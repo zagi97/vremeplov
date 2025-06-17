@@ -1,22 +1,59 @@
-
-import { useState } from 'react';
+// src/pages/Location.tsx
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { ArrowLeft, Plus } from "lucide-react";
-import { MOCK_PHOTOS } from "../utils/mockData";
 import PhotoGrid from "../components/PhotoGrid";
-import AddPostForm from "../components/AddPostForm";
+import PhotoUpload from "../components/PhotoUpload";
+import { photoService, Photo } from "../services/firebaseService";
+import { toast } from 'sonner';
+
 
 const Location = () => {
   const { locationName } = useParams<{ locationName: string }>();
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
   const [showAddForm, setShowAddForm] = useState(false);
-  const [photos, setPhotos] = useState(MOCK_PHOTOS);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddPost = (newPost: any) => {
-    setPhotos(prev => [newPost, ...prev]);
+  // Load photos for this location
+  useEffect(() => {
+    const loadPhotos = async () => {
+      if (!decodedLocationName) return;
+      
+      try {
+        setLoading(true);
+        const locationPhotos = await photoService.getPhotosByLocation(decodedLocationName);
+        setPhotos(locationPhotos);
+      } catch (error) {
+        console.error('Error loading photos:', error);
+        toast.error('Failed to load photos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPhotos();
+  }, [decodedLocationName]);
+
+  const handleUploadSuccess = () => {
     setShowAddForm(false);
+    // Reload photos to show the new one (after approval)
+    toast.success('Photo uploaded successfully! It will appear after review.');
+    // Note: In a real app, you might want to reload the photos here
+    // but since photos need approval, they won't show immediately
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading memories...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
@@ -47,29 +84,30 @@ const Location = () => {
         </div>
       </header>
 
-      {/* Add Post Form */}
+      {/* Upload Form */}
       {showAddForm && (
         <section className="py-8 px-4 bg-white border-b">
           <div className="container max-w-6xl mx-auto">
-            <AddPostForm 
+             <PhotoUpload 
               locationName={decodedLocationName}
-              onClose={() => setShowAddForm(false)}
-              onSubmit={handleAddPost}
+              onSuccess={handleUploadSuccess}
+              onCancel={() => setShowAddForm(false)}
             />
           </div>
         </section>
       )}
 
-      {/* Feed Section */}
+       {/* Feed Section */}
       <section className="py-12 px-4">
         <div className="container max-w-6xl mx-auto">
           <PhotoGrid photos={photos} />
-          
-          <div className="mt-12 text-center">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Load More Memories
-            </Button>
-          </div>
+          {photos.length > 0 && (
+            <div className="mt-12 text-center">
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                Load More Memories
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

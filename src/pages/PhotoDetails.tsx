@@ -8,6 +8,7 @@ import PhotoGrid from "../components/PhotoGrid";
 import PhotoTagger from "../components/PhotoTagger";
 import PhotoComments from "../components/PhotoComments";
 import { TooltipProvider } from "../components/ui/tooltip";
+import { Photo } from "../services/firebaseService";
 
 const PhotoDetail = () => {
   const { photoId } = useParams<{ photoId: string }>();
@@ -38,6 +39,25 @@ const PhotoDetail = () => {
     
     setComments([newCommentObj, ...comments]);
   };
+
+
+  // Convert mock photos to Firebase Photo format for the grid
+  const convertedPhotos: Photo[] = MOCK_PHOTOS.map(mockPhoto => ({
+    id: mockPhoto.id.toString(),
+    imageUrl: mockPhoto.imageUrl,
+    imageStoragePath: '',
+    year: mockPhoto.year,
+    description: mockPhoto.description,
+    detailedDescription: '',
+    author: mockPhoto.author,
+    location: mockPhoto.location,
+    createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
+    likes: 0,
+    views: 0,
+    isApproved: true,
+    tags: []
+  }));
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
@@ -170,8 +190,8 @@ const PhotoDetail = () => {
         <div className="mt-12">
           <h2 className="text-2xl font-bold mb-6">More Photos from {photo.location}</h2>
           <PhotoGrid 
-            photos={MOCK_PHOTOS} 
-            currentPhotoId={photoIdNumber}
+           photos={convertedPhotos} 
+          currentPhotoId={photoIdNumber.toString()}
           />
         </div>
       </div>
