@@ -53,7 +53,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     setPreviewUrl('');
   };
 
-  // Handle form submission
+  // Handle form submission - improved flow
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -70,25 +70,26 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     setUploading(true);
 
     try {
-      // First, add the photo document to get an ID
-      const photoId = await photoService.addPhoto({
-        imageUrl: '', // We'll update this after upload
-        imageStoragePath: '',
+     // Generate a unique ID first
+     const photoId = Date.now().toString();
+      
+     console.log('Starting upload process for photoId:', photoId);
+     
+     // Upload file first (most likely to fail)
+     const imageUrl = await photoService.uploadPhotoFile(selectedFile, photoId);
+     
+     console.log('File upload successful, creating database record...');
+     
+     // Only create Firestore record if upload succeeds
+     const finalPhotoId = await photoService.addPhoto({
+       imageUrl: imageUrl,
+       imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
         year: formData.year,
         description: formData.description,
         detailedDescription: formData.detailedDescription,
         author: formData.author,
         location: locationName,
         tags: formData.tags
-      });
-
-      // Upload the file to Firebase Storage
-      const imageUrl = await photoService.uploadPhotoFile(selectedFile, photoId);
-
-      // Update the photo document with the image URL and storage path
-      await photoService.updatePhoto(photoId, {
-        imageUrl: imageUrl,
-        imageStoragePath: `photos/${photoId}/${selectedFile.name}`
       });
       
       toast.success('Photo uploaded successfully! It will be reviewed and published soon.');
@@ -108,7 +109,26 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Failed to upload photo. Please try again.');
+  
+      // Type guard to safely access error properties
+      const firebaseError = error as any; // or create a proper type
+      
+      console.error('Error details:', {
+        message: firebaseError?.message,
+        code: firebaseError?.code,
+        name: firebaseError?.name
+      });
+      
+      // More specific error messages
+      if (firebaseError?.code === 'storage/unauthorized') {
+        toast.error('Upload failed: Storage permissions issue. Please check CORS configuration.');
+      } else if (firebaseError?.code === 'storage/quota-exceeded') {
+        toast.error('Upload failed: Storage quota exceeded.');
+      } else if (firebaseError?.message?.includes('CORS')) {
+        toast.error('Upload failed: CORS configuration issue. Please check your Firebase Storage CORS settings.');
+      } else {
+        toast.error('Failed to upload photo. Please try again.');
+      }
     } finally {
       setUploading(false);
     }
