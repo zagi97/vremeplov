@@ -1,63 +1,160 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { ArrowLeft, Calendar, User, MapPin, Tag } from "lucide-react";
-import { MOCK_PHOTOS } from "../utils/mockData";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoTagger from "../components/PhotoTagger";
 import PhotoComments from "../components/PhotoComments";
 import { TooltipProvider } from "../components/ui/tooltip";
-import { Photo } from "../services/firebaseService";
+import { photoService, Photo } from "../services/firebaseService";
+import { toast } from "sonner";
 
 const PhotoDetail = () => {
   const { photoId } = useParams<{ photoId: string }>();
-  const photoIdNumber = parseInt(photoId || "0", 10);
+  const [photo, setPhoto] = useState<Photo | null>(null);
+  const [relatedPhotos, setRelatedPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<any[]>([]);
+  const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
   
-  const photo = MOCK_PHOTOS.find(p => p.id === photoIdNumber) || MOCK_PHOTOS[0];
-  const [comments, setComments] = useState(photo.comments);
-  const [taggedPersons, setTaggedPersons] = useState(photo.taggedPersons || []);
+  // Load photo data
+  useEffect(() => {
+    const loadPhotoData = async () => {
+      if (!photoId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load the main photo
+        const photoData = await photoService.getPhotoById(photoId);
+        if (!photoData) {
+          toast.error('Photo not found');
+          return;
+        }
+        
+        setPhoto(photoData);
+        
+        // Increment view count
+        await photoService.incrementViews(photoId);
+        
+        // Load comments
+        const photoComments = await photoService.getCommentsByPhotoId(photoId);
+        setComments(photoComments.map(comment => ({
+          id: comment.id,
+          author: comment.author,
+          text: comment.text,
+          date: comment.createdAt.toDate().toLocaleDateString()
+        })));
+        
+        // Load tagged persons
+        const taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
+        console.log('Loaded tagged persons:', taggedPersonsData);
+        setTaggedPersons(taggedPersonsData);
+        
+        // Load related photos from the same location
+        if (photoData.location) {
+          const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
+          // Filter out current photo and take first 6 for related photos
+          const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
+          setRelatedPhotos(related);
+        }
+        
+      } catch (error) {
+        console.error('Error loading photo data:', error);
+        toast.error('Failed to load photo details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPhotoData();
+  }, [photoId]);
   
   const { handleImageClick, renderTaggingUI, renderTaggingForm, isTagging } = PhotoTagger({
     taggedPersons,
-    onAddTag: (newTag) => {
-      const newTagWithId = {
-        ...newTag,
-        id: Date.now() // Use timestamp for unique ID
-      };
-      setTaggedPersons([...taggedPersons, newTagWithId]);
+    onAddTag: async (newTag) => {
+      if (!photoId) return;
+      
+      try {
+        console.log('Adding new tag:', newTag);
+        const tagId = await photoService.addTaggedPerson({
+          photoId,
+          name: newTag.name,
+          x: newTag.x,
+          y: newTag.y,
+          description: newTag.description || '',
+          addedBy: 'User' // In a real app, this would be the current user
+        });
+        // Create the new tag object with Firebase ID
+        const newTagWithId = {
+          id: tagId,
+          name: newTag.name,
+          x: newTag.x,
+          y: newTag.y,
+          description: newTag.description || '',
+          photoId,
+          addedBy: 'User'
+        };
+         
+        console.log('Tag saved with ID:', tagId);
+        setTaggedPersons([...taggedPersons, newTagWithId]);
+        toast.success('Person tagged successfully!');
+      } catch (error) {
+        console.error('Error adding tag:', error);
+        toast.error('Failed to add tag');
+      }
     }
   });
   
-  const handleAddComment = (text: string) => {
-    const newCommentObj = {
-      id: comments.length + 1,
-      author: "You",
-      text,
-      date: "Just now"
-    };
+  const handleAddComment = async (text: string) => {
+    if (!photoId) return;
     
-    setComments([newCommentObj, ...comments]);
+    try {
+      console.log('Adding new comment:', text);
+      const commentId = await photoService.addComment(photoId, 'You', text);
+      
+      const newComment = {
+        id: commentId,
+        author: "You",
+        text,
+        date: "Just now"
+      };
+      console.log('Comment saved with ID:', commentId);
+      setComments([newComment, ...comments]);
+      toast.success('Comment added successfully!');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Failed to add comment');
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading memory...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Convert mock photos to Firebase Photo format for the grid
-  const convertedPhotos: Photo[] = MOCK_PHOTOS.map(mockPhoto => ({
-    id: mockPhoto.id.toString(),
-    imageUrl: mockPhoto.imageUrl,
-    imageStoragePath: '',
-    year: mockPhoto.year,
-    description: mockPhoto.description,
-    detailedDescription: '',
-    author: mockPhoto.author,
-    location: mockPhoto.location,
-    createdAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-    updatedAt: { seconds: Date.now() / 1000, nanoseconds: 0 } as any,
-    likes: 0,
-    views: 0,
-    isApproved: true,
-    tags: []
-  }));
+  if (!photo) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Photo not found</h2>
+          <p className="text-gray-600 mb-4">The requested memory could not be found.</p>
+          <Link to="/">
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              Return to Homepage
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
@@ -81,7 +178,7 @@ const PhotoDetail = () => {
 
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* Photo Section - This is where the user clicks to add a tag */}
+         {/* Photo Section */}
           <div className="relative">
             <TooltipProvider>
               <div 
@@ -99,7 +196,7 @@ const PhotoDetail = () => {
             </TooltipProvider>
           </div>
 
-          {/* Tagging Form - Now rendered OUTSIDE the image */}
+          {/* Tagging Form */}
           {renderTaggingForm()}
 
           {/* Details Section */}
@@ -124,8 +221,7 @@ const PhotoDetail = () => {
                 
                 <div className="mt-6">
                   <p className="text-gray-700 leading-relaxed">
-                    This historical photograph from {photo.year} shows {photo.description} in {photo.location}. 
-                    It was contributed to the Vremeplov.hr archive by {photo.author}.
+                  {photo.detailedDescription || `This historical photograph from ${photo.year} shows ${photo.description} in ${photo.location}. It was contributed to the Vremeplov.hr archive by ${photo.author}.`}
                   </p>
                 </div>
                 
@@ -160,40 +256,45 @@ const PhotoDetail = () => {
                   Many similar photographs from this era document the changing landscape and 
                   daily life of inhabitants.
                 </p>
-                
-                <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
-                <div className="space-y-3">
-                  {MOCK_PHOTOS.filter(p => p.id !== photo.id).slice(0, 2).map((relatedPhoto) => (
-                    <Link 
-                      key={relatedPhoto.id} 
-                      to={`/photo/${relatedPhoto.id}`}
-                      className="block hover:opacity-90 transition-opacity"
-                    >
-                      <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-                        <img 
-                          src={relatedPhoto.imageUrl} 
-                          alt={relatedPhoto.description} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-sm font-medium">{relatedPhoto.description}</p>
-                      <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-                    </Link>
-                  ))}
-                </div>
+                {relatedPhotos.length > 0 && (
+                  <>
+                    <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
+                    <div className="space-y-3">
+                      {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
+                        <Link 
+                          key={relatedPhoto.id} 
+                          to={`/photo/${relatedPhoto.id}`}
+                          className="block hover:opacity-90 transition-opacity"
+                        >
+                          <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
+                            <img 
+                              src={relatedPhoto.imageUrl} 
+                              alt={relatedPhoto.description} 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <p className="text-sm font-medium">{relatedPhoto.description}</p>
+                          <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                )}
+
               </div>
             </div>
           </div>
         </div>
         
-        {/* Related Photos Grid */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">More Photos from {photo.location}</h2>
-          <PhotoGrid 
-           photos={convertedPhotos} 
-          currentPhotoId={photoIdNumber.toString()}
-          />
-        </div>
+        {relatedPhotos.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold mb-6">More Photos from {photo.location}</h2>
+            <PhotoGrid 
+              photos={relatedPhotos} 
+              currentPhotoId={photoId}
+            />
+          </div>
+        )}
       </div>
       
       {/* Footer */}

@@ -15,6 +15,10 @@ const Location = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PHOTOS_PER_PAGE = 10;
 
   // Load photos for this location
   useEffect(() => {
@@ -24,7 +28,12 @@ const Location = () => {
       try {
         setLoading(true);
         const locationPhotos = await photoService.getPhotosByLocation(decodedLocationName);
-        setPhotos(locationPhotos);
+         
+        // Show first 10 photos initially
+        const initialPhotos = locationPhotos.slice(0, PHOTOS_PER_PAGE);
+        setPhotos(initialPhotos);
+        setHasMore(locationPhotos.length > PHOTOS_PER_PAGE);
+        setCurrentPage(1);
       } catch (error) {
         console.error('Error loading photos:', error);
         toast.error('Failed to load photos');
@@ -36,12 +45,46 @@ const Location = () => {
     loadPhotos();
   }, [decodedLocationName]);
 
-  const handleUploadSuccess = () => {
+  const loadMorePhotos = async () => {
+    if (!decodedLocationName || loadingMore || !hasMore) return;
+    
+    try {
+      setLoadingMore(true);
+      const locationPhotos = await photoService.getPhotosByLocation(decodedLocationName);
+      
+      const nextPage = currentPage + 1;
+      const startIndex = (nextPage - 1) * PHOTOS_PER_PAGE;
+      const endIndex = nextPage * PHOTOS_PER_PAGE;
+      const newPhotos = locationPhotos.slice(startIndex, endIndex);
+      
+      if (newPhotos.length > 0) {
+        setPhotos(prev => [...prev, ...newPhotos]);
+        setCurrentPage(nextPage);
+        setHasMore(endIndex < locationPhotos.length);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Error loading more photos:', error);
+      toast.error('Failed to load more photos');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const handleUploadSuccess = async () => {
     setShowAddForm(false);
-    // Reload photos to show the new one (after approval)
-    toast.success('Photo uploaded successfully! It will appear after review.');
-    // Note: In a real app, you might want to reload the photos here
-    // but since photos need approval, they won't show immediately
+    toast.success('Photo uploaded successfully! It will appear after admin review.');
+    
+    // Refresh the photos list to potentially show the new photo if it's approved
+    try {
+      const locationPhotos = await photoService.getPhotosByLocation(decodedLocationName);
+      const currentPhotos = locationPhotos.slice(0, currentPage * PHOTOS_PER_PAGE);
+      setPhotos(currentPhotos);
+      setHasMore(locationPhotos.length > currentPage * PHOTOS_PER_PAGE);
+    } catch (error) {
+      console.error('Error refreshing photos:', error);
+    }
   };
 
   if (loading) {
@@ -101,10 +144,14 @@ const Location = () => {
       <section className="py-12 px-4">
         <div className="container max-w-6xl mx-auto">
           <PhotoGrid photos={photos} />
-          {photos.length > 0 && (
+          {hasMore && (
             <div className="mt-12 text-center">
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                Load More Memories
+              <Button 
+                onClick={loadMorePhotos}
+                disabled={loadingMore}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {loadingMore ? 'Loading...' : 'Load More Memories'}
               </Button>
             </div>
           )}
