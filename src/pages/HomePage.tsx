@@ -97,10 +97,10 @@ const Index = () => {
               <p className="mt-2">Preserving Croatian heritage, one memory at a time.</p>
             </div>
             <div className="flex space-x-6">
-              <Link to="/" className="hover:text-white transition-colors">About</Link>
-              <Link to="/" className="hover:text-white transition-colors">Privacy</Link>
-              <Link to="/" className="hover:text-white transition-colors">Terms</Link>
-              <Link to="/" className="hover:text-white transition-colors">Contact</Link>
+            <Link to="/about" className="hover:text-white transition-colors">About</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center">

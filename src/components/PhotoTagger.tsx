@@ -10,7 +10,6 @@ interface TaggedPerson {
   name: string;
   x: number;
   y: number;
-  description?: string;
 }
 
 interface PhotoTaggerProps {
@@ -21,7 +20,6 @@ interface PhotoTaggerProps {
 const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
   const [isTagging, setIsTagging] = useState(false);
   const [newTagName, setNewTagName] = useState("");
-  const [newTagDescription, setNewTagDescription] = useState("");
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   
@@ -57,15 +55,13 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
     onAddTag({
       name: newTagName,
       x: tagPosition.x,
-      y: tagPosition.y,
-      description: newTagDescription
+      y: tagPosition.y
     });
     
     console.log('Tag saved with position:', tagPosition);
     
     // Reset the form
     setNewTagName("");
-    setNewTagDescription("");
     setIsTagging(false);
     setHasSelectedPosition(false);
     toast.success(`Tagged ${newTagName} in the photo!`);
@@ -74,7 +70,6 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
   const cancelTagging = () => {
     setIsTagging(false);
     setNewTagName("");
-    setNewTagDescription("");
     setHasSelectedPosition(false);
   };
 
@@ -100,9 +95,6 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
                   <User className="h-4 w-4 text-gray-600" />
                 </div>
                 <span className="font-medium text-gray-500">{person.name}</span>
-                {person.description && (
-                  <span className="text-sm text-gray-600">{person.description}</span>
-                )}
               </div>
             </TooltipContent>
           </Tooltip>
@@ -154,12 +146,6 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
                   autoFocus
-                />
-                <Input
-                  type="text"
-                  placeholder="Description (optional)"
-                  value={newTagDescription}
-                  onChange={(e) => setNewTagDescription(e.target.value)}
                 />
                <div className="flex gap-2">
                   <Button 

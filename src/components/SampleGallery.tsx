@@ -1,62 +1,66 @@
-// src/components/SampleGallery.tsx
-import { Clock, MapPin } from "lucide-react";
-
-const photoData = [
-  {
-    id: 1,
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', // Dubrovnik old town
-    location: 'Zagreb',
-    year: '1950',
-    description: 'Main Square during winter'
-  },
-  {
-    id: 2,
-    url: 'https://images.unsplash.com/photo-1555636222-cae831e670b3?w=600&auto=format', // Split waterfront
-    location: 'Split',
-    year: '1935',
-    description: 'Harbor with traditional boats'
-  },
-  {
-    id: 3,
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', // Croatian coastal city
-    location: 'Dubrovnik',
-    year: '1920',
-    description: 'Old city walls panorama'
-  },
-  {
-    id: 4,
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', // Historic European town
-    location: 'Rijeka',
-    year: '1960',
-    description: 'Carnival celebration'
-  },
-  {
-    id: 5,
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&auto=format', // River with bridge
-    location: 'Osijek',
-    year: '1940',
-    description: 'River Drava bridge'
-  },
-  {
-    id: 6,
-    url: 'https://images.unsplash.com/photo-1595846519845-68e298c2edd8?w=600&auto=format', // Lavender fields
-    location: 'Hvar',
-    year: '1955',
-    description: 'Traditional lavender harvest'
-  }
-];
-
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Clock, MapPin, Image } from "lucide-react";
+import { Link } from 'react-router-dom';
+import { photoService, Photo } from "../services/firebaseService";
 
 const SampleGallery = () => {
+  const [recentPhotos, setRecentPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadRecentPhotos = async () => {
+      try {
+        const photos = await photoService.getRecentPhotos(6);
+        setRecentPhotos(photos);
+      } catch (error) {
+        console.error('Error loading recent photos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRecentPhotos();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={index} className="aspect-[4/3] bg-gray-200 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    );
+  }
+
+  if (recentPhotos.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos yet</h3>
+        <p className="text-gray-600">
+          Be the first to share a historical photo and help preserve Croatian heritage!
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {photoData.map((photo) => (
-        <div key={photo.id} className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      {recentPhotos.map((photo) => (
+        <Link 
+          key={photo.id} 
+          to={`/photo/${photo.id}`}
+          className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
+        >
           <div className="aspect-[4/3] overflow-hidden">
             <img 
-              src={photo.url} 
+              src={photo.imageUrl} 
               alt={`${photo.location}, ${photo.year}`} 
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=1932';
+              }}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
@@ -69,7 +73,7 @@ const SampleGallery = () => {
               <span>{photo.year}</span>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );

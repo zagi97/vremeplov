@@ -83,7 +83,7 @@ const PhotoDetail = () => {
           name: newTag.name,
           x: newTag.x,
           y: newTag.y,
-          description: newTag.description || '',
+          description: '',
           addedBy: 'User' // In a real app, this would be the current user
         });
         // Create the new tag object with Firebase ID
@@ -92,7 +92,6 @@ const PhotoDetail = () => {
           name: newTag.name,
           x: newTag.x,
           y: newTag.y,
-          description: newTag.description || '',
           photoId,
           addedBy: 'User'
         };

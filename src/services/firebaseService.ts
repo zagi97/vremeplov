@@ -251,6 +251,30 @@ export class PhotoService {
       throw error;
     }
   }
+
+  // Get recent photos for homepage
+  async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
+    try {
+      const photosQuery = query(
+        this.photosCollection,
+        where('isApproved', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
+      );
+      
+      const snapshot = await getDocs(photosQuery);
+      const photos: Photo[] = [];
+      
+      snapshot.forEach(doc => {
+        photos.push({ id: doc.id, ...doc.data() } as Photo);
+      });
+      
+      return photos;
+    } catch (error) {
+      console.error('Error getting recent photos:', error);
+      return [];
+    }
+  }
 }
 
 // Create singleton instance
