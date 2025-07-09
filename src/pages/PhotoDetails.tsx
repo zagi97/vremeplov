@@ -2,21 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Calendar, User, MapPin, Tag } from "lucide-react";
+import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye } from "lucide-react";
+import AuthButton from "../components/AuthButton";
+import UserProfile from "../components/UserProfile";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoTagger from "../components/PhotoTagger";
 import PhotoComments from "../components/PhotoComments";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 
 const PhotoDetail = () => {
   const { photoId } = useParams<{ photoId: string }>();
+  const { user } = useAuth();
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [relatedPhotos, setRelatedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<any[]>([]);
   const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
+  const [likes, setLikes] = useState(0);
+  const [views, setViews] = useState(0);
   
   // Load photo data
   useEffect(() => {
@@ -34,9 +40,17 @@ const PhotoDetail = () => {
         }
         
         setPhoto(photoData);
+        console.log('Loaded photo data:', photoData);
+        console.log('Photo uploadedBy:', photoData.uploadedBy);
+        console.log('Photo uploadedAt:', photoData.uploadedAt);
+        setLikes(photoData.likes || 0);
+        setViews(photoData.views || 0);
         
-        // Increment view count
-        await photoService.incrementViews(photoId);
+        // Increment view count (only if user is logged in)
+        if (user) {
+          await photoService.incrementViews(photoId, user.uid);
+          setViews(prev => prev + 1);
+        }
         
         // Load comments
         const photoComments = await photoService.getCommentsByPhotoId(photoId);
@@ -69,7 +83,7 @@ const PhotoDetail = () => {
     };
 
     loadPhotoData();
-  }, [photoId]);
+  }, [photoId, user]);
   
   const { handleImageClick, renderTaggingUI, renderTaggingForm, isTagging } = PhotoTagger({
     taggedPersons,
@@ -86,6 +100,7 @@ const PhotoDetail = () => {
           description: '',
           addedBy: 'User' // In a real app, this would be the current user
         });
+        
         // Create the new tag object with Firebase ID
         const newTagWithId = {
           id: tagId,
@@ -95,7 +110,7 @@ const PhotoDetail = () => {
           photoId,
           addedBy: 'User'
         };
-         
+        
         console.log('Tag saved with ID:', tagId);
         setTaggedPersons([...taggedPersons, newTagWithId]);
         toast.success('Person tagged successfully!');
@@ -107,24 +122,50 @@ const PhotoDetail = () => {
   });
   
   const handleAddComment = async (text: string) => {
-    if (!photoId) return;
+    if (!photoId || !user) return;
     
     try {
+      const authorName = user.displayName || user.email || 'Anonymous User';
       console.log('Adding new comment:', text);
-      const commentId = await photoService.addComment(photoId, 'You', text);
+      const commentId = await photoService.addComment(photoId, authorName, text);
       
       const newComment = {
         id: commentId,
-        author: "You",
+        author: authorName,
         text,
         date: "Just now"
       };
+      
       console.log('Comment saved with ID:', commentId);
       setComments([newComment, ...comments]);
       toast.success('Comment added successfully!');
     } catch (error) {
       console.error('Error adding comment:', error);
       toast.error('Failed to add comment');
+    }
+  };
+
+  const handleLike = async () => {
+    if (!photoId) return;
+    
+    if (!user) {
+      toast.error('Please sign in to like photos');
+      return;
+    }
+    
+    try {
+      const result = await photoService.toggleLike(photoId, user.uid);
+      
+      if (result.alreadyLiked) {
+        toast.info('You have already liked this photo');
+        return;
+      }
+      
+      setLikes(result.newLikesCount);
+      toast.success('Photo liked!');
+    } catch (error) {
+      console.error('Error liking photo:', error);
+      toast.error('Failed to like photo');
     }
   };
 
@@ -160,13 +201,19 @@ const PhotoDetail = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center mb-4">
-            <Link to={`/location/${encodeURIComponent(photo.location)}`}>
-              <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Link to={`/location/${encodeURIComponent(photo.location)}`}>
+                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <UserProfile className="text-white" />
+              <AuthButton variant="outline" />
+            </div>
           </div>
           <div className="mt-6">
             <h2 className="text-3xl md:text-4xl font-bold mb-2">{photo.description}</h2>
@@ -177,7 +224,7 @@ const PhotoDetail = () => {
 
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-         {/* Photo Section */}
+          {/* Photo Section */}
           <div className="relative">
             <TooltipProvider>
               <div 
@@ -198,6 +245,30 @@ const PhotoDetail = () => {
           {/* Tagging Form */}
           {renderTaggingForm()}
 
+          {/* Photo Stats and Actions */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Eye className="h-5 w-5" />
+                  <span className="text-sm">{views} views</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Heart className="h-5 w-5" />
+                  <span className="text-sm">{likes} likes</span>
+                </div>
+              </div>
+              <Button 
+                onClick={handleLike}
+                variant="outline" 
+                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+              >
+                <Heart className="h-4 w-4" />
+                Like Photo
+              </Button>
+            </div>
+          </div>
+
           {/* Details Section */}
           <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-8 p-6">
             <div>
@@ -216,11 +287,26 @@ const PhotoDetail = () => {
                     <MapPin className="h-5 w-5 text-blue-600" />
                     <span>Location: {photo.location}</span>
                   </div>
+                  {photo.uploadedBy && (
+                    <div className="flex items-center gap-2 col-span-2">
+                      <User className="h-5 w-5 text-green-600" />
+                      <span>Uploaded by: {photo.uploadedBy}</span>
+                      {photo.uploadedAt && (
+                        <span className="text-gray-500 ml-2">
+                          on {new Date(photo.uploadedAt).toLocaleDateString('hr-HR', {
+                            day: '2-digit',
+                            month: '2-digit', 
+                            year: 'numeric'
+                          })}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="mt-6">
                   <p className="text-gray-700 leading-relaxed">
-                  {photo.detailedDescription || `This historical photograph from ${photo.year} shows ${photo.description} in ${photo.location}. It was contributed to the Vremeplov.hr archive by ${photo.author}.`}
+                    {photo.detailedDescription || `This historical photograph from ${photo.year} shows ${photo.description} in ${photo.location}. It was contributed to the Vremeplov.hr archive by ${photo.author}.`}
                   </p>
                 </div>
                 
@@ -255,6 +341,7 @@ const PhotoDetail = () => {
                   Many similar photographs from this era document the changing landscape and 
                   daily life of inhabitants.
                 </p>
+                
                 {relatedPhotos.length > 0 && (
                   <>
                     <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
@@ -279,12 +366,12 @@ const PhotoDetail = () => {
                     </div>
                   </>
                 )}
-
               </div>
             </div>
           </div>
         </div>
         
+        {/* Related Photos Grid */}
         {relatedPhotos.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold mb-6">More Photos from {photo.location}</h2>
@@ -296,7 +383,6 @@ const PhotoDetail = () => {
         )}
       </div>
       
-      {/* Footer */}
       <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400 mt-12">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">

@@ -7,7 +7,8 @@ import PhotoGrid from "../components/PhotoGrid";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
-
+import AuthButton from "../components/AuthButton";
+import UserProfile from "../components/UserProfile";
 
 const Location = () => {
   const { locationName } = useParams<{ locationName: string }>();
@@ -103,13 +104,19 @@ const Location = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center mb-4">
-            <Link to="/">
-              <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+        <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Link to="/">
+                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <UserProfile className="text-white" />
+              <AuthButton variant="outline" />
+            </div>
           </div>
           <div className="mt-6 flex justify-between items-end">
             <div>

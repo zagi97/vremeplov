@@ -1,27 +1,78 @@
-// src/components/PhotoGrid.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "./ui/card";
 import { Calendar, User, Eye, Heart } from "lucide-react";
-import { Photo } from '../services/firebaseService';
+import { Photo, photoService } from '../services/firebaseService';
+import { toast } from "sonner";
+import { useAuth } from '../contexts/AuthContext';
 
 interface PhotoGridProps {
   photos: Photo[];
   currentPhotoId?: string;
+  onPhotoUpdate?: (photoId: string, updatedPhoto: Photo) => void;
 }
 
-const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId }) => {
+const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUpdate }) => {
+  const [photosState, setPhotosState] = useState<Photo[]>(photos);
+  const { user } = useAuth();
+  
+  // Update local state when photos prop changes
+  React.useEffect(() => {
+    setPhotosState(photos);
+  }, [photos]);
+  
   // Filter out current photo if viewing photo details
   const displayPhotos = currentPhotoId 
-    ? photos.filter(photo => photo.id !== currentPhotoId)
-    : photos;
+    ? photosState.filter(photo => photo.id !== currentPhotoId)
+    : photosState;
+
+  const handleLike = async (e: React.MouseEvent, photoId: string) => {
+    e.preventDefault(); // Prevent navigation to photo detail
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Please sign in to like photos');
+      return;
+    }
+    
+    try {
+      const result = await photoService.toggleLike(photoId, user.uid);
+      
+      if (result.alreadyLiked) {
+        toast.info('You have already liked this photo');
+        return;
+      }
+      
+      // Update local state
+      setPhotosState(prev => 
+        prev.map(photo => 
+          photo.id === photoId 
+            ? { ...photo, likes: result.newLikesCount }
+            : photo
+        )
+      );
+      
+      // Call parent update if provided
+      if (onPhotoUpdate) {
+        const updatedPhoto = photosState.find(p => p.id === photoId);
+        if (updatedPhoto) {
+          onPhotoUpdate(photoId, { ...updatedPhoto, likes: result.newLikesCount });
+        }
+      }
+      
+      toast.success('Photo liked!');
+    } catch (error) {
+      console.error('Error liking photo:', error);
+      toast.error('Failed to like photo');
+    }
+  };
 
   if (displayPhotos.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos found</h3>
         <p className="text-gray-600">
-          Be the first to share a historical photo!
+          Be the first to share a historical photo of this location!
         </p>
       </div>
     );
@@ -70,10 +121,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId }) => {
                       <Eye className="h-3 w-3" />
                       <span>{photo.views || 0}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <button 
+                      onClick={(e) => handleLike(e, photo.id!)}
+                      className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                    >
                       <Heart className="h-3 w-3" />
                       <span>{photo.likes || 0}</span>
-                    </div>
+                    </button>
                   </div>
                   
                   {photo.tags && photo.tags.length > 0 && (

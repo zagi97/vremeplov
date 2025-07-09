@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { photoService } from '../services/firebaseService';
 import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PhotoFormData {
   year: string;
@@ -68,6 +69,7 @@ const retryUpload = async (uploadFn: () => Promise<string>, maxRetries: number =
 };
 
 export const usePhotoUpload = (locationName: string, onSuccess?: () => void) => {
+  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
@@ -125,6 +127,11 @@ export const usePhotoUpload = (locationName: string, onSuccess?: () => void) => 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!user) {
+      toast.error('Please sign in to upload photos');
+      return;
+    }
     
     if (!selectedFile) {
       toast.error('Please select a photo to upload');
@@ -162,17 +169,42 @@ export const usePhotoUpload = (locationName: string, onSuccess?: () => void) => 
       
       console.log('File upload successful, creating database record...');
       
-      // Only create Firestore record if upload succeeds
-      const finalPhotoId = await photoService.addPhoto({
-        imageUrl: imageUrl,
-        imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
-        year: formData.year,
-        description: formData.description,
-        detailedDescription: formData.detailedDescription,
-        author: formData.author,
-        location: locationName,
-        tags: formData.tags
-      });
+      
+      console.log('User exists?', !!user);
+      console.log('User displayName:', user?.displayName);
+      console.log('User email:', user?.email);
+      console.log('User uid:', user?.uid);
+      console.log('User displayName exists?', !!user?.displayName);
+      console.log('User email exists?', !!user?.email);
+      
+      // Try displayName first, then email, then fallback
+      let uploaderName = 'Anonymous User';
+      if (user?.displayName && user.displayName.trim()) {
+        console.log('Using displayName:', user.displayName);
+        uploaderName = user.displayName.trim();
+      } else if (user?.email && user.email.trim()) {
+        console.log('Using email:', user.email);
+        uploaderName = user.email.trim();
+      } else {
+        console.log('No valid user data found, using fallback');
+      }
+   
+     const photoDataToSave = {
+       imageUrl: imageUrl,
+       imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
+       year: formData.year,
+       description: formData.description,
+       detailedDescription: formData.detailedDescription,
+       author: formData.author,
+       location: locationName,
+       tags: formData.tags,
+       uploadedBy: uploaderName,
+       uploadedAt: new Date().toISOString()
+      };
+      
+      console.log('Photo data being saved:', photoDataToSave);
+      
+      const finalPhotoId = await photoService.addPhoto(photoDataToSave);
       
       console.log('Database record created successfully with ID:', finalPhotoId);
       

@@ -7,10 +7,27 @@ import { Link } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import FeatureCard from "@/components/FeaturedCard";
 import SampleGallery from "@/components/SampleGallery";
+import AuthButton from "@/components/AuthButton";
+import UserProfile from "@/components/UserProfile";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
+            {/* Navigation Header */}
+            <nav className="absolute top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
+        <div className="container max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link to="/" className="text-2xl font-bold text-white">
+              Vremeplov.hr
+            </Link>
+            <div className="flex items-center gap-4">
+              <UserProfile className="text-white" />
+              <AuthButton variant="outline" />
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>

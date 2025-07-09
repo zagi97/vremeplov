@@ -32,6 +32,8 @@ export interface Photo {
   author: string;
   authorId?: string;
   location: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   likes: number;
@@ -60,11 +62,27 @@ export interface TaggedPerson {
   createdAt: Timestamp;
 }
 
+export interface UserLike {
+  id?: string;
+  userId: string;
+  photoId: string;
+  createdAt: Timestamp;
+}
+
+export interface UserView {
+  id?: string;
+  userId: string;
+  photoId: string;
+  createdAt: Timestamp;
+}
+
 // Photo Services
 export class PhotoService {
   private photosCollection = collection(db, 'photos');
   private commentsCollection = collection(db, 'comments');
   private taggedPersonsCollection = collection(db, 'taggedPersons');
+  private userLikesCollection = collection(db, 'userLikes');
+  private userViewsCollection = collection(db, 'userViews');
 
   // Upload photo to Firebase Storage
   async uploadPhotoFile(file: File, photoId: string): Promise<string> {
@@ -100,9 +118,19 @@ export class PhotoService {
   // Add new photo
   async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'>): Promise<string> {
     try {
+      console.log('Adding photo with data:', photoData);
       const now = Timestamp.now();
       const photo: Omit<Photo, 'id'> = {
-        ...photoData,
+        imageUrl: photoData.imageUrl,
+        imageStoragePath: photoData.imageStoragePath,
+        year: photoData.year,
+        description: photoData.description,
+        detailedDescription: photoData.detailedDescription || '',
+        author: photoData.author,
+        location: photoData.location,
+        tags: photoData.tags || [],
+        uploadedBy: photoData.uploadedBy || 'Unknown',
+        uploadedAt: photoData.uploadedAt || new Date().toISOString(),
         createdAt: now,
         updatedAt: now,
         likes: 0,
@@ -110,7 +138,9 @@ export class PhotoService {
         isApproved: false // Photos need approval by default
       };
 
+      console.log('Final photo object being saved:', photo);
       const docRef = await addDoc(this.photosCollection, photo);
+      console.log('Photo saved with ID:', docRef.id);
       return docRef.id;
     } catch (error) {
       console.error('Error adding photo:', error);
@@ -233,24 +263,113 @@ export class PhotoService {
     }
   }
 
-  // Increment photo views
-  async incrementViews(photoId: string): Promise<void> {
+ // Check if user has already viewed this photo
+ async hasUserViewed(photoId: string, userId: string): Promise<boolean> {
+  try {
+    const q = query(
+      this.userViewsCollection,
+      where('photoId', '==', photoId),
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking user view:', error);
+    return false;
+  }
+}
+
+// Increment photo views (only if user hasn't viewed before)
+async incrementViews(photoId: string, userId: string): Promise<void> {
+  try {
+    // Check if user has already viewed this photo
+    const hasViewed = await this.hasUserViewed(photoId, userId);
+    if (hasViewed) {
+      return; // User has already viewed this photo
+    }
+
+    // Record the user view
+    await addDoc(this.userViewsCollection, {
+      photoId,
+      userId,
+      createdAt: Timestamp.now()
+    });
+
+    // Increment the photo's view count
+    const docRef = doc(this.photosCollection, photoId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const currentViews = docSnap.data().views || 0;
+      await updateDoc(docRef, {
+        views: currentViews + 1,
+        updatedAt: Timestamp.now()
+      });
+    }
+  } catch (error) {
+    console.error('Error incrementing views:', error);
+    // Don't throw error for view counting, it's not critical
+  }
+}
+
+    // Check if user has already liked this photo
+  async hasUserLiked(photoId: string, userId: string): Promise<boolean> {
     try {
-      const docRef = doc(this.photosCollection, photoId);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        const currentViews = docSnap.data().views || 0;
-        await updateDoc(docRef, {
-          views: currentViews + 1,
-          updatedAt: Timestamp.now()
-        });
-      }
+      const q = query(
+        this.userLikesCollection,
+        where('photoId', '==', photoId),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(q);
+      return !querySnapshot.empty;
     } catch (error) {
-      console.error('Error incrementing views:', error);
-      throw error;
+      console.error('Error checking user like:', error);
+      return false;
     }
   }
+
+  // Toggle like for photo (only if user hasn't liked before)
+  async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number; alreadyLiked: boolean }> {
+    try {
+      // Check if user has already liked this photo
+      const hasLiked = await this.hasUserLiked(photoId, userId);
+      if (hasLiked) {
+        // User has already liked this photo
+        const docRef = doc(this.photosCollection, photoId);
+        const docSnap = await getDoc(docRef);
+        const currentLikes = docSnap.exists() ? docSnap.data().likes || 0 : 0;
+        return { liked: false, newLikesCount: currentLikes, alreadyLiked: true };
+      }
+
+      // Record the user like
+      await addDoc(this.userLikesCollection, {
+        photoId,
+        userId,
+        createdAt: Timestamp.now()
+      });
+
+      // Increment the photo's like count
+        const docRef = doc(this.photosCollection, photoId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const currentLikes = docSnap.data().likes || 0;
+          const newLikesCount = currentLikes + 1;
+          
+          await updateDoc(docRef, {
+            likes: newLikesCount,
+            updatedAt: Timestamp.now()
+          });
+          
+          return { liked: true, newLikesCount, alreadyLiked: false };
+        }
+        
+        return { liked: false, newLikesCount: 0, alreadyLiked: false };
+      } catch (error) {
+        console.error('Error toggling like:', error);
+        throw error;
+      }
+    }
 
   // Get recent photos for homepage
   async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
