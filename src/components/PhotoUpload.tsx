@@ -1,4 +1,3 @@
-// src/components/PhotoUpload.tsx
 import React, { useState, useEffect } from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Upload, X, Calendar, MapPin, User, Image as ImageIcon } from "lucide-react";
 import { photoService } from '../services/firebaseService';
 import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
 
 interface PhotoUploadProps {
   locationName: string;
@@ -62,6 +62,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   onSuccess, 
   onCancel 
 }) => {
+  const { user } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -158,6 +159,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast.error('Please sign in to upload photos');
+      return;
+    }
+    
     if (!selectedFile) {
       toast.error('Please select a photo to upload');
       return;
@@ -192,6 +198,18 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       
       console.log('File upload successful, creating database record...');
       
+      // Extract user name from authenticated user
+      let uploaderName = 'Unknown';
+      
+      if (user?.displayName && user.displayName.trim() !== '') {
+        uploaderName = user.displayName.trim();
+      } else if (user?.email && user.email.trim() !== '') {
+        // Extract name from email if displayName is not available
+        uploaderName = user.email.split('@')[0].trim();
+      }
+      
+      console.log('User uploading photo:', uploaderName);
+      
       // Only create Firestore record if upload succeeds
       const finalPhotoId = await photoService.addPhoto({
         imageUrl: imageUrl,
@@ -201,7 +219,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         detailedDescription: formData.detailedDescription,
         author: formData.author,
         location: locationName,
-        tags: formData.tags
+        tags: formData.tags,
+        uploadedBy: uploaderName,
+        uploadedAt: new Date().toISOString()
       });
       
       console.log('Database record created successfully with ID:', finalPhotoId);

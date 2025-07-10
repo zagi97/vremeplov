@@ -23,4 +23,13 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
+// Add these scopes to ensure we get user profile information
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+
+// Force account selection to ensure fresh data
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 export default app;
