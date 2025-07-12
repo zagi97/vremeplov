@@ -13,6 +13,7 @@ import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/location/:locationName" element={<Location />} />
       <Route path="/photo/:photoId" element={<PhotoDetail />} />
       <Route path="/about" element={<About />} />

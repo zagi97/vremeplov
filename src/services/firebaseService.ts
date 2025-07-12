@@ -39,6 +39,7 @@ export interface Photo {
   likes: number;
   views: number;
   isApproved: boolean;
+  approved?: boolean; // Alternative field name used in dashboard
   tags: string[];
 }
 
@@ -115,6 +116,18 @@ export class PhotoService {
     }
   }
 
+   // Delete photo
+  async deletePhoto(photoId: string): Promise<void> {
+    try {
+      const docRef = doc(this.photosCollection, photoId);
+      await deleteDoc(docRef);
+      console.log('Photo deleted successfully:', photoId);
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      throw error;
+    }
+  }
+
   // Add new photo
   async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'>): Promise<string> {
     try {
@@ -136,6 +149,7 @@ export class PhotoService {
         likes: 0,
         views: 0,
         isApproved: false // Photos need approval by default
+        
       };
 
       console.log('Final photo object being saved:', photo);
@@ -392,6 +406,77 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
     } catch (error) {
       console.error('Error getting recent photos:', error);
       return [];
+    }
+  }
+// Get all photos for admin dashboard (including pending)
+  async getAllPhotosForAdmin(): Promise<Photo[]> {
+    try {
+      console.log('Fetching all photos for admin dashboard...');
+      const photosQuery = query(
+        this.photosCollection,
+        orderBy('createdAt', 'desc')
+      );
+      
+      const snapshot = await getDocs(photosQuery);
+      const photos = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data
+        } as Photo;
+      });
+      
+      console.log(`Fetched ${photos.length} total photos for admin`);
+      console.log('Sample photo approval status:', photos.slice(0, 3).map(p => ({ 
+        id: p.id, 
+        isApproved: p.isApproved, 
+        approved: p.approved 
+      })));
+      
+      return photos;
+    } catch (error) {
+      console.error('Error getting all photos for admin:', error);
+      return [];
+    }
+  }
+
+  // Get user's photos
+  async getUserPhotos(userId: string): Promise<Photo[]> {
+    try {
+      const q = query(
+        this.photosCollection,
+        where('authorId', '==', userId),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Photo));
+    } catch (error) {
+      console.error('Error getting user photos:', error);
+      // Fallback: try with uploadedBy field
+      try {
+        const fallbackQuery = query(
+          this.photosCollection,
+          orderBy('createdAt', 'desc')
+        );
+        
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        const allPhotos = fallbackSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Photo));
+
+        // Filter by userId locally
+        return allPhotos.filter(photo => 
+          photo.authorId === userId || photo.uploadedBy === userId
+        );
+      } catch (fallbackError) {
+        console.error('Fallback user photos query failed:', fallbackError);
+        return [];
+      }
     }
   }
 }
