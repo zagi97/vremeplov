@@ -10,10 +10,10 @@ import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2 } from 'lucide-react';
+import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+ const { user, isAdmin, logout } = useAuth();
   const [pendingPhotos, setPendingPhotos] = useState<Photo[]>([]);
   const [approvedPhotos, setApprovedPhotos] = useState<Photo[]>([]);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   });
 
   // Temporarily allow access for testing - in real app, check user role in database
-  const isAdmin = true; // user?.email === 'admin@vremeplov.hr' || user?.email?.includes('admin');
+  //const isAdmin = true; // user?.email === 'admin@vremeplov.hr' || user?.email?.includes('admin');
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -132,6 +132,17 @@ export default function AdminDashboard() {
     }
   };
 
+    const handleLogout = async () => {
+    try {
+      await logout();
+      // User will be redirected automatically by the auth context
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to logout');
+    }
+  };
+
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -139,10 +150,22 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle className="text-center text-destructive">Access Denied</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground">
-              You don't have admin permissions to access this page.
-            </p>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={() => window.location.href = '/admin-login'}
+                className="w-full"
+              >
+                Go to Admin Login
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => window.location.href = '/'}
+                className="w-full"
+              >
+                Back to Home
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -163,9 +186,25 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage photos, users, and content moderation</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage photos, users, and content moderation</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user?.email}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

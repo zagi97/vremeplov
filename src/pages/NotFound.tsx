@@ -29,7 +29,7 @@ const NotFound = () => {
                 <Home className="mr-2 h-4 w-4" />
                 Return Home
               </Button>
-              </Link>
+            </Link>
           </div>
         </div>
         <div className="mt-8 text-gray-500">

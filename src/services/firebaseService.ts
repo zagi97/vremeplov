@@ -19,7 +19,7 @@ import {
   getDownloadURL, 
   deleteObject 
 } from 'firebase/storage';
-import { db, storage } from '../lib/firebase';
+import { db, storage, auth } from '../lib/firebase';
 
 // Types based on your existing mock data
 export interface Photo {
@@ -481,5 +481,57 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
   }
 }
 
-// Create singleton instance
+// Authentication Services
+export class AuthService {
+  async signInAdmin(email: string, password: string) {
+    try {
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check if this is the admin email
+      if (userCredential.user.email === 'vremeplov.app@gmail.com') {
+        return {
+          success: true,
+          user: userCredential.user
+        };
+      } else {
+        // Sign out non-admin users
+        await this.signOut();
+        return {
+          success: false,
+          error: 'Unauthorized: Admin access only'
+        };
+      }
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async signOut() {
+    try {
+      const { signOut } = await import('firebase/auth');
+      await signOut(auth);
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async getCurrentUser() {
+    return auth.currentUser;
+  }
+
+  isAdmin(user: any) {
+    return user?.email === 'vremeplov.app@gmail.com';
+  }
+}
+
+// Create singleton instances
 export const photoService = new PhotoService();
+export const authService = new AuthService();
