@@ -121,7 +121,7 @@ const TermsModal = ({ children }: TermsModalProps) => {
               <h3 className="text-xl font-bold mb-4">Questions About Terms</h3>
               <p className="text-gray-700 leading-relaxed">
                 If you have questions about these terms of service, please contact us at 
-                <span className="font-medium text-blue-600"> vremeplov@vremeplov.hr</span>
+                <span className="font-medium text-blue-600"> vremeplov.app@gmail.com</span>
               </p>
             </div>
 

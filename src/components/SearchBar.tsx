@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { VALID_LOCATIONS } from "../constants/locations";
 import {
   Command,
   CommandEmpty,
@@ -17,14 +18,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-// Temporary sample data - replace with API data later
+/* // Temporary sample data - replace with API data later
 const sampleLocations = [
   "Zagreb", "Split", "Rijeka", "Osijek", "Zadar", 
   "Pula", "Slavonski Brod", "Karlovac", "Varaždin", 
   "Šibenik", "Dubrovnik", "Vinkovci", "Čakovec", 
   "Vukovar", "Koprivnica", "Požega", "Đakovo", 
   "Virovitica", "Samobor", "Čačinci", "Metković"
-].sort();
+].sort(); */
 
 const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +40,7 @@ const SearchBar = () => {
     }
   };
 
-  const filteredLocations = sampleLocations.filter(location =>
+  const filteredLocations = VALID_LOCATIONS.filter(location =>
     location.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -54,8 +55,11 @@ const SearchBar = () => {
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
+    // Check if the entered value exactly matches a valid location
+    const isValidLocation = VALID_LOCATIONS.includes(value) && value === "Čačinci";
+    setIsValid(isValidLocation);
     // When user types manually, they need to select from dropdown
-    setIsValid(false);
+    /* setIsValid(false); */
   };
 
   return (

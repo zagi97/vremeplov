@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Tag, X, User } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { useAuth } from "../contexts/AuthContext";
 
 interface TaggedPerson {
   id: number;
@@ -22,7 +23,8 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
   const [newTagName, setNewTagName] = useState("");
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
-  
+  const { user } = useAuth();
+
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
     
@@ -111,21 +113,23 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
           />
         )}
         
-        {/* Tag Button - Kept at the bottom right of the image */}
-        <div className="absolute bottom-4 right-4">
-          {isTagging ? (
-            <div></div> // Empty placeholder, we'll only use the cancel button in the form below
-          ) : (
-            <Button
-              onClick={() => setIsTagging(true)}
-              variant="secondary"
-              className="bg-white/80 hover:bg-white/90"
-            >
-              <Tag className="h-4 w-4 mr-2" />
-              Tag Person
-            </Button>
-          )}
-        </div>
+       {/* Tag Button - Only show if user is authenticated */}
+        {user && (
+          <div className="absolute bottom-4 right-4">
+            {isTagging ? (
+              <div></div> // Empty placeholder, we'll only use the cancel button in the form below
+            ) : (
+              <Button
+                onClick={() => setIsTagging(true)}
+                variant="secondary"
+                className="bg-white/80 hover:bg-white/90"
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                Tag Person
+              </Button>
+            )}
+          </div>
+        )}
       </>
     ),
     // Additional UI element that will be rendered OUTSIDE the image

@@ -23,6 +23,12 @@ const PhotoDetail = () => {
   const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
+
+  // In your PhotoDetail component, add this function:
+const handleSignInPrompt = () => {
+  toast.info('Please sign in to like photos and interact with memories');
+  // You can trigger your AuthButton sign-in here, or just show the toast
+};
   
   // Load photo data
   useEffect(() => {
@@ -258,14 +264,28 @@ const PhotoDetail = () => {
                   <span className="text-sm">{likes} likes</span>
                 </div>
               </div>
-              <Button 
-                onClick={handleLike}
-                variant="outline" 
-                className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-              >
-                <Heart className="h-4 w-4" />
-                Like Photo
-              </Button>
+             {user ? (
+                <Button 
+                  onClick={handleLike}
+                  variant="outline" 
+                  className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                >
+                  <Heart className="h-4 w-4" />
+                  Like Photo
+                </Button>
+              ) : (
+  <Button 
+    onClick={() => {
+      toast.info('Please sign in to like photos and interact with memories');
+      // Optionally, you can trigger your sign-in modal here
+    }}
+    variant="outline" 
+    className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+  >
+    <Heart className="h-4 w-4" />
+    Sign In to Like
+  </Button>
+)}
             </div>
           </div>
 

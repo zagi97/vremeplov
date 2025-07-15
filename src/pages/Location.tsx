@@ -1,18 +1,28 @@
 // src/pages/Location.tsx
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, LogIn } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
 import AuthButton from "../components/AuthButton";
 import UserProfile from "../components/UserProfile";
+import { VALID_LOCATIONS } from "../constants/locations";
+import { useAuth } from "../contexts/AuthContext";
 
 const Location = () => {
   const { locationName } = useParams<{ locationName: string }>();
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
+  const { user, signInWithGoogle } = useAuth(); // Add auth context
+
+  // Validate if the location is in our allowed list
+  const isValidLocation = VALID_LOCATIONS.includes(decodedLocationName);
+  
+  // For now, only allow Čačinci (your current restriction)
+  const isAllowedLocation = decodedLocationName === "Čačinci";
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +30,21 @@ const Location = () => {
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const PHOTOS_PER_PAGE = 10;
+
+  // Redirect to 404 if location is not valid or not allowed
+  if (!isValidLocation || !isAllowedLocation) {
+    return <Navigate to="/not-found" replace />;
+  }
+
+  // Handle sign in to add memory
+  const handleSignInToAddMemory = async () => {
+    try {
+      await signInWithGoogle();
+      toast.success('Successfully signed in! You can now add memories.');
+    } catch (error) {
+      toast.error('Failed to sign in. Please try again.');
+    }
+  };
 
   // Load photos for this location
   useEffect(() => {
@@ -104,7 +129,7 @@ const Location = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Link to="/">
                 <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
@@ -123,19 +148,31 @@ const Location = () => {
               <h2 className="text-3xl md:text-4xl font-bold mb-2">{decodedLocationName}</h2>
               <p className="text-gray-300">Explore the history of {decodedLocationName} through photos and memories</p>
             </div>
-            <Button 
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Memory
-            </Button>
+            
+            {/* Conditional Add Memory Button */}
+            {user ? (
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Memory
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleSignInToAddMemory}
+                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors flex items-center gap-2"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign In to Add Memory
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Upload Form */}
-      {showAddForm && (
+      {/* Upload Form - Only show if user is signed in */}
+      {showAddForm && user && (
         <section className="py-8 px-4 bg-white border-b">
           <div className="container max-w-6xl mx-auto">
              <PhotoUpload 
@@ -147,7 +184,7 @@ const Location = () => {
         </section>
       )}
 
-       {/* Feed Section */}
+      {/* Feed Section */}
       <section className="py-12 px-4">
         <div className="container max-w-6xl mx-auto">
           <PhotoGrid photos={photos} />

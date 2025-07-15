@@ -2,8 +2,9 @@
 import React, { useState } from 'react';
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { User, MessageSquare, Send } from "lucide-react";
+import { User, MessageSquare, Send, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "../contexts/AuthContext";
 
 interface Comment {
   id: number;
@@ -19,7 +20,17 @@ interface PhotoCommentsProps {
 
 const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
   const [newComment, setNewComment] = useState("");
-  
+    const { user, signInWithGoogle } = useAuth(); // Add signInWithGoogle
+
+     const handleSignInToComment = async () => {
+    try {
+      await signInWithGoogle();
+      toast.success('Successfully signed in! You can now comment.');
+    } catch (error) {
+      toast.error('Failed to sign in. Please try again.');
+    }
+  };
+
   const handleSubmitComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -36,22 +47,36 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
         Comments ({comments.length})
       </h2>
       
-      <form onSubmit={handleSubmitComment} className="mb-6">
-        <Textarea 
-          placeholder="Share your memories or knowledge about this photo..." 
-          className="min-h-[80px] mb-2"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        />
-        <Button 
-          type="submit" 
-          className="bg-blue-600 hover:bg-blue-700"
-          disabled={!newComment.trim()}
-        >
-          <Send className="h-4 w-4 mr-2" />
-          Post Comment
-        </Button>
-      </form>
+      {user ? (
+        <form onSubmit={handleSubmitComment} className="mb-6">
+          <Textarea 
+            placeholder="Share your memories or knowledge about this photo..." 
+            className="min-h-[80px] mb-2"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
+          <Button 
+            type="submit" 
+            className="bg-blue-600 hover:bg-blue-700"
+            disabled={!newComment.trim()}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Post Comment
+          </Button>
+        </form>
+      ) : (
+        <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
+          <LogIn className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+          <p className="text-gray-600 mb-3">Sign in to share your memories and comments</p>
+          <Button 
+            onClick={handleSignInToComment}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign In to Comment
+          </Button>
+        </div>
+      )}
       
       <div className="space-y-4">
         {comments.map((comment) => (

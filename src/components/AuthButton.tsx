@@ -18,7 +18,12 @@ const AuthButton: React.FC<AuthButtonProps> = ({
 
   if (loading) {
     return (
-      <Button variant={variant} size={size} className={className} disabled>
+      <Button 
+        variant={variant} 
+        size={size} 
+        className={`bg-transparent border-2 border-white text-white ${className}`}
+        disabled
+      >
         <User className="h-4 w-4 mr-2" />
         Loading...
       </Button>
@@ -30,7 +35,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({
       <Button 
         variant={variant} 
         size={size} 
-        className={`text-foreground border-foreground hover:bg-foreground hover:text-background ${className}`}
+        className={`bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors ${className}`}
         onClick={logout}
       >
         <LogOut className="h-4 w-4 mr-2" />
@@ -43,7 +48,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({
     <Button 
       variant={variant} 
       size={size} 
-      className={className}
+      className={`bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors ${className}`}
       onClick={signInWithGoogle}
     >
       <LogIn className="h-4 w-4 mr-2" />

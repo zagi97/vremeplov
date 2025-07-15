@@ -4,7 +4,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import HomePage from "./pages/HomePage";
+import Index from "./pages/Index";
 import Location from "./pages/Location";
 import PhotoDetail from "./pages/PhotoDetails";
 import About from "./pages/About";
@@ -12,7 +12,6 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
@@ -33,23 +32,12 @@ const AppContent = () => {
     );
   }
 
- 
-  // Only check auth for exact valid routes, let everything else go to 404
-  const exactValidPaths = ['/', '/dashboard', '/admin', '/about', '/privacy', '/terms', '/contact', '/admin-login'];
-  const dynamicValidPaths = ['/location/', '/photo/'];
-  const currentPath = window.location.pathname;
-  
-  const isExactMatch = exactValidPaths.includes(currentPath);
-  const isDynamicMatch = dynamicValidPaths.some(path => currentPath.startsWith(path) && currentPath.length > path.length);
-  const isValidPath = isExactMatch || isDynamicMatch;
-  
-  if (!user && isValidPath && currentPath !== '/admin-login') {
-    return <Login />;
-  }
+  // Only protect specific routes that require authentication
+  // Most pages are now public for browsing
   return (
     <Routes>
-      <Route path="/" element={<HomePage />} />
-       <Route path="/admin" element={
+      <Route path="/" element={<Index />} />
+      <Route path="/admin" element={
         <ProtectedAdminRoute>
           <AdminDashboard />
         </ProtectedAdminRoute>
@@ -61,6 +49,7 @@ const AppContent = () => {
       <Route path="/terms" element={<Terms />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/admin-login" element={<AdminLogin />} />
+      
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -71,9 +60,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BrowserRouter>
-        <Toaster />
-        <Sonner />
-        <AppContent />
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

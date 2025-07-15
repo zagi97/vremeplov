@@ -98,7 +98,7 @@ const PrivacyModal = ({ children }: PrivacyModalProps) => {
                   please contact us at:
                 </p>
                 <p className="text-lg font-medium text-purple-700">
-                  vremeplov@vremeplov.hr
+                  vremeplov.app@gmail.com
                 </p>
               </div>
             </div>

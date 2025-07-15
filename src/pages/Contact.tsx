@@ -40,7 +40,7 @@ const Contact = () => {
               we're here to assist you.
             </p>
             <div className="bg-blue-50 p-6 rounded-lg inline-block">
-              <p className="text-2xl font-bold text-blue-600 mb-2">vremeplov@vremeplov.hr</p>
+              <p className="text-2xl font-bold text-blue-600 mb-2">vremeplov.app@gmail.com</p>
               <p className="text-gray-600">Our dedicated email for all Vremeplov.hr inquiries</p>
             </div>
           </div>
