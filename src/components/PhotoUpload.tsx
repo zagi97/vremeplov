@@ -3,11 +3,14 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Upload, X, Calendar, MapPin, User, Image as ImageIcon } from "lucide-react";
 import { photoService } from '../services/firebaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
+import { CharacterCounter } from "./ui/character-counter";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { cn } from "@/lib/utils";
+/* import { CalendarYearPicker } from "./DatePicker"; */
 
 interface PhotoUploadProps {
   locationName: string;
@@ -67,6 +70,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [yearPopoverOpen, setYearPopoverOpen] = useState(false);
   
   // Form data
   const [formData, setFormData] = useState({
@@ -211,18 +215,19 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       console.log('User uploading photo:', uploaderName);
       
       // Only create Firestore record if upload succeeds
-      const finalPhotoId = await photoService.addPhoto({
-        imageUrl: imageUrl,
-        imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
-        year: formData.year,
-        description: formData.description,
-        detailedDescription: formData.detailedDescription,
-        author: formData.author,
-        location: locationName,
-        tags: formData.tags,
-        uploadedBy: uploaderName,
-        uploadedAt: new Date().toISOString()
-      });
+const finalPhotoId = await photoService.addPhoto({
+  imageUrl: imageUrl,
+  imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
+  year: formData.year,
+  description: formData.description,
+  detailedDescription: formData.detailedDescription,
+  author: formData.author,
+  authorId: user.uid, // ✅ Add this line - store the actual user UID
+  location: locationName,
+  tags: formData.tags,
+  uploadedBy: uploaderName,
+  uploadedAt: new Date().toISOString()
+});
       
       console.log('Database record created successfully with ID:', finalPhotoId);
       
@@ -334,28 +339,51 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Year */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                <Calendar className="inline h-4 w-4 mr-1" />
-                Year *
-              </label>
-              <Select 
-                value={formData.year} 
-                onValueChange={(value) => setFormData({...formData, year: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearOptions.map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+{/* Year */}
+<div>
+  <label className="block text-sm font-medium mb-2">
+    <Calendar className="inline h-4 w-4 mr-1" />
+    Year *
+  </label>
+<Popover open={yearPopoverOpen} onOpenChange={setYearPopoverOpen}>
+  <PopoverTrigger asChild>
+    <Button
+      variant="outline"
+      className={cn(
+        "w-full justify-start text-left font-normal",
+        !formData.year && "text-muted-foreground"
+      )}
+    >
+      <Calendar className="mr-2 h-4 w-4" />
+      {formData.year || "Select year"}
+    </Button>
+  </PopoverTrigger>
+  <PopoverContent 
+    className="w-[200px] p-0" 
+    align="start"
+    side="bottom"
+    sideOffset={4}
+  >
+    <div className="max-h-[200px] overflow-y-auto p-2 space-y-1">
+      {yearOptions.map((year) => (
+        <Button
+          key={year}
+          variant="ghost"
+          size="sm"
+          className="w-full justify-start text-sm hover:bg-accent"
+          onClick={() => {
+            setFormData({...formData, year: year.toString()});
+            setYearPopoverOpen(false); // Close the popover
+          }}
+        >
+          {year}
+        </Button>
+      ))}
+    </div>
+  </PopoverContent>
+</Popover>
+</div>
+
 
             {/* Author */}
             <div>
@@ -368,7 +396,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 placeholder="Who took this photo?"
                 value={formData.author}
                 onChange={(e) => setFormData({...formData, author: e.target.value})}
-              />
+                maxLength={40}
+                className={formData.author.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
+            />
+            <CharacterCounter currentLength={formData.author.length} maxLength={40} />
             </div>
           </div>
 
@@ -396,7 +427,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               placeholder="Brief description of the photo"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
+              maxLength={120}
+               className={formData.description.length >= 114 ? "border-red-300 focus:border-red-500" : ""}
             />
+            <CharacterCounter currentLength={formData.description.length} maxLength={120} />
           </div>
 
           {/* Detailed Description */}
@@ -408,8 +442,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               placeholder="Share the story behind this photo, historical context, or personal memories..."
               value={formData.detailedDescription}
               onChange={(e) => setFormData({...formData, detailedDescription: e.target.value})}
+              maxLength={250}
               rows={3}
+               className={formData.detailedDescription.length >= 238 ? "border-red-300 focus:border-red-500" : ""}
             />
+            <CharacterCounter currentLength={formData.detailedDescription.length} maxLength={250} />
           </div>
 
           {/* Action Buttons */}

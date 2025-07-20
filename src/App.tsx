@@ -15,6 +15,8 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import UserProfilePage from "./pages/UserProfile";
+import CommunityLeaderboard from "./pages/CommunityLeaderboard";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const AppContent = () => {
       } />
       <Route path="/location/:locationName" element={<Location />} />
       <Route path="/photo/:photoId" element={<PhotoDetail />} />
+<Route path="/user/:userId" element={<UserProfilePage />} />
+<Route path="/community" element={<CommunityLeaderboard />} />
       <Route path="/about" element={<About />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />

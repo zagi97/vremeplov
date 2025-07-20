@@ -5,6 +5,7 @@ import { Textarea } from "./ui/textarea";
 import { User, MessageSquare, Send, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
+import { CharacterCounter } from "./ui/character-counter";
 
 interface Comment {
   id: number;
@@ -54,7 +55,9 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
             className="min-h-[80px] mb-2"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
+            maxLength={250}
           />
+        <CharacterCounter currentLength={newComment.length} maxLength={250} />
           <Button 
             type="submit" 
             className="bg-blue-600 hover:bg-blue-700"

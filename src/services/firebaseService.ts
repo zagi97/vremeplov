@@ -11,7 +11,8 @@ import {
   where, 
   orderBy, 
   limit,
-  Timestamp 
+  Timestamp, 
+  setDoc
 } from 'firebase/firestore';
 import { 
   ref, 
@@ -77,6 +78,17 @@ export interface UserView {
   createdAt: Timestamp;
 }
 
+export interface UserDocument {
+  uid: string;
+  displayName: string;
+  email: string;
+  photoURL?: string;
+  bio?: string;
+  location?: string;
+  joinedAt: Timestamp;
+  lastActiveAt: Timestamp;
+}
+
 // Photo Services
 export class PhotoService {
   private photosCollection = collection(db, 'photos');
@@ -129,38 +141,41 @@ export class PhotoService {
   }
 
   // Add new photo
-  async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'>): Promise<string> {
-    try {
-      console.log('Adding photo with data:', photoData);
-      const now = Timestamp.now();
-      const photo: Omit<Photo, 'id'> = {
-        imageUrl: photoData.imageUrl,
-        imageStoragePath: photoData.imageStoragePath,
-        year: photoData.year,
-        description: photoData.description,
-        detailedDescription: photoData.detailedDescription || '',
-        author: photoData.author,
-        location: photoData.location,
-        tags: photoData.tags || [],
-        uploadedBy: photoData.uploadedBy || 'Unknown',
-        uploadedAt: photoData.uploadedAt || new Date().toISOString(),
-        createdAt: now,
-        updatedAt: now,
-        likes: 0,
-        views: 0,
-        isApproved: false // Photos need approval by default
-        
-      };
 
-      console.log('Final photo object being saved:', photo);
-      const docRef = await addDoc(this.photosCollection, photo);
-      console.log('Photo saved with ID:', docRef.id);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error adding photo:', error);
-      throw error;
-    }
+async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'> & { authorId?: string }): Promise<string> {
+  try {
+    console.log('Adding photo with data:', photoData);
+    const now = Timestamp.now();
+    const currentUser = auth.currentUser;
+    
+    const photo: Omit<Photo, 'id'> = {
+      imageUrl: photoData.imageUrl,
+      imageStoragePath: photoData.imageStoragePath,
+      year: photoData.year,
+      description: photoData.description,
+      detailedDescription: photoData.detailedDescription || '',
+      author: photoData.author,
+      authorId: photoData.authorId || currentUser?.uid, // Store the actual user UID
+      location: photoData.location,
+      tags: photoData.tags || [],
+      uploadedBy: photoData.uploadedBy || currentUser?.displayName || currentUser?.email || 'Unknown',
+      uploadedAt: photoData.uploadedAt || new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+      likes: 0,
+      views: 0,
+      isApproved: false // Photos need approval by default
+    };
+
+    console.log('Final photo object being saved:', photo);
+    const docRef = await addDoc(this.photosCollection, photo);
+    console.log('Photo saved with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding photo:', error);
+    throw error;
   }
+}
 
   // Get photos by location
   async getPhotosByLocation(location: string): Promise<Photo[]> {
@@ -479,6 +494,135 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
       }
     }
   }
+  // Add these methods to your PhotoService class in firebaseService.ts
+
+// Get photos by uploader (for user profiles)
+async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
+  try {
+    // First try to find by authorId (if you're storing user UIDs)
+    const q1 = query(
+      this.photosCollection,
+      where('authorId', '==', uploaderUid),
+      where('isApproved', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot1 = await getDocs(q1);
+    if (!querySnapshot1.empty) {
+      return querySnapshot1.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Photo));
+    }
+
+    // Fallback: try to find by uploadedBy field if authorId doesn't exist
+    // This searches for the user's display name or email
+    const q2 = query(
+      this.photosCollection,
+      where('uploadedBy', '==', uploaderUid),
+      where('isApproved', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot2 = await getDocs(q2);
+    return querySnapshot2.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Photo));
+  } catch (error) {
+    console.error('Error fetching photos by uploader:', error);
+    return [];
+  }
+}
+
+// Get photos by uploader name (alternative method for display names)
+async getPhotosByUploaderName(uploaderName: string): Promise<Photo[]> {
+  try {
+    const q = query(
+      this.photosCollection, 
+      where('uploadedBy', '==', uploaderName),
+      where('isApproved', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Photo));
+  } catch (error) {
+    console.error('Error fetching photos by uploader name:', error);
+    return [];
+  }
+}
+
+// Get all unique uploaders (for leaderboard)
+async getAllUploaders(): Promise<{ uid: string; displayName: string; photoCount: number }[]> {
+  try {
+    const q = query(
+      this.photosCollection,
+      where('isApproved', '==', true)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const uploaderMap = new Map<string, { displayName: string; count: number }>();
+    
+    querySnapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const uploadedBy = data.uploadedBy || 'Unknown';
+      const authorId = data.authorId || uploadedBy;
+      
+      if (uploaderMap.has(authorId)) {
+        uploaderMap.get(authorId)!.count++;
+      } else {
+        uploaderMap.set(authorId, {
+          displayName: uploadedBy,
+          count: 1
+        });
+      }
+    });
+    
+    return Array.from(uploaderMap.entries()).map(([uid, data]) => ({
+      uid,
+      displayName: data.displayName,
+      photoCount: data.count
+    }));
+  } catch (error) {
+    console.error('Error getting all uploaders:', error);
+    return [];
+  }
+}
+
+// Get user statistics (for user profiles)
+async getUserStats(userUid: string): Promise<{
+  totalPhotos: number;
+  totalLikes: number;
+  totalViews: number;
+  locationsCount: number;
+}> {
+  try {
+    const photos = await this.getPhotosByUploader(userUid);
+    
+    const totalLikes = photos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
+    const totalViews = photos.reduce((sum, photo) => sum + (photo.views || 0), 0);
+    const uniqueLocations = new Set(photos.map(photo => photo.location)).size;
+    
+    return {
+      totalPhotos: photos.length,
+      totalLikes,
+      totalViews,
+      locationsCount: uniqueLocations
+    };
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    return {
+      totalPhotos: 0,
+      totalLikes: 0,
+      totalViews: 0,
+      locationsCount: 0
+    };
+  }
+}
 }
 
 // Authentication Services
@@ -530,6 +674,55 @@ export class AuthService {
   isAdmin(user: any) {
     return user?.email === 'vremeplov.app@gmail.com';
   }
+
+  // Add this method to your PhotoService class:
+async getUserById(userId: string): Promise<UserDocument | null> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      return {
+        uid: userSnap.id,
+        ...userSnap.data()
+      } as UserDocument;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting user:', error);
+    return null;
+  }
+}
+
+// Create or update user document when they sign in:
+async createOrUpdateUser(user: any): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userDoc = await getDoc(userRef);
+    
+    const userData = {
+      displayName: user.displayName || user.email || 'Unknown User',
+      email: user.email || '',
+      photoURL: user.photoURL || '',
+      lastActiveAt: Timestamp.now()
+    };
+    
+    if (!userDoc.exists()) {
+      // Create new user document
+      await setDoc(userRef, {
+        ...userData,
+        bio: 'Passionate about preserving Croatian heritage.',
+        location: 'Croatia',
+        joinedAt: Timestamp.now()
+      });
+    } else {
+      // Update existing user
+      await updateDoc(userRef, userData);
+    }
+  } catch (error) {
+    console.error('Error creating/updating user:', error);
+  }
+}
 }
 
 // Create singleton instances

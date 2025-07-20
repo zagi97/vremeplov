@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye } from "lucide-react";
-import AuthButton from "../components/AuthButton";
 import UserProfile from "../components/UserProfile";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoTagger from "../components/PhotoTagger";
@@ -24,11 +23,6 @@ const PhotoDetail = () => {
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
 
-  // In your PhotoDetail component, add this function:
-const handleSignInPrompt = () => {
-  toast.info('Please sign in to like photos and interact with memories');
-  // You can trigger your AuthButton sign-in here, or just show the toast
-};
   
   // Load photo data
   useEffect(() => {
@@ -217,8 +211,7 @@ const handleSignInPrompt = () => {
               <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
             </div>
             <div className="flex items-center gap-4">
-              <UserProfile className="text-white" />
-              <AuthButton variant="outline" />
+              
             </div>
           </div>
           <div className="mt-6">

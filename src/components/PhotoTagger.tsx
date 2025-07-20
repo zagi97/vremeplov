@@ -5,6 +5,7 @@ import { Tag, X, User } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { useAuth } from "../contexts/AuthContext";
+import { CharacterCounter } from "./ui/character-counter";
 
 interface TaggedPerson {
   id: number;
@@ -149,8 +150,11 @@ const PhotoTagger = ({ taggedPersons, onAddTag }: PhotoTaggerProps) => {
                   placeholder="Person's name"
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
+                  maxLength={40}
                   autoFocus
+                  className={newTagName.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
                 />
+                <CharacterCounter currentLength={newTagName.length} maxLength={40} />
                <div className="flex gap-2">
                   <Button 
                     type="submit" 

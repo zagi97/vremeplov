@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import FeatureCard from "@/components/FeaturedCard";
 import SampleGallery from "@/components/SampleGallery";
-import AuthButton from "@/components/AuthButton";
 import UserProfile from "@/components/UserProfile";
 
 const Index = () => {
@@ -22,7 +21,6 @@ const Index = () => {
             </Link>
             <div className="flex items-center gap-4">
               <UserProfile className="text-white" />
-              <AuthButton variant="outline" />
             </div>
           </div>
         </div>

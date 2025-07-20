@@ -1,35 +1,69 @@
+// src/components/UserProfile.tsx - Corrected version using 'logout' instead of 'signOut'
 import React from 'react';
-import { User } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
+import { Button } from "./ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { User, LogOut, Trophy, ChevronDown } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 interface UserProfileProps {
   className?: string;
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ className = '' }) => {
-  const { user } = useAuth();
+const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
+  const { user, signInWithGoogle, logout } = useAuth(); // ✅ Use 'logout' instead of 'signOut'
 
   if (!user) {
-    return null;
+    return (  
+      <Button 
+        onClick={signInWithGoogle} 
+        variant="ghost" 
+        className={cn("text-white hover:bg-white hover:text-gray-900 transition-colors", className)}
+      >
+        Sign In
+      </Button>
+    );
   }
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {user.photoURL ? (
-        <img 
-          src={user.photoURL} 
-          alt={user.displayName || 'User'} 
-          className="w-8 h-8 rounded-full"
-        />
-      ) : (
-        <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-          <User className="w-4 h-4" />
-        </div>
-      )}
-      <span className="text-sm font-medium">
-        {user.displayName || 'Anonymous'}
-      </span>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className={cn("h-auto p-2 hover:bg-white hover:text-gray-900 transition-colors", className)}>
+          <div className="flex items-center gap-2">
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+              <AvatarFallback className="bg-blue-600 text-white">
+                {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden md:block text-sm font-medium">
+              {user.displayName || user.email}
+            </span>
+            <ChevronDown className="h-4 w-4" />
+          </div>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem asChild>
+          <Link to={`/user/${user.uid}`} className="flex items-center gap-2 cursor-pointer">
+            <User className="h-4 w-4" />
+            My Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/community" className="flex items-center gap-2 cursor-pointer">
+            <Trophy className="h-4 w-4" />
+            Community
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={logout} className="flex items-center gap-2 cursor-pointer">
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
