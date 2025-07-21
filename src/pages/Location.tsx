@@ -14,6 +14,7 @@ import UserProfile from "../components/UserProfile";
 import { VALID_LOCATIONS } from "../constants/locations";
 import { useAuth } from "../contexts/AuthContext";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 
 // Filter interfaces
 interface YearRange {
@@ -408,18 +409,21 @@ const Location = () => {
         </div>
       </section>
 
-      {/* Upload Form */}
-      {showAddForm && user && (
-        <section className="py-8 px-4 bg-white border-b">
-          <div className="container max-w-6xl mx-auto">
-             <PhotoUpload 
-              locationName={decodedLocationName}
-              onSuccess={handleUploadSuccess}
-              onCancel={() => setShowAddForm(false)}
-            />
-          </div>
-        </section>
-      )}
+     {/* Upload Form Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Add Historical Photo to {decodedLocationName}
+            </DialogTitle>
+          </DialogHeader>
+          <PhotoUpload 
+            locationName={decodedLocationName}
+            onSuccess={handleUploadSuccess}
+            onCancel={() => setShowAddForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Results Summary */}
       {hasActiveFilters && (

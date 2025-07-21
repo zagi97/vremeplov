@@ -345,43 +345,22 @@ const finalPhotoId = await photoService.addPhoto({
     <Calendar className="inline h-4 w-4 mr-1" />
     Year *
   </label>
-<Popover open={yearPopoverOpen} onOpenChange={setYearPopoverOpen}>
-  <PopoverTrigger asChild>
-    <Button
-      variant="outline"
-      className={cn(
-        "w-full justify-start text-left font-normal",
-        !formData.year && "text-muted-foreground"
-      )}
-    >
-      <Calendar className="mr-2 h-4 w-4" />
-      {formData.year || "Select year"}
-    </Button>
-  </PopoverTrigger>
-  <PopoverContent 
-    className="w-[200px] p-0" 
-    align="start"
-    side="bottom"
-    sideOffset={4}
+  <select
+    value={formData.year}
+    onChange={(e) => {
+      console.log('HTML select changed:', e.target.value);
+      setFormData(prev => ({...prev, year: e.target.value}));
+    }}
+    className="w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-input text-sm"
+    required
   >
-    <div className="max-h-[200px] overflow-y-auto p-2 space-y-1">
-      {yearOptions.map((year) => (
-        <Button
-          key={year}
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-sm hover:bg-accent"
-          onClick={() => {
-            setFormData({...formData, year: year.toString()});
-            setYearPopoverOpen(false); // Close the popover
-          }}
-        >
-          {year}
-        </Button>
-      ))}
-    </div>
-  </PopoverContent>
-</Popover>
+    <option value="" disabled hidden>Select year</option>
+    {yearOptions.map((year) => (
+      <option key={year} value={year.toString()}>
+        {year}
+      </option>
+    ))}
+  </select>
 </div>
 
 
