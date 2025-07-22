@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { photoService, Photo, Comment } from '../services/firebaseService';
+import { photoService, Photo, Comment, TaggedPerson } from '../services/firebaseService';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -10,26 +10,27 @@ import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut } from 'lucide-react';
+import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut, Tag, User } from 'lucide-react';
 
 export default function AdminDashboard() {
  const { user, isAdmin, logout } = useAuth();
   const [pendingPhotos, setPendingPhotos] = useState<Photo[]>([]);
   const [approvedPhotos, setApprovedPhotos] = useState<Photo[]>([]);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
+  const [pendingTags, setPendingTags] = useState<TaggedPerson[]>([]);
+  const [allTags, setAllTags] = useState<TaggedPerson[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [stats, setStats] = useState({
     totalPhotos: 0,
     pendingPhotos: 0,
     approvedPhotos: 0,
-    rejectedPhotos: 0, // Add rejected photos counter
+    rejectedPhotos: 0,
     totalViews: 0,
-    totalLikes: 0
+    totalLikes: 0,
+    pendingTags: 0,
+    totalTags: 0
   });
-
-  // Temporarily allow access for testing - in real app, check user role in database
-  //const isAdmin = true; // user?.email === 'admin@vremeplov.hr' || user?.email?.includes('admin');
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -39,29 +40,30 @@ export default function AdminDashboard() {
   const loadAdminData = async () => {
     try {
       setLoading(true);
-      const photos = await photoService.getAllPhotosForAdmin(); // Get ALL photos for admin
+      
+      // Load photos
+      const photos = await photoService.getAllPhotosForAdmin();
       console.log('All photos from database:', photos);
       
-      // Pending: photos that haven't been reviewed yet + previously rejected ones
       const pending = photos.filter(photo => 
         photo.isApproved === undefined || 
         photo.isApproved === null || 
         photo.isApproved === false
       );
       
-      // Approved: only photos that are explicitly approved
       const approved = photos.filter(photo => photo.isApproved === true || photo.approved === true);
       
-      // Get rejected photos counter from localStorage
-      const rejectedCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
+      // Load tags
+      const allTaggedPersons = await photoService.getAllTaggedPersonsForAdmin();
+      const pendingTaggedPersons = allTaggedPersons.filter(tag => !tag.isApproved);
       
-      console.log('Pending photos (including rejected):', pending);
-      console.log('Approved photos:', approved);
-      console.log('Rejected photos count:', rejectedCount);
+      const rejectedCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
       
       setPendingPhotos(pending);
       setApprovedPhotos(approved);
       setAllPhotos(photos);
+      setPendingTags(pendingTaggedPersons);
+      setAllTags(allTaggedPersons);
       
       setStats({
         totalPhotos: photos.length,
@@ -69,7 +71,9 @@ export default function AdminDashboard() {
         approvedPhotos: approved.length,
         rejectedPhotos: rejectedCount,
         totalViews: photos.reduce((sum, photo) => sum + photo.views, 0),
-        totalLikes: photos.reduce((sum, photo) => sum + photo.likes, 0)
+        totalLikes: photos.reduce((sum, photo) => sum + photo.likes, 0),
+        pendingTags: pendingTaggedPersons.length,
+        totalTags: allTaggedPersons.length
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
@@ -93,10 +97,8 @@ export default function AdminDashboard() {
   const handleRejectPhoto = async (photoId: string) => {
     try {
       console.log('Rejecting (deleting) photo with ID:', photoId);
-      // Delete the photo completely from the database
       await photoService.deletePhoto(photoId);
       
-      // Increment rejected photos counter in localStorage
       const currentCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
       localStorage.setItem('rejectedPhotosCount', (currentCount + 1).toString());
       
@@ -132,16 +134,48 @@ export default function AdminDashboard() {
     }
   };
 
-    const handleLogout = async () => {
+  // Tag moderation handlers
+  const handleApproveTag = async (tagId: string) => {
+    try {
+      await photoService.approveTaggedPerson(tagId, user!.uid);
+      toast.success('Tag approved successfully');
+      loadAdminData();
+    } catch (error) {
+      console.error('Error approving tag:', error);
+      toast.error('Failed to approve tag');
+    }
+  };
+
+  const handleRejectTag = async (tagId: string) => {
+    try {
+      await photoService.rejectTaggedPerson(tagId);
+      toast.success('Tag rejected and deleted');
+      loadAdminData();
+    } catch (error) {
+      console.error('Error rejecting tag:', error);
+      toast.error('Failed to reject tag');
+    }
+  };
+
+  const handleEditTag = async (tagId: string, updates: Partial<TaggedPerson>) => {
+    try {
+      await photoService.updateTaggedPerson(tagId, updates);
+      toast.success('Tag updated successfully');
+      loadAdminData();
+    } catch (error) {
+      console.error('Error updating tag:', error);
+      toast.error('Failed to update tag');
+    }
+  };
+
+  const handleLogout = async () => {
     try {
       await logout();
-      // User will be redirected automatically by the auth context
     } catch (error) {
       console.error('Error logging out:', error);
       toast.error('Failed to logout');
     }
   };
-
 
   if (!isAdmin) {
     return (
@@ -189,7 +223,7 @@ export default function AdminDashboard() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage photos, users, and content moderation</p>
+            <p className="text-muted-foreground">Manage photos, tags, users, and content moderation</p>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
@@ -208,7 +242,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Photos</CardTitle>
@@ -221,7 +255,7 @@ export default function AdminDashboard() {
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+              <CardTitle className="text-sm font-medium">Pending Photos</CardTitle>
               <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -248,6 +282,26 @@ export default function AdminDashboard() {
               <div className="text-2xl font-bold text-red-600">{stats.rejectedPhotos}</div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Tags</CardTitle>
+              <Tag className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">{stats.pendingTags}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Tags</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTags}</div>
+            </CardContent>
+          </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -272,12 +326,15 @@ export default function AdminDashboard() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="pending">
-              Pending Review ({stats.pendingPhotos})
+              Pending Photos ({stats.pendingPhotos})
             </TabsTrigger>
             <TabsTrigger value="approved">
               Approved Photos ({stats.approvedPhotos})
+            </TabsTrigger>
+            <TabsTrigger value="tags">
+              Person Tags ({stats.pendingTags})
             </TabsTrigger>
             <TabsTrigger value="comments">Comments</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
@@ -290,27 +347,15 @@ export default function AdminDashboard() {
             </div>
             
             {pendingPhotos.length === 0 ? (
-              loading ? (
-                <Card>
-                  <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                      <h3 className="text-lg font-medium">Loading pending photos...</h3>
-                      <p className="text-muted-foreground">Please wait while we fetch the data.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card>
-                  <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium">All caught up!</h3>
-                      <p className="text-muted-foreground">No photos pending approval.</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )
+              <Card>
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium">All caught up!</h3>
+                    <p className="text-muted-foreground">No photos pending approval.</p>
+                  </div>
+                </CardContent>
+              </Card>
             ) : (
               <div className="grid gap-6">
                 {pendingPhotos.map((photo) => (
@@ -332,24 +377,43 @@ export default function AdminDashboard() {
               <Badge variant="secondary">{approvedPhotos.length} approved</Badge>
             </div>
             
-            {loading ? (
+            <div className="grid gap-6">
+              {approvedPhotos.map((photo) => (
+                <PhotoManagementCard
+                  key={photo.id}
+                  photo={photo}
+                  onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
+                  onDelete={() => handleDeletePhoto(photo.id!)}
+                />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tags" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Person Tags Awaiting Approval</h2>
+              <Badge variant="secondary">{pendingTags.length} pending</Badge>
+            </div>
+            
+            {pendingTags.length === 0 ? (
               <Card>
                 <CardContent className="flex items-center justify-center py-12">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <h3 className="text-lg font-medium">Loading approved photos...</h3>
-                    <p className="text-muted-foreground">Please wait while we fetch the data.</p>
+                    <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium">All caught up!</h3>
+                    <p className="text-muted-foreground">No person tags pending approval.</p>
                   </div>
                 </CardContent>
               </Card>
             ) : (
               <div className="grid gap-6">
-                {approvedPhotos.map((photo) => (
-                  <PhotoManagementCard
-                    key={photo.id}
-                    photo={photo}
-                    onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
-                    onDelete={() => handleDeletePhoto(photo.id!)}
+                {pendingTags.map((tag) => (
+                  <TagModerationCard
+                    key={tag.id}
+                    tag={tag}
+                    onApprove={() => handleApproveTag(tag.id!)}
+                    onReject={() => handleRejectTag(tag.id!)}
+                    onEdit={(updates) => handleEditTag(tag.id!, updates)}
                   />
                 ))}
               </div>
@@ -382,6 +446,220 @@ export default function AdminDashboard() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+// Component for moderating person tags
+function TagModerationCard({ 
+  tag, 
+  onApprove, 
+  onReject, 
+  onEdit 
+}: { 
+  tag: TaggedPerson; 
+  onApprove: () => void; 
+  onReject: () => void; 
+  onEdit: (updates: Partial<TaggedPerson>) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    name: tag.name,
+    description: tag.description || ''
+  });
+  const [photo, setPhoto] = useState<Photo | null>(null);
+
+  // Load photo data for context
+  useEffect(() => {
+    const loadPhoto = async () => {
+      try {
+        const photoData = await photoService.getPhotoById(tag.photoId);
+        setPhoto(photoData);
+      } catch (error) {
+        console.error('Error loading photo for tag:', error);
+      }
+    };
+    loadPhoto();
+  }, [tag.photoId]);
+
+  const hasChanges = editData.name !== tag.name || editData.description !== (tag.description || '');
+  const isFormValid = editData.name.trim() !== '';
+  const canSave = hasChanges && isFormValid;
+
+  const handleSaveEdit = () => {
+    onEdit(editData);
+    setIsEditing(false);
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex gap-6 p-6">
+        {photo && (
+          <div className="flex-shrink-0 relative group w-48">
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="relative cursor-pointer w-full h-32">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.description}
+                    className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
+                  />
+                  {/* Show tag position */}
+                  <div 
+                    className="absolute w-6 h-6 bg-red-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
+                    style={{ 
+                      left: `${tag.x}%`, 
+                      top: `${tag.y}%` 
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Expand className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                <div className="relative">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.description}
+                    className="w-full h-auto object-contain rounded-lg"
+                  />
+                  <div 
+                    className="absolute w-8 h-8 bg-red-500 border-2 border-white rounded-full -ml-4 -mt-4"
+                    style={{ 
+                      left: `${tag.x}%`, 
+                      top: `${tag.y}%` 
+                    }}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
+        
+        <div className="flex-1 space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                Pending Tag Review
+              </Badge>
+              <p className="text-sm text-muted-foreground mt-1">
+                Tagged: {tag.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
+                  day: '2-digit',
+                  month: '2-digit', 
+                  year: 'numeric'
+                })} by {tag.addedBy}
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-green-600 border-green-600 hover:bg-green-50"
+                  >
+                    <Check className="h-4 w-4" />
+                    Approve
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Approve Person Tag</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to approve this person tag? It will be visible to all users.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onApprove} className="bg-green-600 hover:bg-green-700">
+                      Approve Tag
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4" />
+                    Reject
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reject Person Tag</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to reject this person tag? This action cannot be undone and the tag will be permanently deleted.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={onReject} className="bg-red-600 hover:bg-red-700">
+                      Reject Tag
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+
+          {isEditing ? (
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Person Name</label>
+                <Input
+                  value={editData.name}
+                  onChange={(e) => setEditData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter person's name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description (Optional)</label>
+                <Textarea
+                  value={editData.description}
+                  onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Additional information about this person"
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave}>
+                  Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h3 className="font-medium flex items-center gap-2">
+                <User className="h-4 w-4" />
+                {tag.name}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Tagged in: {photo?.description} • {photo?.location} • {photo?.year}
+              </p>
+              {tag.description && (
+                <p className="text-sm mt-2">{tag.description}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                Position: {tag.x.toFixed(1)}%, {tag.y.toFixed(1)}%
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 

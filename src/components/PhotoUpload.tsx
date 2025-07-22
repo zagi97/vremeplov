@@ -10,6 +10,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { CharacterCounter } from "./ui/character-counter";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { cn } from "@/lib/utils";
+import PhotoTagger from "./PhotoTagger";
+import { TooltipProvider } from "./ui/tooltip";
 /* import { CalendarYearPicker } from "./DatePicker"; */
 
 interface PhotoUploadProps {
@@ -71,6 +73,15 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [yearPopoverOpen, setYearPopoverOpen] = useState(false);
+
+  // Tagged persons state
+  const [taggedPersons, setTaggedPersons] = useState<Array<{
+    id: number;
+    name: string;
+    x: number;
+    y: number;
+  }>>([]);
+
   
   // Form data
   const [formData, setFormData] = useState({
@@ -153,10 +164,20 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   // Remove selected file
   const removeFile = () => {
     setSelectedFile(null);
+    setTaggedPersons([]); // Clear tags when removing file
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl('');
     }
+  };
+
+  // Handle adding a new tag
+  const handleAddTag = (newTag: { name: string; x: number; y: number }) => {
+    const tagWithId = {
+      ...newTag,
+      id: Date.now() // Simple ID generation
+    };
+    setTaggedPersons(prev => [...prev, tagWithId]);
   };
 
   // Handle form submission with proper error handling
@@ -225,6 +246,13 @@ const finalPhotoId = await photoService.addPhoto({
   authorId: user.uid, // ✅ Add this line - store the actual user UID
   location: locationName,
   tags: formData.tags,
+          taggedPersons: taggedPersons.map(person => ({
+          name: person.name,
+          x: person.x,
+          y: person.y,
+          addedByUid: user.uid, // Store who added the tag
+          isApproved: false // Requires approval
+        })),
   uploadedBy: uploaderName,
   uploadedAt: new Date().toISOString()
 });
@@ -235,6 +263,7 @@ const finalPhotoId = await photoService.addPhoto({
       
       // Reset form
       setSelectedFile(null);
+      setTaggedPersons([]);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl('');
@@ -320,20 +349,14 @@ const finalPhotoId = await photoService.addPhoto({
                 </div>
               </div>
             ) : (
-              <div className="relative">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-h-64 mx-auto rounded-lg"
+             <TooltipProvider>
+ <PhotoTagger
+                  taggedPersons={taggedPersons}
+                  onAddTag={handleAddTag}
+                  imageUrl={previewUrl}
+                  onRemoveFile={removeFile}
                 />
-                <button
-                  type="button"
-                  onClick={removeFile}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+              </TooltipProvider>
             )}
           </div>
 
