@@ -10,10 +10,8 @@ import PhotoGrid from "../components/PhotoGrid";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
-import UserProfile from "../components/UserProfile";
 import { VALID_LOCATIONS } from "../constants/locations";
 import { useAuth } from "../contexts/AuthContext";
-import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 
 // Filter interfaces

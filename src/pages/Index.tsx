@@ -8,8 +8,12 @@ import SearchBar from "@/components/SearchBar";
 import FeatureCard from "@/components/FeaturedCard";
 import SampleGallery from "@/components/SampleGallery";
 import UserProfile from "@/components/UserProfile";
+import LanguageSelector from "@/components/LanguageSelector";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
+    const { t } = useLanguage();
+  
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
             {/* Navigation Header */}
@@ -20,6 +24,7 @@ const Index = () => {
               Vremeplov.hr
             </Link>
             <div className="flex items-center gap-4">
+               <LanguageSelector />
               <UserProfile className="text-white" />
             </div>
           </div>
@@ -35,7 +40,7 @@ const Index = () => {
             Vremeplov<span className="text-gray-300">.hr</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto animate-fade-in">
-            Discover and share the rich history of Croatian cities and villages through photos and videos from the past.
+            {t('home.description')}
           </p>
           <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in">
             <SearchBar />
