@@ -164,7 +164,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       description: photoData.description,
       detailedDescription: photoData.detailedDescription || '',
       author: photoData.author,
-      authorId: photoData.authorId || currentUser?.uid, // Store the actual user UID
+      authorId: photoData.authorId || currentUser?.uid,
       location: photoData.location,
       tags: photoData.tags || [],
       taggedPersons: photoData.taggedPersons || [],
@@ -174,12 +174,38 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       updatedAt: now,
       likes: 0,
       views: 0,
-      isApproved: false // Photos need approval by default
+      isApproved: false
     };
 
     console.log('Final photo object being saved:', photo);
     const docRef = await addDoc(this.photosCollection, photo);
     console.log('Photo saved with ID:', docRef.id);
+
+    // NOVO: Dodaj aktivnost i ažuriraj statistike
+    if (currentUser?.uid) {
+      // Import userService dinamički da izbjegneš circular dependency
+      const { userService } = await import('./userService');
+      
+      // Dodaj aktivnost
+      await userService.addUserActivity(
+        currentUser.uid,
+        'photo_upload',
+        docRef.id,
+        {
+          photoTitle: photoData.description,
+          location: photoData.location
+        }
+      );
+
+      // Ažuriraj user statistike
+      await userService.updateUserStats(currentUser.uid, {
+        totalPhotos: 1
+      });
+
+      // Provjeri za nova badges
+      await userService.checkAndAwardBadges(currentUser.uid);
+    }
+
     return docRef.id;
   } catch (error) {
     console.error('Error adding photo:', error);
@@ -229,22 +255,43 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
 
   // Add comment to photo
   async addComment(photoId: string, author: string, text: string): Promise<string> {
-    try {
-      const comment: Omit<Comment, 'id'> = {
-        photoId,
-        author,
-        text,
-        createdAt: Timestamp.now(),
-        isApproved: true // Auto-approve for now
-      };
+  try {
+    const comment: Omit<Comment, 'id'> = {
+      photoId,
+      author,
+      text,
+      createdAt: Timestamp.now(),
+      isApproved: true
+    };
 
-      const docRef = await addDoc(this.commentsCollection, comment);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      throw error;
+    const docRef = await addDoc(this.commentsCollection, comment);
+
+    // NOVO: Dodaj aktivnost
+    const currentUser = auth.currentUser;
+    if (currentUser?.uid) {
+      // Get photo details
+      const photoDoc = await getDoc(doc(this.photosCollection, photoId));
+      const photoData = photoDoc.data();
+
+      const { userService } = await import('./userService');
+      
+      await userService.addUserActivity(
+        currentUser.uid,
+        'comment_added',
+        photoId,
+        {
+          photoTitle: photoData?.description || 'Unknown photo',
+          location: photoData?.location
+        }
+      );
     }
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    throw error;
   }
+}
 
   // Get comments for photo
   async getCommentsByPhotoId(photoId: string): Promise<Comment[]> {
@@ -509,11 +556,20 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
-      const currentViews = docSnap.data().views || 0;
+      const photoData = docSnap.data();
+      const currentViews = photoData.views || 0;
       await updateDoc(docRef, {
         views: currentViews + 1,
         updatedAt: Timestamp.now()
       });
+
+      // NOVO: Ažuriraj statistike vlasnika slike
+      if (photoData.authorId) {
+        const { userService } = await import('./userService');
+        await userService.updateUserStats(photoData.authorId, {
+          totalViews: 1
+        });
+      }
     }
   } catch (error) {
     console.error('Error incrementing views:', error);
@@ -538,47 +594,72 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
   }
 
   // Toggle like for photo (only if user hasn't liked before)
-  async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number; alreadyLiked: boolean }> {
-    try {
-      // Check if user has already liked this photo
-      const hasLiked = await this.hasUserLiked(photoId, userId);
-      if (hasLiked) {
-        // User has already liked this photo
-        const docRef = doc(this.photosCollection, photoId);
-        const docSnap = await getDoc(docRef);
-        const currentLikes = docSnap.exists() ? docSnap.data().likes || 0 : 0;
-        return { liked: false, newLikesCount: currentLikes, alreadyLiked: true };
-      }
+async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number; alreadyLiked: boolean }> {
+  try {
+    // Check if user has already liked this photo
+    const hasLiked = await this.hasUserLiked(photoId, userId);
+    if (hasLiked) {
+      // User has already liked this photo
+      const docRef = doc(this.photosCollection, photoId);
+      const docSnap = await getDoc(docRef);
+      const currentLikes = docSnap.exists() ? docSnap.data().likes || 0 : 0;
+      return { liked: false, newLikesCount: currentLikes, alreadyLiked: true };
+    }
 
-      // Record the user like
-      await addDoc(this.userLikesCollection, {
-        photoId,
-        userId,
-        createdAt: Timestamp.now()
+    // Record the user like
+    await addDoc(this.userLikesCollection, {
+      photoId,
+      userId,
+      createdAt: Timestamp.now()
+    });
+
+    // Increment the photo's like count
+    const docRef = doc(this.photosCollection, photoId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      const photoData = docSnap.data();
+      const currentLikes = photoData.likes || 0;
+      const newLikesCount = currentLikes + 1;
+      
+      await updateDoc(docRef, {
+        likes: newLikesCount,
+        updatedAt: Timestamp.now()
       });
 
-      // Increment the photo's like count
-        const docRef = doc(this.photosCollection, photoId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          const currentLikes = docSnap.data().likes || 0;
-          const newLikesCount = currentLikes + 1;
-          
-          await updateDoc(docRef, {
-            likes: newLikesCount,
-            updatedAt: Timestamp.now()
-          });
-          
-          return { liked: true, newLikesCount, alreadyLiked: false };
+      // NOVO: Dodaj aktivnost i ažuriraj statistike
+      const { userService } = await import('./userService');
+
+      // Dodaj aktivnost za like
+      await userService.addUserActivity(
+        userId,
+        'photo_like',
+        photoId,
+        {
+          photoTitle: photoData.description,
+          location: photoData.location
         }
-        
-        return { liked: false, newLikesCount: 0, alreadyLiked: false };
-      } catch (error) {
-        console.error('Error toggling like:', error);
-        throw error;
+      );
+
+      // Ažuriraj statistike vlasnika slike
+      if (photoData.authorId) {
+        await userService.updateUserStats(photoData.authorId, {
+          totalLikes: 1
+        });
+
+        // Provjeri za nova badges za vlasnika slike
+        await userService.checkAndAwardBadges(photoData.authorId);
       }
+      
+      return { liked: true, newLikesCount, alreadyLiked: false };
     }
+    
+    return { liked: false, newLikesCount: 0, alreadyLiked: false };
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    throw error;
+  }
+}
 
   // Get recent photos for homepage
   async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
@@ -679,36 +760,51 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
 // Get photos by uploader (for user profiles)
 async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
   try {
-    // First try to find by authorId (if you're storing user UIDs)
-    const q1 = query(
-      this.photosCollection,
-      where('authorId', '==', uploaderUid),
-      where('isApproved', '==', true),
-      orderBy('createdAt', 'desc')
-    );
+    // Get current user from auth
+    const currentUser = auth.currentUser;
     
-    const querySnapshot1 = await getDocs(q1);
-    if (!querySnapshot1.empty) {
-      return querySnapshot1.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Photo));
+    // Pokušaj sve načine
+    const queries = [
+      // 1. Po authorId (novi način)
+      query(this.photosCollection, where('authorId', '==', uploaderUid), where('isApproved', '==', true)),
+    ];
+
+    // 2. Dodaj query po uploadedBy samo ako imamo currentUser podatke
+    if (currentUser?.email) {
+      queries.push(
+        query(this.photosCollection, where('uploadedBy', '==', currentUser.email), where('isApproved', '==', true))
+      );
+    }
+    
+    if (currentUser?.displayName) {
+      queries.push(
+        query(this.photosCollection, where('uploadedBy', '==', currentUser.displayName), where('isApproved', '==', true))
+      );
     }
 
-    // Fallback: try to find by uploadedBy field if authorId doesn't exist
-    // This searches for the user's display name or email
-    const q2 = query(
-      this.photosCollection,
-      where('uploadedBy', '==', uploaderUid),
-      where('isApproved', '==', true),
-      orderBy('createdAt', 'desc')
+    // 3. Dodaj i direktni search po tvojim podacima (za tvoje postojeće slike)
+    queries.push(
+      query(this.photosCollection, where('uploadedBy', '==', 'Kruno Žagar'), where('isApproved', '==', true))
     );
-    
-    const querySnapshot2 = await getDocs(q2);
-    return querySnapshot2.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Photo));
+
+    let allPhotos: Photo[] = [];
+    for (const q of queries) {
+      try {
+        const snapshot = await getDocs(q);
+        const photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
+        allPhotos = [...allPhotos, ...photos];
+      } catch (error) {
+        console.log('Query failed, continuing to next...', error);
+      }
+    }
+
+    // Ukloni duplikate
+    const uniquePhotos = allPhotos.filter((photo, index, self) => 
+      index === self.findIndex(p => p.id === photo.id)
+    );
+
+    console.log(`Found ${uniquePhotos.length} photos for user ${uploaderUid}`);
+    return uniquePhotos;
   } catch (error) {
     console.error('Error fetching photos by uploader:', error);
     return [];
@@ -877,6 +973,7 @@ async getUserById(userId: string): Promise<UserDocument | null> {
 // Create or update user document when they sign in:
 async createOrUpdateUser(user: any): Promise<void> {
   try {
+    // Prvo kreiraj/ažuriraj osnovni user document
     const userRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userRef);
     
@@ -888,15 +985,15 @@ async createOrUpdateUser(user: any): Promise<void> {
     };
     
     if (!userDoc.exists()) {
-      // Create new user document
-      await setDoc(userRef, {
+      // Kreiraj novi user document s punim profilom
+      const { userService } = await import('./userService');
+      await userService.createUserProfile(user.uid, {
         ...userData,
         bio: 'Passionate about preserving Croatian heritage.',
-        location: 'Croatia',
-        joinedAt: Timestamp.now()
+        location: 'Croatia'
       });
     } else {
-      // Update existing user
+      // Ažuriraj postojeći user
       await updateDoc(userRef, userData);
     }
   } catch (error) {

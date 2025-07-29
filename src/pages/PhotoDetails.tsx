@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Card, CardContent } from "../components/ui/card";
 import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye } from "lucide-react";
-import UserProfile from "../components/UserProfile";
 import PhotoGrid from "../components/PhotoGrid";
-import PhotoTagger from "../components/PhotoTagger";
 import PhotoComments from "../components/PhotoComments";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../components/ui/tooltip";
 import { CharacterCounter } from "../components/ui/character-counter";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
-
+// Na vrhu PhotoDetails.tsx komponente dodaj import:
+import { useNavigate } from 'react-router-dom';
 const PhotoDetail = () => {
   const { photoId } = useParams<{ photoId: string }>();
   const { user } = useAuth();
@@ -28,7 +26,25 @@ const PhotoDetail = () => {
   const [newTagName, setNewTagName] = useState("");
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
+// Unutar komponente (dodaj nakon existing hooks):
+const navigate = useNavigate();
 
+const handleBack = () => {
+  // Provjeri ima li browser history
+  if (window.history.length > 1 && document.referrer) {
+    // Ako ima history i referrer, idi nazad
+    navigate(-1);
+  } else {
+    // Fallback: idi na location page ako nema history
+    // DODAJ NULL CHECK za photo
+    if (photo?.location) {
+      navigate(`/location/${encodeURIComponent(photo.location)}`);
+    } else {
+      // Ultimate fallback - idi na homepage
+      navigate('/');
+    }
+  }
+};
   
   // Load photo data
   useEffect(() => {
@@ -280,26 +296,29 @@ const PhotoDetail = () => {
     <div className="min-h-screen bg-[#F8F9FA]">
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Link to={`/location/${encodeURIComponent(photo.location)}`}>
-                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              
-            </div>
-          </div>
-          <div className="mt-6">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">{photo.description}</h2>
-            <p className="text-gray-300">{photo.location}, {photo.year}</p>
-          </div>
-        </div>
-      </header>
+  <div className="container max-w-6xl mx-auto px-4">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center">
+        <Button 
+          variant="ghost" 
+          className="text-white hover:bg-white/10 p-2 mr-2"
+          onClick={handleBack}
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+      </div>
+      <div className="flex items-center gap-4">
+        
+      </div>
+    </div>
+    <div className="mt-6">
+      <h2 className="text-3xl md:text-4xl font-bold mb-2">{photo.description}</h2>
+      <p className="text-gray-300">{photo.location}, {photo.year}</p>
+    </div>
+  </div>
+</header>
 
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">

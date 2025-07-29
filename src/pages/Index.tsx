@@ -1,8 +1,4 @@
-import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Image, Video, Clock, Archive, Users } from "lucide-react";
+import { MapPin, Archive, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import SearchBar from "@/components/SearchBar";
 import FeatureCard from "@/components/FeaturedCard";

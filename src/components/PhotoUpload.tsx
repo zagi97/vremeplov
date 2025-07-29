@@ -3,13 +3,11 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Upload, X, Calendar, MapPin, User, Image as ImageIcon } from "lucide-react";
+import { Upload, Calendar, MapPin, User, Image as ImageIcon } from "lucide-react";
 import { photoService } from '../services/firebaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { CharacterCounter } from "./ui/character-counter";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { cn } from "@/lib/utils";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
 /* import { CalendarYearPicker } from "./DatePicker"; */
