@@ -12,6 +12,11 @@ import { CharacterCounter } from "../components/ui/character-counter";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
+
+
+// Na vrhu PhotoDetail.tsx dodaj import:
+import PhotoLocationMap from "../components/PhotoLocationMap";
+
 // Na vrhu PhotoDetails.tsx komponente dodaj import:
 import { useNavigate } from 'react-router-dom';
 const PhotoDetail = () => {
@@ -495,7 +500,6 @@ const debugLike = async () => {
           
 
           {/* Photo Stats and Actions */}
-         // Find this section in your JSX (around line 400) and modify it:
 
 {/* Photo Stats and Actions */}
 <div className="p-6 border-b border-gray-200">
@@ -559,108 +563,128 @@ const debugLike = async () => {
   </div>
 </div>
 
-          {/* Details Section */}
-          <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-8 p-6">
-            <div>
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">About this photo</h2>
-                <div className="grid grid-cols-2 gap-y-4 text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium">Year: {photo.year}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    <span>Author: {photo.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2 col-span-2">
-                    <MapPin className="h-5 w-5 text-blue-600" />
-                    <span>Location: {photo.location}</span>
-                  </div>
-                  {photo.uploadedBy && (
-                    <div className="flex items-center gap-2 col-span-2">
-                      <User className="h-5 w-5 text-green-600" />
-                      <span>Uploaded by: {photo.uploadedBy}</span>
-                      {photo.uploadedAt && (
-                        <span className="text-gray-500 ml-2">
-                          on {new Date(photo.uploadedAt).toLocaleDateString('hr-HR', {
-                            day: '2-digit',
-                            month: '2-digit', 
-                            year: 'numeric'
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {photo.detailedDescription || `This historical photograph from ${photo.year} shows ${photo.description} in ${photo.location}. It was contributed to the Vremeplov.hr archive by ${photo.author}.`}
-                  </p>
-                </div>
-                
-                {/* Tagged People List */}
-                {taggedPersons.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-2">Tagged People</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {taggedPersons.map((person) => (
-                        <div key={person.id} className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-                          <User className="h-3 w-3 mr-1 text-gray-600" />
-                          <span className="text-sm">{person.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Comments Section */}
-              <PhotoComments 
-                comments={comments}
-                onAddComment={handleAddComment}
-              />
-            </div>
-            
-            <div className="hidden md:block">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-lg mb-3">Historical Context</h3>
-                <p className="text-gray-700">
-                  This period marked significant developments in the local history of {photo.location}. 
-                  Many similar photographs from this era document the changing landscape and 
-                  daily life of inhabitants.
-                </p>
-                
-               {relatedPhotos.length > 0 && (
-  <>
-    <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
-    <div className="space-y-3">
-      {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
-        <Link 
-          key={relatedPhoto.id} 
-          to={`/photo/${relatedPhoto.id}`}
-          className="block hover:opacity-90 transition-opacity"
-        >
-          <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-            <LazyImage
-              src={relatedPhoto.imageUrl}
-              alt={relatedPhoto.description}
-              className="w-full h-full object-cover"
-            />
+         {/* Details Section */}
+<div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-8 p-6">
+  {/* Left Column - Main Content */}
+  <div>
+    <div className="mb-8">
+      <h2 className="text-2xl font-bold mb-4">About this photo</h2>
+      <div className="grid grid-cols-2 gap-y-4 text-gray-700">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-5 w-5 text-blue-600" />
+          <span className="font-medium">Year: {photo.year}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <User className="h-5 w-5 text-blue-600" />
+          <span>Author: {photo.author}</span>
+        </div>
+        <div className="flex items-center gap-2 col-span-2">
+          <MapPin className="h-5 w-5 text-blue-600" />
+          <span>Location: {photo.location}</span>
+        </div>
+        {photo.uploadedBy && (
+          <div className="flex items-center gap-2 col-span-2">
+            <User className="h-5 w-5 text-green-600" />
+            <span>Uploaded by: {photo.uploadedBy}</span>
+            {photo.uploadedAt && (
+              <span className="text-gray-500 ml-2">
+                on {new Date(photo.uploadedAt).toLocaleDateString('hr-HR', {
+                  day: '2-digit',
+                  month: '2-digit', 
+                  year: 'numeric'
+                })}
+              </span>
+            )}
           </div>
-          <p className="text-sm font-medium">{relatedPhoto.description}</p>
-          <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-        </Link>
-      ))}
-    </div>
-  </>
-
-                )}
+        )}
+      </div>
+      
+      <div className="mt-6">
+        <p className="text-gray-700 leading-relaxed">
+          {photo.detailedDescription || `This historical photograph from ${photo.year} shows ${photo.description} in ${photo.location}. It was contributed to the Vremeplov.hr archive by ${photo.author}.`}
+        </p>
+      </div>
+      
+      {/* Tagged People List */}
+      {taggedPersons.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-medium mb-2">Tagged People</h3>
+          <div className="flex flex-wrap gap-2">
+            {taggedPersons.map((person) => (
+              <div key={person.id} className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
+                <User className="h-3 w-3 mr-1 text-gray-600" />
+                <span className="text-sm">{person.name}</span>
               </div>
-            </div>
+            ))}
           </div>
         </div>
+      )}
+    </div>
+    
+    {/* Comments Section */}
+    <PhotoComments 
+      comments={comments}
+      onAddComment={handleAddComment}
+    />
+  </div>
+  
+  {/* Right Column - Sidebar */}
+  <div className="hidden md:block">
+    {/* ✅ 1. Location Map - PRVI */}
+    <PhotoLocationMap 
+      photo={{
+        id: photo.id || '',
+        description: photo.description,
+        location: photo.location,
+        coordinates: photo.coordinates // Ovo će biti undefined u mock verziji
+      }}
+      nearbyPhotos={relatedPhotos.slice(0, 3).map(p => ({
+        id: p.id || '',
+        description: p.description,
+        imageUrl: p.imageUrl,
+        year: p.year
+      }))}
+    />
+    
+    {/* ✅ 2. Historical Context - DRUGI */}
+    <div className="bg-gray-50 p-4 rounded-lg mt-4">
+      <h3 className="font-medium text-lg mb-3">Historical Context</h3>
+      <p className="text-gray-700">
+        This period marked significant developments in the local history of {photo.location}. 
+        Many similar photographs from this era document the changing landscape and 
+        daily life of inhabitants.
+      </p>
+    </div>
+    
+    {/* ✅ 3. Related Photos - TREĆI */}
+    {relatedPhotos.length > 0 && (
+      <div className="mt-4">
+        <h3 className="font-medium text-lg mb-3">Related Photos</h3>
+        <div className="space-y-3">
+          {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
+            <Link 
+              key={relatedPhoto.id} 
+              to={`/photo/${relatedPhoto.id}`}
+              className="block hover:opacity-90 transition-opacity"
+            >
+              <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
+                <LazyImage
+                  src={relatedPhoto.imageUrl}
+                  alt={relatedPhoto.description}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-sm font-medium">{relatedPhoto.description}</p>
+              <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+          </div>
+    
         
         {/* Related Photos Grid */}
         {relatedPhotos.length > 0 && (

@@ -2,6 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ✅ LEAFLET CSS IMPORT */
+@import 'leaflet/dist/leaflet.css';
+
+/* ✅ CUSTOM LEAFLET STYLES */
+/* Custom styles za photo markers */
+.photo-marker {
+  filter: hue-rotate(220deg) saturate(1.5) brightness(1.1);
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+}
+
+.leaflet-popup-tip {
+  background: white !important;
+  border: none !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+.photo-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+}
+
+.photo-popup .leaflet-popup-close-button {
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 18px !important;
+  color: #666 !important;
+}
+
+/* Map container styling */
+.leaflet-container {
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Mini map marker styles */
+.current-photo-marker {
+  filter: hue-rotate(0deg) saturate(1.8) brightness(1.2) !important;
+}
+
+.nearby-photo-marker {
+  filter: hue-rotate(220deg) saturate(1.5) brightness(1.1) !important;
+}
+
+/* ✅ CUSTOM CLUSTERING STYLES */
+.photo-cluster {
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.photo-cluster:hover {
+  transform: scale(1.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.cluster-small {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: 3px solid #ffffff;
+}
+
+.cluster-medium {
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  border: 3px solid #ffffff;
+}
+
+.cluster-large {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 3px solid #ffffff;
+}
+
+.cluster-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cluster-inner span {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 /* Your other CSS rules */
 
 @layer base {

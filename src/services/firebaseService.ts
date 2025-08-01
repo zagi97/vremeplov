@@ -30,6 +30,12 @@ export interface Photo {
   author: string;
   authorId?: string;
   location: string;
+  // ✅ DODAJ OVE NOVE KOORDINATE
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+    address?: string; // Točna adresa unutar lokacije
+  };
   uploadedBy?: string;
   uploadedAt?: string;
   createdAt: Timestamp;
@@ -94,6 +100,167 @@ export interface UserDocument {
   joinedAt: Timestamp;
   lastActiveAt: Timestamp;
 }
+
+// ✅ ZAMIJENITI POSTOJEĆI geocodingService u firebaseService.ts
+
+export const geocodingService = {
+  // Poboljšana funkcija za dohvaćanje koordinata s randomizacijom
+  async getCoordinatesFromAddress(address: string, city: string): Promise<{latitude: number, longitude: number} | null> {
+    try {
+      // Kombiniramo adresu i grad za bolji rezultat
+      const fullAddress = address ? `${address}, ${city}, Croatia` : `${city}, Croatia`;
+      const encodedAddress = encodeURIComponent(fullAddress);
+      
+      // Dodaj delay da ne bombardiraš API (rate limiting)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Geocoding address:', fullAddress);
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=hr&accept-language=hr`,
+        {
+          headers: {
+            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)' // Uvijek dodaj User-Agent za Nominatim
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Geocoding request failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        let latitude = parseFloat(data[0].lat);
+        let longitude = parseFloat(data[0].lon);
+        
+        // ✅ DODAJ MALU RANDOMIZACIJU za iste ulice (10-50m offset)
+        const randomOffsetLat = (Math.random() - 0.5) * 0.0005; // ~25m radius
+        const randomOffsetLon = (Math.random() - 0.5) * 0.0005;
+        
+        latitude += randomOffsetLat;
+        longitude += randomOffsetLon;
+        
+        const result = {
+          latitude,
+          longitude
+        };
+        console.log('Geocoding successful with randomization:', result);
+        return result;
+      }
+      
+      console.log('No geocoding results found for:', fullAddress);
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
+  },
+
+  // Poboljšana funkcija za pretragu adresa s boljim error handling
+  async searchAddresses(searchTerm: string, city: string): Promise<string[]> {
+    try {
+      if (!searchTerm || searchTerm.length < 2) {
+        return [];
+      }
+
+      const fullSearchTerm = `${searchTerm}, ${city}, Croatia`;
+      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      
+      console.log('Searching addresses for:', fullSearchTerm);
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
+        {
+          headers: {
+            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      // Izvuci jedinstvenije adrese
+      const addresses = new Set<string>();
+      
+      data.forEach((item: any) => {
+        if (item.address) {
+          const streetName = item.address.road || item.address.street;
+          const houseNumber = item.address.house_number;
+          const amenity = item.address.amenity;
+          const shop = item.address.shop;
+          const building = item.address.building;
+          
+          // Dodaj ulice s brojevima
+          if (streetName) {
+            if (houseNumber) {
+              addresses.add(`${streetName} ${houseNumber}`);
+            } else {
+              addresses.add(streetName);
+            }
+          }
+          
+          // Dodaj zanimljive lokacije
+          if (amenity) {
+            addresses.add(amenity);
+          }
+          if (shop) {
+            addresses.add(`${shop} (trgovina)`);
+          }
+          if (building) {
+            addresses.add(building);
+          }
+        }
+      });
+      
+      const results = Array.from(addresses).slice(0, 8);
+      console.log('Address search results:', results);
+      return results;
+      
+    } catch (error) {
+      console.error('Error searching addresses:', error);
+      return [];
+    }
+  },
+
+  // Dohvati osnovne informacije o gradu
+  async getCityInfo(city: string): Promise<{latitude: number, longitude: number, displayName: string} | null> {
+    try {
+      const encodedCity = encodeURIComponent(`${city}, Croatia`);
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedCity}&limit=1&countrycodes=hr&accept-language=hr`,
+        {
+          headers: {
+            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
+          }
+        }
+      );
+      
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        return {
+          latitude: parseFloat(data[0].lat),
+          longitude: parseFloat(data[0].lon),
+          displayName: data[0].display_name
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting city info:', error);
+      return null;
+    }
+  }
+};
 
 // Photo Services
 export class PhotoService {
@@ -163,6 +330,8 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       author: photoData.author,
       authorId: photoData.authorId || currentUser?.uid,
       location: photoData.location,
+      // ✅ DODAJ COORDINATES
+      coordinates: photoData.coordinates, // Ovo će biti undefined ako nema koordinata
       tags: photoData.tags || [],
       taggedPersons: photoData.taggedPersons || [],
       uploadedBy: photoData.uploadedBy || currentUser?.displayName || currentUser?.email || 'Unknown',
@@ -209,6 +378,39 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     throw error;
   }
 }
+  // ✅ NOVA FUNKCIJA za dobivanje fotografija s koordinatama
+  async getPhotosWithCoordinates(): Promise<Photo[]> {
+    try {
+      const photosQuery = query(
+        collection(db, 'photos'),
+        where('coordinates', '!=', null),
+        where('isApproved', '==', true),
+        orderBy('coordinates'),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(photosQuery);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Photo));
+    } catch (error) {
+      console.error('Error fetching photos with coordinates:', error);
+      return [];
+    }
+  }
+
+  // ✅ FUNKCIJA za update postojećih fotografija s koordinatama
+  async updatePhotoCoordinates(photoId: string, coordinates: {latitude: number, longitude: number, address?: string}): Promise<void> {
+    try {
+      const photoRef = doc(db, 'photos', photoId);
+      await updateDoc(photoRef, { coordinates });
+      console.log('Coordinates updated for photo:', photoId);
+    } catch (error) {
+      console.error('Error updating coordinates:', error);
+      throw error;
+    }
+  }
 
   // Get photos by location
   async getPhotosByLocation(location: string): Promise<Photo[]> {

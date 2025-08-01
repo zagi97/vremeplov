@@ -18,6 +18,7 @@ import AdminLogin from "./pages/AdminLogin";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import UserProfilePage from "./pages/UserProfile";
 import CommunityLeaderboard from "./pages/CommunityLeaderboard";
+import MapView from './components/MapView';
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const AppContent = () => {
       } />
       <Route path="/location/:locationName" element={<Location />} />
       <Route path="/photo/:photoId" element={<PhotoDetail />} />
+      <Route path="/map" element={<MapView />} />
 <Route path="/user/:userId" element={<UserProfilePage />} />
 <Route path="/community" element={<CommunityLeaderboard />} />
       <Route path="/about" element={<About />} />

@@ -20,7 +20,15 @@ const Index = () => {
               Vremeplov.hr
             </Link>
             <div className="flex items-center gap-4">
-               <LanguageSelector />
+              {/* ✅ DODAJ MEMORY MAP LINK OVDJE */}
+              <Link 
+                to="/map" 
+                className="flex items-center gap-2 text-white hover:text-blue-300 transition-colors text-sm font-medium"
+              >
+                <MapPin className="h-4 w-4" />
+                Memory Map
+              </Link>
+              <LanguageSelector />
               <UserProfile className="text-white" />
             </div>
           </div>
@@ -59,10 +67,11 @@ const Index = () => {
         <div className="container max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">Reconnect with Your Heritage</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* ✅ MOŽEŠ AŽURIRATI FEATURE CARD da uključuje map */}
             <FeatureCard 
               icon={<MapPin className="h-10 w-10 text-blue-600" />} 
               title="Discover Places" 
-              description="Search for any city or village in Croatia and explore its visual history." 
+              description="Search for any city or village in Croatia and explore its visual history on our interactive map." 
             />
             <FeatureCard 
               icon={<Archive className="h-10 w-10 text-blue-600" />} 
@@ -75,6 +84,23 @@ const Index = () => {
               description="Tag individuals, share stories, and reconnect with your community." 
             />
           </div>
+        </div>
+      </section>
+
+      {/* ✅ DODAJ NOVU SEKCIJU ZA MAP PREVIEW */}
+      <section className="py-20 px-4 bg-white border-t border-gray-200">
+        <div className="container max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">Explore Croatia Through Time</h2>
+          <p className="text-lg text-gray-600 mb-10 max-w-3xl mx-auto">
+            Discover historical photos geographically and see how your favorite places looked throughout history.
+          </p>
+          <Link 
+            to="/map"
+            className="inline-flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-lg"
+          >
+            <MapPin className="h-6 w-6" />
+            Explore Memory Map
+          </Link>
         </div>
       </section>
 
