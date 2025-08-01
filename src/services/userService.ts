@@ -13,7 +13,6 @@ import {
   onSnapshot,
   orderBy,
   limit,
-  serverTimestamp,
   increment,
   Timestamp
 } from 'firebase/firestore';
@@ -81,6 +80,43 @@ export interface Badge {
   color: string;
   requirement: string;
   checkFunction: (profile: UserProfile, photos: any[]) => boolean;
+}
+
+// Leaderboard interfaces
+export interface LeaderboardUser {
+  uid: string;
+  displayName: string;
+  photoURL?: string;
+  rank: number;
+  totalPhotos: number;
+  totalLikes: number;
+  totalViews: number;
+  locationsCount: number;
+  joinDate: string;
+  badges: string[];
+  recentPhotoUrl?: string;
+}
+
+export interface CommunityStats {
+  totalMembers: number;
+  photosShared: number;
+  locationsDocumented: number;
+  totalLikes: number;
+}
+
+export interface MonthlyHighlights {
+  mostActiveLocation: {
+    name: string;
+    photoCount: number;
+  };
+  photoOfTheMonth: {
+    title: string;
+    author: string;
+  };
+  newMembers: {
+    count: number;
+    percentageChange: number;
+  };
 }
 
 class UserService {
@@ -317,23 +353,123 @@ class UserService {
   }
 
   // Update user stats (call this after photo upload, like, etc.)
-  async updateUserStats(userId: string, statUpdates: Partial<UserProfile['stats']>): Promise<void> {
-    try {
-      const userRef = doc(db, 'users', userId);
-      const updates: any = {};
-      
-      Object.entries(statUpdates).forEach(([key, value]) => {
-        if (typeof value === 'number') {
-          updates[`stats.${key}`] = increment(value);
-        }
-      });
-      
-      await updateDoc(userRef, updates);
-    } catch (error) {
-      console.error('Error updating user stats:', error);
-      throw error;
-    }
+async updateUserStats(userId: string, statUpdates: Partial<UserProfile['stats']>): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const updates: any = {};
+    
+    // ✅ Set absolute values (not incremental)
+    Object.entries(statUpdates).forEach(([key, value]) => {
+      if (typeof value === 'number') {
+        updates[`stats.${key}`] = value; // Direct assignment
+      }
+    });
+    
+    console.log(`Updating user ${userId} stats:`, updates);
+    await updateDoc(userRef, updates);
+    console.log('User stats updated successfully');
+  } catch (error) {
+    console.error('Error updating user stats:', error);
+    throw error;
   }
+}
+
+// ✅ Better method: Update stats by recalculating from photos
+// Force recalculate stats from actual Firebase data
+async forceRecalculateUserStats(userId: string): Promise<void> {
+  try {
+    console.log(`Force recalculating stats for user ${userId}`);
+    
+    // Get all user's photos
+    const { photoService } = await import('./firebaseService');
+    const userPhotos = await photoService.getPhotosByUploader(userId);
+    
+    console.log(`Found ${userPhotos.length} photos for user`);
+    
+    // Calculate actual likes from userLikes collection for each photo
+    let totalLikes = 0;
+    for (const photo of userPhotos) {
+      if (photo.id) {
+        // Count actual likes from userLikes collection
+        const likesQuery = query(
+          collection(db, 'userLikes'),
+          where('photoId', '==', photo.id)
+        );
+        const likesSnapshot = await getDocs(likesQuery);
+        const actualLikes = likesSnapshot.size;
+        
+        // Update the photo's like count if it's wrong
+        if (photo.likes !== actualLikes) {
+          console.log(`Fixing photo ${photo.id}: ${photo.likes} → ${actualLikes} likes`);
+          await updateDoc(doc(db, 'photos', photo.id), {
+            likes: actualLikes
+          });
+        }
+        
+        totalLikes += actualLikes;
+      }
+    }
+    
+    // Calculate other stats
+    const totalViews = userPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);
+    const uniqueLocations = new Set(userPhotos.map(photo => photo.location)).size;
+    
+    // Update user stats with correct values
+    await this.updateUserStats(userId, {
+      totalPhotos: userPhotos.length,
+      totalLikes: totalLikes, // This is the corrected value
+      totalViews: totalViews,
+      locationsContributed: uniqueLocations
+    });
+    
+    console.log(`Updated user stats:`, {
+      totalPhotos: userPhotos.length,
+      totalLikes: totalLikes,
+      totalViews: totalViews,
+      locationsContributed: uniqueLocations
+    });
+    
+  } catch (error) {
+    console.error('Error force recalculating user stats:', error);
+    throw error;
+  }
+}
+
+// Fix all photos' like counts based on userLikes collection
+async fixAllPhotoLikeCounts(): Promise<void> {
+  try {
+    console.log('Fixing all photo like counts...');
+    
+    // Get all photos
+    const { photoService } = await import('./firebaseService');
+    const allPhotos = await photoService.getAllPhotos();
+    
+    for (const photo of allPhotos) {
+      if (photo.id) {
+        // Count actual likes from userLikes collection
+        const likesQuery = query(
+          collection(db, 'userLikes'),
+          where('photoId', '==', photo.id)
+        );
+        const likesSnapshot = await getDocs(likesQuery);
+        const actualLikes = likesSnapshot.size;
+        
+        // Update if different
+        if (photo.likes !== actualLikes) {
+          console.log(`Fixing photo ${photo.id}: ${photo.likes} → ${actualLikes} likes`);
+          await updateDoc(doc(db, 'photos', photo.id), {
+            likes: actualLikes
+          });
+        }
+      }
+    }
+    
+    console.log('All photo like counts fixed!');
+  } catch (error) {
+    console.error('Error fixing photo like counts:', error);
+    throw error;
+  }
+}
 
   // Badge system
   async checkAndAwardBadges(userId: string): Promise<string[]> {
@@ -383,7 +519,7 @@ class UserService {
         iconName: 'Camera',
         color: 'bg-blue-500',
         requirement: '1+ photos',
-        checkFunction: (profile, photos) => photos.length >= 1
+        checkFunction: (_profile, photos) => photos.length >= 1
       },
       {
         id: 'historian',
@@ -392,7 +528,7 @@ class UserService {
         iconName: 'Medal',
         color: 'bg-purple-500',
         requirement: '10+ photos',
-        checkFunction: (profile, photos) => photos.length >= 10
+        checkFunction: (_profile, photos) => photos.length >= 10
       },
       {
         id: 'explorer',
@@ -401,7 +537,7 @@ class UserService {
         iconName: 'MapPin',
         color: 'bg-green-500',
         requirement: '5+ locations',
-        checkFunction: (profile, photos) => {
+        checkFunction: (_profile, photos) => {
           const uniqueLocations = new Set(photos.map(p => p.location));
           return uniqueLocations.size >= 5;
         }
@@ -444,7 +580,7 @@ class UserService {
         iconName: 'Trophy',
         color: 'bg-orange-500',
         requirement: '50+ photos',
-        checkFunction: (profile, photos) => photos.length >= 50
+        checkFunction: (_profile, photos) => photos.length >= 50
       }
     ];
   }
@@ -504,6 +640,274 @@ class UserService {
     } catch (error) {
       console.error('Error fetching activity feed:', error);
       return [];
+    }
+  }
+
+  // Get leaderboard data
+  async getLeaderboard(
+    timePeriod: 'all-time' | 'this-year' | 'this-month' = 'all-time', 
+    limitCount: number = 10
+  ): Promise<{
+    photos: LeaderboardUser[];
+    likes: LeaderboardUser[];
+    locations: LeaderboardUser[];
+    recent: LeaderboardUser[];
+  }> {
+    try {
+      // Calculate date filter based on time period
+      let dateFilter: Date | null = null;
+      const now = new Date();
+      
+      switch (timePeriod) {
+        case 'this-year':
+          dateFilter = new Date(now.getFullYear(), 0, 1); // January 1st of current year
+          break;
+        case 'this-month':
+          dateFilter = new Date(now.getFullYear(), now.getMonth(), 1); // 1st of current month
+          break;
+        default:
+          dateFilter = null; // All time
+      }
+
+      // Get all users with their stats
+      const usersQuery = query(
+        collection(db, 'users'),
+        orderBy('stats.totalPhotos', 'desc'),
+        limit(50) // Get more than needed for processing
+      );
+      
+      const userDocs = await getDocs(usersQuery);
+      const users: LeaderboardUser[] = [];
+
+      for (const doc of userDocs.docs) {
+        const userData = doc.data() as UserProfile;
+        
+        // If filtering by time period, calculate stats for that period
+        let periodStats = userData.stats;
+        if (dateFilter) {
+          periodStats = await this.getUserStatsForPeriod(doc.id, dateFilter);
+        }
+
+        // Get user's most recent photo for preview
+        const recentPhoto = await this.getUserMostRecentPhoto(doc.id);
+
+        users.push({
+          uid: doc.id,
+          displayName: userData.displayName,
+          photoURL: userData.photoURL,
+          rank: 0, // Will be set after sorting
+          totalPhotos: periodStats.totalPhotos,
+          totalLikes: periodStats.totalLikes,
+          totalViews: periodStats.totalViews,
+          locationsCount: periodStats.locationsContributed,
+          joinDate: userData.joinedAt?.toDate()?.toISOString() || new Date().toISOString(),
+          badges: userData.badges || [],
+          recentPhotoUrl: recentPhoto?.imageUrl
+        });
+      }
+
+      // Sort and rank users by different criteria
+      const photoLeaders = [...users]
+        .sort((a, b) => b.totalPhotos - a.totalPhotos)
+        .slice(0, limitCount)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
+
+      const likeLeaders = [...users]
+        .sort((a, b) => b.totalLikes - a.totalLikes)
+        .slice(0, limitCount)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
+
+      const locationLeaders = [...users]
+        .sort((a, b) => b.locationsCount - a.locationsCount)
+        .slice(0, limitCount)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
+
+      const recentMembers = [...users]
+        .sort((a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
+        .slice(0, limitCount)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
+
+      return {
+        photos: photoLeaders,
+        likes: likeLeaders,
+        locations: locationLeaders,
+        recent: recentMembers
+      };
+
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      throw error;
+    }
+  }
+
+    // Get user stats for a specific time period
+  private async getUserStatsForPeriod(userId: string, fromDate: Date): Promise<UserProfile['stats']> {
+    try {
+      // Get photos uploaded since the date
+      const { photoService } = await import('./firebaseService');
+      const allPhotos = await photoService.getPhotosByUploader(userId);
+      
+      const periodPhotos = allPhotos.filter(photo => {
+        const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
+        return photoDate >= fromDate;
+      });
+
+      const totalLikes = periodPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
+      const totalViews = periodPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);
+      const uniqueLocations = new Set(periodPhotos.map(photo => photo.location)).size;
+
+      return {
+        totalPhotos: periodPhotos.length,
+        totalLikes,
+        totalViews,
+        locationsContributed: uniqueLocations,
+        followers: 0, // Not time-dependent
+        following: 0  // Not time-dependent
+      };
+    } catch (error) {
+      console.error('Error calculating period stats:', error);
+      return {
+        totalPhotos: 0,
+        totalLikes: 0,
+        totalViews: 0,
+        locationsContributed: 0,
+        followers: 0,
+        following: 0
+      };
+    }
+  }
+
+  // Get user's most recent photo
+  private async getUserMostRecentPhoto(userId: string) {
+    try {
+      const { photoService } = await import('./firebaseService');
+      const photos = await photoService.getPhotosByUploader(userId);
+      
+      if (photos.length === 0) return null;
+      
+      // Sort by creation date and return the most recent
+      const sortedPhotos = photos.sort((a, b) => {
+        const dateA = a.createdAt?.toDate() || new Date(a.uploadedAt || 0);
+        const dateB = b.createdAt?.toDate() || new Date(b.uploadedAt || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      return sortedPhotos[0];
+    } catch (error) {
+      console.error('Error fetching recent photo:', error);
+      return null;
+    }
+  }
+
+  // Get community statistics
+  async getCommunityStats(): Promise<CommunityStats> {
+    try {
+      // Get total users count
+      const usersQuery = query(collection(db, 'users'));
+      const userDocs = await getDocs(usersQuery);
+      const totalMembers = userDocs.size;
+
+      // Get total photos count and aggregate stats
+      const { photoService } = await import('./firebaseService');
+      const allPhotos = await photoService.getAllPhotos(); // You'll need to implement this
+      
+      const photosShared = allPhotos.length;
+      const totalLikes = allPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
+      const uniqueLocations = new Set(allPhotos.map(photo => photo.location)).size;
+
+      return {
+        totalMembers,
+        photosShared,
+        locationsDocumented: uniqueLocations,
+        totalLikes
+      };
+    } catch (error) {
+      console.error('Error fetching community stats:', error);
+      return {
+        totalMembers: 0,
+        photosShared: 0,
+        locationsDocumented: 0,
+        totalLikes: 0
+      };
+    }
+  }
+
+  // Get monthly highlights
+  async getMonthlyHighlights(): Promise<MonthlyHighlights> {
+    try {
+      const now = new Date();
+      const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      
+      // Get photos from this month
+      const { photoService } = await import('./firebaseService');
+      const allPhotos = await photoService.getAllPhotos();
+      
+      const thisMonthPhotos = allPhotos.filter(photo => {
+        const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
+        return photoDate >= thisMonth;
+      });
+
+      const lastMonthPhotos = allPhotos.filter(photo => {
+        const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
+        return photoDate >= lastMonth && photoDate < thisMonth;
+      });
+
+      // Most active location this month
+      const locationCounts: { [location: string]: number } = {};
+      thisMonthPhotos.forEach(photo => {
+        locationCounts[photo.location] = (locationCounts[photo.location] || 0) + 1;
+      });
+
+      const mostActiveLocation = Object.entries(locationCounts).reduce(
+        (max, [location, count]) => count > max.photoCount ? { name: location, photoCount: count } : max,
+        { name: 'No activity', photoCount: 0 }
+      );
+
+      // Photo of the month (most liked this month)
+      const mostLikedPhoto = thisMonthPhotos.reduce(
+        (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
+        null as any
+      );
+
+      // New members this month
+      const usersQuery = query(collection(db, 'users'));
+      const userDocs = await getDocs(usersQuery);
+      
+      const thisMonthMembers = userDocs.docs.filter(doc => {
+        const userData = doc.data();
+        const joinDate = userData.joinedAt?.toDate() || new Date();
+        return joinDate >= thisMonth;
+      }).length;
+
+      const lastMonthMembers = userDocs.docs.filter(doc => {
+        const userData = doc.data();
+        const joinDate = userData.joinedAt?.toDate() || new Date();
+        return joinDate >= lastMonth && joinDate < thisMonth;
+      }).length;
+
+      const percentageChange = lastMonthMembers > 0 
+        ? Math.round(((thisMonthMembers - lastMonthMembers) / lastMonthMembers) * 100)
+        : 0;
+
+      return {
+        mostActiveLocation,
+        photoOfTheMonth: {
+          title: mostLikedPhoto?.description || 'No photos this month',
+          author: mostLikedPhoto?.author || 'Unknown'
+        },
+        newMembers: {
+          count: thisMonthMembers,
+          percentageChange
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching monthly highlights:', error);
+      return {
+        mostActiveLocation: { name: 'Error loading', photoCount: 0 },
+        photoOfTheMonth: { title: 'Error loading', author: 'Unknown' },
+        newMembers: { count: 0, percentageChange: 0 }
+      };
     }
   }
 }

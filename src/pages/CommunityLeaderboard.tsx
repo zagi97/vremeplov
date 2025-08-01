@@ -1,3 +1,4 @@
+import { userService, LeaderboardUser, CommunityStats, MonthlyHighlights } from "../services/userService";
 // src/pages/CommunityLeaderboard.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -14,30 +15,13 @@ import {
   Award,
   Camera,
   Heart,
-  Eye,
   MapPin,
   Star,
   TrendingUp,
-  Calendar,
   Users
 } from "lucide-react";
-import { photoService } from "../services/firebaseService";
 import { toast } from 'sonner';
 
-// Leaderboard entry interface
-interface LeaderboardUser {
-  uid: string;
-  displayName: string;
-  photoURL?: string;
-  rank: number;
-  totalPhotos: number;
-  totalLikes: number;
-  totalViews: number;
-  locationsCount: number;
-  joinDate: string;
-  badges: string[];
-  recentPhotoUrl?: string;
-}
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -54,100 +38,39 @@ const CommunityLeaderboard = () => {
     locations: [],
     recent: []
   });
+const [communityStats, setCommunityStats] = useState<CommunityStats>({
+    totalMembers: 0,
+    photosShared: 0,
+    locationsDocumented: 0,
+    totalLikes: 0
+  });
+  const [monthlyHighlights, setMonthlyHighlights] = useState<MonthlyHighlights>({
+    mostActiveLocation: { name: 'Loading...', photoCount: 0 },
+    photoOfTheMonth: { title: 'Loading...', author: 'Loading...' },
+    newMembers: { count: 0, percentageChange: 0 }
+  });
+
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('photos');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time');
-
-  // Mock leaderboard data (in real app, this would come from your API)
-  const generateMockLeaderboard = (): typeof leaderboardData => {
-    const mockUsers: LeaderboardUser[] = [
-      {
-        uid: '1',
-        displayName: 'Ana Marić',
-        photoURL: 'https://images.unsplash.com/photo-1494790108755-2616b612b100?w=150',
-        rank: 1,
-        totalPhotos: 127,
-        totalLikes: 2456,
-        totalViews: 15420,
-        locationsCount: 23,
-        joinDate: '2023-03-15',
-        badges: ['photographer', 'historian', 'explorer', 'popular'],
-        recentPhotoUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
-      },
-      {
-        uid: '2',
-        displayName: 'Marko Kovač',
-        photoURL: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-        rank: 2,
-        totalPhotos: 89,
-        totalLikes: 1823,
-        totalViews: 12100,
-        locationsCount: 18,
-        joinDate: '2023-05-22',
-        badges: ['photographer', 'historian', 'explorer'],
-        recentPhotoUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
-      },
-      {
-        uid: '3',
-        displayName: 'Petra Novak',
-        photoURL: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
-        rank: 3,
-        totalPhotos: 76,
-        totalLikes: 1654,
-        totalViews: 9870,
-        locationsCount: 15,
-        joinDate: '2023-07-08',
-        badges: ['photographer', 'historian'],
-        recentPhotoUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
-      },
-      {
-        uid: '4',
-        displayName: 'Josip Babić',
-        photoURL: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-        rank: 4,
-        totalPhotos: 64,
-        totalLikes: 1432,
-        totalViews: 8960,
-        locationsCount: 12,
-        joinDate: '2023-09-12',
-        badges: ['photographer', 'explorer'],
-        recentPhotoUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
-      },
-      {
-        uid: '5',
-        displayName: 'Miljenko Jurić',
-        photoURL: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-        rank: 5,
-        totalPhotos: 52,
-        totalLikes: 1205,
-        totalViews: 7840,
-        locationsCount: 9,
-        joinDate: '2023-11-03',
-        badges: ['photographer'],
-        recentPhotoUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=100'
-      }
-    ];
-
-    return {
-      photos: [...mockUsers].sort((a, b) => b.totalPhotos - a.totalPhotos),
-      likes: [...mockUsers].sort((a, b) => b.totalLikes - a.totalLikes),
-      locations: [...mockUsers].sort((a, b) => b.locationsCount - a.locationsCount),
-      recent: [...mockUsers].sort((a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
-    };
-  };
 
   useEffect(() => {
     const loadLeaderboard = async () => {
       try {
         setLoading(true);
-        
-        // In a real app, you'd fetch this from your API based on timePeriod
-        // const data = await photoService.getLeaderboard(timePeriod);
-        
-        // For now, using mock data
-        const data = generateMockLeaderboard();
-        setLeaderboardData(data);
-        
+
+        // Load leaderboard data from Firebase
+        const leaderboard = await userService.getLeaderboard(timePeriod, 10);
+        setLeaderboardData(leaderboard);
+
+         // Load community stats (only on initial load or all-time period)
+        if (timePeriod === 'all-time') {
+          const stats = await userService.getCommunityStats();
+          setCommunityStats(stats);
+          
+          const highlights = await userService.getMonthlyHighlights();
+          setMonthlyHighlights(highlights);
+        }     
       } catch (error) {
         console.error('Error loading leaderboard:', error);
         toast.error('Failed to load leaderboard');
@@ -169,19 +92,6 @@ const CommunityLeaderboard = () => {
         return <Award className="h-6 w-6 text-amber-600" />;
       default:
         return <span className="text-lg font-bold text-gray-500">#{rank}</span>;
-    }
-  };
-
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return 'bg-gradient-to-r from-yellow-400 to-yellow-600';
-      case 2:
-        return 'bg-gradient-to-r from-gray-300 to-gray-500';
-      case 3:
-        return 'bg-gradient-to-r from-amber-400 to-amber-600';
-      default:
-        return 'bg-gradient-to-r from-blue-500 to-blue-600';
     }
   };
 
@@ -467,23 +377,23 @@ const CommunityLeaderboard = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Members</span>
-                      <span className="font-bold">2,847</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Photos Shared</span>
-                      <span className="font-bold">15,423</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Locations Documented</span>
-                      <span className="font-bold">342</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Total Likes</span>
-                      <span className="font-bold">89,156</span>
-                    </div>
-                  </CardContent>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Total Members</span>
+      <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Photos Shared</span>
+      <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Locations Documented</span>
+      <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between">
+      <span className="text-gray-600">Total Likes</span>
+      <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
+    </div>
+  </CardContent>
                 </Card>
 
                 {/* This Month's Highlights */}
@@ -495,22 +405,25 @@ const CommunityLeaderboard = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <div className="text-sm text-gray-600">Most Active Location</div>
-                      <div className="font-medium">Čačinci</div>
-                      <div className="text-xs text-gray-500">47 new photos</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">Photo of the Month</div>
-                      <div className="font-medium">Old Town Square 1952</div>
-                      <div className="text-xs text-gray-500">by Ana Marić</div>
-                    </div>
-                    <div>
-                      <div className="text-sm text-gray-600">New Members</div>
-                      <div className="font-medium">156 joined</div>
-                      <div className="text-xs text-gray-500">+23% from last month</div>
-                    </div>
-                  </CardContent>
+    <div>
+      <div className="text-sm text-gray-600">Most Active Location</div>
+      <div className="font-medium">{monthlyHighlights.mostActiveLocation.name}</div>
+      <div className="text-xs text-gray-500">{monthlyHighlights.mostActiveLocation.photoCount} new photos</div>
+    </div>
+    <div>
+      <div className="text-sm text-gray-600">Photo of the Month</div>
+      <div className="font-medium">{monthlyHighlights.photoOfTheMonth.title}</div>
+      <div className="text-xs text-gray-500">by {monthlyHighlights.photoOfTheMonth.author}</div>
+    </div>
+    <div>
+      <div className="text-sm text-gray-600">New Members</div>
+      <div className="font-medium">{monthlyHighlights.newMembers.count} joined</div>
+      <div className="text-xs text-gray-500">
+        {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
+        {monthlyHighlights.newMembers.percentageChange}% from last month
+      </div>
+    </div>
+  </CardContent>
                 </Card>
 
                 {/* Badge Showcase */}

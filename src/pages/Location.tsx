@@ -1,3 +1,6 @@
+
+// In your Location.tsx, add this import at the top:
+import LazyImage from "../components/LazyImage";
 // src/pages/Location.tsx
 import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
@@ -5,7 +8,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Plus, LogIn, Search, Filter, X, Calendar, Tag, TrendingUp, Clock } from "lucide-react";
+import { ArrowLeft, Plus, LogIn, Search, Filter, X, Calendar, Tag, TrendingUp, Clock, MapPin } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
@@ -412,7 +415,7 @@ const Location = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
-              Add Historical Photo to {decodedLocationName}
+              {/* Add Historical Photo to {decodedLocationName} */}
             </DialogTitle>
           </DialogHeader>
           <PhotoUpload 
@@ -457,23 +460,51 @@ const Location = () => {
               )}
             </div>
           ) : (
-            <>
-              <PhotoGrid photos={displayedPhotos} />
-              {hasMore && (
-                <div className="mt-12 text-center">
-                  <Button 
-                    onClick={loadMorePhotos}
-                    disabled={loadingMore}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    {loadingMore ? 'Loading...' : 'Load More Memories'}
-                  </Button>
+      <>
+        {/* ✅ Updated PhotoGrid with Lazy Loading */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayedPhotos.map((photo) => (
+            <Link 
+              key={photo.id} 
+              to={`/photo/${photo.id}`}
+              className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
+            >
+              <div className="aspect-[4/3] overflow-hidden relative">
+                <LazyImage
+                  src={photo.imageUrl}
+                  alt={`${photo.location}, ${photo.year}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
+              <div className="absolute bottom-0 left-0 p-4 w-full">
+                <h3 className="text-white text-lg font-semibold">{photo.description}</h3>
+                <div className="flex items-center mt-2 text-gray-200 text-sm">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  <span className="mr-3">{photo.location}</span>
+                  <Calendar className="h-4 w-4 mr-1" />
+                  <span>{photo.year}</span>
                 </div>
-              )}
-            </>
-          )}
+              </div>
+            </Link>
+          ))}
         </div>
-      </section>
+        
+        {hasMore && (
+          <div className="mt-12 text-center">
+            <Button 
+              onClick={loadMorePhotos}
+              disabled={loadingMore}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loadingMore ? 'Loading...' : 'Load More Memories'}
+            </Button>
+          </div>
+        )}
+      </>
+    )}
+  </div>
+</section>
 
       {/* Footer */}
       <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">

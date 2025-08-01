@@ -1,3 +1,5 @@
+// In your PhotoDetail.tsx, add this import at the top:
+import LazyImage from "../components/LazyImage";
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
@@ -26,6 +28,8 @@ const PhotoDetail = () => {
   const [newTagName, setNewTagName] = useState("");
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
+  const [userHasLiked, setUserHasLiked] = useState(false);
+const [likeLoading, setLikeLoading] = useState(false);
 // Unutar komponente (dodaj nakon existing hooks):
 const navigate = useNavigate();
 
@@ -69,10 +73,15 @@ const handleBack = () => {
         setViews(photoData.views || 0);
         
         // Increment view count (only if user is logged in)
-        if (user) {
-          await photoService.incrementViews(photoId, user.uid);
-          setViews(prev => prev + 1);
-        }
+         // ✅ ADD: Check if current user has liked this photo
+      if (user) {
+        const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+        setUserHasLiked(hasLiked);
+        
+        // Increment view count
+        await photoService.incrementViews(photoId, user.uid);
+        // Note: Don't increment local views state here since it's handled in the service
+      }
         
         // Load comments
         const photoComments = await photoService.getCommentsByPhotoId(photoId);
@@ -242,28 +251,81 @@ const handleBack = () => {
   };
 
   const handleLike = async () => {
-    if (!photoId) return;
+    if (!photoId || !user || likeLoading) return;
     
     if (!user) {
       toast.error('Please sign in to like photos');
       return;
     }
     
-    try {
-      const result = await photoService.toggleLike(photoId, user.uid);
-      
-      if (result.alreadyLiked) {
-        toast.info('You have already liked this photo');
-        return;
-      }
-      
-      setLikes(result.newLikesCount);
+try {
+    setLikeLoading(true);
+    
+    const result = await photoService.toggleLike(photoId, user.uid);
+    
+    // Update local state
+    setLikes(result.newLikesCount);
+    setUserHasLiked(result.liked);
+    
+    if (result.liked) {
       toast.success('Photo liked!');
-    } catch (error) {
-      console.error('Error liking photo:', error);
-      toast.error('Failed to like photo');
+    } else {
+      toast.success('Photo unliked!');
     }
+    
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    toast.error('Failed to update like');
+  } finally {
+    setLikeLoading(false);
+  }
   };
+  // ✅ ADD THIS DEBUG FUNCTION HERE:
+const debugLike = async () => {
+  if (!photoId || !user) return;
+  
+  console.log('=== LIKE DEBUG START ===');
+  console.log('Photo ID:', photoId);
+  console.log('User ID:', user.uid);
+  
+  try {
+    // Check current like status
+    const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+    console.log('User has liked before:', hasLiked);
+    
+    // Get current photo data
+    const currentPhoto = await photoService.getPhotoById(photoId);
+    console.log('Current photo likes:', currentPhoto?.likes);
+    
+    // Toggle like
+    const result = await photoService.toggleLike(photoId, user.uid);
+    console.log('Toggle result:', result);
+    
+    // Check new like status
+    const newLikeStatus = await photoService.hasUserLiked(photoId, user.uid);
+    console.log('New like status:', newLikeStatus);
+    
+    // Get updated photo data
+    const updatedPhoto = await photoService.getPhotoById(photoId);
+    console.log('Updated photo likes:', updatedPhoto?.likes);
+    
+    console.log('=== LIKE DEBUG END ===');
+    
+    // Update UI
+    setLikes(result.newLikesCount);
+    setUserHasLiked(result.liked);
+    
+    // Also recalculate user stats to check leaderboard
+    const { userService } = await import('../services/userService');
+    if (updatedPhoto?.authorId) {
+      await userService.forceRecalculateUserStats(updatedPhoto.authorId);
+      console.log('User stats recalculated for:', updatedPhoto.authorId);
+    }
+    
+  } catch (error) {
+    console.error('Debug like error:', error);
+  }
+};
 
   if (loading) {
     return (
@@ -322,74 +384,74 @@ const handleBack = () => {
 
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* Photo Section */}
-          <div className="relative w-full">
-            <TooltipProvider>
-              <div 
-                className="relative w-full cursor-pointer"
-                onClick={handleImageClick}
-              >
-                <img 
-                  src={photo.imageUrl} 
-                  alt={photo.description} 
-                  className="w-full h-auto object-cover"
-                />
-                
-                {/* Tagged persons dots */}
-                {taggedPersons.map((person) => (
-                  <Tooltip key={person.id}>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className="absolute w-6 h-6 bg-blue-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
-                        style={{ 
-                          left: `${person.x}%`, 
-                          top: `${person.y}%` 
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <span className="font-medium text-gray-500">{person.name}</span>
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                ))}
-                
-                {/* Current tag position marker */}
-                {isTagging && hasSelectedPosition && (
-                  <div 
-                    className="absolute w-6 h-6 bg-green-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
-                    style={{ 
-                      left: `${tagPosition.x}%`, 
-                      top: `${tagPosition.y}%` 
-                    }}
-                  />
-                )}
-                
-                {/* Tag Button - Only show if user is authenticated */}
-                {user && (
-                  <div className="absolute bottom-4 right-4">
-                    {!isTagging && (
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsTagging(true);
-                        }}
-                        variant="secondary"
-                        className="bg-white/80 hover:bg-white/90"
-                      >
-                        <Tag className="h-4 w-4 mr-2" />
-                        Tag Person
-                      </Button>
-                    )}
-                  </div>
-                )}
+         {/* Photo Section */}
+<div className="relative w-full">
+  <TooltipProvider>
+    <div 
+      className="relative w-full cursor-pointer"
+      onClick={handleImageClick}
+    >
+      <LazyImage
+        src={photo.imageUrl}
+        alt={photo.description}
+        className="w-full h-auto object-cover"
+      />
+      
+      {/* Tagged persons dots */}
+      {taggedPersons.map((person) => (
+        <Tooltip key={person.id}>
+          <TooltipTrigger asChild>
+            <div 
+              className="absolute w-6 h-6 bg-blue-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
+              style={{ 
+                left: `${person.x}%`, 
+                top: `${person.y}%` 
+              }}
+            />
+          </TooltipTrigger>
+          <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-gray-600" />
               </div>
-            </TooltipProvider>
-          </div>
+              <span className="font-medium text-gray-500">{person.name}</span>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ))}
+      
+      {/* Current tag position marker */}
+      {isTagging && hasSelectedPosition && (
+        <div 
+          className="absolute w-6 h-6 bg-green-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
+          style={{ 
+            left: `${tagPosition.x}%`, 
+            top: `${tagPosition.y}%` 
+          }}
+        />
+      )}
+      
+      {/* Tag Button - Only show if user is authenticated */}
+      {user && (
+        <div className="absolute bottom-4 right-4">
+          {!isTagging && (
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsTagging(true);
+              }}
+              variant="secondary"
+              className="bg-white/80 hover:bg-white/90"
+            >
+              <Tag className="h-4 w-4 mr-2" />
+              Tag Person
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  </TooltipProvider>
+</div>
 
           {/* Tagging Interface - Below the image */}
           {isTagging && (
@@ -433,42 +495,69 @@ const handleBack = () => {
           
 
           {/* Photo Stats and Actions */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Eye className="h-5 w-5" />
-                  <span className="text-sm">{views} views</span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Heart className="h-5 w-5" />
-                  <span className="text-sm">{likes} likes</span>
-                </div>
-              </div>
-             {user ? (
-                <Button 
-                  onClick={handleLike}
-                  variant="outline" 
-                  className="flex items-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                >
-                  <Heart className="h-4 w-4" />
-                  Like Photo
-                </Button>
-              ) : (
-  <Button 
-    onClick={() => {
-      toast.info('Please sign in to like photos and interact with memories');
-      // Optionally, you can trigger your sign-in modal here
-    }}
-    variant="outline" 
-    className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
-  >
-    <Heart className="h-4 w-4" />
-    Sign In to Like
-  </Button>
-)}
-            </div>
-          </div>
+         // Find this section in your JSX (around line 400) and modify it:
+
+{/* Photo Stats and Actions */}
+<div className="p-6 border-b border-gray-200">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 text-gray-600">
+        <Eye className="h-5 w-5" />
+        <span className="text-sm">{views} views</span>
+      </div>
+      <div className="flex items-center gap-2 text-gray-600">
+        <Heart className="h-5 w-5" />
+        <span className="text-sm">{likes} likes</span>
+      </div>
+    </div>
+    
+    {/* ✅ ADD THE DEBUG BUTTON HERE */}
+    <div className="flex items-center gap-2">
+      {user ? (
+        <>
+          <Button 
+            onClick={handleLike}
+            disabled={likeLoading}
+            variant={userHasLiked ? "default" : "outline"}
+            className={`flex items-center gap-2 ${
+              userHasLiked 
+                ? "bg-red-600 text-white hover:bg-red-700" 
+                : "hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+            }`}
+          >
+            {likeLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+            ) : (
+              <Heart className={`h-4 w-4 ${userHasLiked ? "fill-current" : ""}`} />
+            )}
+            {userHasLiked ? "Unlike Photo" : "Like Photo"}
+          </Button>
+          
+          {/* ✅ DEBUG BUTTON - REMOVE AFTER TESTING */}
+          <Button 
+            onClick={debugLike} 
+            variant="outline" 
+            size="sm"
+            className="text-xs"
+          >
+            Debug Like ({likes})
+          </Button>
+        </>
+      ) : (
+        <Button 
+          onClick={() => {
+            toast.info('Please sign in to like photos and interact with memories');
+          }}
+          variant="outline" 
+          className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+        >
+          <Heart className="h-4 w-4" />
+          Sign In to Like
+        </Button>
+      )}
+    </div>
+  </div>
+</div>
 
           {/* Details Section */}
           <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-8 p-6">
@@ -543,29 +632,30 @@ const handleBack = () => {
                   daily life of inhabitants.
                 </p>
                 
-                {relatedPhotos.length > 0 && (
-                  <>
-                    <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
-                    <div className="space-y-3">
-                      {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
-                        <Link 
-                          key={relatedPhoto.id} 
-                          to={`/photo/${relatedPhoto.id}`}
-                          className="block hover:opacity-90 transition-opacity"
-                        >
-                          <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-                            <img 
-                              src={relatedPhoto.imageUrl} 
-                              alt={relatedPhoto.description} 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="text-sm font-medium">{relatedPhoto.description}</p>
-                          <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  </>
+               {relatedPhotos.length > 0 && (
+  <>
+    <h3 className="font-medium text-lg mt-6 mb-3">Related Photos</h3>
+    <div className="space-y-3">
+      {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
+        <Link 
+          key={relatedPhoto.id} 
+          to={`/photo/${relatedPhoto.id}`}
+          className="block hover:opacity-90 transition-opacity"
+        >
+          <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
+            <LazyImage
+              src={relatedPhoto.imageUrl}
+              alt={relatedPhoto.description}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <p className="text-sm font-medium">{relatedPhoto.description}</p>
+          <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
+        </Link>
+      ))}
+    </div>
+  </>
+
                 )}
               </div>
             </div>
@@ -604,7 +694,10 @@ const handleBack = () => {
         </div>
       </footer>
     </div>
+    
   );
+  
 };
+
 
 export default PhotoDetail;

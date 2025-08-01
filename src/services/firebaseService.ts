@@ -11,15 +11,12 @@ import {
   where, 
   orderBy, 
   limit,
-  Timestamp, 
-  setDoc
-} from 'firebase/firestore';
+  startAfter,
+  Timestamp} from 'firebase/firestore';
 import { 
   ref, 
   uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
+  getDownloadURL} from 'firebase/storage';
 import { db, storage, auth } from '../lib/firebase';
 
 // Types based on your existing mock data
@@ -578,59 +575,94 @@ async incrementViews(photoId: string, userId: string): Promise<void> {
 }
 
     // Check if user has already liked this photo
-  async hasUserLiked(photoId: string, userId: string): Promise<boolean> {
-    try {
-      const q = query(
+async hasUserLiked(photoId: string, userId: string): Promise<boolean> {
+  try {
+    const q = query(
+      this.userLikesCollection,
+      where('photoId', '==', photoId),
+      where('userId', '==', userId)
+    );
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking user like:', error);
+    return false;
+  }
+}
+
+// Toggle like for photo (properly handles both like and unlike)
+async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number }> {
+  try {
+    // Check if user has already liked this photo
+    const hasLiked = await this.hasUserLiked(photoId, userId);
+    
+    const docRef = doc(this.photosCollection, photoId);
+    const docSnap = await getDoc(docRef);
+    
+    if (!docSnap.exists()) {
+      throw new Error('Photo not found');
+    }
+    
+    const photoData = docSnap.data();
+    const currentLikes = photoData.likes || 0;
+    
+    if (hasLiked) {
+      // ✅ UNLIKE: User has already liked, so remove the like
+      
+      // 1. Remove the like record
+      const likeQuery = query(
         this.userLikesCollection,
         where('photoId', '==', photoId),
         where('userId', '==', userId)
       );
-      const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
-    } catch (error) {
-      console.error('Error checking user like:', error);
-      return false;
-    }
-  }
-
-  // Toggle like for photo (only if user hasn't liked before)
-async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number; alreadyLiked: boolean }> {
-  try {
-    // Check if user has already liked this photo
-    const hasLiked = await this.hasUserLiked(photoId, userId);
-    if (hasLiked) {
-      // User has already liked this photo
-      const docRef = doc(this.photosCollection, photoId);
-      const docSnap = await getDoc(docRef);
-      const currentLikes = docSnap.exists() ? docSnap.data().likes || 0 : 0;
-      return { liked: false, newLikesCount: currentLikes, alreadyLiked: true };
-    }
-
-    // Record the user like
-    await addDoc(this.userLikesCollection, {
-      photoId,
-      userId,
-      createdAt: Timestamp.now()
-    });
-
-    // Increment the photo's like count
-    const docRef = doc(this.photosCollection, photoId);
-    const docSnap = await getDoc(docRef);
-    
-    if (docSnap.exists()) {
-      const photoData = docSnap.data();
-      const currentLikes = photoData.likes || 0;
-      const newLikesCount = currentLikes + 1;
+      const likeSnapshot = await getDocs(likeQuery);
       
+      // Delete all like records (should be only one)
+      const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      
+      // 2. Decrement the photo's like count
+      const newLikesCount = Math.max(0, currentLikes - 1);
       await updateDoc(docRef, {
         likes: newLikesCount,
         updatedAt: Timestamp.now()
       });
-
-      // NOVO: Dodaj aktivnost i ažuriraj statistike
+      
+      // 3. Update owner's stats (decrease)
+      if (photoData.authorId) {
+        const { userService } = await import('./userService');
+        const ownerProfile = await userService.getUserProfile(photoData.authorId);
+        if (ownerProfile) {
+          await userService.updateUserStats(photoData.authorId, {
+            totalLikes: Math.max(0, ownerProfile.stats.totalLikes - 1)
+          });
+        }
+      }
+      
+      console.log(`Photo ${photoId} unliked by user ${userId}`);
+      return { liked: false, newLikesCount };
+      
+    } else {
+      // ✅ LIKE: User hasn't liked yet, so add the like
+      
+      // 1. Record the user like
+      await addDoc(this.userLikesCollection, {
+        photoId,
+        userId,
+        createdAt: Timestamp.now()
+      });
+      
+      // 2. Increment the photo's like count
+      const newLikesCount = currentLikes + 1;
+      await updateDoc(docRef, {
+        likes: newLikesCount,
+        updatedAt: Timestamp.now()
+      });
+      
+      // 3. Add activity and update stats
       const { userService } = await import('./userService');
-
-      // Dodaj aktivnost za like
+      
+      // Add activity for like
       await userService.addUserActivity(
         userId,
         'photo_like',
@@ -640,25 +672,52 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
           location: photoData.location
         }
       );
-
-      // Ažuriraj statistike vlasnika slike
+      
+      // Update owner's stats (increase)
       if (photoData.authorId) {
-        await userService.updateUserStats(photoData.authorId, {
-          totalLikes: 1
-        });
-
-        // Provjeri za nova badges za vlasnika slike
-        await userService.checkAndAwardBadges(photoData.authorId);
+        const ownerProfile = await userService.getUserProfile(photoData.authorId);
+        if (ownerProfile) {
+          await userService.updateUserStats(photoData.authorId, {
+            totalLikes: ownerProfile.stats.totalLikes + 1
+          });
+          
+          // Check for new badges
+          await userService.checkAndAwardBadges(photoData.authorId);
+        }
       }
       
-      return { liked: true, newLikesCount, alreadyLiked: false };
+      console.log(`Photo ${photoId} liked by user ${userId}`);
+      return { liked: true, newLikesCount };
     }
-    
-    return { liked: false, newLikesCount: 0, alreadyLiked: false };
   } catch (error) {
     console.error('Error toggling like:', error);
     throw error;
   }
+}
+
+// ✅ Also add these helper methods to make the code cleaner:
+
+// Like a photo (separate method for clarity)
+async likePhoto(photoId: string, userId: string): Promise<number> {
+  const result = await this.toggleLike(photoId, userId);
+  if (!result.liked) {
+    throw new Error('Photo was already liked or unlike operation occurred');
+  }
+  return result.newLikesCount;
+}
+
+// Unlike a photo (separate method for clarity)
+async unlikePhoto(photoId: string, userId: string): Promise<number> {
+  const result = await this.toggleLike(photoId, userId);
+  if (result.liked) {
+    throw new Error('Photo was not liked or like operation occurred');
+  }
+  return result.newLikesCount;
+}
+
+// Check if user liked photo (alias for hasUserLiked for consistency)
+async checkIfUserLikedPhoto(photoId: string, userId: string): Promise<boolean> {
+  return this.hasUserLiked(photoId, userId);
 }
 
   // Get recent photos for homepage
@@ -715,6 +774,61 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
       return [];
     }
   }
+
+  // Get all photos (for statistics and leaderboard calculations)
+async getAllPhotos(): Promise<Photo[]> {
+  try {
+    const photosQuery = query(
+      collection(db, 'photos'),
+      where('isApproved', '==', true), // Only approved photos
+      orderBy('createdAt', 'desc')
+    );
+    
+    const photoSnapshot = await getDocs(photosQuery);
+    return photoSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Photo[];
+  } catch (error) {
+    console.error('Error fetching all photos:', error);
+    throw error;
+  }
+}
+  // Get photos with pagination for better performance
+  async getPhotosWithPagination(limitCount: number = 50, lastPhotoId?: string): Promise<Photo[]> {
+    try {
+      let photosQuery;
+      
+      if (lastPhotoId) {
+        // Get reference to last photo for pagination
+        const lastPhotoDoc = await getDoc(doc(db, 'photos', lastPhotoId));
+        photosQuery = query(
+          collection(db, 'photos'),
+          where('isApproved', '==', true),
+          orderBy('createdAt', 'desc'),
+          startAfter(lastPhotoDoc),
+          limit(limitCount)
+        );
+      } else {
+        photosQuery = query(
+          collection(db, 'photos'),
+          where('isApproved', '==', true),
+          orderBy('createdAt', 'desc'),
+          limit(limitCount)
+        );
+      }
+      
+      const photoSnapshot = await getDocs(photosQuery);
+      return photoSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Photo[];
+    } catch (error) {
+      console.error('Error fetching photos with pagination:', error);
+      throw error;
+    }
+  }
+
 
   // Get user's photos
   async getUserPhotos(userId: string): Promise<Photo[]> {

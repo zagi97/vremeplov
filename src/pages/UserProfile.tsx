@@ -1,3 +1,5 @@
+// In your UserProfile.tsx, add this import at the top:
+import LazyImage from "../components/LazyImage";
 // src/pages/UserProfile.tsx - KOMPLETNA verzija
 import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
@@ -19,13 +21,12 @@ import {
   UserPlus,
   UserCheck,
   Medal,
+  Eye,
   Crown,
-  Shield,
   Award,
   Edit,
   Users
 } from "lucide-react";
-import PhotoGrid from "../components/PhotoGrid";
 import { photoService, Photo } from "../services/firebaseService";
 import { userService, UserProfile, UserActivity } from "../services/userService";
 import { toast } from 'sonner';
@@ -72,88 +73,110 @@ const UserProfilePage = () => {
     return badges[badgeId] || { name: badgeId, icon: Award, color: 'bg-gray-500' };
   };
 
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      if (!userId) return;
+ useEffect(() => {
+  const loadUserProfile = async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
       
-      try {
-        setLoading(true);
-        
-        // Check if viewing own profile
-        const ownProfile = currentUser?.uid === userId;
-        setIsOwnProfile(ownProfile);
-        
-        // Load user profile from Firebase
-        let userProfile = await userService.getUserProfile(userId);
-        
-        // If profile doesn't exist and it's current user, create it
-        if (!userProfile && ownProfile && currentUser) {
-          await userService.createUserProfile(currentUser.uid, {
-            displayName: currentUser.displayName || currentUser.email || 'Unknown User',
-            email: currentUser.email || '',
-            photoURL: currentUser.photoURL || undefined,
-            bio: 'Passionate about preserving Croatian heritage through historical photography.'
-          });
-          userProfile = await userService.getUserProfile(userId);
-        }
-        
-        if (!userProfile) {
-          setProfile(null);
-          return;
-        }
-
-        // Load user's photos
-        const photos = await photoService.getPhotosByUploader(userId);
-        setUserPhotos(photos);
-        
-        // Update user stats based on photos
-        const totalLikes = photos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
-        const totalViews = photos.reduce((sum, photo) => sum + (photo.views || 0), 0);
-        const uniqueLocations = new Set(photos.map(photo => photo.location)).size;
-        
-        await userService.updateUserStats(userId, {
-          totalPhotos: photos.length - userProfile.stats.totalPhotos,
-          totalLikes: totalLikes - userProfile.stats.totalLikes,
-          totalViews: totalViews - userProfile.stats.totalViews,
-          locationsContributed: uniqueLocations - userProfile.stats.locationsContributed
+      // Check if viewing own profile
+      const ownProfile = currentUser?.uid === userId;
+      setIsOwnProfile(ownProfile);
+      
+      // Load user profile from Firebase
+      let userProfile = await userService.getUserProfile(userId);
+      
+      // If profile doesn't exist and it's current user, create it
+      if (!userProfile && ownProfile && currentUser) {
+        await userService.createUserProfile(currentUser.uid, {
+          displayName: currentUser.displayName || currentUser.email || 'Unknown User',
+          email: currentUser.email || '',
+          photoURL: currentUser.photoURL || undefined,
+          bio: 'Passionate about preserving Croatian heritage through historical photography.'
         });
+        userProfile = await userService.getUserProfile(userId);
+      }
+      
+      if (!userProfile) {
+        setProfile(null);
+        return;
+      }
+
+      // Load user's photos
+      const photos = await photoService.getPhotosByUploader(userId);
+      setUserPhotos(photos);
+
+      // Calculate current stats from photos
+      const totalLikes = photos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
+      const totalViews = photos.reduce((sum, photo) => sum + (photo.views || 0), 0);
+      const uniqueLocations = new Set(photos.map(photo => photo.location)).size;
+
+      // ✅ BETTER FIX: Only update if stats have changed
+      const needsUpdate = 
+        userProfile.stats.totalPhotos !== photos.length ||
+        userProfile.stats.totalLikes !== totalLikes ||
+        userProfile.stats.totalViews !== totalViews ||
+        userProfile.stats.locationsContributed !== uniqueLocations;
+
+      let finalProfile = userProfile;
+
+      if (needsUpdate) {
+        const updatedStats = {
+          totalPhotos: photos.length,
+          totalLikes: totalLikes, 
+          totalViews: totalViews,
+          locationsContributed: uniqueLocations
+        };
         
-        // Check for new badges
+        await userService.updateUserStats(userId, updatedStats);
+        
+        // Get updated profile after stats update
+        const updatedProfile = await userService.getUserProfile(userId);
+        finalProfile = updatedProfile || userProfile;
+      }
+      
+      // Check for new badges (only if we have photos or it's the user's first visit)
+      if (photos.length > 0 || needsUpdate) {
         await userService.checkAndAwardBadges(userId);
         
-        // Get updated profile
-        const updatedProfile = await userService.getUserProfile(userId);
-        setProfile(updatedProfile);
-        
-        // Check if current user is following this user
-        if (currentUser && !ownProfile) {
-          const followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
-          setIsFollowing(followStatus);
-        }
-        
-        // Load user activities
-        const activities = await userService.getUserActivities(userId, 10);
-        setUserActivities(activities);
-        
-        // Set edit form values
-        if (updatedProfile) {
-          setEditForm({
-            displayName: updatedProfile.displayName,
-            bio: updatedProfile.bio || '',
-            location: updatedProfile.location || ''
-          });
-        }
-        
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-        toast.error('Failed to load user profile');
-      } finally {
-        setLoading(false);
+        // Get final updated profile after potential badge awards
+        const profileWithBadges = await userService.getUserProfile(userId);
+        finalProfile = profileWithBadges || finalProfile;
       }
-    };
+      
+      // Set the final profile
+      setProfile(finalProfile);
+      
+      // Check if current user is following this user
+      if (currentUser && !ownProfile) {
+        const followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
+        setIsFollowing(followStatus);
+      }
+      
+      // Load user activities
+      const activities = await userService.getUserActivities(userId, 10);
+      setUserActivities(activities);
+      
+      // Set edit form values
+      if (finalProfile) {
+        setEditForm({
+          displayName: finalProfile.displayName,
+          bio: finalProfile.bio || '',
+          location: finalProfile.location || ''
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      toast.error('Failed to load user profile');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    loadUserProfile();
-  }, [userId, currentUser]);
+  loadUserProfile();
+}, [userId, currentUser]);
 
   const handleFollowToggle = async () => {
     if (!profile || !currentUser || isOwnProfile || followLoading) return;
@@ -215,6 +238,29 @@ const UserProfilePage = () => {
     }
   };
 
+    // Add this function inside your UserProfilePage component:
+const fixUserStats = async () => {
+  if (!currentUser) return;
+  
+  try {
+    setLoading(true);
+    
+    // Force recalculate user stats
+    await userService.forceRecalculateUserStats(currentUser.uid);
+    
+    // Reload the profile to see updated stats
+    const updatedProfile = await userService.getUserProfile(currentUser.uid);
+    setProfile(updatedProfile);
+    
+    toast.success('User stats fixed successfully!');
+  } catch (error) {
+    console.error('Error fixing user stats:', error);
+    toast.error('Failed to fix user stats');
+  } finally {
+    setLoading(false);
+  }
+};
+
   const formatActivityDate = (timestamp: any) => {
     if (!timestamp) return '';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -225,6 +271,8 @@ const UserProfilePage = () => {
       minute: '2-digit'
     });
   };
+
+
 
   if (loading) {
     return (
@@ -319,58 +367,56 @@ const UserProfilePage = () => {
                       )}
                     </Button>
                   ) : isOwnProfile ? (
-                    <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full mb-4">
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Edit Profile</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div>
-                            <label className="text-sm font-medium">Display Name</label>
-                            <Input
-                              value={editForm.displayName}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
-                              placeholder="Your display name"
-                            />
+                    <><Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full mb-4">
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Edit Profile</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div>
+                              <label className="text-sm font-medium">Display Name</label>
+                              <Input
+                                value={editForm.displayName}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
+                                placeholder="Your display name" />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Bio</label>
+                              <Textarea
+                                value={editForm.bio}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                                placeholder="Tell us about yourself..."
+                                rows={3} />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Location</label>
+                              <Input
+                                value={editForm.location}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                                placeholder="e.g. Zagreb, Croatia" />
+                            </div>
+                            <div className="flex gap-2 pt-4">
+                              <Button onClick={handleEditProfile} className="flex-1">
+                                Save Changes
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => setEditProfileOpen(false)}
+                                className="flex-1"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium">Bio</label>
-                            <Textarea
-                              value={editForm.bio}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                              placeholder="Tell us about yourself..."
-                              rows={3}
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">Location</label>
-                            <Input
-                              value={editForm.location}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                              placeholder="e.g. Zagreb, Croatia"
-                            />
-                          </div>
-                          <div className="flex gap-2 pt-4">
-                            <Button onClick={handleEditProfile} className="flex-1">
-                              Save Changes
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              onClick={() => setEditProfileOpen(false)}
-                              className="flex-1"
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogContent>
+                      </Dialog>
+</>
                   ) : null}
 
                   {/* Stats */}
@@ -434,53 +480,112 @@ const UserProfilePage = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="photos" className="mt-6">
-                  {userPhotos.length > 0 ? (
-                    <>
-                      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold mb-2">Collection Overview</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">{profile.stats.totalPhotos}</div>
-                            <div className="text-gray-500">Total Photos</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-green-600">{profile.stats.locationsContributed}</div>
-                            <div className="text-gray-500">Locations</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-red-600">{profile.stats.totalLikes}</div>
-                            <div className="text-gray-500">Total Likes</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-lg font-bold text-purple-600">{profile.stats.totalViews}</div>
-                            <div className="text-gray-500">Total Views</div>
-                          </div>
-                        </div>
-                      </div>
-                      <PhotoGrid photos={userPhotos} />
-                    </>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos yet</h3>
-                      <p className="text-gray-600 mb-4">
-                        {isOwnProfile 
-                          ? "Start sharing your historical photos to build your collection!" 
-                          : "This user hasn't shared any photos yet."
-                        }
-                      </p>
-                      {isOwnProfile && (
-                        <Link to="/upload">
-                          <Button>
-                            <Camera className="h-4 w-4 mr-2" />
-                            Upload Your First Photo
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  )}
-                </TabsContent>
+<TabsContent value="photos" className="mt-6">
+  {userPhotos.length > 0 ? (
+    <>
+      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+        <h3 className="font-semibold mb-2">Collection Overview</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="text-center">
+            <div className="text-lg font-bold text-blue-600" data-test="total-photos">
+              {profile.stats.totalPhotos}
+            </div>
+            <div className="text-gray-500">Total Photos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-green-600" data-test="total-locations">
+              {profile.stats.locationsContributed}
+            </div>
+            <div className="text-gray-500">Locations</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-red-600" data-test="total-likes">
+              {profile.stats.totalLikes}
+            </div>
+            <div className="text-gray-500">Total Likes</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-purple-600">
+              {profile.stats.totalViews}
+            </div>
+            <div className="text-gray-500">Total Views</div>
+          </div>
+        </div>
+      </div>
+      
+      {/* ✅ Updated photo grid with lazy loading */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {userPhotos.map(photo => (
+          <Link 
+            key={photo.id} 
+            to={`/photo/${photo.id}`}
+            className="group block"
+          >
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full">
+              {/* Fixed aspect ratio container */}
+              <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                <LazyImage
+                  src={photo.imageUrl}
+                  alt={photo.description}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+                  {photo.description}
+                </h3>
+                
+                <div className="flex items-center text-sm text-gray-500 mb-2">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  <span>{photo.year || 'Unknown'}</span>
+                </div>
+                
+                <div className="flex items-center text-sm text-gray-500 mb-3">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  <span className="line-clamp-1">{photo.location}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm text-gray-500">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1">
+                      <Heart className="h-3 w-3" />
+                      {photo.likes || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      {photo.views || 0}
+                    </span>
+                  </div>
+                  <span className="truncate">{photo.author || photo.uploadedBy || 'Unknown'}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </>
+  ) : (
+    <div className="text-center py-12">
+      <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos yet</h3>
+      <p className="text-gray-600 mb-4">
+        {isOwnProfile 
+          ? "Start sharing your historical photos to build your collection!" 
+          : "This user hasn't shared any photos yet."
+        }
+      </p>
+      {isOwnProfile && (
+        <Link to="/upload">
+          <Button>
+            <Camera className="h-4 w-4 mr-2" />
+            Upload Your First Photo
+          </Button>
+        </Link>
+      )}
+    </div>
+  )}
+</TabsContent>
 
                 <TabsContent value="stats" className="mt-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
