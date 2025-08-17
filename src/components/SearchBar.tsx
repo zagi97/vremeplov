@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Search, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { VALID_LOCATIONS } from "../constants/locations";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   Command,
   CommandEmpty,
@@ -18,6 +19,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+
 /* // Temporary sample data - replace with API data later
 const sampleLocations = [
   "Zagreb", "Split", "Rijeka", "Osijek", "Zadar", 
@@ -28,6 +30,7 @@ const sampleLocations = [
 ].sort(); */
 
 const SearchBar = () => {
+   const { t } = useLanguage(); // 🆕 DODAJ
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [isValid, setIsValid] = useState(false);
@@ -62,14 +65,14 @@ const SearchBar = () => {
     /* setIsValid(false); */
   };
 
-  return (
+return (
     <form onSubmit={handleSearch} className="relative flex w-full max-w-lg">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <div className="flex-grow">
             <Input
               type="text"
-              placeholder="Search for a city or village..."
+              placeholder={t('search.placeholder')} // 🆕 ZAMIJENI
               className="pr-10 rounded-r-none h-12 bg-white/90 backdrop-blur-sm border-r-0 focus-visible:ring-offset-0"
               value={searchQuery}
               onChange={(e) => handleInputChange(e.target.value)}
@@ -80,13 +83,13 @@ const SearchBar = () => {
         <PopoverContent className="p-0 w-[300px] md:w-[400px]" align="start">
           <Command>
             <CommandInput 
-              placeholder="Search location..." 
+              placeholder={t('search.inputPlaceholder')} // 🆕 ZAMIJENI
               value={searchQuery}
               onValueChange={handleInputChange}
               className="h-9"
             />
             <CommandList>
-              <CommandEmpty>No locations found</CommandEmpty>
+              <CommandEmpty>{t('search.noLocations')}</CommandEmpty> {/* 🆕 ZAMIJENI */}
               <CommandGroup>
                 {filteredLocations.map((location) => {
                   const isEnabled = location === "Čačinci";
@@ -116,10 +119,10 @@ const SearchBar = () => {
         disabled={!isValid || !searchQuery.trim()}
       >
         <Search className="h-5 w-5" />
-        <span className="ml-2 hidden md:inline">Search</span>
+        <span className="ml-2 hidden md:inline">{t('search.button')}</span> {/* 🆕 ZAMIJENI */}
       </Button>
     </form>
   );
 };
 
-export default SearchBar
+export default SearchBar;

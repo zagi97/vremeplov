@@ -1,9 +1,11 @@
+/* ✅ LEAFLET CSS IMPORT */
+@import 'leaflet/dist/leaflet.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ LEAFLET CSS IMPORT */
-@import 'leaflet/dist/leaflet.css';
+
 
 /* ✅ CUSTOM LEAFLET STYLES */
 /* Custom styles za photo markers */

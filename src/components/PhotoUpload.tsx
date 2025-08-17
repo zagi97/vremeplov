@@ -7,6 +7,8 @@ import { Upload, Calendar, MapPin, User, Image as ImageIcon, Navigation, Search 
 import { photoService, geocodingService } from '../services/firebaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
+// ✅ DODAJ useLanguage HOOK
+import { useLanguage } from '../contexts/LanguageContext';
 import { CharacterCounter } from "./ui/character-counter";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
@@ -22,6 +24,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   onSuccess, 
   onCancel 
 }) => {
+  // ✅ KORISTI LANGUAGE HOOK
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -285,22 +289,22 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     e.preventDefault();
     
     if (!user) {
-      toast.error('Please sign in to upload photos');
+      toast.error(t('upload.error'));
       return;
     }
     
     if (!selectedFile) {
-      toast.error('Please select a photo to upload');
+      toast.error(t('upload.error'));
       return;
     }
 
     if (!formData.year || !formData.description || !formData.author) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('upload.fillRequired'));
       return;
     }
 
     if (!navigator.onLine) {
-      toast.error('No internet connection. Please check your network and try again.');
+      toast.error(t('upload.offline'));
       return;
     }
 
@@ -361,7 +365,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       if (finalCoordinates) {
         toast.success(`Photo uploaded successfully with location ${selectedAddress}! It will be reviewed and published soon.`);
       } else {
-        toast.success('Photo uploaded successfully! It will be reviewed and published soon.');
+        toast.success(t('upload.success'));
       }
       
       // Reset form
@@ -399,7 +403,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       } else if (errorMessage?.includes('network')) {
         toast.error('Upload failed: Poor internet connection. Please check your connection and try again.');
       } else {
-        toast.error('Upload failed: Please check your internet connection and try again.');
+        toast.error(t('upload.error'));
       }
     } finally {
       setUploading(false);
@@ -418,7 +422,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5" />
-          Add Historical Photo to {locationName}
+          {t('upload.addPhotoTo')} {locationName}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -431,10 +435,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 <div className="mt-4">
                   <label htmlFor="photo-upload" className="cursor-pointer">
                     <span className="mt-2 block text-sm font-medium text-gray-900">
-                      Click to upload a historical photo
+                      {t('upload.clickToUpload')}
                     </span>
                     <span className="mt-1 block text-xs text-gray-500">
-                      PNG, JPG, JPEG up to 5MB
+                      {t('upload.fileTypes')}
                     </span>
                   </label>
                   <input
@@ -462,7 +466,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           <div>
             <label className="block text-sm font-medium mb-2">
               <Navigation className="inline h-4 w-4 mr-1" />
-              Specific Address in {locationName} (Optional)
+              {t('upload.specificAddress')} {locationName} {t('upload.optional')}
             </label>
             
             <div className="relative">
@@ -470,7 +474,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder="Search for street, landmark, or building..."
+                  placeholder={t('upload.searchAddress')}
                   value={addressSearch}
                   onChange={(e) => handleAddressSearch(e.target.value)}
                   className={`pl-10 ${loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''}`}
@@ -524,7 +528,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                     <div className="px-4 py-4 text-sm text-gray-500 text-center">
                       <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
                       No addresses found for "<span className="font-medium">{addressSearch}</span>"
-                      <div className="text-xs text-gray-400 mt-1">Try: "Školska", "Glavni trg", "Crkva"</div>
+                      <div className="text-xs text-gray-400 mt-1">{t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva"</div>
                     </div>
                   ) : null}
                 </div>
@@ -540,7 +544,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             )}
 
             <div className="mt-1 text-xs text-gray-500">
-              Try searching: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
+              {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
             </div>
           </div>
 
@@ -550,7 +554,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             <div>
               <label className="block text-sm font-medium mb-2">
                 <Calendar className="inline h-4 w-4 mr-1" />
-                Year *
+                {t('upload.year')} *
               </label>
               <select
                 value={formData.year}
@@ -558,7 +562,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 className="w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                 required
               >
-                <option value="" disabled hidden>Select year</option>
+                <option value="" disabled hidden>{t('upload.selectYear')}</option>
                 {yearOptions.map((year) => (
                   <option key={year} value={year.toString()}>
                     {year}
@@ -571,11 +575,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
             <div>
               <label className="block text-sm font-medium mb-2">
                 <User className="inline h-4 w-4 mr-1" />
-                Photo Author *
+                {t('upload.author')} *
               </label>
               <Input
                 type="text"
-                placeholder="Who took this photo?"
+                placeholder={t('upload.whoTookPhoto')}
                 value={formData.author}
                 onChange={(e) => setFormData({...formData, author: e.target.value})}
                 maxLength={40}
@@ -589,7 +593,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           <div>
             <label className="block text-sm font-medium mb-2">
               <MapPin className="inline h-4 w-4 mr-1" />
-              Location
+              {t('upload.location')}
             </label>
             <Input
               type="text"
@@ -602,11 +606,11 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Description *
+              {t('upload.description')} *
             </label>
             <Input
               type="text"
-              placeholder="Brief description of the photo"
+              placeholder={t('upload.briefDescription')}
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               maxLength={120}
@@ -618,10 +622,10 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           {/* Detailed Description */}
           <div>
             <label className="block text-sm font-medium mb-2">
-              Detailed Story (Optional)
+              {t('upload.detailedStory')}
             </label>
             <Textarea
-              placeholder="Share the story behind this photo, historical context, or personal memories..."
+              placeholder={t('upload.shareStory')}
               value={formData.detailedDescription}
               onChange={(e) => setFormData({...formData, detailedDescription: e.target.value})}
               maxLength={250}
@@ -635,7 +639,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
           <div className="flex justify-end space-x-4">
             {onCancel && (
               <Button type="button" variant="outline" onClick={onCancel}>
-                Cancel
+                {t('common.cancel')}
               </Button>
             )}
             <Button 
@@ -643,7 +647,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               disabled={uploading || !isOnline || !isFormValid()}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {uploading ? 'Uploading...' : !isOnline ? 'No Connection' : !isFormValid() ? 'Fill Required Fields' : 'Share Memory'}
+              {uploading ? t('upload.uploading') : !isOnline ? t('upload.noConnection') : !isFormValid() ? t('upload.fillRequired') : t('upload.shareMemory')}
             </Button>
           </div>
         </form>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Leaflet imports za mini mapu
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -54,6 +55,8 @@ interface PhotoLocationMapProps {
 }
 
 const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos = [] }) => {
+  const { t } = useLanguage();
+  
   // Ako nema koordinata, koristi default Čačinci koordinate
   const coords = photo.coordinates || { latitude: 45.6236, longitude: 17.8403 };
   
@@ -76,12 +79,12 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-medium text-lg flex items-center gap-2">
           <MapPin className="h-5 w-5 text-blue-600" />
-          Photo Location
+          {t('locationMap.photoLocation')}
         </h3>
         <Link to="/map">
           <Button variant="outline" size="sm" className="text-xs">
             <ExternalLink className="h-3 w-3 mr-1" />
-            View on Map
+            {t('locationMap.viewOnMap')}
           </Button>
         </Link>
       </div>
@@ -136,7 +139,7 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
                     to={`/photo/${nearbyPhoto.id}`}
                     className="text-blue-600 hover:underline text-xs"
                   >
-                    View photo
+                    {t('locationMap.viewPhoto')}
                   </Link>
                 </div>
               </Popup>
@@ -153,20 +156,20 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
       {/* Location details */}
       <div className="space-y-2">
         <div className="text-sm">
-          <span className="font-medium text-gray-700">Location:</span>
+          <span className="font-medium text-gray-700">{t('locationMap.location')}:</span>
           <span className="ml-2 text-gray-600">{photo.location}</span>
         </div>
         
         {photo.coordinates?.address && (
           <div className="text-sm">
-            <span className="font-medium text-gray-700">Address:</span>
+            <span className="font-medium text-gray-700">{t('locationMap.address')}:</span>
             <span className="ml-2 text-gray-600">{photo.coordinates.address}</span>
           </div>
         )}
 
         {nearbyPhotosForMap.length > 0 && (
           <div className="mt-3">
-            <span className="font-medium text-gray-700 text-sm">Nearby photos:</span>
+            <span className="font-medium text-gray-700 text-sm">{t('locationMap.nearbyPhotos')}:</span>
             <div className="mt-2 space-y-1">
               {nearbyPhotosForMap.slice(0, 3).map((nearbyPhoto, index) => (
                 <Link 

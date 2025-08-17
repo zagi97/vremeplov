@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, User, Filter, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
@@ -6,6 +6,13 @@ import { Input } from './ui/input';
 import LazyImage from './LazyImage';
 import { photoService, Photo } from '../services/firebaseService';
 import { toast } from 'sonner';
+
+import LanguageSelector from "../components/LanguageSelector";
+
+// Add these imports at the top of MapView.tsx:
+import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
+
+
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
@@ -68,6 +75,8 @@ interface ClusterGroup {
 }
 
 const MapView: React.FC = () => {
+  // Add this hook inside the component:
+const { t } = useLanguage();
   const [photos, setPhotos] = useState<PhotoWithCoordinates[]>([]);
   const [filteredPhotos, setFilteredPhotos] = useState<PhotoWithCoordinates[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,7 +133,7 @@ const MapView: React.FC = () => {
     
     console.log('Using cluster radius:', clusterRadius);
 
-    filteredPhotos.forEach((photo, index) => {
+    filteredPhotos.forEach((photo) => {
       if (processed.has(photo.id!)) return;
 
       const cluster: ClusterGroup = {
@@ -134,7 +143,7 @@ const MapView: React.FC = () => {
       };
 
       // Pronađi obližnje fotografije
-      filteredPhotos.forEach((otherPhoto, otherIndex) => {
+      filteredPhotos.forEach((otherPhoto) => {
         if (processed.has(otherPhoto.id!) || photo.id === otherPhoto.id) return;
 
         const distance = Math.sqrt(
@@ -158,7 +167,7 @@ const MapView: React.FC = () => {
 
     console.log('Created clusters:', clusters.map(c => ({ count: c.count, photos: c.photos.map(p => p.description) })));
 
-    return clusters.map((cluster, index) => {
+    return clusters.map((cluster) => {
       if (cluster.count === 1) {
         return {
           type: 'individual' as const,
@@ -248,13 +257,14 @@ const MapView: React.FC = () => {
     });
     return Array.from(decades).sort();
   };
-
+<h2 className="text-3xl md:text-4xl font-bold mb-2"></h2>
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading memory map...</p>
+
+<p className="text-gray-600">{t('mapView.loadingMemoryMap')}</p>
         </div>
       </div>
     );
@@ -282,14 +292,13 @@ const MapView: React.FC = () => {
 
         <div className="container max-w-6xl mx-auto px-4 py-12 text-center">
           <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">No Located Photos Yet</h3>
-          <p className="text-gray-600 mb-6">
-            Photos will appear on the map once they are uploaded with specific addresses.
-          </p>
+
+<h3 className="text-2xl font-bold text-gray-800 mb-4">{t('mapView.noLocatedPhotos')}</h3>
+<p className="text-gray-600 mb-6">{t('mapView.photosWillAppear')}</p>
           <Link to="/location/Čačinci">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              Add Photos to Čačinci
-            </Button>
+<Button className="bg-blue-600 hover:bg-blue-700">
+  {translateWithParams(t, 'mapView.addPhotosTo', { location: 'Čačinci' })}
+</Button>
           </Link>
         </div>
       </div>
@@ -310,9 +319,12 @@ const MapView: React.FC = () => {
               </Link>
               <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
             </div>
+            <div className="flex items-center gap-4">
+              <LanguageSelector />
+            </div>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-2">Memory Map</h2>
-          <p className="text-gray-300">Explore Croatian heritage through interactive map</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-2">{t('mapView.memoryMap')}</h2>
+          <p className="text-gray-300">{t('mapView.exploreCroatian')}</p>
         </div>
       </header>
 
@@ -322,7 +334,7 @@ const MapView: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-4 items-center">
             <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-600" />
-              <span className="font-medium">Filters:</span>
+             <span className="font-medium">{t('mapView.filters')}</span>
             </div>
             
             <select
@@ -330,7 +342,7 @@ const MapView: React.FC = () => {
               onChange={(e) => setSelectedDecade(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All decades</option>
+              <option value="all">{t('mapView.allDecades')}</option>
               {getAvailableDecades().map(decade => (
                 <option key={decade} value={decade.toString()}>
                   {decade}s ({decade}-{decade + 9})
@@ -340,15 +352,15 @@ const MapView: React.FC = () => {
 
             <Input
               type="text"
-              placeholder="Search by location or address..."
+              placeholder={t('mapView.searchByLocation')}
               value={searchLocation}
               onChange={(e) => setSearchLocation(e.target.value)}
               className="max-w-xs"
             />
 
-            <div className="text-sm text-gray-600">
-              Showing {filteredPhotos.length} of {photos.length} photos
-            </div>
+         <div className="text-sm text-gray-600">
+  {translateWithParams(t, 'mapView.showing', { filtered: filteredPhotos.length, total: photos.length })}
+</div>
           </div>
         </div>
       </div>
@@ -422,9 +434,9 @@ const MapView: React.FC = () => {
                           
                           <Link to={`/photo/${item.photo.id}`}>
                             <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              View Details
-                            </Button>
+  <ExternalLink className="h-3 w-3 mr-1" />
+  {t('mapView.viewDetails')}
+</Button>
                           </Link>
                         </div>
                       </Popup>
@@ -441,8 +453,8 @@ const MapView: React.FC = () => {
                       <Popup maxWidth={400} className="cluster-popup">
                         <div className="p-3">
                           <h3 className="font-bold text-lg mb-3">
-                            {item.cluster.count} Photos in this area
-                          </h3>
+  {translateWithParams(t, 'mapView.photosInArea', { count: item.cluster.count })}
+</h3>
                           
                           <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                             {item.cluster.photos.slice(0, 8).map((photo) => (
@@ -484,7 +496,7 @@ const MapView: React.FC = () => {
 
         {/* Photo Grid Preview */}
         <div className="mt-8">
-          <h3 className="text-xl font-bold mb-4">Photos on Map</h3>
+          <h3 className="text-xl font-bold mb-4">{t('mapView.photosOnMap')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPhotos.slice(0, 6).map((photo) => (
               <div key={photo.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -525,8 +537,8 @@ const MapView: React.FC = () => {
                   </div>
                   <Link to={`/photo/${photo.id}`}>
                     <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                      View Details
-                    </Button>
+  {t('mapView.viewDetails')}
+</Button>
                   </Link>
                 </div>
               </div>
@@ -538,83 +550,83 @@ const MapView: React.FC = () => {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white p-6 rounded-xl shadow-sm text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">{photos.length}</div>
-            <div className="text-gray-600">Located Photos</div>
+            <div className="text-gray-600">{t('mapView.locatedPhotos')}</div>
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-sm text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
               {new Set(photos.map(p => p.location)).size}
             </div>
-            <div className="text-gray-600">Cities</div>
+            <div className="text-gray-600">{t('mapView.cities')}</div>
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-sm text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">
               {photos.filter(p => p.address).length}
             </div>
-            <div className="text-gray-600">Specific Addresses</div>
+            <div className="text-gray-600">{t('mapView.specificAddresses')}</div>
           </div>
 
           <div className="bg-white p-6 rounded-xl shadow-sm text-center">
             <div className="text-3xl font-bold text-orange-600 mb-2">
               {getAvailableDecades().length}
             </div>
-            <div className="text-gray-600">Different Decades</div>
+            <div className="text-gray-600">{t('mapView.differentDecades')}</div>
           </div>
         </div>
 
         {/* Debug information */}
         <div className="mt-4 bg-gray-100 rounded-lg p-4 text-sm">
-          <h4 className="font-bold mb-2">🔍 Debug Info:</h4>
+          <h4 className="font-bold mb-2">{t('mapView.debugInfo')}</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <span className="font-medium">Total photos:</span> {photos.length}
+             <span className="font-medium">{t('mapView.totalPhotos')}</span> {photos.length}
             </div>
             <div>
-              <span className="font-medium">Filtered:</span> {filteredPhotos.length}
+             <span className="font-medium">{t('mapView.filtered')}</span> {filteredPhotos.length}
             </div>
             <div>
-              <span className="font-medium">Current zoom:</span> {currentZoom}
+              <span className="font-medium">{t('mapView.currentZoom')}</span> {currentZoom}
             </div>
             <div>
-              <span className="font-medium">Clusters:</span> {clusteredData.filter(item => item.type === 'cluster').length}
+              <span className="font-medium">{t('mapView.clusters')}</span> {clusteredData.filter(item => item.type === 'cluster').length}
             </div>
           </div>
           <div className="mt-2">
-            <span className="font-medium">Individual markers:</span> {clusteredData.filter(item => item.type === 'individual').length}
+           <span className="font-medium">{t('mapView.individualMarkers')}</span> {clusteredData.filter(item => item.type === 'individual').length}
           </div>
         </div>
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-blue-800 mb-2">📍 How clustering works</h3>
-          <div className="text-blue-700 text-sm space-y-2">
-            <p>• When multiple photos are close together, they group into <strong>numbered clusters</strong></p>
-            <p>• Click on a cluster to see all photos in that area</p>
-            <p>• Zoom in to see individual photo markers</p>
-            <p>• Upload more photos to the same address to see clustering in action!</p>
-          </div>
+          <h3 className="font-bold text-blue-800 mb-2">{t('mapView.howClusteringWorks')}</h3>
+<div className="text-blue-700 text-sm space-y-2">
+  <p>{t('mapView.clusteringDesc1')}</p>
+  <p>{t('mapView.clusteringDesc2')}</p>
+  <p>{t('mapView.clusteringDesc3')}</p>
+  <p>{t('mapView.clusteringDesc4')}</p>
+</div>
         </div>
       </div>
 
       {/* Footer */}
       <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400 mt-12">
-        <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-              <p className="mt-2">Preserving Croatian heritage, one memory at a time.</p>
-            </div>
-            <div className="flex space-x-6">
-              <Link to="/about" className="hover:text-white transition-colors">About</Link>
-              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
-              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} Vremeplov.hr. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+              <div className="container max-w-6xl mx-auto">
+                <div className="flex flex-col md:flex-row justify-between items-center">
+                  <div className="mb-6 md:mb-0">
+                    <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
+                    <p className="mt-2">{t('footer.tagline')}</p>
+                  </div>
+                  <div className="flex space-x-6">
+                    <Link to="/" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+                    <Link to="/" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+                    <Link to="/" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
+                    <Link to="/" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
+                  </div>
+                </div>
+                <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+                  <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
+                </div>
+              </div>
+            </footer>
     </div>
   );
 };

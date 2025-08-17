@@ -1,5 +1,7 @@
 // src/components/ui/character-counter.tsx
 import React from 'react';
+// ✅ DODAJ useLanguage HOOK
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface CharacterCounterProps {
   currentLength: number;
@@ -14,6 +16,8 @@ const CharacterCounter: React.FC<CharacterCounterProps> = ({
 }) => {
   // Calculate percentage and determine color
   const percentage = (currentLength / maxLength) * 100;
+  // ✅ KORISTI LANGUAGE HOOK
+  const { t } = useLanguage();
   
   // Color logic:
   // - Green/gray: 0-79%
@@ -27,7 +31,7 @@ const CharacterCounter: React.FC<CharacterCounterProps> = ({
 
   return (
     <div className={`text-right text-xs mt-1 ${getColorClass()} ${className}`}>
-      {currentLength}/{maxLength} characters
+      {currentLength}/{maxLength} {t('text.characterCounter')}
       {percentage >= 95 && (
         <span className="ml-1">⚠️</span>
       )}

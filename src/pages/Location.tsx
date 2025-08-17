@@ -1,4 +1,3 @@
-
 // In your Location.tsx, add this import at the top:
 import LazyImage from "../components/LazyImage";
 // src/pages/Location.tsx
@@ -9,13 +8,16 @@ import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
 import { ArrowLeft, Plus, LogIn, Search, Filter, X, Calendar, Tag, TrendingUp, Clock, MapPin } from "lucide-react";
-import PhotoGrid from "../components/PhotoGrid";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
 import { VALID_LOCATIONS } from "../constants/locations";
 import { useAuth } from "../contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+
+// DODAJ NA VRHU Location.tsx:
+import LanguageSelector from "../components/LanguageSelector";
+import { useLanguage } from "../contexts/LanguageContext";
 
 // Filter interfaces
 interface YearRange {
@@ -31,39 +33,41 @@ interface FilterState {
   sortBy: string;
 }
 
-// Predefined year ranges
-const YEAR_RANGES: YearRange[] = [
-  { start: 1900, end: 1920, label: "1900-1920" },
-  { start: 1920, end: 1940, label: "1920-1940" },
-  { start: 1940, end: 1960, label: "1940-1960" },
-  { start: 1960, end: 1980, label: "1960-1980" },
-  { start: 1980, end: 2000, label: "1980-2000" },
-  { start: 2000, end: 2025, label: "2000-2025" }
-];
-
-// Photo types for filtering
-const PHOTO_TYPES = [
-  { value: "all", label: "All Types" },
-  { value: "street", label: "Street Scenes" },
-  { value: "building", label: "Buildings" },
-  { value: "people", label: "People" },
-  { value: "event", label: "Events" },
-  { value: "nature", label: "Nature" }
-];
-
-// Sort options
-const SORT_OPTIONS = [
-  { value: "newest", label: "Newest First", icon: Clock },
-  { value: "oldest", label: "Oldest First", icon: Calendar },
-  { value: "popular", label: "Most Popular", icon: TrendingUp },
-  { value: "year_desc", label: "Year (Newest)", icon: Calendar },
-  { value: "year_asc", label: "Year (Oldest)", icon: Calendar }
-];
-
 const Location = () => {
+  // ✅ PREMJESTI useLanguage HOOK UNUTAR KOMPONENTE
+  const { t } = useLanguage();
   const { locationName } = useParams<{ locationName: string }>();
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
   const { user, signInWithGoogle } = useAuth();
+
+  // ✅ PREVEDENE KONSTANTE - sada koriste t() funkciju
+  const YEAR_RANGES: YearRange[] = [
+    { start: 1900, end: 1920, label: "1900-1920" },
+    { start: 1920, end: 1940, label: "1920-1940" },
+    { start: 1940, end: 1960, label: "1940-1960" },
+    { start: 1960, end: 1980, label: "1960-1980" },
+    { start: 1980, end: 2000, label: "1980-2000" },
+    { start: 2000, end: 2025, label: "2000-2025" }
+  ];
+
+  // ✅ PREVEDENI PHOTO TYPES
+  const PHOTO_TYPES = [
+    { value: "all", label: t('photoType.allTypes') },
+    { value: "street", label: t('photoType.street') },
+    { value: "building", label: t('photoType.building') },
+    { value: "people", label: t('photoType.people') },
+    { value: "event", label: t('photoType.event') },
+    { value: "nature", label: t('photoType.nature') }
+  ];
+
+  // ✅ PREVEDENE SORT OPTIONS
+  const SORT_OPTIONS = [
+    { value: "newest", label: t('sort.newest'), icon: Clock },
+    { value: "oldest", label: t('sort.oldest'), icon: Calendar },
+    { value: "popular", label: t('sort.popular'), icon: TrendingUp },
+    { value: "year_desc", label: t('sort.yearNewest'), icon: Calendar },
+    { value: "year_asc", label: t('sort.yearOldest'), icon: Calendar }
+  ];
 
   // Validate if the location is in our allowed list
   const isValidLocation = VALID_LOCATIONS.includes(decodedLocationName);
@@ -97,7 +101,7 @@ const Location = () => {
   const handleSignInToAddMemory = async () => {
     try {
       await signInWithGoogle();
-      toast.success('Successfully signed in! You can now add memories.');
+      toast.success(t('auth.signInSuccess'));
     } catch (error) {
       toast.error('Failed to sign in. Please try again.');
     }
@@ -231,7 +235,7 @@ const Location = () => {
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading memories...</p>
+          <p className="text-gray-600">{t('location.loadingMemories')}</p>
         </div>
       </div>
     );
@@ -240,55 +244,56 @@ const Location = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Link to="/">
-                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            </div>
-            <div className="flex items-center gap-4">
-            
-            </div>
-          </div>
-          <div className="mt-6 flex justify-between items-end">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">{decodedLocationName}</h2>
-              <p className="text-gray-300">
-                Explore the history of {decodedLocationName} through photos and memories
-                {filteredPhotos.length !== allPhotos.length && (
-                  <span className="ml-2 text-blue-300">
-                    ({filteredPhotos.length} of {allPhotos.length} photos)
-                  </span>
-                )}
-              </p>
-            </div>
-            
-            {/* Conditional Add Memory Button */}
-            {user ? (
-              <Button 
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Memory
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSignInToAddMemory}
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors flex items-center gap-2"
-              >
-                <LogIn className="h-4 w-4" />
-                Sign In to Add Memory
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+<header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
+  <div className="container max-w-6xl mx-auto px-4">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center">
+        <Link to="/">
+          <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </Link>
+        <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
+      </div>
+      {/* 🆕 DODAJ LANGUAGE SELECTOR OVDJE */}
+      <div className="flex items-center gap-4">
+        <LanguageSelector />
+      </div>
+    </div>
+    <div className="mt-6 flex justify-between items-end">
+      <div>
+        <h2 className="text-3xl md:text-4xl font-bold mb-2">{decodedLocationName}</h2>
+        <p className="text-gray-300">
+          {t('location.exploreHistory')} {decodedLocationName} {t('location.throughPhotos')}
+          {filteredPhotos.length !== allPhotos.length && (
+            <span className="ml-2 text-blue-300">
+              ({filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')})
+            </span>
+          )}
+        </p>
+      </div>
+      
+      {/* Conditional Add Memory Button */}
+      {user ? (
+        <Button 
+          onClick={() => setShowAddForm(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          {t('location.addMemory')}
+        </Button>
+      ) : (
+        <Button 
+          onClick={handleSignInToAddMemory}
+          className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors flex items-center gap-2"
+        >
+          <LogIn className="h-4 w-4" />
+          {t('location.signInToAdd')}
+        </Button>
+      )}
+    </div>
+  </div>
+</header>
 
       {/* Search and Filter Section */}
       <section className="py-6 px-4 bg-white border-b">
@@ -299,7 +304,7 @@ const Location = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search photos, descriptions, authors, or tags..."
+                  placeholder={t('location.searchPlaceholder')}
                   value={filters.searchText}
                   onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
                   className="pl-10"
@@ -314,7 +319,7 @@ const Location = () => {
               className={`flex items-center gap-2 ${hasActiveFilters ? 'border-blue-500 text-blue-600' : ''}`}
             >
               <Filter className="h-4 w-4" />
-              Filters {hasActiveFilters && '●'}
+              {t('location.filters')} {hasActiveFilters && '●'}
             </Button>
 
             {/* Clear Filters */}
@@ -325,20 +330,19 @@ const Location = () => {
                 className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
               >
                 <X className="h-4 w-4" />
-                Clear
+                {t('location.clear')}
               </Button>
             )}
           </div>
 
           {/* Advanced Filters */}
-
 {showFilters && (
   <Card className="mt-4">
     <CardContent className="p-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Year Range Filter */}
         <div>
-          <label className="block text-sm font-medium mb-2">Time Period</label>
+          <label className="block text-sm font-medium mb-2">{t('location.timePeriod')}</label>
           <Select
             value={filters.yearRange?.label || 'all'}
             onValueChange={(value) => {
@@ -351,10 +355,10 @@ const Location = () => {
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="All years" />
+              <SelectValue placeholder={t('location.allYears')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All years</SelectItem>
+              <SelectItem value="all">{t('location.allYears')}</SelectItem>
               {YEAR_RANGES.map(range => (
                 <SelectItem key={range.label} value={range.label}>
                   {range.label}
@@ -366,7 +370,7 @@ const Location = () => {
 
         {/* Photo Type Filter */}
         <div>
-          <label className="block text-sm font-medium mb-2">Photo Type</label>
+          <label className="block text-sm font-medium mb-2">{t('location.photoType')}</label>
           <Select
             value={filters.photoType}
             onValueChange={(value) => setFilters(prev => ({ ...prev, photoType: value }))}
@@ -386,7 +390,7 @@ const Location = () => {
 
         {/* Sort By */}
         <div>
-          <label className="block text-sm font-medium mb-2">Sort By</label>
+          <label className="block text-sm font-medium mb-2">{t('location.sortBy')}</label>
           <Select
             value={filters.sortBy}
             onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
@@ -413,11 +417,11 @@ const Location = () => {
      {/* Upload Form Modal */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+          {/* <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
-              {/* Add Historical Photo to {decodedLocationName} */}
+              {t('upload.addPhotoTo')} {decodedLocationName}
             </DialogTitle>
-          </DialogHeader>
+          </DialogHeader> */}
           <PhotoUpload 
             locationName={decodedLocationName}
             onSuccess={handleUploadSuccess}
@@ -431,10 +435,10 @@ const Location = () => {
         <section className="py-4 px-4 bg-blue-50">
           <div className="container max-w-6xl mx-auto">
             <p className="text-blue-700">
-              Showing {filteredPhotos.length} of {allPhotos.length} photos
-              {filters.searchText && ` matching "${filters.searchText}"`}
-              {filters.yearRange && ` from ${filters.yearRange.label}`}
-              {filters.photoType !== 'all' && ` in ${PHOTO_TYPES.find(t => t.value === filters.photoType)?.label}`}
+              {t('location.showing')} {filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')}
+              {filters.searchText && ` ${t('location.matching')} "${filters.searchText}"`}
+              {filters.yearRange && ` ${t('location.from')} ${filters.yearRange.label}`}
+              {filters.photoType !== 'all' && ` ${t('location.in')} ${PHOTO_TYPES.find(t => t.value === filters.photoType)?.label}`}
             </p>
           </div>
         </section>
@@ -446,16 +450,16 @@ const Location = () => {
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-12">
               <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos found</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('location.noPhotosFound')}</h3>
               <p className="text-gray-600 mb-4">
                 {hasActiveFilters 
-                  ? "Try adjusting your filters or search terms." 
-                  : "Be the first to share a historical photo of this location!"
+                  ? t('location.tryAdjusting')
+                  : t('location.beFirst')
                 }
               </p>
               {hasActiveFilters && (
                 <Button onClick={clearFilters} variant="outline">
-                  Clear all filters
+                  {t('location.clearAllFilters')}
                 </Button>
               )}
             </div>
@@ -497,7 +501,7 @@ const Location = () => {
               disabled={loadingMore}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {loadingMore ? 'Loading...' : 'Load More Memories'}
+              {loadingMore ? t('common.loading') : t('location.loadMoreMemories')}
             </Button>
           </div>
         )}
@@ -512,17 +516,17 @@ const Location = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
               <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-              <p className="mt-2">Preserving Croatian heritage, one memory at a time.</p>
+              <p className="mt-2">{t('footer.tagline')}</p>
             </div>
             <div className="flex space-x-6">
-              <Link to="/" className="hover:text-white transition-colors">About</Link>
-              <Link to="/" className="hover:text-white transition-colors">Privacy</Link>
-              <Link to="/" className="hover:text-white transition-colors">Terms</Link>
-              <Link to="/" className="hover:text-white transition-colors">Contact</Link>
+              <Link to="/" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+              <Link to="/" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+              <Link to="/" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
+              <Link to="/" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} Vremeplov.hr. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
           </div>
         </div>
       </footer>

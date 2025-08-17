@@ -6,6 +6,7 @@ import { User, MessageSquare, Send, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
 interface Comment {
   id: number;
@@ -21,14 +22,15 @@ interface PhotoCommentsProps {
 
 const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
   const [newComment, setNewComment] = useState("");
-    const { user, signInWithGoogle } = useAuth(); // Add signInWithGoogle
+  const { user, signInWithGoogle } = useAuth();
+  const { t } = useLanguage();
 
-     const handleSignInToComment = async () => {
+  const handleSignInToComment = async () => {
     try {
       await signInWithGoogle();
-      toast.success('Successfully signed in! You can now comment.');
+      toast.success(t('comments.signInSuccess'));
     } catch (error) {
-      toast.error('Failed to sign in. Please try again.');
+      toast.error(t('comments.signInError'));
     }
   };
 
@@ -38,45 +40,45 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
     
     onAddComment(newComment);
     setNewComment("");
-    toast.success("Your comment has been added!");
+    toast.success(t('comments.commentAdded'));
   };
 
   return (
     <div className="mt-8">
       <h2 className="text-2xl font-bold mb-4">
         <MessageSquare className="h-5 w-5 inline mr-2" />
-        Comments ({comments.length})
+        {translateWithParams(t, 'comments.title', { count: comments.length })}
       </h2>
       
       {user ? (
         <form onSubmit={handleSubmitComment} className="mb-6">
           <Textarea 
-            placeholder="Share your memories or knowledge about this photo..." 
+            placeholder={t('comments.placeholder')}
             className="min-h-[80px] mb-2"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             maxLength={250}
           />
-        <CharacterCounter currentLength={newComment.length} maxLength={250} />
+          <CharacterCounter currentLength={newComment.length} maxLength={250} />
           <Button 
             type="submit" 
             className="bg-blue-600 hover:bg-blue-700"
             disabled={!newComment.trim()}
           >
             <Send className="h-4 w-4 mr-2" />
-            Post Comment
+            {t('comments.postComment')}
           </Button>
         </form>
       ) : (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
           <LogIn className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-          <p className="text-gray-600 mb-3">Sign in to share your memories and comments</p>
+          <p className="text-gray-600 mb-3">{t('comments.signInMessage')}</p>
           <Button 
             onClick={handleSignInToComment}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <LogIn className="h-4 w-4 mr-2" />
-            Sign In to Comment
+            {t('comments.signInToComment')}
           </Button>
         </div>
       )}
@@ -97,7 +99,7 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
         
         {comments.length === 0 && (
           <p className="text-gray-500 text-center py-4">
-            No comments yet. Be the first to share your thoughts!
+            {t('comments.noComments')}
           </p>
         )}
       </div>
