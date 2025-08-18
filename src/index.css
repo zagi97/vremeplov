@@ -5,7 +5,25 @@
 @tailwind components;
 @tailwind utilities;
 
+input[placeholder*="Search"]::placeholder {
+  color: #6b7280 !important;
+  opacity: 1 !important;
+}
 
+/* Specific override for your search component */
+form input[type="text"] {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border: 1px solid #d1d5db !important;
+}
+
+form input[type="text"]:focus {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #3b82f6 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
 
 /* ✅ CUSTOM LEAFLET STYLES */
 /* Custom styles za photo markers */

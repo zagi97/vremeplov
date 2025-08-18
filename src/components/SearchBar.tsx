@@ -69,14 +69,18 @@ return (
     <form onSubmit={handleSearch} className="relative flex w-full max-w-lg">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <div className="flex-grow">
+         <div className="flex-grow">
             <Input
               type="text"
-              placeholder={t('search.placeholder')} // 🆕 ZAMIJENI
-              className="pr-10 rounded-r-none h-12 bg-white/90 backdrop-blur-sm border-r-0 focus-visible:ring-offset-0"
+              placeholder={t('search.placeholder')}
+              className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
               value={searchQuery}
               onChange={(e) => handleInputChange(e.target.value)}
               onClick={() => setOpen(true)}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#1f2937'
+              }}
             />
           </div>
         </PopoverTrigger>

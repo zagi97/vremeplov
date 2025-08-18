@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye } from "lucide-react";
+import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye, Users, Camera, Upload } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoComments from "../components/PhotoComments";
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../components/ui/tooltip";
@@ -36,6 +36,7 @@ const PhotoDetail = () => {
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [hoveredTag, setHoveredTag] = useState<string | null>(null);
 
   const handleBack = () => {
     if (window.history.length > 1 && document.referrer) {
@@ -74,13 +75,19 @@ const PhotoDetail = () => {
           await photoService.incrementViews(photoId, user.uid);
         }
         
-        const photoComments = await photoService.getCommentsByPhotoId(photoId);
-        setComments(photoComments.map(comment => ({
-          id: comment.id,
-          author: comment.author,
-          text: comment.text,
-          date: comment.createdAt.toDate().toLocaleDateString()
-        })));
+      const photoComments = await photoService.getCommentsByPhotoId(photoId);
+setComments(photoComments.map(comment => ({
+  id: comment.id,
+  author: comment.author,
+  text: comment.text,
+  date: comment.createdAt.toDate().toLocaleDateString('hr-HR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }) // ✅ Datum + vreme u hrvatskom formatu
+})));
         
         let taggedPersonsData;
         if (user?.email === 'vremeplov.app@gmail.com') {
@@ -123,6 +130,26 @@ const PhotoDetail = () => {
 
     loadPhotoData();
   }, [photoId, user, t]);
+
+  useEffect(() => {
+// U PhotoDetail komponenti, prije prosljeđivanja u PhotoLocationMap:
+console.log('=== PHOTODETAIL DEBUG ===');
+console.log('relatedPhotos raw:', relatedPhotos);
+console.log('relatedPhotos with coordinates:', relatedPhotos.filter(p => p.coordinates));
+relatedPhotos.forEach((photo, index) => {
+  console.log(`Related photo ${index}:`, {
+    id: photo.id,
+    description: photo.description,
+    coordinates: photo.coordinates
+  });
+});
+  
+  const photosWithCoords = relatedPhotos.filter(p => p.coordinates);
+  console.log(`Total related photos: ${relatedPhotos.length}`);
+  console.log(`Related photos with coordinates: ${photosWithCoords.length}`);
+  
+  console.log('=== END COORDINATES DEBUG ===');
+}, [photo, relatedPhotos]);
   
   const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; y: number; }, 'id'>) => {
     if (!photoId) return;
@@ -342,46 +369,52 @@ const PhotoDetail = () => {
 
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* Photo Section */}
+          {/* Photo Section with Hover-Only Tags */}
           <div className="relative w-full">
-            <TooltipProvider>
-              <div 
-                className="relative w-full cursor-pointer"
-                onClick={handleImageClick}
-              >
-                <LazyImage
-                  src={photo.imageUrl}
-                  alt={photo.description}
-                  className="w-full h-auto object-cover"
-                />
-                
-                {/* Tagged persons dots */}
+            <div 
+              className="relative w-full cursor-pointer group"
+              onClick={handleImageClick}
+            >
+              <LazyImage
+                src={photo.imageUrl}
+                alt={photo.description}
+                className="w-full h-auto object-cover"
+              />
+              
+              {/* Hover-Only Tagged Persons */}
+              <div className="absolute inset-0 rounded-lg overflow-hidden">
                 {taggedPersons.map((person) => (
-                  <Tooltip key={person.id}>
-                    <TooltipTrigger asChild>
-                      <div 
-                        className="absolute w-6 h-6 bg-blue-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
-                        style={{ 
-                          left: `${person.x}%`, 
-                          top: `${person.y}%` 
-                        }}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          <User className="h-4 w-4 text-gray-600" />
-                        </div>
-                        <span className="font-medium text-gray-500">{person.name}</span>
+                  <div
+                    key={person.id}
+                    className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
+                    style={{ 
+                      left: `${person.x}%`, 
+                      top: `${person.y}%`,
+                      zIndex: 10
+                    }}
+                    onMouseEnter={() => setHoveredTag(person.id)}
+                    onMouseLeave={() => setHoveredTag(null)}
+                  >
+                    {/* Subtle circle with person icon */}
+                    <div className="w-8 h-8 border-2 border-white bg-black/30 backdrop-blur-sm rounded-full cursor-pointer hover:bg-black/50 hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg">
+                      <Users className="w-4 h-4 text-white drop-shadow-sm" />
+                    </div>
+                    
+                    {/* Name tooltip on hover */}
+                    {hoveredTag === person.id && (
+                      <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in">
+                        {person.name}
+                        {/* Tooltip arrow */}
+                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
                       </div>
-                    </TooltipContent>
-                  </Tooltip>
+                    )}
+                  </div>
                 ))}
                 
-                {/* Current tag position marker */}
+                {/* Current tag position marker (when tagging) */}
                 {isTagging && hasSelectedPosition && (
                   <div 
-                    className="absolute w-6 h-6 bg-green-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
+                    className="absolute w-6 h-6 bg-green-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse z-20"
                     style={{ 
                       left: `${tagPosition.x}%`, 
                       top: `${tagPosition.y}%` 
@@ -391,7 +424,7 @@ const PhotoDetail = () => {
                 
                 {/* Tag Button - Only show if user is authenticated */}
                 {user && (
-                  <div className="absolute bottom-4 right-4">
+                  <div className="absolute bottom-4 right-4 z-30">
                     {!isTagging && (
                       <Button
                         onClick={(e) => {
@@ -399,7 +432,7 @@ const PhotoDetail = () => {
                           setIsTagging(true);
                         }}
                         variant="secondary"
-                        className="bg-white/80 hover:bg-white/90"
+                        className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
                       >
                         <Tag className="h-4 w-4 mr-2" />
                         {t('photoDetail.tagPerson')}
@@ -408,7 +441,7 @@ const PhotoDetail = () => {
                   </div>
                 )}
               </div>
-            </TooltipProvider>
+            </div>
           </div>
 
           {/* Tagging Interface - Below the image */}
@@ -462,6 +495,12 @@ const PhotoDetail = () => {
                   <Heart className="h-5 w-5" />
                   <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
                 </div>
+                {taggedPersons.length > 0 && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Users className="h-5 w-5" />
+                    <span className="text-sm">{taggedPersons.length} {t('photoDetail.taggedPeople')}</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
@@ -509,80 +548,112 @@ const PhotoDetail = () => {
                 )}
               </div>
             </div>
+            
+            {/* Hover instruction for tagged persons */}
+            {taggedPersons.length > 0 && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <strong>💡 Tip:</strong> Hover over the photo to see tagged persons
+                </p>
+              </div>
+            )}
           </div>
 
-          {/* Details Section */}
-          <div className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-8 p-6">
-            {/* Left Column - Main Content */}
-            <div>
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-4">{t('photoDetail.aboutPhoto')}</h2>
-                <div className="grid grid-cols-2 gap-y-4 text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium">{t('photoDetail.year')}: {photo.year}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    <span>{t('photoDetail.author')}: {photo.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2 col-span-2">
-                    <MapPin className="h-5 w-5 text-blue-600" />
-                    <span>{t('photoDetail.location')}: {photo.location}</span>
-                  </div>
-                  {photo.uploadedBy && (
-                    <div className="flex items-center gap-2 col-span-2">
-                      <User className="h-5 w-5 text-green-600" />
-                      <span>{t('photoDetail.uploadedBy')}: {photo.uploadedBy}</span>
-                      {photo.uploadedAt && (
-                        <span className="text-gray-500 ml-2">
-                          {t('photoDetail.on')} {new Date(photo.uploadedAt).toLocaleDateString('hr-HR', {
-                            day: '2-digit',
-                            month: '2-digit', 
-                            year: 'numeric'
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  )}
+          {/* NEW: Modern Compact Layout for Photo Information */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden m-6">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white p-6">
+              <h3 className="text-xl font-bold mb-2">{t('photoDetail.aboutPhoto')}</h3>
+              <p className="text-gray-300 text-sm">Povijesni detalji i informacije</p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Calendar className="h-6 w-6 mx-auto text-blue-600 mb-2" />
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.year')}</p>
+                  <p className="text-lg font-bold text-gray-900">{photo.year}</p>
                 </div>
                 
-                <div className="mt-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {photo.detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
-                      year: photo.year,
-                      description: photo.description,
-                      location: photo.location,
-                      author: photo.author
-                    })}
-                  </p>
+                <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <Camera className="h-6 w-6 mx-auto text-purple-600 mb-2" />
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.author')}</p>
+                  <p className="text-sm font-bold text-gray-900">{photo.author}</p>
                 </div>
                 
-                {/* Tagged People List */}
-                {taggedPersons.length > 0 && (
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium mb-2">{t('photoDetail.taggedPeople')}</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {taggedPersons.map((person) => (
-                        <div key={person.id} className="flex items-center bg-gray-100 px-3 py-1 rounded-full">
-                          <User className="h-3 w-3 mr-1 text-gray-600" />
-                          <span className="text-sm">{person.name}</span>
-                        </div>
-                      ))}
-                    </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <MapPin className="h-6 w-6 mx-auto text-green-600 mb-2" />
+                  <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.location')}</p>
+                  <p className="text-sm font-bold text-gray-900">{photo.location}</p>
+                </div>
+                
+                {photo.uploadedBy && (
+                  <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <Upload className="h-6 w-6 mx-auto text-orange-600 mb-2" />
+                    <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.uploadedBy')}</p>
+                    <p className="text-xs font-bold text-gray-900">{photo.uploadedBy}</p>
+                    {photo.uploadedAt && (
+                      <p className="text-xs text-gray-500">
+                        {new Date(photo.uploadedAt).toLocaleDateString('hr-HR', {
+                          day: '2-digit',
+                          month: '2-digit', 
+                          year: 'numeric'
+                        })}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
-              
-              {/* Comments Section */}
-              <PhotoComments 
-                comments={comments}
-                onAddComment={handleAddComment}
-              />
+
+              {/* Description */}
+              <div className="mb-6">
+                <p className="text-gray-700 leading-relaxed">
+                  {photo.detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
+                    year: photo.year,
+                    description: photo.description,
+                    location: photo.location,
+                    author: photo.author
+                  })}
+                </p>
+              </div>
+
+              {/* Tagged People */}
+              {taggedPersons.length > 0 && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {t('photoDetail.taggedPeople')}
+                    </h4>
+                    <span className="text-sm text-gray-500">{taggedPersons.length} osoba</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {taggedPersons.map((person) => (
+                      <span key={person.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                        <User className="h-3 w-3" />
+                        {person.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            
-            {/* Right Column - Sidebar */}
-            <div className="hidden md:block">
+          </div>
+
+          {/* Comments Section */}
+          <div className="p-6">
+            <PhotoComments 
+              comments={comments}
+              onAddComment={handleAddComment}
+            />
+          </div>
+
+          {/* Right Column - Sidebar for larger screens */}
+          <div className="hidden md:block p-6 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Location Map */}
               <PhotoLocationMap 
                 photo={{
@@ -592,15 +663,16 @@ const PhotoDetail = () => {
                   coordinates: photo.coordinates
                 }}
                 nearbyPhotos={relatedPhotos.slice(0, 3).map(p => ({
-                  id: p.id || '',
-                  description: p.description,
-                  imageUrl: p.imageUrl,
-                  year: p.year
+                   id: p.id || '',
+    description: p.description,
+    imageUrl: p.imageUrl,
+    year: p.year,
+    coordinates: p.coordinates // ✅ DODAJ OVO!
                 }))}
               />
               
               {/* Historical Context */}
-              <div className="bg-gray-50 p-4 rounded-lg mt-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-medium text-lg mb-3">{t('photoDetail.historicalContext')}</h3>
                 <p className="text-gray-700">
                   {translateWithParams(t, 'photoDetail.historicalContextDesc', {
@@ -608,33 +680,33 @@ const PhotoDetail = () => {
                   })}
                 </p>
               </div>
-              
-              {/* Related Photos */}
-              {relatedPhotos.length > 0 && (
-                <div className="mt-4">
-                  <h3 className="font-medium text-lg mb-3">{t('photoDetail.relatedPhotos')}</h3>
-                  <div className="space-y-3">
-                    {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
-                      <Link 
-                        key={relatedPhoto.id} 
-                        to={`/photo/${relatedPhoto.id}`}
-                        className="block hover:opacity-90 transition-opacity"
-                      >
-                        <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-                          <LazyImage
-                            src={relatedPhoto.imageUrl}
-                            alt={relatedPhoto.description}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <p className="text-sm font-medium">{relatedPhoto.description}</p>
-                        <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+            
+            {/* Related Photos */}
+            {relatedPhotos.length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-medium text-lg mb-3">{t('photoDetail.relatedPhotos')}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
+                    <Link 
+                      key={relatedPhoto.id} 
+                      to={`/photo/${relatedPhoto.id}`}
+                      className="block hover:opacity-90 transition-opacity"
+                    >
+                      <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
+                        <LazyImage
+                          src={relatedPhoto.imageUrl}
+                          alt={relatedPhoto.description}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <p className="text-sm font-medium">{relatedPhoto.description}</p>
+                      <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         

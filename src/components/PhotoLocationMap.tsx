@@ -56,23 +56,37 @@ interface PhotoLocationMapProps {
 
 const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos = [] }) => {
   const { t } = useLanguage();
+
+  // DODAJ DETALJNI DEBUG
+  console.log('=== PhotoLocationMap DEBUG ===');
+  console.log('Received photo:', photo);
+  console.log('Received nearbyPhotos:', nearbyPhotos);
+
+   nearbyPhotos.forEach((nearby, index) => {
+    console.log(`Nearby photo ${index}:`, {
+      id: nearby.id,
+      description: nearby.description,
+      year: nearby.year,
+      coordinates: nearby.coordinates,
+      coordinatesType: typeof nearby.coordinates,
+      hasLatitude: nearby.coordinates?.latitude,
+      hasLongitude: nearby.coordinates?.longitude
+    });
+  });
   
-  // Ako nema koordinata, koristi default Čačinci koordinate
+  console.log('=== END PhotoLocationMap DEBUG ===');
+  
+  // Ako nema koordinat, koristi default Čačinci koordinate
   const coords = photo.coordinates || { latitude: 45.6236, longitude: 17.8403 };
   
-  // Filtriraj nearby photos da imaju koordinate
+  // ✅ ISPRAVLJENO: Prikaži SAMO fotografije koje stvarno imaju koordinate
   const nearbyPhotosWithCoords = nearbyPhotos.filter(p => p.coordinates);
   
-  // Mock koordinate za nearby photos ako nema pravih (za testiranje)
-  const nearbyPhotosForMap = nearbyPhotosWithCoords.length > 0 
-    ? nearbyPhotosWithCoords 
-    : nearbyPhotos.slice(0, 3).map((p, index) => ({
-        ...p,
-        coordinates: {
-          latitude: coords.latitude + (index - 1) * 0.002,
-          longitude: coords.longitude + (index - 1) * 0.003
-        }
-      }));
+  console.log('PhotoLocationMap Debug:');
+  console.log('Current photo coords:', coords);
+  console.log('Nearby photos:', nearbyPhotos.length);
+  console.log('Nearby photos with coords:', nearbyPhotosWithCoords.length);
+  console.log('Nearby photos with coords data:', nearbyPhotosWithCoords);
   
   return (
     <div className="bg-gray-50 rounded-lg p-4">
@@ -121,30 +135,36 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
             </Popup>
           </Marker>
 
-          {/* Nearby photos markers - plavi i manji */}
-          {nearbyPhotosForMap.slice(0, 3).map((nearbyPhoto, index) => (
-            <Marker
-              key={nearbyPhoto.id}
-              position={[
-                nearbyPhoto.coordinates!.latitude,
-                nearbyPhoto.coordinates!.longitude
-              ]}
-              icon={nearbyPhotoIcon}
-            >
-              <Popup>
-                <div className="text-center">
-                  <div className="font-medium">{nearbyPhoto.description}</div>
-                  <div className="text-sm text-gray-600">{nearbyPhoto.year}</div>
-                  <Link 
-                    to={`/photo/${nearbyPhoto.id}`}
-                    className="text-blue-600 hover:underline text-xs"
-                  >
-                    {t('locationMap.viewPhoto')}
-                  </Link>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {/* ✅ ISPRAVLJENO: Prikaži SAMO nearby photos koje stvarno imaju koordinate */}
+          {nearbyPhotosWithCoords.slice(0, 3).map((nearbyPhoto, index) => {
+            console.log(`Rendering nearby photo ${index}:`, nearbyPhoto.description, nearbyPhoto.coordinates);
+            return (
+              <Marker
+                key={nearbyPhoto.id}
+                position={[
+                  nearbyPhoto.coordinates!.latitude,
+                  nearbyPhoto.coordinates!.longitude
+                ]}
+                icon={nearbyPhotoIcon}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <div className="font-medium">{nearbyPhoto.description}</div>
+                    <div className="text-sm text-gray-600">{nearbyPhoto.year}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      📍 {nearbyPhoto.coordinates!.latitude.toFixed(4)}, {nearbyPhoto.coordinates!.longitude.toFixed(4)}
+                    </div>
+                    <Link 
+                      to={`/photo/${nearbyPhoto.id}`}
+                      className="text-blue-600 hover:underline text-xs block mt-1"
+                    >
+                      {t('locationMap.viewPhoto')}
+                    </Link>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
         </MapContainer>
 
         {/* Coordinates display overlay */}
@@ -167,11 +187,14 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
           </div>
         )}
 
-        {nearbyPhotosForMap.length > 0 && (
+        {/* ✅ ISPRAVLJENO: Prikaži samo fotografije s koordinatama */}
+        {nearbyPhotosWithCoords.length > 0 && (
           <div className="mt-3">
-            <span className="font-medium text-gray-700 text-sm">{t('locationMap.nearbyPhotos')}:</span>
+            <span className="font-medium text-gray-700 text-sm">
+              {t('locationMap.nearbyPhotos')} ({nearbyPhotosWithCoords.length}):
+            </span>
             <div className="mt-2 space-y-1">
-              {nearbyPhotosForMap.slice(0, 3).map((nearbyPhoto, index) => (
+              {nearbyPhotosWithCoords.slice(0, 3).map((nearbyPhoto, index) => (
                 <Link 
                   key={nearbyPhoto.id}
                   to={`/photo/${nearbyPhoto.id}`}
@@ -182,9 +205,22 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
                   </span>
                   <span className="truncate">{nearbyPhoto.description}</span>
                   <span className="text-gray-400">({nearbyPhoto.year})</span>
+                  <span className="text-gray-400 text-[10px]">
+                    📍 {nearbyPhoto.coordinates!.latitude.toFixed(3)}, {nearbyPhoto.coordinates!.longitude.toFixed(3)}
+                  </span>
                 </Link>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* ✅ NOVO: Debug informacije */}
+        {nearbyPhotosWithCoords.length === 0 && nearbyPhotos.length > 0 && (
+          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+            <span className="font-medium text-yellow-800">ℹ️ Debug:</span>
+            <span className="text-yellow-700 ml-1">
+              {nearbyPhotos.length} nearby photos found, but {nearbyPhotosWithCoords.length} have coordinates
+            </span>
           </div>
         )}
       </div>
