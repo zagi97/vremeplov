@@ -417,11 +417,11 @@ const Location = () => {
      {/* Upload Form Modal */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          {/* <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              {t('upload.addPhotoTo')} {decodedLocationName}
-            </DialogTitle>
-          </DialogHeader> */}
+         <DialogHeader className="sr-only">
+  <DialogTitle>
+    {t('upload.addPhotoTo')} {decodedLocationName}
+  </DialogTitle>
+</DialogHeader>
           <PhotoUpload 
             locationName={decodedLocationName}
             onSuccess={handleUploadSuccess}
@@ -519,10 +519,10 @@ const Location = () => {
               <p className="mt-2">{t('footer.tagline')}</p>
             </div>
             <div className="flex space-x-6">
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
+              <Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center">

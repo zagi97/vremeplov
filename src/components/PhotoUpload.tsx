@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -8,12 +8,12 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { photoService, geocodingService } from '../services/firebaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
-// ✅ DODAJ useLanguage HOOK
 import { useLanguage } from '../contexts/LanguageContext';
 import { CharacterCounter } from "./ui/character-counter";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
 import { SimpleMiniMap } from "./SimpleMiniMap";
+import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker import
 
 interface PhotoUploadProps {
   locationName: string;
@@ -21,26 +21,55 @@ interface PhotoUploadProps {
   onCancel?: () => void;
 }
 
+// Custom debounce hook
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+// Cache for search results
+const searchCache = new Map<string, string[]>();
+
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ 
   locationName, 
   onSuccess, 
   onCancel 
 }) => {
-  // ✅ KORISTI LANGUAGE HOOK
+  // Hooks
   const { t } = useLanguage();
   const { user } = useAuth();
+  
+  // Basic state
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
 
-  // ✅ Address state
+  // Address search state (optimized)
   const [addressSearch, setAddressSearch] = useState<string>('');
   const [availableAddresses, setAvailableAddresses] = useState<string[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [loadingAddresses, setLoadingAddresses] = useState(false);
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
   const [coordinates, setCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
+
+  // Manual positioning state
+  const [needsManualPositioning, setNeedsManualPositioning] = useState(false);
+  const [streetOnlyCoordinates, setStreetOnlyCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
+  const [houseNumber, setHouseNumber] = useState<string>('');
+  const [streetName, setStreetName] = useState<string>('');
+  const [manualMarkerPosition, setManualMarkerPosition] = useState<{latitude: number, longitude: number} | null>(null);
 
   // Tagged persons state
   const [taggedPersons, setTaggedPersons] = useState<Array<{
@@ -59,97 +88,112 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     tags: [] as string[]
   });
 
-
-// DODAJ SAMO OVE NOVE STATE VARIJABLE U PHOTOUPLOAD KOMPONENTU
-const [needsManualPositioning, setNeedsManualPositioning] = useState(false);
-const [streetOnlyCoordinates, setStreetOnlyCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
-const [houseNumber, setHouseNumber] = useState<string>('');
-const [streetName, setStreetName] = useState<string>('');
-
-  // ✅ SEARCH ADDRESSES when user types
-// HELPER FUNKCIJE
-// HELPER FUNKCIJE (dodaj u PhotoUpload komponentu)
-const extractStreetName = (fullAddress: string): string => {
-  return fullAddress.replace(/\d+.*$/, '').trim();
-};
-
-const extractHouseNumber = (fullAddress: string): string | null => {
-  const match = fullAddress.match(/\d+/);
-  return match ? match[0] : null;
-};
-
-// MODIFICIRAJ POSTOJEĆU handleAddressSearch FUNKCIJU
-const handleAddressSearch = async (searchTerm: string) => {
-  setAddressSearch(searchTerm);
+  // Debounce search term - waits 500ms after user stops typing
+  const debouncedSearchTerm = useDebounce(addressSearch, 500);
   
-  if (searchTerm.length < 2) {
-    setAvailableAddresses([]);
-    setShowAddressDropdown(false);
-    setNeedsManualPositioning(false);
-    return;
-  }
+  // Ref for tracking current request
+  const currentRequestRef = useRef<AbortController | null>(null);
+  
+  // Flag to prevent search when selecting an address
+  const isSelectingAddressRef = useRef(false);
 
-  setLoadingAddresses(true);
-  setShowAddressDropdown(true);
+  // Helper functions
+  const extractStreetName = (fullAddress: string): string => {
+    return fullAddress.replace(/\d+.*$/, '').trim();
+  };
 
-  try {
-    // 1. POKUŠAJ PRONAĆI TOČNU ADRESU (postojeći kod)
-    const fullSearchTerm = `${searchTerm}, ${locationName}, Croatia`;
-    const encodedSearch = encodeURIComponent(fullSearchTerm);
-    
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
-      {
-        headers: {
-          'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
-        }
-      }
-    );
+  const extractHouseNumber = (fullAddress: string): string | null => {
+    const match = fullAddress.match(/\d+/);
+    return match ? match[0] : null;
+  };
 
-    if (!response.ok) {
-      throw new Error('Search request failed');
+  // Optimized address search function with caching and debouncing
+  const searchAddresses = useCallback(async (searchTerm: string) => {
+    // Check cache first
+    const cacheKey = `${searchTerm}_${locationName}`;
+    if (searchCache.has(cacheKey)) {
+      console.log('📋 Using cached results for:', searchTerm);
+      const cachedResults = searchCache.get(cacheKey);
+      setAvailableAddresses(cachedResults || []);
+      setLoadingAddresses(false);
+      setShowAddressDropdown(true);
+      return;
     }
 
-    const data = await response.json();
-    
-    // Izvuci adrese
-    const addresses = new Set<string>();
-    let exactAddressFound = false;
-    
-    data.forEach((item: any) => {
-      if (item.address) {
-        const streetNameFromAPI = item.address.road || item.address.street;
-        const houseNumberFromAPI = item.address.house_number;
-        const amenity = item.address.amenity;
-        const shop = item.address.shop;
-        
-        if (streetNameFromAPI) {
-          if (houseNumberFromAPI) {
-            addresses.add(`${streetNameFromAPI} ${houseNumberFromAPI}`);
-            exactAddressFound = true;
-          } else {
-            addresses.add(streetNameFromAPI);
+    setLoadingAddresses(true);
+    setShowAddressDropdown(true);
+
+    try {
+      // Cancel previous request if still running
+      if (currentRequestRef.current) {
+        currentRequestRef.current.abort();
+      }
+      
+      // Create new AbortController
+      const abortController = new AbortController();
+      currentRequestRef.current = abortController;
+
+      // 1. TRY TO FIND EXACT ADDRESS
+      const fullSearchTerm = `${searchTerm}, ${locationName}, Croatia`;
+      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
+        {
+          headers: {
+            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
+          },
+          signal: abortController.signal
+        }
+      );
+
+      // Check if request was cancelled
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
+
+      const data = await response.json();
+      
+      // Extract addresses
+      const addresses = new Set<string>();
+      let exactAddressFound = false;
+      
+      data.forEach((item: any) => {
+        if (item.address) {
+          const streetNameFromAPI = item.address.road || item.address.street;
+          const houseNumberFromAPI = item.address.house_number;
+          const amenity = item.address.amenity;
+          const shop = item.address.shop;
+          
+          if (streetNameFromAPI) {
+            if (houseNumberFromAPI) {
+              addresses.add(`${streetNameFromAPI} ${houseNumberFromAPI}`);
+              exactAddressFound = true;
+            } else {
+              addresses.add(streetNameFromAPI);
+            }
+          }
+          
+          if (amenity && amenity.toLowerCase().includes(searchTerm.toLowerCase())) {
+            addresses.add(amenity);
+          }
+          if (shop && shop.toLowerCase().includes(searchTerm.toLowerCase())) {
+            addresses.add(`${shop} (trgovina)`);
           }
         }
-        
-        if (amenity && amenity.toLowerCase().includes(searchTerm.toLowerCase())) {
-          addresses.add(amenity);
-        }
-        if (shop && shop.toLowerCase().includes(searchTerm.toLowerCase())) {
-          addresses.add(`${shop} (trgovina)`);
-        }
-      }
-    });
+      });
 
-    // 2. NOVI DIO: AKO NEMA TOČNE ADRESE, POKUŠAJ SAMO ULICU
-    if (!exactAddressFound && addresses.size === 0) {
+      // 2. SEARCH FOR STREET ONLY IF NO EXACT ADDRESS FOUND
       const streetOnly = extractStreetName(searchTerm);
       const extractedHouseNumber = extractHouseNumber(searchTerm);
       
-      if (streetOnly !== searchTerm && extractedHouseNumber) {
-        console.log(`Exact address not found. Trying street only: "${streetOnly}"`);
+      if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
+        console.log(`Exact address not found. Searching for street: "${streetOnly}"`);
         
-        // Pokušaj pronaći samo ulicu
         const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
         const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
         
@@ -158,15 +202,15 @@ const handleAddressSearch = async (searchTerm: string) => {
           {
             headers: {
               'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
-            }
+            },
+            signal: abortController.signal
           }
         );
 
-        if (streetResponse.ok) {
+        if (!abortController.signal.aborted && streetResponse.ok) {
           const streetData = await streetResponse.json();
           
           if (streetData.length > 0) {
-            // Pronašli smo ulicu!
             const streetResult = streetData[0];
             setStreetOnlyCoordinates({
               latitude: parseFloat(streetResult.lat),
@@ -174,90 +218,172 @@ const handleAddressSearch = async (searchTerm: string) => {
             });
             setHouseNumber(extractedHouseNumber);
             setStreetName(streetOnly);
-            setNeedsManualPositioning(true);
             
-            // Dodaj ulicu u rezultate
-            addresses.add(streetOnly);
-            
-            console.log(`Found street "${streetOnly}" but not house number ${extractedHouseNumber}. Enabling manual positioning.`);
-            toast.info(`📍 Pronašli smo ${streetOnly}! Odaberite točnu lokaciju za broj ${extractedHouseNumber}`);
+            addresses.add(`${streetOnly} (kliknite za broj ${extractedHouseNumber})`);
+            console.log(`Found street "${streetOnly}". Manual positioning ready.`);
           }
         }
       }
+
+      const finalResults = Array.from(addresses).slice(0, 8);
+      
+      // Save to cache only if request wasn't cancelled
+      if (!abortController.signal.aborted) {
+        searchCache.set(cacheKey, finalResults);
+        setAvailableAddresses(finalResults);
+        console.log('🔍 Search completed for:', searchTerm, 'Results:', finalResults.length);
+      }
+      
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log('Search request was cancelled');
+        return;
+      }
+      console.error('Error searching addresses:', error);
+      toast.error('Failed to search addresses');
+      setAvailableAddresses([]);
+    } finally {
+      if (currentRequestRef.current) {
+        setLoadingAddresses(false);
+        currentRequestRef.current = null;
+      }
+    }
+  }, [locationName]);
+
+  // Trigger search when debounced term changes
+  useEffect(() => {
+    // Don't search if we're in the process of selecting an address
+    if (isSelectingAddressRef.current) {
+      console.log('🚫 Skipping search - address being selected');
+      isSelectingAddressRef.current = false; // Reset flag
+      return;
+    }
+    
+    if (debouncedSearchTerm.length >= 2) {
+      console.log('🚀 Starting search for:', debouncedSearchTerm);
+      searchAddresses(debouncedSearchTerm);
+    } else {
+      setAvailableAddresses([]);
+      setShowAddressDropdown(false);
+      setLoadingAddresses(false);
+    }
+  }, [debouncedSearchTerm, searchAddresses]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (currentRequestRef.current) {
+        currentRequestRef.current.abort();
+      }
+    };
+  }, []);
+
+  // Handle input change with immediate loading feedback
+  const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Reset the selection flag when user manually types
+    isSelectingAddressRef.current = false;
+    
+    setAddressSearch(value);
+    
+    // Clear selected address when user starts typing again
+    if (selectedAddress && value !== selectedAddress) {
+      setSelectedAddress('');
+      setCoordinates(null);
+    }
+    
+    // Show loading immediately if user is typing
+    if (value.length >= 2 && !loadingAddresses) {
+      setLoadingAddresses(true);
+      setShowAddressDropdown(true);
+    }
+    
+    // Hide dropdown if search is too short
+    if (value.length < 2) {
+      setShowAddressDropdown(false);
+      setLoadingAddresses(false);
+      setAvailableAddresses([]); // Clear results
+      
+      // Cancel current request
+      if (currentRequestRef.current) {
+        currentRequestRef.current.abort();
+        currentRequestRef.current = null;
+      }
+    }
+  };
+
+  // SELECT ADDRESS from dropdown
+  const handleAddressSelect = async (address: string) => {
+    console.log('📍 Address selected:', address);
+    
+    // Set flag to prevent search from running when we update addressSearch
+    isSelectingAddressRef.current = true;
+    
+    // Immediately close dropdown and clear loading state
+    setShowAddressDropdown(false);
+    setLoadingAddresses(false);
+    setAvailableAddresses([]); // Clear the dropdown results
+    
+    // Set the selected address
+    setSelectedAddress(address);
+    setAddressSearch(address);
+
+    // Cancel current request
+    if (currentRequestRef.current) {
+      currentRequestRef.current.abort();
+      currentRequestRef.current = null;
     }
 
-    setAvailableAddresses(Array.from(addresses).slice(0, 8));
-    
-  } catch (error) {
-    console.error('Error searching addresses:', error);
-    toast.error('Failed to search addresses');
-    setAvailableAddresses([]);
-  } finally {
-    setLoadingAddresses(false);
-  }
-};
+    // Check if this requires manual positioning
+    if (address.includes('(kliknite za broj')) {
+      const streetName = address.split(' (kliknite za broj')[0];
+      setNeedsManualPositioning(true);
+      toast.info(`📍 Odaberite točnu lokaciju za ${streetName} ${houseNumber}`);
+      return;
+    }
 
-  // ✅ SELECT ADDRESS from dropdown
-const handleAddressSelect = async (address: string) => {
-  setSelectedAddress(address);
-  setAddressSearch(address);
-  setShowAddressDropdown(false);
+    // Reset manual positioning state
+    setNeedsManualPositioning(false);
+    setStreetOnlyCoordinates(null);
+    setHouseNumber('');
+    setStreetName('');
 
-  // DODAJ OVU LOGIKU:
-  // Provjeri ako je korisnik prije upisao broj, a sada odabira samo ulicu
-  const originalSearch = addressSearch; // "Mlinska ulica 8"
-  const selectedStreet = address; // "Mlinska ulica"
-  
-  const extractedHouseNumber = extractHouseNumber(originalSearch);
-  
-  if (extractedHouseNumber && originalSearch.includes(selectedStreet)) {
-    // Korisnik je htio "Mlinska ulica 8" ali odabrao "Mlinska ulica"
-    console.log(`User wanted ${originalSearch} but selected ${selectedStreet}. Enabling manual positioning.`);
-    
+    // Try to get coordinates for regular address
     try {
       const coords = await geocodingService.getCoordinatesFromAddress(address, locationName);
       if (coords) {
-        setStreetOnlyCoordinates(coords);
-        setHouseNumber(extractedHouseNumber);
-        setStreetName(selectedStreet);
-        setNeedsManualPositioning(true);
-        toast.info(`📍 Odaberite točnu lokaciju za ${selectedStreet} ${extractedHouseNumber}`);
-        return;
+        setCoordinates(coords);
+        console.log('Coordinates found for address:', address, coords);
+        toast.success('📍 Address location found!');
+      } else {
+        toast.warning('Could not find exact coordinates for this address');
       }
     } catch (error) {
       console.error('Error getting coordinates:', error);
     }
-  }
+  };
 
-  // POSTOJEĆI KOD za normalne adrese
-  try {
-    const coords = await geocodingService.getCoordinatesFromAddress(address, locationName);
-    if (coords) {
-      setCoordinates(coords);
-      console.log('Coordinates found for address:', address, coords);
-      toast.success('📍 Address location found!');
-    } else {
-      toast.warning('Could not find exact coordinates for this address');
+  // CLEAR ADDRESS
+  const handleClearAddress = () => {
+    setAddressSearch('');
+    setSelectedAddress('');
+    setAvailableAddresses([]);
+    setShowAddressDropdown(false);
+    setCoordinates(null);
+    setNeedsManualPositioning(false);
+    setStreetOnlyCoordinates(null);
+    setHouseNumber('');
+    setStreetName('');
+    setManualMarkerPosition(null);
+    setLoadingAddresses(false);
+
+    // Cancel current request
+    if (currentRequestRef.current) {
+      currentRequestRef.current.abort();
+      currentRequestRef.current = null;
     }
-  } catch (error) {
-    console.error('Error getting coordinates:', error);
-  }
-};
-
-  // ✅ CLEAR ADDRESS
-// MODIFICIRAJ handleClearAddress FUNKCIJU
-const handleClearAddress = () => {
-  setAddressSearch('');
-  setSelectedAddress('');
-  setAvailableAddresses([]);
-  setShowAddressDropdown(false);
-  setCoordinates(null);
-  // DODAJ OVE NOVE CLEAR AKCIJE
-  setNeedsManualPositioning(false);
-  setStreetOnlyCoordinates(null);
-  setHouseNumber('');
-  setStreetName('');
-};
+  };
 
   // Monitor online status
   useEffect(() => {
@@ -426,7 +552,7 @@ const handleClearAddress = () => {
         uploaderName = user.email.split('@')[0].trim();
       }
 
-      // ✅ PREPARE COORDINATES AND ADDRESS
+      // Prepare coordinates and address
       let finalCoordinates = undefined;
       if (coordinates && selectedAddress) {
         finalCoordinates = {
@@ -445,7 +571,6 @@ const handleClearAddress = () => {
         author: formData.author,
         authorId: user.uid,
         location: locationName,
-        // ✅ DODAJ COORDINATES
         coordinates: finalCoordinates,
         tags: formData.tags,
         taggedPersons: taggedPersons.map(person => ({
@@ -470,11 +595,7 @@ const handleClearAddress = () => {
       // Reset form
       setSelectedFile(null);
       setTaggedPersons([]);
-      setAddressSearch('');
-      setSelectedAddress('');
-      setAvailableAddresses([]);
-      setShowAddressDropdown(false);
-      setCoordinates(null);
+      handleClearAddress();
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl('');
@@ -508,13 +629,6 @@ const handleClearAddress = () => {
       setUploading(false);
     }
   };
-
-  // Generate year options
-  const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(
-    { length: currentYear - 1899 }, 
-    (_, i) => currentYear - i
-  );
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -561,205 +675,245 @@ const handleClearAddress = () => {
             )}
           </div>
 
-          {/* ✅ ADDRESS SEARCH */}
-<div>
-  <label className="block text-sm font-medium mb-2">
-    <Navigation className="inline h-4 w-4 mr-1" />
-    {t('upload.specificAddress')} {locationName} {t('upload.optional')}
-  </label>
-  
-  <div className="relative">
-    <div className="relative">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-      <Input
-        type="text"
-        placeholder={t('upload.searchAddress')}
-        value={addressSearch}
-        onChange={(e) => handleAddressSearch(e.target.value)}
-        className={`pl-10 ${loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''}`}
-      />
-      {loadingAddresses && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-        </div>
-      )}
-      {selectedAddress && !loadingAddresses && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleClearAddress}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-        >
-          ✕
-        </Button>
-      )}
-    </div>
-
-    {/* POSTOJEĆI DROPDOWN S ADRESAMA - bez promjena */}
-    {showAddressDropdown && (
-      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-        {loadingAddresses ? (
-          <div className="flex items-center justify-center py-4">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-            <span className="text-sm text-gray-600">Searching for addresses...</span>
-          </div>
-        ) : availableAddresses.length > 0 ? (
+          {/* OPTIMIZED ADDRESS SEARCH */}
           <div>
-            <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
-              Found {availableAddresses.length} address{availableAddresses.length !== 1 ? 'es' : ''}
-            </div>
-            {availableAddresses.map((address, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => handleAddressSelect(address)}
-                className="w-full text-left px-4 py-3 hover:bg-blue-50 hover:text-blue-700 text-sm border-b border-gray-100 last:border-b-0 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-3 w-3 text-gray-400" />
-                  <span className="font-medium">{address}</span>
+            <label className="block text-sm font-medium mb-2">
+              <Navigation className="inline h-4 w-4 mr-1" />
+              {t('upload.specificAddress')} {locationName} {t('upload.optional')}
+            </label>
+            
+            <div className="relative">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={t('upload.searchAddress')}
+                  value={addressSearch}
+                  onChange={handleAddressInputChange}
+                  className={`pl-10 ${loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''}`}
+                />
+                
+                {/* Loading Spinner */}
+                {loadingAddresses && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+                
+                {/* Clear Button */}
+                {selectedAddress && !loadingAddresses && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearAddress}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+
+              {/* Search Status Indicator */}
+              {addressSearch.length >= 2 && (
+                <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+                  {loadingAddresses ? 'Searching...' : 
+                   debouncedSearchTerm !== addressSearch ? 'Typing...' : 
+                   availableAddresses.length > 0 ? `${availableAddresses.length} found` : 'No results'}
                 </div>
-              </button>
-            ))}
+              )}
+
+              {/* Dropdown with Results */}
+              {showAddressDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {loadingAddresses ? (
+                    <div className="flex items-center justify-center py-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+                      <span className="text-sm text-gray-600">Searching for addresses...</span>
+                    </div>
+                  ) : availableAddresses.length > 0 ? (
+                    <div>
+                      <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
+                        Found {availableAddresses.length} address{availableAddresses.length !== 1 ? 'es' : ''}
+                        {searchCache.has(`${debouncedSearchTerm}_${locationName}`) && (
+                          <span className="ml-2 text-green-600">📋 (cached)</span>
+                        )}
+                      </div>
+                      {availableAddresses.map((address, index) => {
+                        const isStatusMessage = address.includes('🔍') || address.includes('❌');
+                        
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              if (!isStatusMessage) {
+                                console.log('🔍 Clicking address:', address);
+                                handleAddressSelect(address);
+                              }
+                            }}
+                            disabled={isStatusMessage}
+                            className={`w-full text-left px-4 py-3 text-sm border-b border-gray-100 last:border-b-0 transition-colors ${
+                              isStatusMessage 
+                                ? 'text-gray-500 cursor-default bg-gray-50' 
+                                : 'hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {!isStatusMessage && <MapPin className="h-3 w-3 text-gray-400" />}
+                              <span className={isStatusMessage ? "font-normal" : "font-medium"}>{address}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : addressSearch.length >= 2 ? (
+                    <div className="px-4 py-4 text-sm text-gray-500 text-center">
+                      <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
+                      No addresses found for "<span className="font-medium">{addressSearch}</span>"
+                      <div className="text-xs text-gray-400 mt-1">{t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva"</div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-1 text-xs text-gray-500">
+              {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
+              {/* Debug info */}
+              <span className="ml-2 text-gray-400">
+                Cache: {searchCache.size} entries
+                {debouncedSearchTerm !== addressSearch && (
+                  <span className="ml-2 text-orange-500">⏳ Waiting...</span>
+                )}
+              </span>
+            </div>
           </div>
-        ) : addressSearch.length >= 2 ? (
-          <div className="px-4 py-4 text-sm text-gray-500 text-center">
-            <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
-            No addresses found for "<span className="font-medium">{addressSearch}</span>"
-            <div className="text-xs text-gray-400 mt-1">{t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva"</div>
-          </div>
-        ) : null}
-      </div>
-    )}
-  </div>
 
-{/* NOVI: MANUAL POSITIONING SEKCIJA */}
-{needsManualPositioning && streetOnlyCoordinates && (
-  <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-    <div className="flex items-start gap-3 mb-3">
-      <div className="p-1 bg-blue-600 text-white rounded">
-        <MapPin className="h-4 w-4" />
-      </div>
-      <div className="flex-1">
-        <h4 className="font-medium text-blue-800 mb-1">
-          📍 {streetName} pronađena! Odaberite točnu lokaciju za broj {houseNumber}
-        </h4>
-        <p className="text-sm text-blue-700">
-          Kliknite na kartu gdje se točno nalazi ova fotografija
-        </p>
-      </div>
-    </div>
-    
-    <div className="rounded-lg overflow-hidden border border-blue-300">
-      <SimpleMiniMap
-        center={streetOnlyCoordinates}
-        onLocationSelect={(coords) => {
-          setCoordinates(coords);
-          setSelectedAddress(`${streetName} ${houseNumber}`);
-          // VAŽNO: Postavi input field na punu adresu
-          setAddressSearch(`${streetName} ${houseNumber}`);
-          setNeedsManualPositioning(false);
-          setShowAddressDropdown(false);
-          toast.success(`📍 Lokacija postavljena za ${streetName} ${houseNumber}!`);
-        }}
-      />
-    </div>
-    
-    <div className="mt-2 text-xs text-blue-600">
-      💡 Tip: Zoom in za veću točnost. Marker će se pojaviti gdje kliknete.
-    </div>
-  </div>
-)}
+          {/* MANUAL POSITIONING SECTION */}
+          {needsManualPositioning && streetOnlyCoordinates && (
+            <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="p-1 bg-blue-600 text-white rounded">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-800 mb-1">
+                    📍 {streetName} pronađena! Odaberite točnu lokaciju za broj {houseNumber}
+                  </h4>
+                  <p className="text-sm text-blue-700">
+                    Kliknite na kartu gdje se točno nalazi ova fotografija
+                  </p>
+                </div>
+              </div>
+              
+              <div className="rounded-lg overflow-hidden border border-blue-300">
+                <SimpleMiniMap
+                  center={streetOnlyCoordinates}
+                  onLocationSelect={(coords) => {
+                    setCoordinates(coords);
+                    setSelectedAddress(`${streetName} ${houseNumber}`);
+                    setAddressSearch(`${streetName} ${houseNumber}`);
+                    setNeedsManualPositioning(false);
+                    setShowAddressDropdown(false);
+                    toast.success(`📍 Lokacija postavljena za ${streetName} ${houseNumber}!`);
+                  }}
+                />
+              </div>
+              
+              <div className="mt-2 text-xs text-blue-600">
+                💡 Tip: Zoom in za veću točnost. Marker će se pojaviti gdje kliknete.
+              </div>
+            </div>
+          )}
 
-{/* NOVI: POTVRDA ODABRANE LOKACIJE */}
-{coordinates && selectedAddress && !needsManualPositioning && (
-  <div className="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
-    <div className="flex items-start gap-3 mb-3">
-      <div className="p-1 bg-green-600 text-white rounded">
-        <MapPin className="h-4 w-4" />
-      </div>
-      <div className="flex-1">
-        <h4 className="font-medium text-green-800 mb-1">
-          ✅ Lokacija postavljena: {selectedAddress}
-        </h4>
-        <p className="text-sm text-green-700">
-          Koordinate: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
-        </p>
-      </div>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          setNeedsManualPositioning(true);
-          setCoordinates(null);
-        }}
-        className="text-green-700 hover:text-green-800 text-xs"
-      >
-        Promijeni
-      </Button>
-    </div>
-    
-    {/* MINI PRIKAZ KARTE S ODABRANIM MJESTOM */}
-    <div className="rounded-lg overflow-hidden border border-green-300 h-32">
-      <MapContainer
-        center={[coordinates.latitude, coordinates.longitude]}
-        zoom={17}
-        style={{ height: '100%', width: '100%' }}
-        className="rounded-lg"
-        zoomControl={false}
-        dragging={false}
-        scrollWheelZoom={false}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap'
-        />
-        <Marker position={[coordinates.latitude, coordinates.longitude]} />
-      </MapContainer>
-    </div>
-    
-    <div className="mt-2 text-xs text-green-600">
-      📍 Odabrana lokacija za fotografiju
-    </div>
-  </div>
-)}
+          {/* LOCATION CONFIRMATION SECTION */}
+          {coordinates && selectedAddress && !needsManualPositioning && (
+            <div className="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="p-1 bg-green-600 text-white rounded">
+                  <MapPin className="h-4 w-4" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-green-800 mb-1">
+                    ✅ Lokacija postavljena: {selectedAddress}
+                  </h4>
+                  <p className="text-sm text-green-700">
+                    Koordinate: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    console.log('Promijeni button clicked');
+                    
+                    // Check if we have data for manual positioning
+                    if (streetName && houseNumber) {
+                      // Return to manual positioning mode
+                      setNeedsManualPositioning(true);
+                      setCoordinates(null);
+                      toast.info(`📍 Odaberite novu lokaciju za ${streetName} ${houseNumber}`);
+                    } else {
+                      // No data, completely reset
+                      handleClearAddress();
+                      toast.info('📍 Možete ponovo pretražiti adresu');
+                    }
+                  }}
+                  className="text-green-700 hover:text-green-800 text-xs"
+                >
+                  Promijeni
+                </Button>
+              </div>
+              
+              {/* MINI MAP DISPLAY WITH SELECTED LOCATION */}
+              <div className="rounded-lg overflow-hidden border border-green-300 h-32">
+                <MapContainer
+                  center={[coordinates.latitude, coordinates.longitude]}
+                  zoom={17}
+                  style={{ height: '100%', width: '100%' }}
+                  className="rounded-lg"
+                  zoomControl={false}
+                  dragging={false}
+                  scrollWheelZoom={false}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; OpenStreetMap'
+                  />
+                  <Marker position={[coordinates.latitude, coordinates.longitude]} />
+                </MapContainer>
+              </div>
+              
+              <div className="mt-2 text-xs text-green-600">
+                📍 Odabrana lokacija za fotografiju
+              </div>
+            </div>
+          )}
 
-{/* STARI COORDINATES DISPLAY - ukloni ili prilagodi */}
-{coordinates && !selectedAddress && (
-  <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
-    <MapPin className="h-3 w-3" />
-    <span>📍 Location found: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}</span>
-  </div>
-)}
-
-  <div className="mt-1 text-xs text-gray-500">
-    {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
-  </div>
-</div>
+          {/* OLD COORDINATES DISPLAY - remove or adapt */}
+          {coordinates && !selectedAddress && (
+            <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
+              <MapPin className="h-3 w-3" />
+              <span>📍 Location found: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}</span>
+            </div>
+          )}
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Year */}
+            {/* Year - ✅ UPDATED WITH YEARPICKER */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 <Calendar className="inline h-4 w-4 mr-1" />
                 {t('upload.year')} *
               </label>
-              <select
-                value={formData.year}
-                onChange={(e) => setFormData(prev => ({...prev, year: e.target.value}))}
-                className="w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-                required
-              >
-                <option value="" disabled hidden>{t('upload.selectYear')}</option>
-                {yearOptions.map((year) => (
-                  <option key={year} value={year.toString()}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+              <YearPicker
+                selectedYear={formData.year}
+                onYearSelect={(year) => setFormData(prev => ({...prev, year}))}
+                t={t}
+                required={true}
+              />
             </div>
 
             {/* Author */}

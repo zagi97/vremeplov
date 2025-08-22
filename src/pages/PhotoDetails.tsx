@@ -730,10 +730,11 @@ relatedPhotos.forEach((photo, index) => {
               <p className="mt-2">{t('footer.tagline')}</p>
             </div>
             <div className="flex space-x-6">
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-              <Link to="/" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
+              {/* In your Location.tsx footer (around line 522-525) */}
+<Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+<Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+<Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
+<Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-800 text-center">
