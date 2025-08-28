@@ -21,12 +21,14 @@ import {
   Users
 } from "lucide-react";
 import { toast } from 'sonner';
-
+import { useLanguage } from "../contexts/LanguageContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
 
 const CommunityLeaderboard = () => {
+  const { t } = useLanguage();
   const [leaderboardData, setLeaderboardData] = useState<{
     photos: LeaderboardUser[];
     likes: LeaderboardUser[];
@@ -114,15 +116,15 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
     const getMetricLabel = () => {
       switch (category) {
         case 'photos':
-          return 'photos';
+          return t('profile.photos');
         case 'likes':
-          return 'likes';
+          return t('community.likes');
         case 'locations':
-          return 'locations';
+          return t('community.locations');
         case 'recent':
-          return 'joined';
+          return t('community.joined');
         default:
-          return 'photos';
+          return t('profile.photos');
       }
     };
 
@@ -194,7 +196,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
               {/* Top Badge */}
               {user.badges.length > 0 && (
                 <Badge variant="secondary" className="hidden lg:flex">
-                  {user.badges.length} badge{user.badges.length !== 1 ? 's' : ''}
+                  {user.badges.length} {t('community.badge')}{user.badges.length !== 1 ? 's' : ''}
                 </Badge>
               )}
             </div>
@@ -209,11 +211,11 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading leaderboard...</p>
+          <p className="text-gray-600">{t('community.loadingLeaderboard')}</p>
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
@@ -229,13 +231,16 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
               </Link>
               <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
             </div>
+            <div className="flex items-center gap-4">
+              <LanguageSelector />
+            </div>
           </div>
           <div className="mt-6">
             <h2 className="text-3xl md:text-4xl font-bold mb-2 flex items-center gap-3">
               <Trophy className="h-8 w-8" />
-              Community Leaderboard
+              {t('community.leaderboard')}
             </h2>
-            <p className="text-gray-300">Celebrating our top heritage contributors</p>
+            <p className="text-gray-300">{t('community.celebratingContributors')}</p>
           </div>
         </div>
       </header>
@@ -245,12 +250,12 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
         <div className="container max-w-6xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-700">Time Period:</span>
+              <span className="text-sm font-medium text-gray-700">{t('community.timePeriod')}:</span>
               <div className="flex gap-2">
                 {[
-                  { value: 'all-time', label: 'All Time' },
-                  { value: 'this-year', label: 'This Year' },
-                  { value: 'this-month', label: 'This Month' }
+                  { value: 'all-time', label: t('community.allTime') },
+                  { value: 'this-year', label: t('community.thisYear') },
+                  { value: 'this-month', label: t('community.thisMonth') }
                 ].map(period => (
                   <Button
                     key={period.value}
@@ -265,7 +270,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
             </div>
             
             <div className="text-sm text-gray-500">
-              Updated daily at midnight
+              {t('community.updatedDaily')}
             </div>
           </div>
         </div>
@@ -278,23 +283,23 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
             <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-8">
               <TabsTrigger value="photos" className="flex items-center gap-2">
                 <Camera className="h-4 w-4" />
-                <span className="hidden sm:inline">Most Photos</span>
-                <span className="sm:hidden">Photos</span>
+                <span className="hidden sm:inline">{t('community.mostPhotos')}</span>
+                <span className="sm:hidden">{t('profile.photos')}</span>
               </TabsTrigger>
               <TabsTrigger value="likes" className="flex items-center gap-2">
                 <Heart className="h-4 w-4" />
-                <span className="hidden sm:inline">Most Liked</span>
-                <span className="sm:hidden">Likes</span>
+                <span className="hidden sm:inline">{t('community.mostLiked')}</span>
+                <span className="sm:hidden">{t('community.likes')}</span>
               </TabsTrigger>
               <TabsTrigger value="locations" className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span className="hidden sm:inline">Most Locations</span>
-                <span className="sm:hidden">Places</span>
+                <span className="hidden sm:inline">{t('community.mostLocations')}</span>
+                <span className="sm:hidden">{t('community.places')}</span>
               </TabsTrigger>
               <TabsTrigger value="recent" className="flex items-center gap-2">
                 <Star className="h-4 w-4" />
-                <span className="hidden sm:inline">New Members</span>
-                <span className="sm:hidden">New</span>
+                <span className="hidden sm:inline">{t('community.newMembers')}</span>
+                <span className="sm:hidden">{t('community.new')}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -306,7 +311,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Camera className="h-5 w-5" />
-                        Top Contributors by Photos
+                        {t('community.topContributorsByPhotos')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -322,7 +327,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Heart className="h-5 w-5" />
-                        Most Appreciated Contributors
+                        {t('community.mostAppreciatedContributors')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -338,7 +343,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <MapPin className="h-5 w-5" />
-                        Heritage Explorers
+                        {t('community.heritageExplorers')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -354,7 +359,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         <Star className="h-5 w-5" />
-                        Welcome New Members
+                        {t('community.welcomeNewMembers')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -373,27 +378,27 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      Community Stats
+                      {t('community.communityStats')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-    <div className="flex justify-between">
-      <span className="text-gray-600">Total Members</span>
-      <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
-    </div>
-    <div className="flex justify-between">
-      <span className="text-gray-600">Photos Shared</span>
-      <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
-    </div>
-    <div className="flex justify-between">
-      <span className="text-gray-600">Locations Documented</span>
-      <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
-    </div>
-    <div className="flex justify-between">
-      <span className="text-gray-600">Total Likes</span>
-      <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
-    </div>
-  </CardContent>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('community.totalMembers')}</span>
+                      <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('community.photosShared')}</span>
+                      <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('community.locationsDocumented')}</span>
+                      <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{t('profile.totalLikes')}</span>
+                      <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
+                    </div>
+                  </CardContent>
                 </Card>
 
                 {/* This Month's Highlights */}
@@ -401,29 +406,29 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5" />
-                      This Month's Highlights
+                      {t('community.thisMonthsHighlights')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-    <div>
-      <div className="text-sm text-gray-600">Most Active Location</div>
-      <div className="font-medium">{monthlyHighlights.mostActiveLocation.name}</div>
-      <div className="text-xs text-gray-500">{monthlyHighlights.mostActiveLocation.photoCount} new photos</div>
-    </div>
-    <div>
-      <div className="text-sm text-gray-600">Photo of the Month</div>
-      <div className="font-medium">{monthlyHighlights.photoOfTheMonth.title}</div>
-      <div className="text-xs text-gray-500">by {monthlyHighlights.photoOfTheMonth.author}</div>
-    </div>
-    <div>
-      <div className="text-sm text-gray-600">New Members</div>
-      <div className="font-medium">{monthlyHighlights.newMembers.count} joined</div>
-      <div className="text-xs text-gray-500">
-        {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
-        {monthlyHighlights.newMembers.percentageChange}% from last month
-      </div>
-    </div>
-  </CardContent>
+                    <div>
+                      <div className="text-sm text-gray-600">{t('community.mostActiveLocation')}</div>
+                      <div className="font-medium">{monthlyHighlights.mostActiveLocation.name}</div>
+                      <div className="text-xs text-gray-500">{monthlyHighlights.mostActiveLocation.photoCount} {t('community.newPhotos')}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">{t('community.photoOfTheMonth')}</div>
+                      <div className="font-medium">{monthlyHighlights.photoOfTheMonth.title}</div>
+                      <div className="text-xs text-gray-500">{t('community.by')} {monthlyHighlights.photoOfTheMonth.author}</div>
+                    </div>
+                    <div>
+                      <div className="text-sm text-gray-600">{t('community.newMembers')}</div>
+                      <div className="font-medium">{monthlyHighlights.newMembers.count} {t('community.joined')}</div>
+                      <div className="text-xs text-gray-500">
+                        {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
+                        {monthlyHighlights.newMembers.percentageChange}% {t('community.fromLastMonth')}
+                      </div>
+                    </div>
+                  </CardContent>
                 </Card>
 
                 {/* Badge Showcase */}
@@ -431,37 +436,37 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Award className="h-5 w-5" />
-                      Achievement System
+                      {t('community.achievementSystem')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm text-gray-600 mb-3">
-                      Earn badges by contributing to our heritage collection:
+                      {t('community.earnBadges')}
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                           <Camera className="h-2 w-2 text-white" />
                         </div>
-                        <span>Photographer: Upload your first photo</span>
+                        <span>{t('community.photographer')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
                           <Medal className="h-2 w-2 text-white" />
                         </div>
-                        <span>Local Historian: Share 10+ photos</span>
+                        <span>{t('community.localHistorian')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                           <MapPin className="h-2 w-2 text-white" />
                         </div>
-                        <span>Heritage Explorer: 5+ locations</span>
+                        <span>{t('community.heritageExplorer')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                           <Heart className="h-2 w-2 text-white" />
                         </div>
-                        <span>Community Favorite: 100+ likes</span>
+                        <span>{t('community.communityFavorite')}</span>
                       </div>
                     </div>
                   </CardContent>
@@ -471,6 +476,27 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
           </Tabs>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-10 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-6 md:mb-0">
+              <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
+              <p className="mt-2">{t('footer.tagline')}</p>
+            </div>
+            <div className="flex space-x-6">
+              <Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+            <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -653,7 +653,7 @@ relatedPhotos.forEach((photo, index) => {
 
           {/* Right Column - Sidebar for larger screens */}
           <div className="hidden md:block p-6 border-t border-gray-200">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mb-8">
               {/* Location Map */}
               <PhotoLocationMap 
                 photo={{
@@ -672,14 +672,14 @@ relatedPhotos.forEach((photo, index) => {
               />
               
               {/* Historical Context */}
-              <div className="bg-gray-50 p-4 rounded-lg">
+       {/*        <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="font-medium text-lg mb-3">{t('photoDetail.historicalContext')}</h3>
                 <p className="text-gray-700">
                   {translateWithParams(t, 'photoDetail.historicalContextDesc', {
                     location: photo.location
                   })}
                 </p>
-              </div>
+              </div> */}
             </div>
             
             {/* Related Photos */}
