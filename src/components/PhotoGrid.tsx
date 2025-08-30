@@ -38,11 +38,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     try {
       const result = await photoService.toggleLike(photoId, user.uid);
       
-      if (result.alreadyLiked) {
-        toast.info('You have already liked this photo');
-        return;
-      }
-      
       // Update local state
       setPhotosState(prev => 
         prev.map(photo => 
@@ -60,7 +55,12 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
         }
       }
       
+       // Show appropriate message
+    if (result.liked) {
       toast.success('Photo liked!');
+    } else {
+      toast.success('Photo unliked!');
+    }
     } catch (error) {
       console.error('Error liking photo:', error);
       toast.error('Failed to like photo');
@@ -130,23 +130,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                     </button>
                   </div>
                   
-                  {photo.tags && photo.tags.length > 0 && (
-                    <div className="flex gap-1">
-                      {photo.tags.slice(0, 2).map((tag, index) => (
-                        <span 
-                          key={index}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                      {photo.tags.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                          +{photo.tags.length - 2}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {photo.photoType && (
+  <div className="flex gap-1">
+    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+      {photo.photoType}
+    </span>
+  </div>
+)}
                 </div>
               </div>
             </CardContent>

@@ -137,8 +137,7 @@ const Location = () => {
       filtered = filtered.filter(photo => 
         photo.description.toLowerCase().includes(searchLower) ||
         photo.detailedDescription?.toLowerCase().includes(searchLower) ||
-        photo.author.toLowerCase().includes(searchLower) ||
-        photo.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+        photo.author.toLowerCase().includes(searchLower)
       );
     }
 
@@ -150,13 +149,13 @@ const Location = () => {
       });
     }
 
-    // Apply photo type filter (this would need tags or categories in your photos)
-    if (filters.photoType !== 'all') {
-      filtered = filtered.filter(photo => 
-        photo.tags?.includes(filters.photoType) ||
-        photo.description.toLowerCase().includes(filters.photoType)
-      );
-    }
+// Apply photo type filter - ažuriraj ovo u Location.tsx
+if (filters.photoType !== 'all') {
+  filtered = filtered.filter(photo => 
+    photo.photoType === filters.photoType || // Dodaj ovo - direktna provjera
+    photo.description.toLowerCase().includes(filters.photoType)
+  );
+}
 
     // Apply sorting
     switch (filters.sortBy) {

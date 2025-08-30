@@ -1,4 +1,4 @@
-// src/components/UserProfile.tsx - Corrected version using 'logout' instead of 'signOut'
+// src/components/UserProfile.tsx - s prijevodima
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "./ui/button";
@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { User, LogOut, Trophy, ChevronDown } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 
 interface UserProfileProps {
@@ -13,7 +14,8 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
-  const { user, signInWithGoogle, logout } = useAuth(); // ✅ Use 'logout' instead of 'signOut'
+  const { user, signInWithGoogle, logout } = useAuth();
+  const { t } = useLanguage();
 
   if (!user) {
     return (  
@@ -22,7 +24,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
         variant="ghost" 
         className={cn("text-white hover:bg-white hover:text-gray-900 transition-colors", className)}
       >
-        Sign In
+        {t('nav.login')}
       </Button>
     );
   }
@@ -49,18 +51,18 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
         <DropdownMenuItem asChild>
           <Link to={`/user/${user.uid}`} className="flex items-center gap-2 cursor-pointer">
             <User className="h-4 w-4" />
-            My Profile
+            {t('userProfile.myProfile')}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/community" className="flex items-center gap-2 cursor-pointer">
             <Trophy className="h-4 w-4" />
-            Community
+            {t('userProfile.community')}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={logout} className="flex items-center gap-2 cursor-pointer">
           <LogOut className="h-4 w-4" />
-          Sign Out
+          {t('userProfile.signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

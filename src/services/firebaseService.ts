@@ -44,8 +44,8 @@ export interface Photo {
   views: number;
   isApproved: boolean;
   approved?: boolean; // Alternative field name used in dashboard
-  tags: string[];
-   taggedPersons?: Array<{
+  photoType?: string; // Dodaj ovo
+  taggedPersons?: Array<{
     name: string;
     x: number;
     y: number;
@@ -332,7 +332,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       location: photoData.location,
       // ✅ DODAJ COORDINATES
       coordinates: photoData.coordinates, // Ovo će biti undefined ako nema koordinata
-      tags: photoData.tags || [],
+      photoType: photoData.photoType,
       taggedPersons: photoData.taggedPersons || [],
       uploadedBy: photoData.uploadedBy || currentUser?.displayName || currentUser?.email || 'Unknown',
       uploadedAt: photoData.uploadedAt || new Date().toISOString(),

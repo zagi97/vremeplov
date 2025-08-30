@@ -88,29 +88,40 @@ setComments(photoComments.map(comment => ({
     minute: '2-digit'
   }) // ✅ Datum + vreme u hrvatskom formatu
 })));
-        
-        let taggedPersonsData;
-        if (user?.email === 'vremeplov.app@gmail.com') {
-          taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
-        } else {
-          taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForUser(photoId, user?.uid, photoData.authorId);
-        }
-        
-        const photoTaggedPersons = photoData.taggedPersons || [];
-        
-        const allTaggedPersons = [
-          ...taggedPersonsData,
-          ...photoTaggedPersons.map((person, index) => ({
-            id: `photo_${index}`,
-            name: person.name,
-            x: person.x,
-            y: person.y,
-            photoId: photoId,
-            addedBy: 'System'
-          }))
-        ];
-        
-        setTaggedPersons(allTaggedPersons);
+const photoTaggedPersons = photoData.taggedPersons || [];
+let taggedPersonsData: any[] = [];
+if (user?.email === 'vremeplov.app@gmail.com') {
+  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForUser(photoId, user?.uid, photoData.authorId);
+} else {
+  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForUser(photoId, user?.uid, photoData.authorId);
+}
+const allTaggedPersons = [
+  ...taggedPersonsData,
+  ...photoTaggedPersons.map((person, index) => ({
+    id: `photo_${index}`,
+    name: person.name,
+    x: person.x,
+    y: person.y,
+    photoId: photoId,
+    addedBy: 'System'
+  }))
+];
+
+let visibleTags = allTaggedPersons;
+// Ako nisi admin:
+if (user?.email !== 'vremeplov.app@gmail.com') {
+  visibleTags = allTaggedPersons.filter(tag => {
+    // Approved tagovi uvijek prolaze
+    if (tag.isApproved !== false) return true;
+    // Pending tagovi koje je sam korisnik dodao
+    if (tag.addedByUid && tag.addedByUid === user?.uid) return true;
+    // Pending tagovi na njegovoj fotki
+    if (tag.addedByUid && tag.addedByUid !== user?.uid && photoData.authorId === user?.uid) return true;
+    return false;
+  });
+}
+
+setTaggedPersons(visibleTags);
         
         // Load related photos from the same location
         if (photoData.location) {

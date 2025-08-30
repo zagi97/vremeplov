@@ -221,6 +221,8 @@ const translations: Record<Language, TranslationMap> = {
     'upload.shareMemory': 'Share Memory',
     'upload.noConnection': 'No Connection',
     'upload.uploading': 'Uploading...',
+    'upload.photoType': 'Photo Type',
+'upload.selectPhotoType': 'Select photo type',
 
     // Text
     'text.characterCounter': 'characters',
@@ -499,6 +501,10 @@ const translations: Record<Language, TranslationMap> = {
 'community.localHistorian': 'Local Historian: Share 10+ photos',
 'community.heritageExplorer': 'Heritage Explorer: 5+ locations',
 'community.communityFavorite': 'Community Favorite: 100+ likes',
+
+'userProfile.myProfile': 'My Profile',
+'userProfile.community': 'Community',
+'userProfile.signOut': 'Sign Out',
   },
   hr: {
     // Navigation
@@ -695,6 +701,8 @@ const translations: Record<Language, TranslationMap> = {
     'upload.shareMemory': 'Podijeli sjećanje',
     'upload.noConnection': 'Nema konekcije',
     'upload.uploading': 'Učitavanje...',
+    'upload.photoType': 'Tip fotografije',
+'upload.selectPhotoType': 'Odaberite tip fotografije',
 
      // Text
     'text.characterCounter': 'znakova',
@@ -973,6 +981,11 @@ const translations: Record<Language, TranslationMap> = {
 'community.localHistorian': 'Lokalni povjesničar: Podijelite 10+ fotografija',
 'community.heritageExplorer': 'Istraživač baštine: 5+ lokacija',
 'community.communityFavorite': 'Favorit zajednice: 100+ sviđanja',
+
+'userProfile.myProfile': 'Moj profil',
+'userProfile.community': 'Zajednica',
+'userProfile.signOut': 'Odjava',
+
   }
 };
 

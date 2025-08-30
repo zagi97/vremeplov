@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Upload, Calendar, MapPin, User, Image as ImageIcon, Navigation, Search } from "lucide-react";
+import { Upload, Calendar, MapPin, User, Image as ImageIcon, Navigation, Search, Tag } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { photoService, geocodingService } from '../services/firebaseService';
 import { toast } from 'sonner';
@@ -14,6 +14,7 @@ import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
 import { SimpleMiniMap } from "./SimpleMiniMap";
 import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker import
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface PhotoUploadProps {
   locationName: string;
@@ -49,6 +50,14 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   // Hooks
   const { t } = useLanguage();
   const { user } = useAuth();
+
+  const PHOTO_TYPES = [
+  { value: "street", label: t('photoType.street') },
+  { value: "building", label: t('photoType.building') },
+  { value: "people", label: t('photoType.people') },
+  { value: "event", label: t('photoType.event') },
+  { value: "nature", label: t('photoType.nature') }
+];
   
   // Basic state
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -85,8 +94,32 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     description: '',
     detailedDescription: '',
     author: '',
-    tags: [] as string[]
+    photoType: '', // Dodaj ovo
   });
+
+  const closeAddressDropdown = () => {
+  setShowAddressDropdown(false);
+  setAvailableAddresses([]);
+  setLoadingAddresses(false);
+};
+
+// Dodaj useEffect za handle click outside
+const dropdownRef = useRef<HTMLDivElement>(null);
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      closeAddressDropdown();
+    }
+  };
+
+  if (showAddressDropdown) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [showAddressDropdown]);
 
   // Debounce search term - waits 500ms after user stops typing
   const debouncedSearchTerm = useDebounce(addressSearch, 500);
@@ -321,9 +354,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     isSelectingAddressRef.current = true;
     
     // Immediately close dropdown and clear loading state
-    setShowAddressDropdown(false);
-    setLoadingAddresses(false);
-    setAvailableAddresses([]); // Clear the dropdown results
+    closeAddressDropdown();
     
     // Set the selected address
     setSelectedAddress(address);
@@ -409,9 +440,9 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   }, [previewUrl]);
 
   // Check if form is valid
-  const isFormValid = (): boolean => {
-    return !!(selectedFile && formData.year && formData.description && formData.author);
-  };
+const isFormValid = (): boolean => {
+  return !!(selectedFile && formData.year && formData.description && formData.author && formData.photoType !== '') ;
+};
 
   // Helper function to compress image
   const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
@@ -572,7 +603,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         authorId: user.uid,
         location: locationName,
         coordinates: finalCoordinates,
-        tags: formData.tags,
+        photoType: formData.photoType,
         taggedPersons: taggedPersons.map(person => ({
           name: person.name,
           x: person.x,
@@ -600,13 +631,13 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl('');
       }
-      setFormData({
-        year: '',
-        description: '',
-        detailedDescription: '',
-        author: '',
-        tags: []
-      });
+setFormData({
+  year: '',
+  description: '',
+  detailedDescription: '',
+  author: '',
+  photoType: ''
+});
 
       onSuccess?.();
       
@@ -725,7 +756,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
               {/* Dropdown with Results */}
               {showAddressDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div ref={dropdownRef} className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                   {loadingAddresses ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
@@ -815,7 +846,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
                     setSelectedAddress(`${streetName} ${houseNumber}`);
                     setAddressSearch(`${streetName} ${houseNumber}`);
                     setNeedsManualPositioning(false);
-                    setShowAddressDropdown(false);
+                    closeAddressDropdown();
                     toast.success(`📍 Lokacija postavljena za ${streetName} ${houseNumber}!`);
                   }}
                 />
@@ -932,6 +963,32 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
               />
               <CharacterCounter currentLength={formData.author.length} maxLength={40} />
             </div>
+            {/* Photo Type - NOVO POLJE */}
+<div>
+  <label className="block text-sm font-medium mb-2">
+    <Tag className="inline h-4 w-4 mr-1" />
+     {t('upload.photoType')} *
+  </label>
+  <Select
+    value={formData.photoType}
+    onValueChange={(value) => setFormData({...formData, photoType: value})}
+  >
+    <SelectTrigger>
+      <SelectValue placeholder={t('upload.selectPhotoType')} />
+    </SelectTrigger>
+    <SelectContent>
+      {PHOTO_TYPES.map(type => (
+      <SelectItem 
+        key={type.value} 
+        value={type.value}
+        className="hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+      >
+        {type.label}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
           </div>
 
           {/* Location (readonly) */}
