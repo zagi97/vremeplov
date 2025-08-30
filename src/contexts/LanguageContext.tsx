@@ -515,7 +515,7 @@ const translations: Record<Language, TranslationMap> = {
     'nav.login': 'Prijava',
     'nav.logout': 'Odjava',
     'nav.admin': 'Admin',
-    'nav.memoryMap': 'Memorijska karta',
+    'nav.memoryMap': 'Karta sjećanja',
     
     // Home page
     'home.title': 'Hrvatske povijesne fotografije',
@@ -533,7 +533,7 @@ const translations: Record<Language, TranslationMap> = {
     'home.connectDesc': 'Označite osobe, podijelite priče i povežite se sa svojom zajednicom.',
     'home.exploreCroatiaTitle': 'Istražite Hrvatsku kroz vrijeme',
     'home.exploreCroatiaDesc': 'Otkrijte povijesne fotografije geografski i vidite kako su vaša omiljena mjesta izgledala kroz povijest.',
-    'home.exploreMemoryMap': 'Istražite memorijsku kartu',
+    'home.exploreMemoryMap': 'Istražite kartu sjećanja',
     'home.glimpseTitle': 'Pogled u prošlost',
     'home.glimpseDesc': 'Pregledajte našu kolekciju povijesnih fotografija iz različitih hrvatskih lokacija.',
     'home.startJourneyTitle': 'Započnite svoje putovanje kroz vrijeme',
@@ -727,9 +727,9 @@ const translations: Record<Language, TranslationMap> = {
 'locationMap.nearbyPhotos': 'Obližnje fotografije',
 
 // Croatian translations (add to the 'hr' object):
-'mapView.memoryMap': 'Memorijska karta',
+'mapView.memoryMap': 'Karta sjećanja',
 'mapView.exploreCroatian': 'Istražite hrvatsku baštinu kroz interaktivnu kartu',
-'mapView.loadingMemoryMap': 'Učitavanje memorijske karte...',
+'mapView.loadingMemoryMap': 'Učitavanje karte sjećanja...',
 'mapView.noLocatedPhotos': 'Još nema lociranih fotografija',
 'mapView.photosWillAppear': 'Fotografije će se pojaviti na karti kada budu učitane s određenim adresama.',
 'mapView.addPhotosTo': 'Dodaj fotografije u {location}',
