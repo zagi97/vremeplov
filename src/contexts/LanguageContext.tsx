@@ -248,6 +248,7 @@ const translations: Record<Language, TranslationMap> = {
 
 // English translations (add to the 'en' object):
 'mapView.memoryMap': 'Memory Map',
+'mapView.noPhotos': 'No photos with coordinates found yet',
 'mapView.exploreCroatian': 'Explore Croatian heritage through interactive map',
 'mapView.loadingMemoryMap': 'Loading memory map...',
 'mapView.noLocatedPhotos': 'No Located Photos Yet',
@@ -728,6 +729,7 @@ const translations: Record<Language, TranslationMap> = {
 
 // Croatian translations (add to the 'hr' object):
 'mapView.memoryMap': 'Karta sjećanja',
+'mapView.noPhotos': 'Trenutno nema niti jedne slike',
 'mapView.exploreCroatian': 'Istražite hrvatsku baštinu kroz interaktivnu kartu',
 'mapView.loadingMemoryMap': 'Učitavanje karte sjećanja...',
 'mapView.noLocatedPhotos': 'Još nema lociranih fotografija',

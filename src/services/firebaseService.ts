@@ -301,17 +301,46 @@ export class PhotoService {
     }
   }
 
-   // Delete photo
-  async deletePhoto(photoId: string): Promise<void> {
-    try {
-      const docRef = doc(this.photosCollection, photoId);
-      await deleteDoc(docRef);
-      console.log('Photo deleted successfully:', photoId);
-    } catch (error) {
-      console.error('Error deleting photo:', error);
-      throw error;
+  // Delete photo
+async deletePhoto(photoId: string): Promise<void> {
+  try {
+    // 1. Prvo dohvati podatke o slici
+    const photoDocRef = doc(this.photosCollection, photoId);
+    const photoDoc = await getDoc(photoDocRef);
+    
+    if (photoDoc.exists()) {
+      const photoData = photoDoc.data();
+      
+      // 2. Obriši sliku iz Storage-a
+      if (photoData.imageUrl) {
+        try {
+          const { deleteObject, ref } = await import('firebase/storage');
+          
+          // Izvuci storage path iz URL-a
+          const url = new URL(photoData.imageUrl);
+          const pathMatch = url.pathname.match(/\/o\/(.+)\?/);
+          if (pathMatch) {
+            const storagePath = decodeURIComponent(pathMatch[1]);
+            const storageRef = ref(storage, storagePath);
+            await deleteObject(storageRef);
+            console.log('Storage file deleted successfully:', storagePath);
+          }
+        } catch (storageError) {
+          console.error('Error deleting from storage:', storageError);
+          // Nastavi s brisanjem dokumenta iako je Storage brisanje neuspješno
+        }
+      }
     }
+    
+    // 3. Obriši Firestore dokument
+    await deleteDoc(photoDocRef);
+    console.log('Photo document deleted successfully:', photoId);
+    
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    throw error;
   }
+}
 
   // Add new photo
 

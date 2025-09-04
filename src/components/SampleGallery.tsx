@@ -6,11 +6,12 @@ import { Clock, MapPin, Image } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { photoService, Photo } from "../services/firebaseService";
 import LazyImage from "./LazyImage"; // ✅ Import the standalone component
+import { useLanguage } from '../contexts/LanguageContext';
 
 const SampleGallery = () => {
   const [recentPhotos, setRecentPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-
+const { t } = useLanguage();
   useEffect(() => {
     const loadRecentPhotos = async () => {
       try {
@@ -40,14 +41,13 @@ const SampleGallery = () => {
       </div>
     );
   }
-
   if (recentPhotos.length === 0) {
     return (
       <div className="text-center py-12">
         <Image className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos yet</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('gallery.noPhotos')}</h3>
         <p className="text-gray-600">
-          Be the first to share a historical photo and help preserve Croatian heritage!
+          {t('gallery.noPhotosDesc')}
         </p>
       </div>
     );
