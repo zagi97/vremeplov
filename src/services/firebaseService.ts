@@ -1071,46 +1071,44 @@ async getAllPhotos(): Promise<Photo[]> {
       }
     }
   }
-  // Add these methods to your PhotoService class in firebaseService.ts
 
-// Get photos by uploader (for user profiles)
-async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
+  async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
   try {
-    // Get current user from auth
-    const currentUser = auth.currentUser;
+    console.log(`Getting photos for user: ${uploaderUid}`);
     
-    // Pokušaj sve načine
-    const queries = [
-      // 1. Po authorId (novi način)
-      query(this.photosCollection, where('authorId', '==', uploaderUid), where('isApproved', '==', true)),
-    ];
-
-    // 2. Dodaj query po uploadedBy samo ako imamo currentUser podatke
-    if (currentUser?.email) {
-      queries.push(
-        query(this.photosCollection, where('uploadedBy', '==', currentUser.email), where('isApproved', '==', true))
-      );
-    }
-    
-    if (currentUser?.displayName) {
-      queries.push(
-        query(this.photosCollection, where('uploadedBy', '==', currentUser.displayName), where('isApproved', '==', true))
-      );
-    }
-
-    // 3. Dodaj i direktni search po tvojim podacima (za tvoje postojeće slike)
-    queries.push(
-      query(this.photosCollection, where('uploadedBy', '==', 'Kruno Žagar'), where('isApproved', '==', true))
-    );
-
     let allPhotos: Photo[] = [];
-    for (const q of queries) {
+    
+    // 1. GLAVNA METODA - samo po authorId
+    try {
+      const authorQuery = query(
+        this.photosCollection, 
+        where('authorId', '==', uploaderUid), 
+        where('isApproved', '==', true),
+        orderBy('createdAt', 'desc')
+      );
+      const authorSnapshot = await getDocs(authorQuery);
+      const authorPhotos = authorSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
+      allPhotos = [...allPhotos, ...authorPhotos];
+      console.log(`Found ${authorPhotos.length} photos by authorId for ${uploaderUid}`);
+    } catch (error) {
+      console.log('AuthorId query failed:', error);
+    }
+
+    // 2. FALLBACK - samo za legacy slike koje nemaju authorId
+    // Ali SAMO za specifični UID - ne za sve korisnike!
+    if (uploaderUid === 'JqLBVMJvyFYZKVTQN310XYLI1') {
       try {
-        const snapshot = await getDocs(q);
-        const photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
-        allPhotos = [...allPhotos, ...photos];
+        const legacyQuery = query(
+          this.photosCollection, 
+          where('uploadedBy', '==', 'Kruno Žagar'), 
+          where('isApproved', '==', true)
+        );
+        const legacySnapshot = await getDocs(legacyQuery);
+        const legacyPhotos = legacySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
+        allPhotos = [...allPhotos, ...legacyPhotos];
+        console.log(`Found ${legacyPhotos.length} legacy photos for Kruno`);
       } catch (error) {
-        console.log('Query failed, continuing to next...', error);
+        console.log('Legacy query failed:', error);
       }
     }
 
@@ -1119,14 +1117,13 @@ async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
       index === self.findIndex(p => p.id === photo.id)
     );
 
-    console.log(`Found ${uniquePhotos.length} photos for user ${uploaderUid}`);
+    console.log(`Total photos for ${uploaderUid}: ${uniquePhotos.length}`);
     return uniquePhotos;
   } catch (error) {
     console.error('Error fetching photos by uploader:', error);
     return [];
   }
 }
-
 // Get photos by uploader name (alternative method for display names)
 async getPhotosByUploaderName(uploaderName: string): Promise<Photo[]> {
   try {
@@ -1305,8 +1302,8 @@ async createOrUpdateUser(user: any): Promise<void> {
       const { userService } = await import('./userService');
       await userService.createUserProfile(user.uid, {
         ...userData,
-        bio: 'Passionate about preserving Croatian heritage.',
-        location: 'Croatia'
+        bio: '',
+        location: ''
       });
     } else {
       // Ažuriraj postojeći user
