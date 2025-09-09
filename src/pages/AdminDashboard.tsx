@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { photoService, Photo, Comment, TaggedPerson } from '../services/firebaseService';
 import { Button } from '../components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -13,7 +14,8 @@ import { toast } from 'sonner';
 import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut, Tag, User } from 'lucide-react';
 
 export default function AdminDashboard() {
- const { user, isAdmin, logout } = useAuth();
+const { user, isAdmin, exitAdminMode } = useAuth();
+const navigate = useNavigate();
   const [pendingPhotos, setPendingPhotos] = useState<Photo[]>([]);
   const [approvedPhotos, setApprovedPhotos] = useState<Photo[]>([]);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
@@ -36,6 +38,33 @@ export default function AdminDashboard() {
     if (!isAdmin) return;
     loadAdminData();
   }, [isAdmin]);
+
+
+  // Auto-exit admin mode when leaving dashboard
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      if (user?.email === 'vremeplov.app@gmail.com') {
+        await exitAdminMode();
+      }
+    };
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden && user?.email === 'vremeplov.app@gmail.com') {
+        setTimeout(async () => {
+          await exitAdminMode();
+          navigate('/');
+        }, 100);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, exitAdminMode, navigate]);
 
   const loadAdminData = async () => {
     try {
@@ -170,10 +199,12 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await exitAdminMode();
+      navigate('/');
+      toast.success('Exited admin mode successfully');
     } catch (error) {
-      console.error('Error logging out:', error);
-      toast.error('Failed to logout');
+      console.error('Error exiting admin mode:', error);
+      toast.error('Failed to exit admin mode');
     }
   };
 

@@ -7,7 +7,7 @@ interface ProtectedAdminRouteProps {
 }
 
 const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, isAdminMode, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,7 +20,7 @@ const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) =
     );
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !isAdmin || !isAdminMode) {
     return <Navigate to="/admin-login" replace />;
   }
 

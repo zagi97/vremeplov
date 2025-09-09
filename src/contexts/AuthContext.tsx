@@ -8,8 +8,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
    isAdmin: boolean;
+   isAdminMode: boolean;
   signInWithGoogle: () => Promise<void>;
    signInAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+   exitAdminMode: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -30,10 +32,17 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+
+
+      // Check if we're in admin mode from session storage
+      const adminModeFromStorage = sessionStorage.getItem('adminMode') === 'true';
+      setIsAdminMode(adminModeFromStorage && user?.email === 'vremeplov.app@gmail.com');
+
       setLoading(false);
     });
 
@@ -54,6 +63,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const result = await authService.signInAdmin(email, password);
       if (result.success) {
+          setIsAdminMode(true);
+          sessionStorage.setItem('adminMode', 'true');
         toast.success('Successfully signed in as admin!');
       } else {
         toast.error(result.error || 'Failed to sign in');
@@ -66,8 +77,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+   const exitAdminMode = async () => {
+    try {
+      setIsAdminMode(false);
+      sessionStorage.removeItem('adminMode');
+      await signOut(auth);
+      toast.success('Exited admin mode');
+    } catch (error) {
+      console.error('Error exiting admin mode:', error);
+      toast.error('Failed to exit admin mode');
+    }
+  };
+
   const logout = async () => {
     try {
+       setIsAdminMode(false);
+      sessionStorage.removeItem('adminMode');
       await signOut(auth);
       toast.success('Successfully signed out!');
     } catch (error) {
@@ -82,8 +107,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     loading,
     isAdmin,
+     isAdminMode,
     signInWithGoogle,
     signInAdmin,
+    exitAdminMode,
     logout
   };
 
