@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogTrigger } from '../components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut, Tag, User } from 'lucide-react';
+import LazyImage from '../components/LazyImage';
+
 
 export default function AdminDashboard() {
 const { user, isAdmin, exitAdminMode } = useAuth();
@@ -526,44 +528,48 @@ function TagModerationCard({
       <div className="flex gap-6 p-6">
         {photo && (
           <div className="flex-shrink-0 relative group w-48">
-            <Dialog>
-              <DialogTrigger asChild>
-                <div className="relative cursor-pointer w-full h-32">
-                  <img
-                    src={photo.imageUrl}
-                    alt={photo.description}
-                    className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
-                  />
-                  {/* Show tag position */}
-                  <div 
-                    className="absolute w-6 h-6 bg-red-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
-                    style={{ 
-                      left: `${tag.x}%`, 
-                      top: `${tag.y}%` 
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Expand className="h-8 w-8 text-white" />
-                  </div>
-                </div>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-                <div className="relative">
-                  <img
-                    src={photo.imageUrl}
-                    alt={photo.description}
-                    className="w-full h-auto object-contain rounded-lg"
-                  />
-                  <div 
-                    className="absolute w-8 h-8 bg-red-500 border-2 border-white rounded-full -ml-4 -mt-4"
-                    style={{ 
-                      left: `${tag.x}%`, 
-                      top: `${tag.y}%` 
-                    }}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
+          // 1. TAGMODERATIONCARD - thumbnail slika (mala slika 48x32)
+<Dialog>
+  <DialogTrigger asChild>
+    <div className="relative cursor-pointer w-full h-32">
+      <LazyImage
+        src={photo.imageUrl}
+        alt={photo.description}
+        className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
+        threshold={0.3} // Admin - učitaj kad je 30% vidljivo
+        rootMargin="100px" // Učitaj 100px prije viewport-a
+      />
+      {/* Show tag position */}
+      <div 
+        className="absolute w-6 h-6 bg-red-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
+        style={{ 
+          left: `${tag.x}%`, 
+          top: `${tag.y}%` 
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <Expand className="h-8 w-8 text-white" />
+      </div>
+    </div>
+  </DialogTrigger>
+  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+    <div className="relative">
+      {/* MODAL slika - NE mijenjaj ovu, učitava se tek kad korisnik klikne */}
+      <img
+        src={photo.imageUrl}
+        alt={photo.description}
+        className="w-full h-auto object-contain rounded-lg"
+      />
+      <div 
+        className="absolute w-8 h-8 bg-red-500 border-2 border-white rounded-full -ml-4 -mt-4"
+        style={{ 
+          left: `${tag.x}%`, 
+          top: `${tag.y}%` 
+        }}
+      />
+    </div>
+  </DialogContent>
+</Dialog>
           </div>
         )}
         
@@ -755,31 +761,39 @@ function PhotoModerationCard({
     <Card className="overflow-hidden">
       <div className="flex gap-6 p-6">
         <div className="flex-shrink-0 relative group w-48">
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="relative cursor-pointer w-full h-32">
-                <img
-                  src={photo.imageUrl}
-                  alt={photo.description}
-                  className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
-                  loading="eager"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Expand className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-              <img
-                src={photo.imageUrl}
-                alt={photo.description}
-                className="w-full h-auto object-contain rounded-lg"
-              />
-            </DialogContent>
-          </Dialog>
+         // 2. PHOTOMODERATIONCARD - thumbnail slika (w-48 h-32)
+<Dialog>
+  <DialogTrigger asChild>
+    <div className="relative cursor-pointer w-full h-32">
+      <LazyImage
+        src={photo.imageUrl}
+        alt={photo.description}
+        className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
+        threshold={0.2} // Pending slike - važnije, učitaj ranije
+        rootMargin="150px"
+        placeholder={
+          <div className="w-full h-full bg-orange-100 animate-pulse flex items-center justify-center rounded-lg">
+            <div className="text-center text-orange-600">
+              <div className="text-xs font-medium">Pending Review</div>
+              <div className="text-xs">{photo.location}</div>
+            </div>
+          </div>
+        }
+      />
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <Expand className="h-8 w-8 text-white" />
+      </div>
+    </div>
+  </DialogTrigger>
+  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+    {/* MODAL slika - ostavi kao img jer se učitava tek kad korisnik klikne */}
+    <img
+      src={photo.imageUrl}
+      alt={photo.description}
+      className="w-full h-auto object-contain rounded-lg"
+    />
+  </DialogContent>
+</Dialog>
         </div>
         
         <div className="flex-1 space-y-4">
@@ -986,31 +1000,39 @@ function PhotoManagementCard({
     <Card className="overflow-hidden">
       <div className="flex gap-6 p-6">
         <div className="flex-shrink-0 relative group w-48">
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="relative cursor-pointer w-full h-32">
-                <img
-                  src={photo.imageUrl}
-                  alt={photo.description}
-                  className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
-                  loading="eager"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Expand className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-              <img
-                src={photo.imageUrl}
-                alt={photo.description}
-                className="w-full h-auto object-contain rounded-lg"
-              />
-            </DialogContent>
-          </Dialog>
+         // 3. PHOTOMANAGEMENTCARD - thumbnail slika (w-48 h-32)
+<Dialog>
+  <DialogTrigger asChild>
+    <div className="relative cursor-pointer w-full h-32">
+      <LazyImage
+        src={photo.imageUrl}
+        alt={photo.description}
+        className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
+        threshold={0.3} // Approved slike - manje hitno
+        rootMargin="100px"
+        placeholder={
+          <div className="w-full h-full bg-green-100 animate-pulse flex items-center justify-center rounded-lg">
+            <div className="text-center text-green-600">
+              <div className="text-xs font-medium">Approved</div>
+              <div className="text-xs">{photo.location}</div>
+            </div>
+          </div>
+        }
+      />
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <Expand className="h-6 w-6 text-white" />
+      </div>
+    </div>
+  </DialogTrigger>
+  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+    {/* MODAL slika - ostavi kao img */}
+    <img
+      src={photo.imageUrl}
+      alt={photo.description}
+      className="w-full h-auto object-contain rounded-lg"
+    />
+  </DialogContent>
+</Dialog>
         </div>
         
         <div className="flex-1 space-y-2">

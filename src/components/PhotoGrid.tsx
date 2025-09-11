@@ -1,3 +1,5 @@
+// Ažurirani PhotoGrid.tsx s LazyImage
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "./ui/card";
@@ -5,6 +7,7 @@ import { Calendar, User, Eye, Heart } from "lucide-react";
 import { Photo, photoService } from '../services/firebaseService';
 import { toast } from "sonner";
 import { useAuth } from '../contexts/AuthContext';
+import LazyImage from './LazyImage'; // DODANO
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -27,7 +30,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     : photosState;
 
   const handleLike = async (e: React.MouseEvent, photoId: string) => {
-    e.preventDefault(); // Prevent navigation to photo detail
+    e.preventDefault(); 
     e.stopPropagation();
     
     if (!user) {
@@ -38,7 +41,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     try {
       const result = await photoService.toggleLike(photoId, user.uid);
       
-      // Update local state
       setPhotosState(prev => 
         prev.map(photo => 
           photo.id === photoId 
@@ -47,7 +49,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
         )
       );
       
-      // Call parent update if provided
       if (onPhotoUpdate) {
         const updatedPhoto = photosState.find(p => p.id === photoId);
         if (updatedPhoto) {
@@ -55,12 +56,11 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
         }
       }
       
-       // Show appropriate message
-    if (result.liked) {
-      toast.success('Photo liked!');
-    } else {
-      toast.success('Photo unliked!');
-    }
+      if (result.liked) {
+        toast.success('Photo liked!');
+      } else {
+        toast.success('Photo unliked!');
+      }
     } catch (error) {
       console.error('Error liking photo:', error);
       toast.error('Failed to like photo');
@@ -88,15 +88,21 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
         >
           <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <div className="aspect-[4/3] overflow-hidden">
-              <img 
-                src={photo.imageUrl} 
+              {/* ZAMIJENIO img s LazyImage */}
+              <LazyImage
+                src={photo.imageUrl}
                 alt={photo.description}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  // Fallback for broken images
-                  const target = e.target as HTMLImageElement;
-                  target.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=1932';
-                }}
+                threshold={0.2} // Počni učitavati kad je 20% vidljivo
+                rootMargin="150px" // Učitaj 150px prije viewport-a
+                placeholder={
+                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <div className="text-sm font-medium">{photo.location}</div>
+                      <div className="text-xs">{photo.year}</div>
+                    </div>
+                  </div>
+                }
               />
             </div>
             <CardContent className="p-4">
@@ -131,12 +137,12 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                   </div>
                   
                   {photo.photoType && (
-  <div className="flex gap-1">
-    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-      {photo.photoType}
-    </span>
-  </div>
-)}
+                    <div className="flex gap-1">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        {photo.photoType}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

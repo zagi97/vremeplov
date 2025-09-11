@@ -19,6 +19,50 @@ import {
   getDownloadURL} from 'firebase/storage';
 import { db, storage, auth } from '../lib/firebase';
 
+// Cache konfiguracija - ISPRAVKA
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minuta
+const photoCache = new Map<string, { data: Photo[], timestamp: number }>();
+const locationCache = new Map<string, { data: Photo[], timestamp: number }>();
+
+// ISPRAVKA: Proper typing for recentPhotosCache
+const recentPhotosCache: { data: Photo[] | null, timestamp: number } = { 
+  data: null, 
+  timestamp: 0 
+};
+
+// Helper funkcija za cache provjeru
+const isCacheValid = (timestamp: number): boolean => {
+  return Date.now() - timestamp < CACHE_DURATION;
+};
+
+// Helper funkcija za cache cleanup (run periodically)
+const cleanupCache = () => {
+  const now = Date.now();
+  
+  // Cleanup photo cache
+  for (const [key, value] of photoCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      photoCache.delete(key);
+    }
+  }
+  
+  // Cleanup location cache  
+  for (const [key, value] of locationCache.entries()) {
+    if (now - value.timestamp > CACHE_DURATION) {
+      locationCache.delete(key);
+    }
+  }
+  
+  // Cleanup recent photos cache
+  if (now - recentPhotosCache.timestamp > CACHE_DURATION) {
+    recentPhotosCache.data = null;
+    recentPhotosCache.timestamp = 0;
+  }
+};
+
+// Run cleanup every 10 minutes
+setInterval(cleanupCache, 10 * 60 * 1000);
+
 // Types based on your existing mock data
 export interface Photo {
   id?: string;
@@ -344,6 +388,7 @@ async deletePhoto(photoId: string): Promise<void> {
 
   // Add new photo
 
+// Ažuriraj addPhoto metodu da invalidira cache
 async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'> & { authorId?: string }): Promise<string> {
   try {
     console.log('Adding photo with data:', photoData);
@@ -375,6 +420,12 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     console.log('Final photo object being saved:', photo);
     const docRef = await addDoc(this.photosCollection, photo);
     console.log('Photo saved with ID:', docRef.id);
+
+     // Invalidate relevant caches
+    this.clearLocationCache(photoData.location);
+    this.clearRecentPhotosCache();
+
+    console.log('Photo saved and cache invalidated');
 
     // NOVO: Dodaj aktivnost i ažuriraj statistike
     if (currentUser?.uid) {
@@ -442,25 +493,41 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
   }
 
   // Get photos by location
-  async getPhotosByLocation(location: string): Promise<Photo[]> {
-    try {
-      const q = query(
-        this.photosCollection,
-        where('location', '==', location),
-        where('isApproved', '==', true),
-        orderBy('year', 'desc')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Photo));
-    } catch (error) {
-      console.error('Error getting photos:', error);
-      throw error;
+// Cached verzija getPhotosByLocation
+async getPhotosByLocation(location: string): Promise<Photo[]> {
+  try {
+    const cacheKey = `location_${location}`;
+    const cached = locationCache.get(cacheKey);
+    
+    if (cached && isCacheValid(cached.timestamp)) {
+      console.log('📋 Using cached photos for location:', location);
+      return cached.data;
     }
+
+    console.log('🔍 Fetching photos from Firestore for:', location);
+    const q = query(
+      this.photosCollection,
+      where('location', '==', location),
+      where('isApproved', '==', true),
+      orderBy('year', 'desc')
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const photos = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Photo));
+    
+    // Spremi u cache
+    locationCache.set(cacheKey, { data: photos, timestamp: Date.now() });
+    console.log(`💾 Cached ${photos.length} photos for ${location}`);
+    
+    return photos;
+  } catch (error) {
+    console.error('Error getting photos by location:', error);
+    throw error;
   }
+}
 
   // Get single photo by ID
   async getPhotoById(photoId: string): Promise<Photo | null> {
@@ -952,28 +1019,61 @@ async checkIfUserLikedPhoto(photoId: string, userId: string): Promise<boolean> {
 }
 
   // Get recent photos for homepage
-  async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
-    try {
-      const photosQuery = query(
-        this.photosCollection,
-        where('isApproved', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(limitCount)
-      );
-      
-      const snapshot = await getDocs(photosQuery);
-      const photos: Photo[] = [];
-      
-      snapshot.forEach(doc => {
-        photos.push({ id: doc.id, ...doc.data() } as Photo);
-      });
-      
-      return photos;
-    } catch (error) {
-      console.error('Error getting recent photos:', error);
-      return [];
+// ISPRAVKA u getRecentPhotos metodi (oko linije 1021):
+async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
+  try {
+    // Provjeri cache
+    if (recentPhotosCache.data && isCacheValid(recentPhotosCache.timestamp)) {
+      console.log('📋 Using cached recent photos');
+      // ISPRAVKA: Check if data is not null before slicing
+      return recentPhotosCache.data.slice(0, limitCount);
     }
+
+    console.log('🔍 Fetching recent photos from Firestore');
+    const photosQuery = query(
+      this.photosCollection,
+      where('isApproved', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(Math.max(limitCount, 12)) // Cache više nego što trebamo
+    );
+    
+    const snapshot = await getDocs(photosQuery);
+    const photos: Photo[] = [];
+    
+    snapshot.forEach(doc => {
+      photos.push({ id: doc.id, ...doc.data() } as Photo);
+    });
+    
+    // Spremi u cache
+    recentPhotosCache.data = photos;
+    recentPhotosCache.timestamp = Date.now();
+    console.log(`💾 Cached ${photos.length} recent photos`);
+    
+    return photos.slice(0, limitCount);
+  } catch (error) {
+    console.error('Error getting recent photos:', error);
+    return [];
   }
+}
+
+// Cache invalidation metode - DODANO
+clearLocationCache(location?: string) {
+  if (location) {
+    const cacheKey = `location_${location}`;
+    locationCache.delete(cacheKey);
+    console.log('🗑️ Cleared cache for location:', location);
+  } else {
+    locationCache.clear();
+    console.log('🗑️ Cleared all location cache');
+  }
+}
+
+clearRecentPhotosCache() {
+  recentPhotosCache.data = null;
+  recentPhotosCache.timestamp = 0;
+  console.log('🗑️ Cleared recent photos cache');
+}
+
 // Get all photos for admin dashboard (including pending)
   async getAllPhotosForAdmin(): Promise<Photo[]> {
     try {

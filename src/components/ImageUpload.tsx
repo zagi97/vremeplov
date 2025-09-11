@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from "./ui/button";
 import { Upload, X } from "lucide-react";
+import LazyImage from './LazyImage'; // DODANO
 
 interface ImageUploadProps {
   imagePreview: string;
@@ -36,10 +37,21 @@ const ImageUpload = ({ imagePreview, onImageChange, onRemoveImage }: ImageUpload
         </div>
       ) : (
         <div className="relative">
-          <img
+          {/* ZAMIJENIO img s LazyImage */}
+          <LazyImage
             src={imagePreview}
             alt="Preview"
             className="w-full h-64 object-cover rounded-lg"
+            threshold={0.1} // Upload preview - učitaj odmah
+            rootMargin="0px" // Bez margin-a jer korisnik eksplicitno gleda preview
+            placeholder={
+              <div className="w-full h-64 bg-gray-100 flex items-center justify-center rounded-lg">
+                <div className="text-center text-gray-500">
+                  <Upload className="h-8 w-8 mx-auto mb-2" />
+                  <span className="text-sm">Loading preview...</span>
+                </div>
+              </div>
+            }
           />
           <Button
             type="button"

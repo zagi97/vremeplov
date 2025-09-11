@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
+import LazyImage from './LazyImage';
 
 interface TaggedPerson {
   id: number;
@@ -112,11 +113,24 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         className="relative cursor-pointer w-full"
         onClick={handleImageClick}
       >
-        <img
-          src={imageUrl}
-          alt="Preview"
-          className="w-full h-auto max-h-[500px] object-contain mx-auto rounded-lg"
-        />
+        {/* ZAMIJENIO img s LazyImage */}
+      <LazyImage
+        src={imageUrl}
+        alt="Preview"
+        className="w-full h-auto max-h-[500px] object-contain mx-auto rounded-lg"
+        threshold={0.1} // Upload/tagging flow - učitaj agresivno
+        rootMargin="0px" // Korisnik gleda direktno na sliku za tagging
+        placeholder={
+          <div className="w-full h-auto max-h-[500px] bg-gray-100 flex items-center justify-center rounded-lg" style={{ minHeight: '300px' }}>
+            <div className="text-center text-gray-500">
+              <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                <Tag className="h-8 w-8 text-gray-400" />
+              </div>
+              <span className="text-sm font-medium">Loading photo for tagging...</span>
+            </div>
+          </div>
+        }
+      />
         
         {/* Approved tagged persons dots - blue */}
         {approvedTags.map((person) => (

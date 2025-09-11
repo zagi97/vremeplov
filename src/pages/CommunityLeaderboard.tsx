@@ -23,6 +23,7 @@ import {
 import { toast } from 'sonner';
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
+import LazyImage from '../components/LazyImage';
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -167,39 +168,46 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
             </div>
 
             {/* Badges and Stats */}
-            <div className="flex items-center gap-4">
-              {/* Recent Photo Preview */}
-              {user.recentPhotoUrl && (
-                <img 
-                  src={user.recentPhotoUrl} 
-                  alt="Recent upload"
-                  className="w-10 h-10 object-cover rounded"
-                />
-              )}
+<div className="flex items-center gap-4">
+  {/* Recent Photo Preview */}
+  {user.recentPhotoUrl && (
+    <LazyImage
+      src={user.recentPhotoUrl} 
+      alt="Recent upload"
+      className="w-10 h-10 object-cover rounded"
+      threshold={0.5} // Mala slika - učitaj tek kad je pola vidljivo
+      rootMargin="50px" // Leaderboard scrolling - minimalni margin
+      placeholder={
+        <div className="w-10 h-10 bg-gray-200 animate-pulse rounded flex items-center justify-center">
+          <Camera className="h-4 w-4 text-gray-400" />
+        </div>
+      }
+    />
+  )}
 
-              {/* Mini Stats */}
-              <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Camera className="h-4 w-4" />
-                  <span>{user.totalPhotos}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Heart className="h-4 w-4" />
-                  <span>{user.totalLikes}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>{user.locationsCount}</span>
-                </div>
-              </div>
+  {/* Mini Stats */}
+  <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
+    <div className="flex items-center gap-1">
+      <Camera className="h-4 w-4" />
+      <span>{user.totalPhotos}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <Heart className="h-4 w-4" />
+      <span>{user.totalLikes}</span>
+    </div>
+    <div className="flex items-center gap-1">
+      <MapPin className="h-4 w-4" />
+      <span>{user.locationsCount}</span>
+    </div>
+  </div>
 
-              {/* Top Badge */}
-              {user.badges.length > 0 && (
-                <Badge variant="secondary" className="hidden lg:flex">
-                  {user.badges.length} {t('community.badge')}{user.badges.length !== 1 ? 's' : ''}
-                </Badge>
-              )}
-            </div>
+  {/* Top Badge */}
+  {user.badges.length > 0 && (
+    <Badge variant="secondary" className="hidden lg:flex">
+      {user.badges.length} {t('community.badge')}{user.badges.length !== 1 ? 's' : ''}
+    </Badge>
+  )}
+</div>
           </div>
         </CardContent>
       </Card>

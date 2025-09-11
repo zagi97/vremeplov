@@ -445,82 +445,155 @@ const isFormValid = (): boolean => {
 };
 
   // Helper function to compress image
-  const compressImage = (file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<File> => {
-    return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const img = new Image();
+// 1. Poboljšaj kompresiju u PhotoUpload.tsx (linija 285)
+// Zamijenite postojeću compressImage funkciju u PhotoUpload.tsx (oko linije 285)
+
+const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.85): Promise<File> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    if (!ctx) {
+      console.warn('Canvas not supported, returning original file');
+      resolve(file);
+      return;
+    }
+    
+    img.onload = () => {
+      // Izračunaj optimalne dimenzije
+      let { width, height } = img;
       
-      if (!ctx) {
+      // Ako je slika manja od maxWidth, ne mijenjaj je
+      if (width <= maxWidth && height <= maxWidth) {
+        console.log('Slika je već dovoljno mala, preskoćemo kompresiju');
         resolve(file);
         return;
       }
       
-      img.onload = () => {
-        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
-        canvas.width = img.width * ratio;
-        canvas.height = img.height * ratio;
-        
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
-              lastModified: Date.now(),
-            });
-            resolve(compressedFile);
-          } else {
-            resolve(file);
-          }
-        }, 'image/jpeg', quality);
-      };
+      // Sačuvaj aspect ratio
+      const aspectRatio = width / height;
       
-      img.onerror = () => {
-        resolve(file);
-      };
+      if (width > height) {
+        // Landscape - ograniči širinu
+        width = Math.min(width, maxWidth);
+        height = width / aspectRatio;
+      } else {
+        // Portrait - ograniči visinu
+        height = Math.min(height, maxWidth);
+        width = height * aspectRatio;
+      }
       
-      img.src = URL.createObjectURL(file);
-    });
-  };
+      // Postavi canvas dimenzije
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Optimiziraj kvalitetu renderiranja
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      // Crtaj sliku
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Određi kvalitetu na osnovu veličine
+      let finalQuality = quality;
+      if (file.size > 10 * 1024 * 1024) {
+        finalQuality = 0.7; // Agresivnija kompresija za velike datoteke
+      } else if (file.size > 5 * 1024 * 1024) {
+        finalQuality = 0.8;
+      }
+      
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          
+          const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+          const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
+          const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
+          
+          console.log(`📸 Kompresija uspješna:`);
+          console.log(`   Original: ${originalSizeMB}MB`);
+          console.log(`   Kompresovano: ${compressedSizeMB}MB`);
+          console.log(`   Smanjeno za: ${reduction}%`);
+          console.log(`   Dimenzije: ${img.width}x${img.height} → ${width}x${height}`);
+          
+          resolve(compressedFile);
+        } else {
+          console.error('Kompresija neuspješna, vraćam original');
+          resolve(file);
+        }
+      }, 'image/jpeg', finalQuality);
+    };
+    
+    img.onerror = () => {
+      console.error('Greška pri učitavanju slike za kompresiju');
+      resolve(file);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
 
   // Handle file selection with compression
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.type.startsWith('image/')) {
-        try {
-          if (file.size > 5 * 1024 * 1024) {
-            toast.error('File size must be less than 5MB. Please compress your image.');
-            return;
-          }
+// Također ažurirajte handleFileChange funkciju (oko linije 320) da bolje rukuje kompresijom:
 
-          if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-          }
+const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    toast.error('Molimo odaberite sliku (JPG, PNG, WEBP)');
+    return;
+  }
+  
+  // Povećajte limit na 20MB jer sada imamo bolju kompresiju
+  if (file.size > 20 * 1024 * 1024) {
+    toast.error('Slika je prevelika (max 20MB). Molimo odaberite manju sliku.');
+    return;
+  }
 
-          const url = URL.createObjectURL(file);
-          setPreviewUrl(url);
-          
-          const compressedFile = await compressImage(file);
-          console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
-          console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
-          
-          setSelectedFile(compressedFile);
-          
-          if (compressedFile.size < file.size) {
-            toast.success(`Image compressed from ${(file.size / 1024 / 1024).toFixed(1)}MB to ${(compressedFile.size / 1024 / 1024).toFixed(1)}MB for better upload`);
-          }
-        } catch (error) {
-          console.error('Image compression failed:', error);
-          setSelectedFile(file);
-        }
-      } else {
-        toast.error('Please select an image file');
-      }
+  try {
+    // Očistite prethodnu preview URL
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
     }
-  };
 
+    // Kreiraj preview
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    
+    // Pokaži loading toast za kompresiju
+    const loadingToast = toast.loading('Kompresiranje slike...');
+    
+    // Kompresija
+    const compressedFile = await compressImage(file);
+    
+    // Ukloni loading toast
+    toast.dismiss(loadingToast);
+    
+    setSelectedFile(compressedFile);
+    
+    // Pokaži rezultat kompresije
+    const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
+    const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(1);
+    
+    if (compressedFile.size < file.size) {
+      const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
+      toast.success(`Slika kompresovana: ${originalSizeMB}MB → ${compressedSizeMB}MB (${reduction}% manje)`);
+    } else {
+      toast.success('Slika je optimalne veličine');
+    }
+    
+  } catch (error) {
+    console.error('Greška pri kompresiji:', error);
+    toast.error('Greška pri kompresiji slike');
+    // U slučaju greške, koristi original
+    setSelectedFile(file);
+  }
+};
   // Remove selected file
   const removeFile = () => {
     setSelectedFile(null);
