@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import postcss from 'postcss';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 import path from 'path';
@@ -14,27 +13,21 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [
-        tailwindcss(),
-        autoprefixer(),
-      ],
-    },
+      plugins: [tailwindcss(), autoprefixer()]
+    }
   },
-  
-  // Build optimizacije
   build: {
-    target: 'es2015', // Bolja browser podrška
-    minify: 'terser',
+    target: 'es2015', 
+    minify: 'terser', // koristi terser, ali moraš instalirati paket
     terserOptions: {
       compress: {
-        drop_console: true, // Ukloni console.log u production
+        drop_console: true,
         drop_debugger: true
       }
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          // Code splitting za bolje caching
           vendor: ['react', 'react-dom'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
           ui: ['lucide-react', 'sonner'],
@@ -42,19 +35,13 @@ export default defineConfig({
         }
       }
     },
-    chunkSizeWarningLimit: 1000 // Povećaj limit da se ne žali na chunks
+    chunkSizeWarningLimit: 1000
   },
-  
-  // Development optimizacije  
   server: {
     port: 5173,
     open: true,
-    hmr: {
-      overlay: false // Disable the error overlay temporarily
-    }
+    hmr: { overlay: false }
   },
-  
-  // Preview optimizacije
   preview: {
     port: 4173,
     open: true
