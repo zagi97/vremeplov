@@ -688,7 +688,7 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     const q = query(
       this.taggedPersonsCollection,
       where('photoId', '==', photoId),
-      where('isApproved', '==', true) // Only approved tags for public
+      where('isApproved', '==', true) // Samo odobreni tagovi
     );
     
     const querySnapshot = await getDocs(q);
@@ -698,50 +698,34 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     } as TaggedPerson));
   } catch (error) {
     console.error('Error getting tagged persons:', error);
-    throw error;
+    return []; // Vrati prazan niz umjesto greške
   }
 }
+// U firebaseService.ts, zamijeni postojeću metodu s ovom:
 async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAuthorId?: string): Promise<TaggedPerson[]> {
   try {
-    console.log('=== FIREBASE QUERY DEBUG ===');
-    console.log('PhotoId:', photoId);
-    console.log('UserId:', userId);
-    console.log('Current auth state:', auth.currentUser?.uid);
-    console.log('Current auth email:', auth.currentUser?.email);
-    
-    // Test basic collection access first
-    console.log('Testing collection access...');
-    const testQuery = query(this.taggedPersonsCollection, limit(1));
-    const testSnapshot = await getDocs(testQuery);
-    console.log('Basic collection access: SUCCESS, docs count:', testSnapshot.docs.length);
-    
-    // Now try the actual query
-    console.log('Trying actual query...');
+    // Jednostavan query samo za odobrene tagove
+    // Ovo će raditi i bez autentifikacije
     const q = query(
       this.taggedPersonsCollection,
-      where('photoId', '==', photoId)
+      where('photoId', '==', photoId),
+      where('isApproved', '==', true)
     );
     
     const snapshot = await getDocs(q);
-    console.log('Actual query: SUCCESS, docs count:', snapshot.docs.length);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as TaggedPerson));
     
-    const allTags = snapshot.docs.map(doc => {
-      const data = doc.data();
-      console.log('Tag data:', { id: doc.id, isApproved: data.isApproved, addedByUid: data.addedByUid });
-      return {
-        id: doc.id,
-        ...data
-      } as TaggedPerson;
-    });
-    
-    return allTags;
   } catch (error: any) {
-    console.error('=== FIREBASE QUERY ERROR ===');
-    console.error('Error type:', error.constructor?.name);
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Full error:', error);
-    throw error;
+    console.error('Error in getTaggedPersonsByPhotoIdForUser:', error);
+    
+    // Graceful fallback - vrati prazan niz umjesto da crasha
+    if (error.code === 'permission-denied') {
+      console.warn('Permission denied for taggedPersons, returning empty array');
+    }
+    return [];
   }
 }
 

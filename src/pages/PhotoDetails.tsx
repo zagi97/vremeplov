@@ -54,95 +54,116 @@ const PhotoDetail = () => {
   useEffect(() => {
     const loadPhotoData = async () => {
   console.log('=== FIREBASE DEBUG ===');
-console.log('User email:', user?.email);
-console.log('User UID:', user?.uid);  // <- DODAJ OVO
-console.log('PhotoId:', photoId);
-console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
-      if (!photoId) return;
+  console.log('User email:', user?.email);
+  console.log('User UID:', user?.uid);
+  console.log('PhotoId:', photoId);
+  console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
+  
+  if (!photoId) return;
+  
+  try {
+    setLoading(true);
+    
+    const photoData = await photoService.getPhotoById(photoId);
+    if (!photoData) {
+      toast.error(t('photoDetail.notFound'));
+      return;
+    }
+    
+    setPhoto(photoData);
+    setLikes(photoData.likes || 0);
+    setViews(photoData.views || 0);
+    
+    if (user) {
+      const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+      setUserHasLiked(hasLiked);
       
-      try {
-        setLoading(true);
-        
-        const photoData = await photoService.getPhotoById(photoId);
-        if (!photoData) {
-          toast.error(t('photoDetail.notFound'));
-          return;
-        }
-        
-        setPhoto(photoData);
-        setLikes(photoData.likes || 0);
-        setViews(photoData.views || 0);
-        
-        if (user) {
-          const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
-          setUserHasLiked(hasLiked);
-          
-          await photoService.incrementViews(photoId, user.uid);
-        }
-        
-      const photoComments = await photoService.getCommentsByPhotoId(photoId);
-setComments(photoComments.map(comment => ({
-  id: comment.id,
-  author: comment.author,
-  text: comment.text,
-  date: comment.createdAt.toDate().toLocaleDateString('hr-HR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }) // ✅ Datum + vreme u hrvatskom formatu
-})));
-const photoTaggedPersons = photoData.taggedPersons || [];
-let taggedPersonsData: any[] = [];
-if (user?.email === 'vremeplov.app@gmail.com') {
-  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForUser(photoId, user?.uid, photoData.authorId);
-} else {
-  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForUser(photoId, user?.uid, photoData.authorId);
-}
-const allTaggedPersons = [
-  ...taggedPersonsData,
-  ...photoTaggedPersons.map((person, index) => ({
-    id: `photo_${index}`,
-    name: person.name,
-    x: person.x,
-    y: person.y,
-    photoId: photoId,
-    addedBy: 'System'
-  }))
-];
+      await photoService.incrementViews(photoId, user.uid);
+    }
+    
+    // Comments
+    const photoComments = await photoService.getCommentsByPhotoId(photoId);
+    setComments(photoComments.map(comment => ({
+      id: comment.id,
+      author: comment.author,
+      text: comment.text,
+      date: comment.createdAt.toDate().toLocaleDateString('hr-HR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    })));
 
-let visibleTags = allTaggedPersons;
-// Ako nisi admin:
-if (user?.email !== 'vremeplov.app@gmail.com') {
-  visibleTags = allTaggedPersons.filter(tag => {
-    // Approved tagovi uvijek prolaze
-    if (tag.isApproved !== false) return true;
-    // Pending tagovi koje je sam korisnik dodao
-    if (tag.addedByUid && tag.addedByUid === user?.uid) return true;
-    // Pending tagovi na njegovoj fotki
-    if (tag.addedByUid && tag.addedByUid !== user?.uid && photoData.authorId === user?.uid) return true;
-    return false;
-  });
-}
-
-setTaggedPersons(visibleTags);
-        
-        // Load related photos from the same location
-        if (photoData.location) {
-          const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
-          // Filter out current photo and take first 6 for related photos
-          const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
-          setRelatedPhotos(related);
-        }
-        
-      } catch (error) {
-        console.error('Error loading photo data:', error);
-        toast.error(t('upload.error'));
-      } finally {
-        setLoading(false);
+    // ✅ ISPRAVKA: Tagged Persons - sigurno dohvaćanje
+    let taggedPersonsData: any[] = [];
+    
+    try {
+      // Pokušaj dohvatiti tagove iz Firestore-a
+      if (user?.email === 'vremeplov.app@gmail.com') {
+        // Admin može vidjeti sve tagove
+        taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+      } else {
+        // Obični korisnici - koristi samo odobrene tagove
+        taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
       }
-    };
+    } catch (tagError) {
+      console.warn('Could not load tagged persons from Firestore:', tagError);
+      // Fallback na prazan niz ako Firestore query ne radi
+      taggedPersonsData = [];
+    }
+    
+    // Dohvati legacy tagove iz samog photo objekta
+    const photoTaggedPersons = photoData.taggedPersons || [];
+    
+    // Kombiniraj sve tagove
+    const allTaggedPersons = [
+      ...taggedPersonsData,
+      ...photoTaggedPersons.map((person, index) => ({
+        id: `photo_${index}`,
+        name: person.name,
+        x: person.x,
+        y: person.y,
+        photoId: photoId,
+        addedBy: 'System',
+        isApproved: true // Legacy tagovi su automatski odobreni
+      }))
+    ];
+
+    // Filtriraj tagove ovisno o korisničkim permisijama
+    let visibleTags = allTaggedPersons;
+    
+    if (user?.email !== 'vremeplov.app@gmail.com') {
+      // Nije admin - prikaži samo:
+      visibleTags = allTaggedPersons.filter(tag => {
+        // 1. Odobreni tagovi
+        if (tag.isApproved === true) return true;
+        // 2. Pending tagovi koje je sam korisnik dodao
+        if (tag.addedByUid && tag.addedByUid === user?.uid) return true;
+        // 3. Pending tagovi na njegovoj fotki
+        if (tag.addedByUid && tag.addedByUid !== user?.uid && photoData.authorId === user?.uid) return true;
+        return false;
+      });
+    }
+
+    setTaggedPersons(visibleTags);
+    
+    // Load related photos from the same location
+    if (photoData.location) {
+      const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
+      // Filter out current photo and take first 6 for related photos
+      const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
+      setRelatedPhotos(related);
+    }
+    
+  } catch (error) {
+    console.error('Error loading photo data:', error);
+    toast.error(t('upload.error'));
+  } finally {
+    setLoading(false);
+  }
+};
 
     loadPhotoData();
   }, [photoId, user, t]);
