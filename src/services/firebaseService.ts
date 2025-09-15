@@ -118,6 +118,7 @@ export interface TaggedPerson {
   isApproved: boolean; // Add approval status
   moderatedAt?: Timestamp; // When it was approved/rejected
   moderatedBy?: string; // Admin who approved/rejected
+  photoAuthorId?: string;
 }
 
 export interface UserLike {
@@ -609,15 +610,27 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
     }
   }
 
-// Add tagged person (now requires approval)
+// Add tagged person (now requires approval + photoAuthorId)
 async addTaggedPerson(tagData: Omit<TaggedPerson, 'id' | 'createdAt' | 'isApproved'>): Promise<string> {
   try {
     const currentUser = auth.currentUser;
+    if (!currentUser) throw new Error("User not authenticated");
+
+    // 1. Dohvati photo dokument
+    const photoRef = doc(this.photosCollection, tagData.photoId);
+    const photoSnap = await getDoc(photoRef);
+    if (!photoSnap.exists()) {
+      throw new Error("Photo not found");
+    }
+    const photoData = photoSnap.data();
+
+    // 2. Kreiraj tag sa photoAuthorId
     const tag: Omit<TaggedPerson, 'id'> = {
       ...tagData,
-      addedByUid: currentUser?.uid,
+      addedByUid: currentUser.uid,
+      photoAuthorId: photoData.authorId, // ⬅️ novo polje
       createdAt: Timestamp.now(),
-      isApproved: false // Requires admin approval
+      isApproved: false
     };
 
     const docRef = await addDoc(this.taggedPersonsCollection, tag);
@@ -627,6 +640,7 @@ async addTaggedPerson(tagData: Omit<TaggedPerson, 'id' | 'createdAt' | 'isApprov
     throw error;
   }
 }
+
 
 // Approve tagged person
 async approveTaggedPerson(tagId: string, adminUid: string): Promise<void> {
@@ -687,71 +701,46 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     throw error;
   }
 }
-// Get tagged persons for photo including user's own pending tags + pending tags on user's photos
 async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAuthorId?: string): Promise<TaggedPerson[]> {
   try {
-    if (!userId) {
-      // If no user, only return approved tags
-      return this.getTaggedPersonsByPhotoId(photoId);
-    }
-
-    // Get approved tags (visible to everyone)
-    const approvedQuery = query(
+    console.log('=== FIREBASE QUERY DEBUG ===');
+    console.log('PhotoId:', photoId);
+    console.log('UserId:', userId);
+    console.log('Current auth state:', auth.currentUser?.uid);
+    console.log('Current auth email:', auth.currentUser?.email);
+    
+    // Test basic collection access first
+    console.log('Testing collection access...');
+    const testQuery = query(this.taggedPersonsCollection, limit(1));
+    const testSnapshot = await getDocs(testQuery);
+    console.log('Basic collection access: SUCCESS, docs count:', testSnapshot.docs.length);
+    
+    // Now try the actual query
+    console.log('Trying actual query...');
+    const q = query(
       this.taggedPersonsCollection,
-      where('photoId', '==', photoId),
-      where('isApproved', '==', true)
+      where('photoId', '==', photoId)
     );
     
-    // Get user's own pending tags
-    const userPendingQuery = query(
-      this.taggedPersonsCollection,
-      where('photoId', '==', photoId),
-      where('addedByUid', '==', userId),
-      where('isApproved', '==', false)
-    );
+    const snapshot = await getDocs(q);
+    console.log('Actual query: SUCCESS, docs count:', snapshot.docs.length);
     
-    const queries = [approvedQuery, userPendingQuery];
-    
-    // If user is the photo owner, also get all pending tags on their photo
-    let photoOwnerPendingQuery = null;
-    if (photoAuthorId && userId === photoAuthorId) {
-      photoOwnerPendingQuery = query(
-        this.taggedPersonsCollection,
-        where('photoId', '==', photoId),
-        where('isApproved', '==', false)
-      );
-      queries.push(photoOwnerPendingQuery);
-    }
-    
-    const snapshots = await Promise.all(queries.map(q => getDocs(q)));
-    
-    const approvedTags = snapshots[0].docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
-    
-    const userPendingTags = snapshots[1].docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
-    
-    // If photo owner, get all pending tags (avoiding duplicates)
-    let allPendingTags: TaggedPerson[] = [];
-    if (photoOwnerPendingQuery && snapshots[2]) {
-      allPendingTags = snapshots[2].docs.map(doc => ({
+    const allTags = snapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Tag data:', { id: doc.id, isApproved: data.isApproved, addedByUid: data.addedByUid });
+      return {
         id: doc.id,
-        ...doc.data()
-      } as TaggedPerson));
-      
-      // Remove duplicates (user's own pending tags are already included)
-      const userPendingIds = new Set(userPendingTags.map(tag => tag.id));
-      allPendingTags = allPendingTags.filter(tag => !userPendingIds.has(tag.id));
-    }
+        ...data
+      } as TaggedPerson;
+    });
     
-    // Combine all visible tags
-    return [...approvedTags, ...userPendingTags, ...allPendingTags];
-  } catch (error) {
-    console.error('Error getting tagged persons for user:', error);
+    return allTags;
+  } catch (error: any) {
+    console.error('=== FIREBASE QUERY ERROR ===');
+    console.error('Error type:', error.constructor?.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Full error:', error);
     throw error;
   }
 }

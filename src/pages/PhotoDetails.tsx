@@ -53,6 +53,11 @@ const PhotoDetail = () => {
   // Load photo data
   useEffect(() => {
     const loadPhotoData = async () => {
+  console.log('=== FIREBASE DEBUG ===');
+console.log('User email:', user?.email);
+console.log('User UID:', user?.uid);  // <- DODAJ OVO
+console.log('PhotoId:', photoId);
+console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
       if (!photoId) return;
       
       try {
@@ -396,7 +401,7 @@ relatedPhotos.forEach((photo, index) => {
               <div className="absolute inset-0 rounded-lg overflow-hidden">
                 {taggedPersons.map((person) => (
                   <div
-                    key={person.id}
+                    key={person.id || `temp-${person.x}-${person.y}`}
                     className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
                     style={{ 
                       left: `${person.x}%`, 
@@ -643,7 +648,7 @@ relatedPhotos.forEach((photo, index) => {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {taggedPersons.map((person) => (
-                      <span key={person.id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
+                      <span key={person.id || `temp-${person.x}-${person.y}`} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
                         <User className="h-3 w-3" />
                         {person.name}
                       </span>

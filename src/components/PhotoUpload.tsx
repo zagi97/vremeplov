@@ -82,7 +82,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   // Tagged persons state
   const [taggedPersons, setTaggedPersons] = useState<Array<{
-    id: number;
+    id: string;
     name: string;
     x: number;
     y: number;
@@ -608,7 +608,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
   const handleAddTag = (newTag: { name: string; x: number; y: number }) => {
     const tagWithId = {
       ...newTag,
-      id: Date.now()
+      id: Date.now().toString()
     };
     setTaggedPersons(prev => [...prev, tagWithId]);
   };

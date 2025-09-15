@@ -528,7 +528,6 @@ function TagModerationCard({
       <div className="flex gap-6 p-6">
         {photo && (
           <div className="flex-shrink-0 relative group w-48">
-          // 1. TAGMODERATIONCARD - thumbnail slika (mala slika 48x32)
 <Dialog>
   <DialogTrigger asChild>
     <div className="relative cursor-pointer w-full h-32">
@@ -761,7 +760,6 @@ function PhotoModerationCard({
     <Card className="overflow-hidden">
       <div className="flex gap-6 p-6">
         <div className="flex-shrink-0 relative group w-48">
-         // 2. PHOTOMODERATIONCARD - thumbnail slika (w-48 h-32)
 <Dialog>
   <DialogTrigger asChild>
     <div className="relative cursor-pointer w-full h-32">
@@ -1000,7 +998,6 @@ function PhotoManagementCard({
     <Card className="overflow-hidden">
       <div className="flex gap-6 p-6">
         <div className="flex-shrink-0 relative group w-48">
-         // 3. PHOTOMANAGEMENTCARD - thumbnail slika (w-48 h-32)
 <Dialog>
   <DialogTrigger asChild>
     <div className="relative cursor-pointer w-full h-32">

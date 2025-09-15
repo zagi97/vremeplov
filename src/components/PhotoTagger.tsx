@@ -9,7 +9,7 @@ import { CharacterCounter } from "./ui/character-counter";
 import LazyImage from './LazyImage';
 
 interface TaggedPerson {
-  id: number;
+  id: string;
   name: string;
   x: number;
   y: number;
@@ -134,7 +134,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         
         {/* Approved tagged persons dots - blue */}
         {approvedTags.map((person) => (
-          <Tooltip key={person.id}>
+          <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-blue-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
@@ -157,7 +157,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
 
         {/* User's own pending tagged persons dots - orange with clock icon */}
         {userOwnPendingTags.map((person) => (
-          <Tooltip key={person.id}>
+          <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-orange-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
@@ -183,7 +183,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
 
         {/* Photo owner sees pending tags by others - purple with clock icon */}
         {photoOwnerPendingTags.map((person) => (
-          <Tooltip key={person.id}>
+          <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-purple-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
