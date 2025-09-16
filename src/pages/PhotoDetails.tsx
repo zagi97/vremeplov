@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye, Users, Camera, Upload } from "lucide-react";
+import { ArrowLeft, Calendar, User, MapPin, Tag, Heart, Eye, Users, Camera, Upload, Clock } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoComments from "../components/PhotoComments";
-import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from "../components/ui/tooltip";
 import { CharacterCounter } from "../components/ui/character-counter";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from "sonner";
@@ -96,58 +95,114 @@ const PhotoDetail = () => {
       })
     })));
 
-    // ✅ ISPRAVKA: Tagged Persons - sigurno dohvaćanje
-    let taggedPersonsData: any[] = [];
-    
-    try {
-      // Pokušaj dohvatiti tagove iz Firestore-a
-      if (user?.email === 'vremeplov.app@gmail.com') {
-        // Admin može vidjeti sve tagove
-        taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
-      } else {
-        // Obični korisnici - koristi samo odobrene tagove
-        taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
-      }
-    } catch (tagError) {
-      console.warn('Could not load tagged persons from Firestore:', tagError);
-      // Fallback na prazan niz ako Firestore query ne radi
-      taggedPersonsData = [];
-    }
-    
-    // Dohvati legacy tagove iz samog photo objekta
-    const photoTaggedPersons = photoData.taggedPersons || [];
-    
-    // Kombiniraj sve tagove
-    const allTaggedPersons = [
-      ...taggedPersonsData,
-      ...photoTaggedPersons.map((person, index) => ({
-        id: `photo_${index}`,
-        name: person.name,
-        x: person.x,
-        y: person.y,
-        photoId: photoId,
-        addedBy: 'System',
-        isApproved: true // Legacy tagovi su automatski odobreni
-      }))
-    ];
+    // ✅ ISPRAVKA: Tagged Persons - vlasnik slike koristi admin metodu
+// ✅ FALLBACK PRISTUP: Prvo probaj obične tagove, pa ručno filtriraj
+let taggedPersonsData: any[] = [];
 
-    // Filtriraj tagove ovisno o korisničkim permisijama
-    let visibleTags = allTaggedPersons;
-    
-    if (user?.email !== 'vremeplov.app@gmail.com') {
-      // Nije admin - prikaži samo:
-      visibleTags = allTaggedPersons.filter(tag => {
-        // 1. Odobreni tagovi
-        if (tag.isApproved === true) return true;
-        // 2. Pending tagovi koje je sam korisnik dodao
-        if (tag.addedByUid && tag.addedByUid === user?.uid) return true;
-        // 3. Pending tagovi na njegovoj fotki
-        if (tag.addedByUid && tag.addedByUid !== user?.uid && photoData.authorId === user?.uid) return true;
-        return false;
-      });
-    }
+try {
+  console.log('🔍 Attempting to fetch tags for photoId:', photoId);
+  console.log('🔍 User details:', { uid: user?.uid, email: user?.email, isOwner: photoData.authorId === user?.uid });
+  
+ if (user?.email === 'vremeplov.app@gmail.com') {
+  // Admin - koristi admin metodu
+  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+  console.log('👑 Admin fetched tags:', taggedPersonsData.length);
+} else if (photoData.authorId === user?.uid && user) {
+  // Vlasnik slike - koristi novu metodu
+  console.log('🏠 Photo owner detected, using owner method...');
+  taggedPersonsData = await photoService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+  console.log('🏠 Photo owner fetched tags:', taggedPersonsData.length);
+} else {
+  // Obični korisnici - samo odobreni tagovi
+  taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
+  console.log('👤 User fetched approved tags:', taggedPersonsData.length);
+}} catch (tagError) {
+  console.warn('Could not load tagged persons from Firestore:', tagError);
+  taggedPersonsData = [];
+}
 
-    setTaggedPersons(visibleTags);
+console.log('📊 Final Firestore tags count:', taggedPersonsData.length);
+
+// Dohvati legacy tagove iz samog photo objekta
+const photoTaggedPersons = photoData.taggedPersons || [];
+
+// Kombiniraj sve tagove
+const allTaggedPersons = [
+  ...taggedPersonsData,
+  ...photoTaggedPersons.map((person, index) => ({
+    id: `photo_${index}`,
+    name: person.name,
+    x: person.x,
+    y: person.y,
+    photoId: photoId,
+    addedBy: 'System',
+    isApproved: true // Legacy tagovi su automatski odobreni
+  }))
+];
+
+// ✅ VRATI ORIGINALNU LOGIKU FILTRIRANJA (ali sada s ispravnim Firestore podacima)
+let visibleTags = allTaggedPersons;
+
+if (user?.email !== 'vremeplov.app@gmail.com') {
+  // Nije admin - prikaži tagove prema pravilima:
+  visibleTags = allTaggedPersons.filter(tag => {
+    // 1. Odobreni tagovi - svi ih vide
+    if (tag.isApproved === true) return true;
+    // 2. Pending tagovi koje je sam korisnik dodao
+    if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
+    // 3. Pending tagovi na korisnikovoj slici (vlasnik vidi sve pending tagove)
+    if (tag.isApproved === false && photoData.authorId === user?.uid) return true;
+    return false;
+  });
+}
+
+// Zamijeniti postojeći === TAG DEBUG === dio s ovim proširenim debugom:
+
+console.log('=== DETAILED TAG DEBUG ===');
+console.log('User UID:', user?.uid);
+console.log('Photo Author ID:', photoData.authorId);
+console.log('Is photo owner:', photoData.authorId === user?.uid);
+console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
+
+console.log('Firestore tags details:');
+taggedPersonsData.forEach((tag, index) => {
+  console.log(`Tag ${index}:`, {
+    id: tag.id,
+    name: tag.name,
+    isApproved: tag.isApproved,
+    addedByUid: tag.addedByUid,
+    photoAuthorId: tag.photoAuthorId,
+    x: tag.x,
+    y: tag.y
+  });
+});
+
+console.log('All combined tags details:');
+allTaggedPersons.forEach((tag, index) => {
+  console.log(`Combined tag ${index}:`, {
+    id: tag.id,
+    name: tag.name,
+    isApproved: tag.isApproved,
+    addedByUid: tag.addedByUid,
+    source: tag.id?.includes('photo_') ? 'legacy' : 'firestore'
+  });
+});
+
+console.log('Visible tags after filtering details:');
+visibleTags.forEach((tag, index) => {
+  console.log(`Visible tag ${index}:`, {
+    id: tag.id,
+    name: tag.name,
+    isApproved: tag.isApproved,
+    addedByUid: tag.addedByUid,
+    shouldShowAsPending: tag.isApproved === false && (tag.addedByUid === user?.uid || photoData.authorId === user?.uid)
+  });
+});
+
+console.log('=== END DETAILED TAG DEBUG ===');
+  
+setTaggedPersons(visibleTags);
+
     
     // Load related photos from the same location
     if (photoData.location) {
@@ -188,35 +243,48 @@ relatedPhotos.forEach((photo, index) => {
   console.log('=== END COORDINATES DEBUG ===');
 }, [photo, relatedPhotos]);
   
-  const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; y: number; }, 'id'>) => {
-    if (!photoId) return;
+const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; y: number; }, 'id'>) => {
+  if (!photoId || !user) return;
+  
+  try {
+    console.log('🔥 Adding tag:', newTag);
+    const tagId = await photoService.addTaggedPerson({
+      photoId,
+      name: newTag.name,
+      x: newTag.x,
+      y: newTag.y,
+      description: '',
+      addedBy: user.displayName || user.email || 'User'
+    });
     
-    try {
-      const tagId = await photoService.addTaggedPerson({
-        photoId,
-        name: newTag.name,
-        x: newTag.x,
-        y: newTag.y,
-        description: '',
-        addedBy: 'User'
-      });
-      
-      const newTagWithId = {
-        id: parseInt(tagId),
-        name: newTag.name,
-        x: newTag.x,
-        y: newTag.y,
-        photoId,
-        addedBy: 'User'
-      };
-      
-      setTaggedPersons([...taggedPersons, newTagWithId]);
-      toast.success(t('photoDetail.taggedSuccess'));
-    } catch (error) {
-      console.error('Error adding tag:', error);
-      toast.error(t('photoDetail.tagSaveFailed'));
-    }
-  };
+    console.log('🔥 Tag saved with ID:', tagId);
+    
+    // NOVO: Odmah dodaj tag u lokalni state s pending statusom
+    const newTagWithId = {
+      id: tagId,
+      name: newTag.name,
+      x: newTag.x,
+      y: newTag.y,
+      photoId,
+      addedBy: user.displayName || user.email || 'User',
+      addedByUid: user.uid,
+      isApproved: false, // Pending status
+      createdAt: new Date()
+    };
+    
+    console.log('🔥 Adding to local state:', newTagWithId);
+    
+    // Dodaj u postojeći state
+    setTaggedPersons([...taggedPersons, newTagWithId]);
+    
+    toast.success(`Tagged ${newTag.name}! Tag is pending admin approval.`, {
+      duration: 4000
+    });
+  } catch (error) {
+    console.error('Error adding tag:', error);
+    toast.error(t('photoDetail.tagSaveFailed'));
+  }
+};
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
@@ -310,45 +378,6 @@ relatedPhotos.forEach((photo, index) => {
     }
   };
 
-  const debugLike = async () => {
-    if (!photoId || !user) return;
-    
-    console.log('=== LIKE DEBUG START ===');
-    console.log('Photo ID:', photoId);
-    console.log('User ID:', user.uid);
-    
-    try {
-      const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
-      console.log('User has liked before:', hasLiked);
-      
-      const currentPhoto = await photoService.getPhotoById(photoId);
-      console.log('Current photo likes:', currentPhoto?.likes);
-      
-      const result = await photoService.toggleLike(photoId, user.uid);
-      console.log('Toggle result:', result);
-      
-      const newLikeStatus = await photoService.hasUserLiked(photoId, user.uid);
-      console.log('New like status:', newLikeStatus);
-      
-      const updatedPhoto = await photoService.getPhotoById(photoId);
-      console.log('Updated photo likes:', updatedPhoto?.likes);
-      
-      console.log('=== LIKE DEBUG END ===');
-      
-      setLikes(result.newLikesCount);
-      setUserHasLiked(result.liked);
-      
-      const { userService } = await import('../services/userService');
-      if (updatedPhoto?.authorId) {
-        await userService.forceRecalculateUserStats(updatedPhoto.authorId);
-        console.log('User stats recalculated for:', updatedPhoto.authorId);
-      }
-      
-    } catch (error) {
-      console.error('Debug like error:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
@@ -420,33 +449,67 @@ relatedPhotos.forEach((photo, index) => {
               
               {/* Hover-Only Tagged Persons */}
               <div className="absolute inset-0 rounded-lg overflow-hidden">
-                {taggedPersons.map((person) => (
-                  <div
-                    key={person.id || `temp-${person.x}-${person.y}`}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
-                    style={{ 
-                      left: `${person.x}%`, 
-                      top: `${person.y}%`,
-                      zIndex: 10
-                    }}
-                    onMouseEnter={() => setHoveredTag(person.id)}
-                    onMouseLeave={() => setHoveredTag(null)}
-                  >
-                    {/* Subtle circle with person icon */}
-                    <div className="w-8 h-8 border-2 border-white bg-black/30 backdrop-blur-sm rounded-full cursor-pointer hover:bg-black/50 hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg">
-                      <Users className="w-4 h-4 text-white drop-shadow-sm" />
-                    </div>
-                    
-                    {/* Name tooltip on hover */}
-                    {hoveredTag === person.id && (
-                      <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in">
-                        {person.name}
-                        {/* Tooltip arrow */}
-                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                {taggedPersons.map((person) => {
+                  // Determine tag type and styling
+                  const isApproved = person.isApproved !== false;
+                  const isPending = person.isApproved === false;
+                  const isUsersPendingTag = isPending && person.addedByUid === user?.uid;
+                  
+                  let tagStyle = {
+                    bgColor: "bg-blue-500", // Approved tags - blue
+                    borderColor: "border-white",
+                    icon: <Users className="w-4 h-4 text-white drop-shadow-sm" />
+                  };
+                  
+                  if (isUsersPendingTag) {
+                    // User's own pending tags - orange
+                    tagStyle = {
+                      bgColor: "bg-orange-500",
+                      borderColor: "border-white",
+                      icon: <Clock className="w-3 h-3 text-white" />
+                    };
+                  } else if (isPending && photo?.authorId === user?.uid) {
+                    // Someone else's pending tag on user's photo - purple  
+                    tagStyle = {
+                      bgColor: "bg-purple-500",
+                      borderColor: "border-white", 
+                      icon: <Clock className="w-3 h-3 text-white" />
+                    };
+                  }
+
+                  return (
+                    <div
+                      key={person.id || `temp-${person.x}-${person.y}`}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
+                      style={{ 
+                        left: `${person.x}%`, 
+                        top: `${person.y}%`,
+                        zIndex: 10
+                      }}
+                      onMouseEnter={() => setHoveredTag(person.id)}
+                      onMouseLeave={() => setHoveredTag(null)}
+                    >
+                      {/* Tag circle with conditional styling */}
+                      <div className={`w-8 h-8 border-2 ${tagStyle.borderColor} ${tagStyle.bgColor} backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg`}>
+                        {tagStyle.icon}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      
+                      {/* Name tooltip on hover */}
+                      {hoveredTag === person.id && (
+                        <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in">
+                          <div className="font-medium">{person.name}</div>
+                          {isPending && (
+                            <div className="text-xs text-orange-600 mt-1">
+                              {isUsersPendingTag ? "Your tag - pending approval" : "Pending approval"}
+                            </div>
+                          )}
+                          {/* Tooltip arrow */}
+                          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 
                 {/* Current tag position marker (when tagging) */}
                 {isTagging && hasSelectedPosition && (
@@ -459,8 +522,8 @@ relatedPhotos.forEach((photo, index) => {
                   />
                 )}
                 
-                {/* Tag Button - Only show if user is authenticated */}
-                {user && (
+                {/* Tag Button - Only show if user is photo owner or admin */}
+                {user && (user.uid === photo?.authorId || user.email === 'vremeplov.app@gmail.com') && (
                   <div className="absolute bottom-4 right-4 z-30">
                     {!isTagging && (
                       <Button
@@ -560,16 +623,6 @@ relatedPhotos.forEach((photo, index) => {
                       )}
                       {userHasLiked ? t('photoDetail.unlikePhoto') : t('photoDetail.likePhoto')}
                     </Button>
-                    
-                    {/* Debug Button - Remove after testing */}
-                    <Button 
-                      onClick={debugLike} 
-                      variant="outline" 
-                      size="sm"
-                      className="text-xs"
-                    >
-                      Debug Like ({likes})
-                    </Button>
                   </>
                 ) : (
                   <Button 
@@ -592,6 +645,16 @@ relatedPhotos.forEach((photo, index) => {
                 <p className="text-sm text-blue-800 flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   <strong>💡 Tip:</strong> Hover over the photo to see tagged persons
+                </p>
+              </div>
+            )}
+            
+            {/* Pending tags notification */}
+            {taggedPersons.some(tag => tag.isApproved === false && tag.addedByUid === user?.uid) && (
+              <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <p className="text-sm text-orange-800 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <strong>Info:</strong> You have pending tags that are awaiting admin approval. Orange dots show your pending tags.
                 </p>
               </div>
             )}
@@ -657,36 +720,45 @@ relatedPhotos.forEach((photo, index) => {
                 </p>
               </div>
 
-              {/* Tagged People */}
-              {taggedPersons.length > 0 && (
-                <div className="border-t pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      {t('photoDetail.taggedPeople')}
-                    </h4>
-                    <span className="text-sm text-gray-500">{taggedPersons.length} osoba</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {taggedPersons.map((person) => (
-                      <span key={person.id || `temp-${person.x}-${person.y}`} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors">
-                        <User className="h-3 w-3" />
-                        {person.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Tagged People - samo odobreni tagovi */}
+{taggedPersons.filter(person => person.isApproved === true).length > 0 && (
+  <div className="border-t pt-4">
+    <div className="flex items-center justify-between mb-3">
+      <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+        <Users className="h-4 w-4" />
+        {t('photoDetail.taggedPeople')}
+      </h4>
+      <span className="text-sm text-gray-500">
+        {taggedPersons.filter(person => person.isApproved === true).length} osoba
+      </span>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {taggedPersons
+        .filter(person => person.isApproved === true)
+        .map((person) => (
+          <span 
+            key={person.id || `temp-${person.x}-${person.y}`} 
+            className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors"
+          >
+            <User className="h-3 w-3" />
+            {person.name}
+          </span>
+        ))}
+    </div>
+  </div>
+)}
             </div>
           </div>
 
           {/* Comments Section */}
-          <div className="p-6">
-            <PhotoComments 
-              comments={comments}
-              onAddComment={handleAddComment}
-            />
-          </div>
+          {/* Comments Section */}
+<div className="p-6">
+  <PhotoComments 
+    comments={comments}
+    onAddComment={handleAddComment}
+    photoAuthor={photo.uploadedBy || photo.author}
+  />
+</div>
 
           {/* Right Column - Sidebar for larger screens */}
           <div className="hidden md:block p-6 border-t border-gray-200">

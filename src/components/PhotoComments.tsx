@@ -15,12 +15,15 @@ interface Comment {
   date: string;
 }
 
+// U PhotoComments.tsx, dodaj photo prop i označi autora:
+
 interface PhotoCommentsProps {
   comments: Comment[];
   onAddComment: (text: string) => void;
+  photoAuthor?: string; // Dodaj ovo
 }
 
-const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
+const PhotoComments = ({ comments, onAddComment, photoAuthor }: PhotoCommentsProps) => {
   const [newComment, setNewComment] = useState("");
   const { user, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
@@ -84,18 +87,29 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
       )}
       
       <div className="space-y-4">
-        {comments.map((comment) => (
-          <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center">
-                <User className="h-4 w-4 mr-2 text-gray-600" />
-                <span className="font-medium">{comment.author}</span>
+        {comments.map((comment) => {
+          const isAuthor = photoAuthor && comment.author === photoAuthor;
+          
+          return (
+            <div key={comment.id} className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <User className="h-4 w-4 mr-2 text-gray-600" />
+                  <span className="font-medium">
+                    {comment.author}
+                    {isAuthor && (
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        autor
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <span className="text-gray-500 text-sm">{comment.date}</span>
               </div>
-              <span className="text-gray-500 text-sm">{comment.date}</span>
+              <p className="text-gray-700">{comment.text}</p>
             </div>
-            <p className="text-gray-700">{comment.text}</p>
-          </div>
-        ))}
+          );
+        })}
         
         {comments.length === 0 && (
           <p className="text-gray-500 text-center py-4">
@@ -106,5 +120,4 @@ const PhotoComments = ({ comments, onAddComment }: PhotoCommentsProps) => {
     </div>
   );
 };
-
 export default PhotoComments;

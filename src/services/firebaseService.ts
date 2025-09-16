@@ -730,20 +730,40 @@ async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAu
 }
 
 // Get tagged persons for admin (all tags)
+// Zamijeni getTaggedPersonsByPhotoIdForAdmin metodu u firebaseService.ts s ovom debug verzijom:
+
 async getTaggedPersonsByPhotoIdForAdmin(photoId: string): Promise<TaggedPerson[]> {
   try {
+    console.log('=== FIRESTORE DEBUG ===');
+    console.log('Querying taggedPersons for photoId:', photoId);
+    console.log('Current user:', auth.currentUser?.uid);
+    console.log('Current user email:', auth.currentUser?.email);
+    
     const q = query(
       this.taggedPersonsCollection,
       where('photoId', '==', photoId)
     );
     
+    console.log('Query created, attempting to fetch...');
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    console.log('Query successful, docs found:', querySnapshot.size);
+    
+    const results = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      console.log('Tag document:', doc.id, data);
+      return {
+        id: doc.id,
+        ...data
+      } as TaggedPerson;
+    });
+    
+    console.log('Final results:', results);
+    console.log('=== END FIRESTORE DEBUG ===');
+    return results;
   } catch (error) {
-    console.error('Error getting all tagged persons for admin:', error);
+    console.error('=== FIRESTORE ERROR DEBUG ===');
+    console.error('Error details:', error);
+    console.error('=== END FIRESTORE ERROR DEBUG ===');
     throw error;
   }
 }
@@ -1025,6 +1045,72 @@ async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
     return photos.slice(0, limitCount);
   } catch (error) {
     console.error('Error getting recent photos:', error);
+    return [];
+  }
+}
+
+// Dodaj ovu metodu u PhotoService klasu u firebaseService.ts:
+
+// Get tagged persons for photo owner (approved + own pending tags)
+async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<TaggedPerson[]> {
+  try {
+    console.log('🏠 Getting tags for photo owner:', { photoId, userId });
+    
+    // 1. Dohvati odobrene tagove (svi mogu)
+    const approvedQuery = query(
+      this.taggedPersonsCollection,
+      where('photoId', '==', photoId),
+      where('isApproved', '==', true)
+    );
+    const approvedSnapshot = await getDocs(approvedQuery);
+    const approvedTags = approvedSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as TaggedPerson));
+    
+    console.log('🏠 Approved tags:', approvedTags.length);
+    
+    // 2. Dohvati pending tagove koje je vlasnik dodao
+    const userPendingQuery = query(
+      this.taggedPersonsCollection,
+      where('photoId', '==', photoId),
+      where('addedByUid', '==', userId),
+      where('isApproved', '==', false)
+    );
+    const userPendingSnapshot = await getDocs(userPendingQuery);
+    const userPendingTags = userPendingSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as TaggedPerson));
+    
+    console.log('🏠 User pending tags:', userPendingTags.length);
+    
+    // 3. Dohvati pending tagove na njegovoj slici (ako ih ima)
+    const photoPendingQuery = query(
+      this.taggedPersonsCollection,
+      where('photoId', '==', photoId),
+      where('photoAuthorId', '==', userId),
+      where('isApproved', '==', false)
+    );
+    const photoPendingSnapshot = await getDocs(photoPendingQuery);
+    const photoPendingTags = photoPendingSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as TaggedPerson));
+    
+    console.log('🏠 Photo pending tags:', photoPendingTags.length);
+    
+    // 4. Kombiniraj sve i ukloni duplikate
+    const allTags = [...approvedTags, ...userPendingTags, ...photoPendingTags];
+    const uniqueTags = allTags.filter((tag, index, self) => 
+      index === self.findIndex(t => t.id === tag.id)
+    );
+    
+    console.log('🏠 Total unique tags:', uniqueTags.length);
+    return uniqueTags;
+    
+  } catch (error) {
+    console.error('Error getting tags for photo owner:', error);
     return [];
   }
 }

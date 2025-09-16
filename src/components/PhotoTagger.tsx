@@ -218,24 +218,24 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           />
         )}
         
-       {/* Tag Button - Only show if user is authenticated */}
-        {user && (
-          <div className="absolute bottom-4 right-4">
-{!isTagging && (
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsTagging(true);
-                }}
-                variant="secondary"
-                className="bg-white/80 hover:bg-white/90"
-              >
-                <Tag className="h-4 w-4 mr-2" />
-                Tag Person
-              </Button>
-            )}
-          </div>
-        )}
+{/* Tag Button - Only show if user is photo owner or admin */}
+{user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && (
+  <div className="absolute bottom-4 right-4">
+    {!isTagging && (
+      <Button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsTagging(true);
+        }}
+        variant="secondary"
+        className="bg-white/80 hover:bg-white/90"
+      >
+        <Tag className="h-4 w-4 mr-2" />
+        Tag Person
+      </Button>
+    )}
+  </div>
+)}
       {/* Remove File Button - Only show if onRemoveFile provided and showRemoveButton is true */}
         {showRemoveButton && onRemoveFile && (
           <button
