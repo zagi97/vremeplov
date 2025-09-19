@@ -237,6 +237,7 @@ const translations: Record<Language, TranslationMap> = {
 'comments.signInError': 'Failed to sign in. Please try again.',
 'comments.commentAdded': 'Your comment has been added!',
 'comments.noComments': 'No comments yet. Be the first to share your thoughts!',
+'comments.author': 'Author',
 
 // English translations (add to the 'en' object):
 'locationMap.photoLocation': 'Photo Location',
@@ -718,6 +719,7 @@ const translations: Record<Language, TranslationMap> = {
 'comments.signInError': 'Neuspjeh pri prijavi. Molimo pokušajte ponovno.',
 'comments.commentAdded': 'Vaš komentar je dodan!',
 'comments.noComments': 'Još nema komentara. Budite prvi koji će podijeliti svoje misli!',
+'comments.author': 'Autor',
 
 // Croatian translations (add to the 'hr' object):
 'locationMap.photoLocation': 'Lokacija fotografije',
