@@ -11,9 +11,10 @@ import { ArrowLeft, Plus, LogIn, Search, Filter, X, Calendar, Tag, TrendingUp, C
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
-import { VALID_LOCATIONS } from "../constants/locations";
 import { useAuth } from "../contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
+
+import municipalityData from '../../data/municipalities.json';
 
 // DODAJ NA VRHU Location.tsx:
 import LanguageSelector from "../components/LanguageSelector";
@@ -32,6 +33,8 @@ interface FilterState {
   photoType: string;
   sortBy: string;
 }
+
+const allLocations: string[] = municipalityData.records.map(record => record[3] as string);
 
 const Location = () => {
   // ✅ PREMJESTI useLanguage HOOK UNUTAR KOMPONENTE
@@ -69,9 +72,12 @@ const Location = () => {
     { value: "year_asc", label: t('sort.yearOldest'), icon: Calendar }
   ];
 
+  // Validacija
+    const isValidLocation = allLocations.includes(decodedLocationName);
+
   // Validate if the location is in our allowed list
-  const isValidLocation = VALID_LOCATIONS.includes(decodedLocationName);
-  const isAllowedLocation = decodedLocationName === "Čačinci";
+  //const isValidLocation = VALID_LOCATIONS.includes(decodedLocationName);
+  //const isAllowedLocation = decodedLocationName === "Čačinci";
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]); // Store all photos
@@ -93,9 +99,14 @@ const Location = () => {
   });
 
   // Redirect to 404 if location is not valid or not allowed
-  if (!isValidLocation || !isAllowedLocation) {
+/*   if (!isValidLocation || !isAllowedLocation) {
     return <Navigate to="/not-found" replace />;
-  }
+  } */
+
+    // Sada provjera treba biti samo:
+    if (!isValidLocation) {
+        return <Navigate to="/not-found" replace />;
+    }
 
   // Handle sign in to add memory
   const handleSignInToAddMemory = async () => {

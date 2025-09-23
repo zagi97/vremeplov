@@ -129,8 +129,13 @@ async function handleImageRequest(request) {
     console.log('SW: Fetching image:', request.url);
     const response = await fetch(request);
     
+    // ✅ DODAJ OVO - ne pokušavaj cache-irati 404 slike
+    if (response.status === 404) {
+      console.log('SW: Image not found (404), not caching:', request.url);
+      return response;
+    }
+    
     if (response.ok) {
-      // Cache successful images
       cache.put(request, response.clone());
       console.log('SW: Image cached:', request.url);
     }
@@ -138,8 +143,15 @@ async function handleImageRequest(request) {
     return response;
   } catch (error) {
     console.log('SW: Image fetch failed:', error);
-    // Return offline placeholder image
-    return new Response('', { status: 404 });
+    
+    // ✅ DODAJ PROPER FALLBACK
+    return new Response(
+      '<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#f3f4f6"/><text x="50%" y="50%" text-anchor="middle" fill="#6b7280">Slika nije dostupna</text></svg>',
+      { 
+        headers: { 'Content-Type': 'image/svg+xml' },
+        status: 200 
+      }
+    );
   }
 }
 

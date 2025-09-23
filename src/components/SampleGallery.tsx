@@ -1,17 +1,18 @@
-// Update your SampleGallery.tsx:
+// Update your SampleGallery.tsx - UKLONI handleImageError kompletno:
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react'; // ← Ukloni useCallback
 import { Skeleton } from './ui/skeleton'
 import { Clock, MapPin, Image } from "lucide-react";
 import { Link } from 'react-router-dom';
 import { photoService, Photo } from "../services/firebaseService";
-import LazyImage from "./LazyImage"; // ✅ Import the standalone component
+import LazyImage from "./LazyImage";
 import { useLanguage } from '../contexts/LanguageContext';
 
 const SampleGallery = () => {
   const [recentPhotos, setRecentPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-const { t } = useLanguage();
+  const { t } = useLanguage();
+
   useEffect(() => {
     const loadRecentPhotos = async () => {
       try {
@@ -27,10 +28,6 @@ const { t } = useLanguage();
     loadRecentPhotos();
   }, []);
 
-  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const target = e.target as HTMLImageElement;
-    target.src = 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=1932';
-  }, []);
 
   if (loading) {
     return (
@@ -41,6 +38,7 @@ const { t } = useLanguage();
       </div>
     );
   }
+
   if (recentPhotos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -66,7 +64,6 @@ const { t } = useLanguage();
               src={photo.imageUrl}
               alt={`${photo.location}, ${photo.year}`}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              onError={handleImageError}
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
