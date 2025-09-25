@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react"; // Možeš ukloniti ChevronDown
+import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// Ukloni import VALID_LOCATIONS
 import { useLanguage } from "../contexts/LanguageContext";
 import {
   Command,
@@ -18,41 +17,120 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import municipalityData from '../../data/municipalities.json'; // Provjeri putanju!
+import municipalityData from '../../data/municipalities.json';
 
-// Izvuci samo imena gradova i općina iz JSON-a
-const allLocations: string[] = municipalityData.records.map(record => record[3] as string);
+// Tip za lokaciju s dodatnim podacima
+interface Location {
+  id: number;
+  county: string;
+  type: string;
+  name: string;
+  displayName: string;
+  // ✅ DODAJ UNIQUE KEY ZA URL
+  urlKey: string; // npr: "Privlaka-Zadarska" ili samo "Zagreb"
+}
+
+// Kreiraj array lokacija s jedinstvenim display nazivima
+const allLocations: Location[] = municipalityData.records.map(record => {
+  const id = record[0] as number;
+  const county = record[1] as string;
+  const type = record[2] as string;
+  const name = record[3] as string;
+  
+  return {
+    id,
+    county,
+    type,
+    name,
+    displayName: name,
+    urlKey: name // zasad samo naziv
+  };
+});
+
+// Pronađi duplikate i dodaj im županiju u naziv
+const nameCounts = new Map<string, number>();
+allLocations.forEach(location => {
+  nameCounts.set(location.name, (nameCounts.get(location.name) || 0) + 1);
+});
+
+// ✅ AŽURIRAJ displayName i urlKey za duplikate
+allLocations.forEach(location => {
+  if (nameCounts.get(location.name)! > 1) {
+    // Skrati naziv županije
+    const countyShort = location.county
+      .replace(/^[IVX]+\s/, '')
+      .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
+      .replace('SPLITSKO-DALMATINSKA', 'Splitsko-dalmatinska')
+      .replace('OSJEČKO-BARANJSKA', 'Osječko-baranjska')
+      .replace('VUKOVARSKO-SRIJEMSKA', 'Vukovarsko-srijemska')
+      .replace('POŽEŠKO-SLAVONSKA', 'Požeško-slavonska')
+      .replace('BRODSKO-POSAVSKA', 'Brodsko-posavska')
+      .replace('VIROVITIČKO-PODRAVSKA', 'Virovitičko-podravska')
+      .replace('KOPRIVNIČKO-KRIŽEVAČKA', 'Koprivničko-križevačka')
+      .replace('BJELOVARSKO-BILOGORSKA', 'Bjelovarsko-bilogorska')
+      .replace('PRIMORSKO-GORANSKA', 'Primorsko-goranska')
+      .replace('SISAČKO-MOSLAVAČKA', 'Sisačko-moslavačka')
+      .replace('KRAPINSKO-ZAGORSKA', 'Krapinsko-zagorska')
+      .replace('ŠIBENSKO-KNINSKA', 'Šibensko-kninska')
+      .replace('LIČKO-SENJSKA', 'Ličko-senjska')
+      .replace('KARLOVAČKA', 'Karlovačka')
+      .replace('VARAŽDINSKA', 'Varaždinska')
+      .replace('ZAGREBAČKA', 'Zagrebačka')
+      .replace('MEĐIMURSKA', 'Međimurska')
+      .replace('ISTARSKA', 'Istarska')
+      .replace('ZADARSKA', 'Zadarska')
+      .replace('GRAD ZAGREB', 'Zagreb');
+    
+    location.displayName = `${location.name} (${countyShort})`;
+    // ✅ KLJUČNI DIO: urlKey s nazivom i županijom
+    location.urlKey = `${location.name}-${countyShort.replace(/\s+/g, '')}`;
+  }
+});
 
 const SearchBar = () => {
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [isValid, setIsValid] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim() && isValid) {
-      navigate(`/location/${encodeURIComponent(searchQuery.trim())}`);
+    if (searchQuery.trim() && isValid && selectedLocation) {
+      // ✅ KORISTI urlKey umjesto samo name
+      navigate(`/location/${encodeURIComponent(selectedLocation.urlKey)}`);
     }
   };
 
   // Filtriranje lokacija na temelju unosa korisnika
-  const filteredLocations = allLocations.filter((location: string) =>
-    location.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredLocations = allLocations.filter((location: Location) =>
+    location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    location.displayName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const selectLocation = (location: string) => {
-    setSearchQuery(location);
-    setIsValid(true); // Budući da je lokacija odabrana iz liste, uvijek je validna
+  const selectLocation = (location: Location) => {
+    setSearchQuery(location.displayName);
+    setSelectedLocation(location);
+    setIsValid(true);
     setOpen(false);
   };
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
+    
     // Provjeri je li unos točan naziv lokacije iz liste
-    const isValidLocation = allLocations.includes(value);
-    setIsValid(isValidLocation);
+    const matchingLocation = allLocations.find(location => 
+      location.name === value || location.displayName === value
+    );
+    
+    if (matchingLocation) {
+      setSelectedLocation(matchingLocation);
+      setIsValid(true);
+    } else {
+      setSelectedLocation(null);
+      setIsValid(false);
+    }
   };
 
   return (
@@ -87,11 +165,16 @@ const SearchBar = () => {
               <CommandGroup>
                 {filteredLocations.map((location) => (
                   <CommandItem
-                    key={location}
+                    key={`${location.id}-${location.name}`}
                     onSelect={() => selectLocation(location)}
                     className="cursor-pointer text-gray-900 hover:bg-gray-100"
                   >
-                    {location}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{location.name}</span>
+                      {location.displayName !== location.name && (
+                        <span className="text-sm text-gray-500">{location.county.replace(/^[IVX]+\s/, '')}</span>
+                      )}
+                    </div>
                   </CommandItem>
                 ))}
               </CommandGroup>

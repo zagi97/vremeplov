@@ -507,8 +507,13 @@ const translations: Record<Language, TranslationMap> = {
 'userProfile.myProfile': 'My Profile',
 'userProfile.community': 'Community',
 'userProfile.signOut': 'Sign Out',
+
+'cityType.city': 'City',
+    'cityType.municipality': 'Municipality',
   },
   hr: {
+    'cityType.city': 'Grad',
+    'cityType.municipality': 'Općina',
     // Navigation
     'nav.home': 'Početna',
     'nav.about': 'O nama',

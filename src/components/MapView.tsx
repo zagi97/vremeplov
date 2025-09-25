@@ -558,27 +558,6 @@ const MapView: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Debug information */}
-                <div className="mt-4 bg-gray-100 rounded-lg p-4 text-sm">
-                    <h4 className="font-bold mb-2">{t('mapView.debugInfo')}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                            <span className="font-medium">{t('mapView.totalPhotos')}</span> {photos.length}
-                        </div>
-                        <div>
-                            <span className="font-medium">{t('mapView.filtered')}</span> {filteredPhotos.length}
-                        </div>
-                        <div>
-                            <span className="font-medium">{t('mapView.currentZoom')}</span> {currentZoom}
-                        </div>
-                        <div>
-                            <span className="font-medium">{t('mapView.clusters')}</span> {clusteredData.filter(item => item.type === 'cluster').length}
-                        </div>
-                    </div>
-                    <div className="mt-2">
-                        <span className="font-medium">{t('mapView.individualMarkers')}</span> {clusteredData.filter(item => item.type === 'individual').length}
-                    </div>
-                </div>
                 <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
                     <h3 className="font-bold text-blue-800 mb-2">{t('mapView.howClusteringWorks')}</h3>
                     <div className="text-blue-700 text-sm space-y-2">

@@ -13,17 +13,24 @@ import municipalityData from '../../data/municipalities.json';
 
 // --- Funkcija za dohvat koordinata ---
 const findCoordinatesByLocation = (locationName: string) => {
-    // Pronađi zapis u JSON datoteci po imenu općine/grada (indeks 3)
-    const record = municipalityData.records.find(record => record[3] === locationName);
+    // Pronađi SVE zapise s tim nazivom (jer mogu biti duplikati)
+    const records = municipalityData.records.filter(record => record[3] === locationName);
     
-    // Provjeri postoje li koordinate i jesu li ispravnog tipa
-    if (record && typeof record[4] === 'number' && typeof record[5] === 'number') {
-        return {
-            latitude: record[4],
-            longitude: record[5]
-        };
+    if (records.length === 0) {
+        return null; // Nema grada s tim nazivom
     }
-    return null; // Vrati null ako koordinate nisu pronađene
+    
+    // Ako ima više zapisa (duplikati), uzmi prvi koji ima koordinate
+    for (const record of records) {
+        if (typeof record[4] === 'number' && typeof record[5] === 'number') {
+            return {
+                latitude: record[4],
+                longitude: record[5]
+            };
+        }
+    }
+    
+    return null; // Nijedan zapis nema koordinate
 };
 
 // Custom ikone za mini mapu
@@ -203,15 +210,6 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
                                 </Link>
                             ))}
                         </div>
-                    </div>
-                )}
-
-                {nearbyPhotosWithCoords.length === 0 && nearbyPhotos.length > 0 && (
-                    <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                        <span className="font-medium text-yellow-800">ℹ️ Debug:</span>
-                        <span className="text-yellow-700 ml-1">
-                            {nearbyPhotos.length} nearby photos found, but {nearbyPhotosWithCoords.length} have coordinates
-                        </span>
                     </div>
                 )}
             </div>
