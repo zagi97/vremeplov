@@ -57,33 +57,52 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
   const [activeTab, setActiveTab] = useState('photos');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time');
 
-  useEffect(() => {
-    const loadLeaderboard = async () => {
-      try {
-        setLoading(true);
+useEffect(() => {
+  let isCancelled = false;
+  
+  const loadLeaderboard = async () => {
+    try {
+      if (!isCancelled) setLoading(true);
 
-        // Load leaderboard data from Firebase
-        const leaderboard = await userService.getLeaderboard(timePeriod, 10);
+      // Load leaderboard data from Firebase
+      const leaderboard = await userService.getLeaderboard(timePeriod, 10);
+      
+      // Load community stats for current time period
+      const stats = await userService.getCommunityStats(timePeriod); // ← Dodaj timePeriod parameter
+      
+      // Load monthly highlights only for relevant periods
+      let highlights = monthlyHighlights;
+if (timePeriod === 'this-month') {
+  highlights = await userService.getMonthlyHighlights();
+} else if (timePeriod === 'this-year') {
+  highlights = await userService.getYearlyHighlights(); // Nova funkcija
+}
+      
+      // Update all state only if component is still mounted
+      if (!isCancelled) {
         setLeaderboardData(leaderboard);
-
-         // Load community stats (only on initial load or all-time period)
-        if (timePeriod === 'all-time') {
-          const stats = await userService.getCommunityStats();
-          setCommunityStats(stats);
-          
-          const highlights = await userService.getMonthlyHighlights();
-          setMonthlyHighlights(highlights);
-        }     
-      } catch (error) {
+        setCommunityStats(stats);
+        setMonthlyHighlights(highlights);
+      }
+      
+    } catch (error) {
+      if (!isCancelled) {
         console.error('Error loading leaderboard:', error);
-        toast.error('Failed to load leaderboard');
-      } finally {
+        toast.error(t('community.loadFailed')); // ← Koristi translation
+      }
+    } finally {
+      if (!isCancelled) {
         setLoading(false);
       }
-    };
+    }
+  };
 
-    loadLeaderboard();
-  }, [timePeriod]);
+  loadLeaderboard();
+  
+  return () => {
+    isCancelled = true;
+  };
+}, [timePeriod, t]);
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -99,35 +118,20 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
   };
 
   const LeaderboardCard = ({ user, category }: { user: LeaderboardUser; category: string }) => {
-    const getMetricValue = () => {
-      switch (category) {
-        case 'photos':
-          return user.totalPhotos;
-        case 'likes':
-          return user.totalLikes;
-        case 'locations':
-          return user.locationsCount;
-        case 'recent':
-          return new Date(user.joinDate).toLocaleDateString('hr-HR');
-        default:
-          return user.totalPhotos;
-      }
-    };
-
-    const getMetricLabel = () => {
-      switch (category) {
-        case 'photos':
-          return t('profile.photos');
-        case 'likes':
-          return t('community.likes');
-        case 'locations':
-          return t('community.locations');
-        case 'recent':
-          return t('community.joined');
-        default:
-          return t('profile.photos');
-      }
-    };
+  const getDisplayValue = () => {
+    switch (category) {
+      case 'photos':
+        return `${user.totalPhotos.toLocaleString()} ${t('profile.photos')}`;
+      case 'likes':
+        return `${user.totalLikes.toLocaleString()} ${t('community.likes')}`;
+      case 'locations':
+        return `${user.locationsCount.toLocaleString()} ${t('community.locations')}`;
+      case 'recent':
+        return `${t('community.joined')}: ${user.joinDate ? new Date(user.joinDate).toLocaleDateString('hr-HR') : 'N/A'}`;
+      default:
+        return `${user.totalPhotos.toLocaleString()} ${t('profile.photos')}`;
+    }
+  };
 
     return (
       <Card className={`mb-4 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
@@ -157,10 +161,7 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm text-gray-500">
-                      {typeof getMetricValue() === 'number' 
-                        ? `${getMetricValue().toLocaleString()} ${getMetricLabel()}`
-                        : `${getMetricLabel()}: ${getMetricValue()}`
-                      }
+                      {getDisplayValue()}
                     </span>
                   </div>
                 </div>
@@ -323,9 +324,15 @@ const [communityStats, setCommunityStats] = useState<CommunityStats>({
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {leaderboardData.photos.map(user => (
-                        <LeaderboardCard key={user.uid} user={user} category="photos" />
-                      ))}
+                     {leaderboardData.photos.length > 0 ? (
+  leaderboardData.photos.map(user => (
+    <LeaderboardCard key={user.uid} user={user} category="photos" />
+  ))
+) : (
+  <div className="text-center py-8 text-gray-500">
+    {t('community.noDataForPeriod')}
+  </div>
+)}
                     </CardContent>
                   </Card>
                 </TabsContent>

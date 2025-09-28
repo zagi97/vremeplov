@@ -92,46 +92,41 @@ const UserProfilePage = () => {
     };
   };
 
- useEffect(() => {
+useEffect(() => {
+  let isCancelled = false;
+  
   const loadUserProfile = async () => {
     if (!userId) return;
     
     try {
-      setLoading(true);
+      if (!isCancelled) setLoading(true);
       
-      // Check if viewing own profile
       const ownProfile = currentUser?.uid === userId;
-      setIsOwnProfile(ownProfile);
       
-      // Load user profile from Firebase
       let userProfile = await userService.getUserProfile(userId);
-      
-      // If profile doesn't exist and it's current user, create it
-      if (!userProfile && ownProfile && currentUser) {
-        await userService.createUserProfile(currentUser.uid, {
-          displayName: currentUser.displayName || currentUser.email || 'Unknown User',
-          email: currentUser.email || '',
-          photoURL: currentUser.photoURL || undefined,
-          bio: t('profile.defaultBio')
-        });
-        userProfile = await userService.getUserProfile(userId);
-      }
+
+      if (!userProfile && ownProfile && currentUser && !isCancelled) {
+  await userService.createUserProfile(currentUser.uid, {
+    displayName: currentUser.displayName || currentUser.email || 'Unknown User',
+    email: currentUser.email || '',
+    photoURL: currentUser.photoURL || undefined,
+    bio: t('profile.defaultBio')
+  });
+  userProfile = await userService.getUserProfile(userId);
+}
       
       if (!userProfile) {
-        setProfile(null);
+        if (!isCancelled) setProfile(null);
         return;
       }
 
-      // Load user's photos
       const photos = await photoService.getPhotosByUploader(userId);
-      setUserPhotos(photos);
-
-      // Calculate current stats from photos
+      
+      // Calculate stats...
       const totalLikes = photos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
       const totalViews = photos.reduce((sum, photo) => sum + (photo.views || 0), 0);
       const uniqueLocations = new Set(photos.map(photo => photo.location)).size;
 
-      // ✅ BETTER FIX: Only update if stats have changed
       const needsUpdate = 
         userProfile.stats.totalPhotos !== photos.length ||
         userProfile.stats.totalLikes !== totalLikes ||
@@ -149,36 +144,32 @@ const UserProfilePage = () => {
         };
         
         await userService.updateUserStats(userId, updatedStats);
-        
-        // Get updated profile after stats update
         const updatedProfile = await userService.getUserProfile(userId);
         finalProfile = updatedProfile || userProfile;
       }
       
-      // Check for new badges (only if we have photos or it's the user's first visit)
       if (photos.length > 0 || needsUpdate) {
         await userService.checkAndAwardBadges(userId);
-        
-        // Get final updated profile after potential badge awards
         const profileWithBadges = await userService.getUserProfile(userId);
         finalProfile = profileWithBadges || finalProfile;
       }
       
-      // Set the final profile
-      setProfile(finalProfile);
-      
-      // Check if current user is following this user
+      // Provjeri follow status
+      let followStatus = false;
       if (currentUser && !ownProfile) {
-        const followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
-        setIsFollowing(followStatus);
+        followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
       }
       
-      // Load user activities
+      // Load activities
       const activities = await userService.getUserActivities(userId, 10);
-      setUserActivities(activities);
       
-      // Set edit form values
-      if (finalProfile) {
+      // ✅ Svi state updates odjednom na kraju
+      if (!isCancelled) {
+        setIsOwnProfile(ownProfile);
+        setProfile(finalProfile);
+        setUserPhotos(photos);
+        setIsFollowing(followStatus);
+        setUserActivities(activities);
         setEditForm({
           displayName: finalProfile.displayName,
           bio: finalProfile.bio || '',
@@ -187,14 +178,22 @@ const UserProfilePage = () => {
       }
       
     } catch (error) {
-      console.error('Error loading user profile:', error);
-      toast.error(t('profile.loadError'));
+      if (!isCancelled) {
+        console.error('Error loading user profile:', error);
+        toast.error(t('profile.loadError'));
+      }
     } finally {
-      setLoading(false);
+      if (!isCancelled) {
+        setLoading(false);
+      }
     }
   };
 
   loadUserProfile();
+
+  return () => {
+    isCancelled = true;
+  };
 }, [userId, currentUser, t]);
 
   const handleFollowToggle = async () => {
@@ -445,18 +444,6 @@ const fixUserStats = async () => {
                       </DialogContent>
                     </Dialog>
                   ) : null}
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-2 gap-4 text-center border-t pt-4">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{profile.stats.followers}</div>
-                      <div className="text-xs text-gray-500">{t('profile.followers')}</div>
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{profile.stats.following}</div>
-                      <div className="text-xs text-gray-500">{t('profile.following')}</div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
 

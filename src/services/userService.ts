@@ -800,37 +800,64 @@ async fixAllPhotoLikeCounts(): Promise<void> {
   }
 
   // Get community statistics
-  async getCommunityStats(): Promise<CommunityStats> {
-    try {
-      // Get total users count
-      const usersQuery = query(collection(db, 'users'));
-      const userDocs = await getDocs(usersQuery);
-      const totalMembers = userDocs.size;
-
-      // Get total photos count and aggregate stats
-      const { photoService } = await import('./firebaseService');
-      const allPhotos = await photoService.getAllPhotos(); // You'll need to implement this
-      
-      const photosShared = allPhotos.length;
-      const totalLikes = allPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
-      const uniqueLocations = new Set(allPhotos.map(photo => photo.location)).size;
-
-      return {
-        totalMembers,
-        photosShared,
-        locationsDocumented: uniqueLocations,
-        totalLikes
-      };
-    } catch (error) {
-      console.error('Error fetching community stats:', error);
-      return {
-        totalMembers: 0,
-        photosShared: 0,
-        locationsDocumented: 0,
-        totalLikes: 0
-      };
+  async getCommunityStats(timePeriod: string = 'all-time'): Promise<CommunityStats> {
+  try {
+    // Date filters based on time period
+    let startDate: Date | null = null;
+    const now = new Date();
+    
+    switch (timePeriod) {
+      case 'this-month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'this-year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      // 'all-time' - no filter
     }
+
+    // Optimized query for photos with date filter
+    let photosQuery = query(
+      collection(db, 'photos'),
+      where('isApproved', '==', true)
+    );
+    
+    if (startDate) {
+      photosQuery = query(
+        collection(db, 'photos'),
+        where('isApproved', '==', true),
+        where('createdAt', '>=', startDate) // ← Promjena ovdje
+      );
+    }
+    
+    const [usersSnapshot, photosSnapshot] = await Promise.all([
+      getDocs(query(collection(db, 'users'))),
+      getDocs(photosQuery)
+    ]);
+
+    const totalMembers = usersSnapshot.size;
+    const photosShared = photosSnapshot.size;
+    
+    let totalLikes = 0;
+    const locationSet = new Set<string>();
+    
+    photosSnapshot.docs.forEach(doc => {
+      const photo = doc.data();
+      totalLikes += photo.likes || 0;
+      if (photo.location) locationSet.add(photo.location);
+    });
+
+    return {
+      totalMembers,
+      photosShared,
+      locationsDocumented: locationSet.size,
+      totalLikes
+    };
+  } catch (error) {
+    console.error('Error fetching community stats:', error);
+    return { totalMembers: 0, photosShared: 0, locationsDocumented: 0, totalLikes: 0 };
   }
+}
 
   // Get monthly highlights
   async getMonthlyHighlights(): Promise<MonthlyHighlights> {
@@ -910,6 +937,80 @@ async fixAllPhotoLikeCounts(): Promise<void> {
       };
     }
   }
+
+  // Dodaj ovu funkciju u UserService klasu
+async getYearlyHighlights(): Promise<MonthlyHighlights> {
+  try {
+    const now = new Date();
+    const thisYear = new Date(now.getFullYear(), 0, 1); // 1. siječnja ove godine
+    const lastYear = new Date(now.getFullYear() - 1, 0, 1); // 1. siječnja prošle godine
+    
+    // Get photos from this year
+    const { photoService } = await import('./firebaseService');
+    const allPhotos = await photoService.getAllPhotos();
+    
+    const thisYearPhotos = allPhotos.filter(photo => {
+      const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
+      return photoDate >= thisYear;
+    });
+    
+    // Most active location this year
+    const locationCounts: { [location: string]: number } = {};
+    thisYearPhotos.forEach(photo => {
+      locationCounts[photo.location] = (locationCounts[photo.location] || 0) + 1;
+    });
+
+    const mostActiveLocation = Object.entries(locationCounts).reduce(
+      (max, [location, count]) => count > max.photoCount ? { name: location, photoCount: count } : max,
+      { name: 'No activity', photoCount: 0 }
+    );
+
+    // Most popular photo of the year (most liked this year)
+    const mostLikedPhoto = thisYearPhotos.reduce(
+      (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
+      null as any
+    );
+
+    // New members this year
+    const usersQuery = query(collection(db, 'users'));
+    const userDocs = await getDocs(usersQuery);
+    
+    const thisYearMembers = userDocs.docs.filter(doc => {
+      const userData = doc.data();
+      const joinDate = userData.joinedAt?.toDate() || new Date();
+      return joinDate >= thisYear;
+    }).length;
+
+    const lastYearMembers = userDocs.docs.filter(doc => {
+       const userData = doc.data();
+  const joinDate = userData.joinedAt?.toDate() || new Date();
+  return joinDate >= lastYear && joinDate < thisYear; // Promijeni endOfLastYear u thisYear
+}).length;
+
+    const percentageChange = lastYearMembers > 0 
+      ? Math.round(((thisYearMembers - lastYearMembers) / lastYearMembers) * 100)
+      : 0;
+
+    return {
+      mostActiveLocation,
+      photoOfTheMonth: { // Naziv ostaje isti za kompatibilnost s interfaceom
+        title: mostLikedPhoto?.description || 'No photos this year',
+        author: mostLikedPhoto?.author || 'Unknown'
+      },
+      newMembers: {
+        count: thisYearMembers,
+        percentageChange
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching yearly highlights:', error);
+    return {
+      mostActiveLocation: { name: 'Error loading', photoCount: 0 },
+      photoOfTheMonth: { title: 'Error loading', author: 'Unknown' },
+      newMembers: { count: 0, percentageChange: 0 }
+    };
+  }
+}
 }
 
 export const userService = new UserService();
