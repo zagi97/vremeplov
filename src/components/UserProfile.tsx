@@ -1,10 +1,10 @@
-// src/components/UserProfile.tsx - s prijevodima
+// UserProfile.tsx - optimizirana za male ekrane
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "./ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { User, LogOut, Trophy, ChevronDown } from "lucide-react";
+import { User, LogOut, Trophy } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
       <Button 
         onClick={signInWithGoogle} 
         variant="ghost" 
-        className={cn("text-white hover:bg-white hover:text-gray-900 transition-colors", className)}
+        size="sm"
+        className={cn("text-white hover:bg-white hover:text-gray-900 transition-colors text-xs sm:text-sm px-2 sm:px-4", className)}
       >
         {t('nav.login')}
       </Button>
@@ -32,19 +33,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className={cn("h-auto p-2 hover:bg-white hover:text-gray-900 transition-colors", className)}>
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-              <AvatarFallback className="bg-blue-600 text-white">
-                {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="hidden md:block text-sm font-medium">
-              {user.displayName || user.email}
-            </span>
-            <ChevronDown className="h-4 w-4" />
-          </div>
+        <Button variant="ghost" size="sm" className={cn("h-auto p-1 sm:p-2 hover:bg-white hover:text-gray-900 transition-colors", className)}>
+          <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
+            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+            <AvatarFallback className="bg-blue-600 text-white text-xs">
+              {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

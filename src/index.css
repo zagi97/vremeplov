@@ -5,6 +5,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ✅ DODAJ OVO ODMAH ISPOD */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#root {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 input[placeholder*="Search"]::placeholder {
   color: #6b7280 !important;
   opacity: 1 !important;

@@ -5,6 +5,20 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    container: {
+      center: true,
+      padding: {
+        DEFAULT: '1rem',
+        sm: '1rem',
+        lg: '2rem',
+      },
+      screens: {
+        sm: '100%',
+        md: '100%',
+        lg: '1024px',
+        xl: '1280px',
+      },
+    },
     extend: {
       colors: {
         border: 'hsl(var(--border))',
@@ -46,7 +60,7 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
- }
+    }
   },
   plugins: [require("tailwindcss-animate")],
 }

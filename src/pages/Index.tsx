@@ -8,24 +8,24 @@ import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
 
 const Index = () => {
-    const { t } = useLanguage();
+  const { t } = useLanguage();
   
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
-            {/* Navigation Header */}
-            <nav className="absolute top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
-        <div className="container max-w-6xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-[#F8F9FA] overflow-x-hidden">
+      {/* Navigation Header */}
+      <nav className="absolute top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <Link to="/" className="text-2xl font-bold text-white">
+            <Link to="/" className="text-sm sm:text-xl md:text-2xl font-bold text-white truncate flex-shrink min-w-0">
               Vremeplov.hr
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0 ml-1">
               <Link 
                 to="/map" 
-                className="flex items-center gap-2 text-white hover:text-blue-300 transition-colors text-sm font-medium"
+                className="flex items-center text-white hover:text-blue-300 transition-colors text-xs sm:text-sm font-medium p-1"
               >
-                <MapPin className="h-4 w-4" />
-                {t('nav.memoryMap')}
+                <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline ml-1">{t('nav.memoryMap')}</span>
               </Link>
               <LanguageSelector />
               <UserProfile className="text-white" />
@@ -38,7 +38,7 @@ const Index = () => {
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519181245277-cffeb31da2e3?q=80&w=2070')] bg-cover bg-center opacity-40 z-[-1]"></div>
-        <div className="container max-w-6xl mx-auto px-4 z-10 text-center">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto px-4 z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight animate-fade-in">
             Vremeplov<span className="text-gray-300">.hr</span>
           </h1>
@@ -53,7 +53,7 @@ const Index = () => {
 
       {/* Features Section */}
       <section className="py-20 px-4 bg-white">
-        <div className="container max-w-6xl mx-auto">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
             {t('home.reconnectTitle')}
           </h2>
@@ -79,7 +79,7 @@ const Index = () => {
 
       {/* Memory Map Preview Section */}
       <section className="py-20 px-4 bg-white border-t border-gray-200">
-        <div className="container max-w-6xl mx-auto text-center">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             {t('home.exploreCroatiaTitle')}
           </h2>
@@ -98,7 +98,7 @@ const Index = () => {
 
       {/* Sample Gallery Section */}
       <section className="py-20 px-4 bg-gray-50">
-        <div className="container max-w-6xl mx-auto">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
             {t('home.glimpseTitle')}
           </h2>
@@ -111,7 +111,7 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-4 bg-blue-600 text-white">
-        <div className="container max-w-6xl mx-auto text-center">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             {t('home.startJourneyTitle')}
           </h2>
@@ -123,7 +123,7 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">
-        <div className="container max-w-6xl mx-auto">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
               <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
