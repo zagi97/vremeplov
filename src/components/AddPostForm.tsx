@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import ImageUpload from "./ImageUpload";
 import DatePicker from "./DatePicker";
 import FormFields from "./FormFields";
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
 interface AddPostFormProps {
   locationName: string;
@@ -15,6 +16,7 @@ interface AddPostFormProps {
 }
 
 const AddPostForm = ({ locationName, onClose, onSubmit }: AddPostFormProps) => {
+    const { t } = useLanguage();
   const [formData, setFormData] = useState({
     description: '',
     date: undefined as Date | undefined,
@@ -37,7 +39,7 @@ const AddPostForm = ({ locationName, onClose, onSubmit }: AddPostFormProps) => {
     e.preventDefault();
     
     if (!formData.description || !formData.date || !formData.author || !formData.imageFile) {
-      toast.error("Please fill in all fields and select an image");
+      toast.error(t('errors.fillAllFields'));
       return;
     }
 

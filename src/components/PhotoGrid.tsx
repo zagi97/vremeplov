@@ -87,24 +87,23 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
           className="group block"
         >
           <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="aspect-[4/3] overflow-hidden">
-              {/* ZAMIJENIO img s LazyImage */}
-              <LazyImage
-                src={photo.imageUrl}
-                alt={photo.description}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                threshold={0.2} // Počni učitavati kad je 20% vidljivo
-                rootMargin="150px" // Učitaj 150px prije viewport-a
-                placeholder={
-                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <div className="text-sm font-medium">{photo.location}</div>
-                      <div className="text-xs">{photo.year}</div>
-                    </div>
-                  </div>
-                }
-              />
-            </div>
+            <div className="relative w-full h-64 overflow-hidden"> {/* Fiksna visina */}
+  <LazyImage
+    src={photo.imageUrl}
+    alt={photo.description}
+    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+    threshold={0.2}
+    rootMargin="150px"
+    placeholder={
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          <div className="text-sm font-medium">{photo.location}</div>
+          <div className="text-xs">{photo.year}</div>
+        </div>
+      </div>
+    }
+  />
+</div>
             <CardContent className="p-4">
               <h3 className="font-semibold text-lg mb-2 group-hover:text-blue-600 transition-colors">
                 {photo.description}

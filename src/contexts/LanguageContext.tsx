@@ -478,7 +478,7 @@ const translations: Record<Language, TranslationMap> = {
 'community.newMembers': 'New Members',
 'community.places': 'Places',
 'community.new': 'New',
-'community.likes': 'likes',
+'community.likes': 'Favorites',
 'community.locations': 'locations',
 'community.joined': 'joined',
 'community.badge': 'badge',
@@ -510,6 +510,70 @@ const translations: Record<Language, TranslationMap> = {
 
 'cityType.city': 'City',
     'cityType.municipality': 'Municipality',
+
+    // ✅ ERROR MESSAGES - ENGLISH
+    'errors.signInFailed': 'Failed to sign in',
+    'errors.signOutFailed': 'Failed to sign out',
+    'errors.signInRequired': 'Please sign in to like photos',
+    'errors.adminModeExit': 'Failed to exit admin mode',
+    'errors.adminModeEnter': 'Failed to enter admin mode',
+    
+    // Upload errors
+    'errors.fillAllFields': 'Please fill in all fields and select an image',
+    'errors.invalidImageType': 'Please select a valid image file (JPG, PNG, WEBP)',
+    'errors.imageTooLarge': 'Image is too large (max 20MB). Please compress the image',
+    'errors.uploadFailed': 'Upload failed: Storage permissions issue or storage quota exceeded',
+    'errors.uploadError': 'Upload failed: Poor internet connection or server issue',
+    'errors.compressionError': 'Image compression failed',
+    'errors.addressSearchFailed': 'Failed to search addresses',
+    'errors.fileRequired': 'Please select a file',
+    'errors.offline': 'You are offline. Please check your internet connection',
+    
+    // Photo errors
+    'errors.photoLoadFailed': 'Failed to load photos',
+    'errors.photoLikeFailed': 'Failed to like photo',
+    'errors.photoDeleteFailed': 'Failed to delete photo',
+    'errors.photoUpdateFailed': 'Failed to update photo',
+    'errors.photoApprovalFailed': 'Failed to approve photo',
+    'errors.photoTagApprovalFailed': 'Failed to approve tag',
+    'errors.photoTagRejectionFailed': 'Failed to reject tag',
+    'errors.photoTagUpdateFailed': 'Failed to update tag',
+    'errors.photoNotFound': 'Photo not found',
+    'errors.photoAddFailed': 'Failed to add photo',
+    
+    // Comment errors
+    'errors.commentError': 'Error posting comment',
+    'errors.commentEmpty': 'Comment cannot be empty',
+    'errors.commentSignInRequired': 'Please sign in to comment',
+    'errors.commentLoadFailed': 'Failed to load comments',
+    
+    // Location errors
+    'errors.locationLoadFailed': 'Failed to load location',
+    
+    // Admin errors
+    'errors.adminDataLoadFailed': 'Failed to load admin data',
+    
+    // Profile errors
+    'errors.profileLoadError': 'Failed to load profile',
+    'errors.followError': 'Failed to follow user',
+    'errors.updateError': 'Failed to update profile',
+    'errors.statsError': 'Failed to load statistics',
+    
+    // Community errors
+    'errors.loadFailed': 'Failed to load data',
+    'errors.leaderboardLoadFailed': 'Failed to load leaderboard',
+    
+    // Photo details errors
+    'errors.notFound': 'Photo not found',
+    'errors.enterNameAndPosition': 'Please enter a name and select a position',
+    'errors.tagSaveFailed': 'Failed to save tag',
+    'errors.signInMessage': 'Please sign in to add tags',
+    'errors.likeFailed': 'Failed to like photo',
+    'errors.signInToLike': 'Please sign in to like photos',
+    
+    // Auth errors
+    'errors.signInError': 'Failed to sign in. Please try again.',
+    'errors.signInToAddMemory': 'Please sign in to add memories',
   },
   hr: {
     'cityType.city': 'Grad',
@@ -965,7 +1029,7 @@ const translations: Record<Language, TranslationMap> = {
 'community.newMembers': 'Novi članovi',
 'community.places': 'Mjesta',
 'community.new': 'Novo',
-'community.likes': 'sviđanja',
+'community.likes': 'Omiljeno',
 'community.locations': 'lokacije',
 'community.joined': 'pridružio se',
 'community.badge': 'značka',
@@ -994,6 +1058,70 @@ const translations: Record<Language, TranslationMap> = {
 'userProfile.myProfile': 'Moj profil',
 'userProfile.community': 'Zajednica',
 'userProfile.signOut': 'Odjava',
+
+// ✅ ERROR MESSAGES - CROATIAN
+    'errors.signInFailed': 'Prijava nije uspjela',
+    'errors.signOutFailed': 'Odjava nije uspjela',
+    'errors.signInRequired': 'Molimo prijavite se da biste lajkali fotografije',
+    'errors.adminModeExit': 'Greška pri izlasku iz admin moda',
+    'errors.adminModeEnter': 'Greška pri ulasku u admin mod',
+    
+    // Upload errors
+    'errors.fillAllFields': 'Molimo ispunite sva polja i odaberite sliku',
+    'errors.invalidImageType': 'Molimo odaberite valjanu sliku (JPG, PNG, WEBP)',
+    'errors.imageTooLarge': 'Slika je prevelika (max 20MB). Molimo komprimirajte sliku',
+    'errors.uploadFailed': 'Upload nije uspio: Greška s dopuštenjima ili kvota premašena',
+    'errors.uploadError': 'Upload nije uspio: Loša internet veza ili problem sa serverom',
+    'errors.compressionError': 'Greška pri kompresiji slike',
+    'errors.addressSearchFailed': 'Pretraživanje adresa nije uspjelo',
+    'errors.fileRequired': 'Molimo odaberite datoteku',
+    'errors.offline': 'Niste povezani na internet. Molimo provjerite vezu',
+    
+    // Photo errors
+    'errors.photoLoadFailed': 'Učitavanje fotografija nije uspjelo',
+    'errors.photoLikeFailed': 'Lajkanje fotografije nije uspjelo',
+    'errors.photoDeleteFailed': 'Brisanje fotografije nije uspjelo',
+    'errors.photoUpdateFailed': 'Ažuriranje fotografije nije uspjelo',
+    'errors.photoApprovalFailed': 'Odobravanje fotografije nije uspjelo',
+    'errors.photoTagApprovalFailed': 'Odobravanje oznake nije uspjelo',
+    'errors.photoTagRejectionFailed': 'Odbijanje oznake nije uspjelo',
+    'errors.photoTagUpdateFailed': 'Ažuriranje oznake nije uspjelo',
+    'errors.photoNotFound': 'Fotografija nije pronađena',
+    'errors.photoAddFailed': 'Dodavanje fotografije nije uspjelo',
+    
+    // Comment errors
+    'errors.commentError': 'Greška pri objavi komentara',
+    'errors.commentEmpty': 'Komentar ne može biti prazan',
+    'errors.commentSignInRequired': 'Molimo prijavite se da biste komentirali',
+    'errors.commentLoadFailed': 'Učitavanje komentara nije uspjelo',
+    
+    // Location errors
+    'errors.locationLoadFailed': 'Učitavanje lokacije nije uspjelo',
+    
+    // Admin errors
+    'errors.adminDataLoadFailed': 'Učitavanje admin podataka nije uspjelo',
+    
+    // Profile errors
+    'errors.profileLoadError': 'Učitavanje profila nije uspjelo',
+    'errors.followError': 'Greška pri praćenju korisnika',
+    'errors.updateError': 'Ažuriranje profila nije uspjelo',
+    'errors.statsError': 'Učitavanje statistike nije uspjelo',
+    
+    // Community errors
+    'errors.loadFailed': 'Učitavanje podataka nije uspjelo',
+    'errors.leaderboardLoadFailed': 'Učitavanje ljestvice nije uspjelo',
+    
+    // Photo details errors
+    'errors.notFound': 'Fotografija nije pronađena',
+    'errors.enterNameAndPosition': 'Molimo unesite ime i odaberite poziciju',
+    'errors.tagSaveFailed': 'Spremanje oznake nije uspjelo',
+    'errors.signInMessage': 'Molimo prijavite se da biste dodali oznake',
+    'errors.likeFailed': 'Lajkanje fotografije nije uspjelo',
+    'errors.signInToLike': 'Molimo prijavite se da biste lajkali fotografije',
+    
+    // Auth errors
+    'errors.signInError': 'Greška pri prijavi. Molimo pokušajte ponovno.',
+    'errors.signInToAddMemory': 'Molimo prijavite se za dodavanje sjećanja',
 
   }
 };

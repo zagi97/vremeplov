@@ -214,7 +214,7 @@ const MapView: React.FC = () => {
 
             } catch (error) {
                 console.error('Error loading photos for map:', error);
-                toast.error('Failed to load photos');
+                toast.error(t('errors.photoLoadFailed'));
             } finally {
                 setLoading(false);
             }
@@ -363,7 +363,7 @@ const MapView: React.FC = () => {
 
             {/* CUSTOM CLUSTERING MAPA */}
             <div className="container max-w-6xl mx-auto px-4 py-6">
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
                     <div style={{ height: '600px', width: '100%' }}>
                         <MapContainer
                             center={mapCenter}
@@ -479,55 +479,63 @@ const MapView: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Photo Grid Preview */}
-                <div className="mt-8">
-                    <h3 className="text-xl font-bold mb-4">{t('mapView.photosOnMap')}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredPhotos.slice(0, 6).map((photo) => (
-                            <div key={photo.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                                <div className="aspect-[4/3] overflow-hidden">
-                                    <LazyImage
-                                        src={photo.imageUrl}
-                                        alt={photo.description}
-                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                                    />
-                                </div>
-                                <div className="p-4">
-                                    <h3 className="font-bold text-lg mb-2 line-clamp-2">{photo.description}</h3>
-                                    <div className="space-y-1 text-sm text-gray-600 mb-3">
-                                        <div className="flex items-center gap-1">
-                                            <MapPin className="h-3 w-3 flex-shrink-0" />
-                                            <span className="truncate">{photo.location}</span>
-                                        </div>
-                                        {photo.address && (
-                                            <div className="flex items-center gap-1">
-                                                <MapPin className="h-3 w-3 flex-shrink-0 text-blue-500" />
-                                                <span className="truncate text-blue-600 text-xs">{photo.address}</span>
-                                            </div>
-                                        )}
-                                        <div className="flex items-center gap-1">
-                                            <Calendar className="h-3 w-3" />
-                                            <span>{photo.year}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <User className="h-3 w-3" />
-                                            <span className="truncate">{photo.author}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                                        <span>❤️ {photo.likes || 0}</span>
-                                        <span>👁️ {photo.views || 0}</span>
-                                    </div>
-                                    <Link to={`/photo/${photo.id}`}>
-                                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
-                                            {t('mapView.viewDetails')}
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {filteredPhotos.slice(0, 6).map((photo) => (
+    <div key={photo.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      {/* Fiksna visina slike */}
+      <div className="h-64 overflow-hidden bg-gray-100">
+        <LazyImage
+          src={photo.imageUrl}
+          alt={photo.description}
+          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+        />
+      </div>
+      
+      {/* Content - više prostora */}
+      <div className="p-5 space-y-3">
+        <h3 className="font-bold text-lg line-clamp-2 min-h-[3.5rem]">
+          {photo.description}
+        </h3>
+        
+        <div className="space-y-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{photo.location}</span>
+          </div>
+          
+          {photo.address && (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500" />
+              <span className="truncate text-blue-600 text-xs">{photo.address}</span>
+            </div>
+          )}
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              <span>{photo.year}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <User className="h-4 w-4" />
+              <span className="truncate">{photo.author}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 text-sm text-gray-500 pt-2 border-t border-gray-100">
+          <span>❤️ {photo.likes || 0}</span>
+          <span>👁️ {photo.views || 0}</span>
+        </div>
+        
+        <Link to={`/photo/${photo.id}`} className="block mt-3">
+          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+            {t('mapView.viewDetails')}
+          </Button>
+        </Link>
+      </div>
+    </div>
+  ))}
+</div>
 
                 {/* Statistics */}
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">

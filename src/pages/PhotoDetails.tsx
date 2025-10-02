@@ -411,7 +411,7 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
               <LazyImage
                 src={photo.imageUrl}
                 alt={photo.description}
-                className="w-full h-auto object-cover"
+                className="w-full h-auto rounded-lg"
               />
               
               {/* Hover-Only Tagged Persons */}
