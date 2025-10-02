@@ -25,7 +25,6 @@ const PhotoDetail = () => {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [relatedPhotos, setRelatedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState<any[]>([]);
   const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
@@ -81,19 +80,7 @@ const PhotoDetail = () => {
     }
     
     // Comments
-    const photoComments = await photoService.getCommentsByPhotoId(photoId);
-    setComments(photoComments.map(comment => ({
-      id: comment.id,
-      author: comment.author,
-      text: comment.text,
-      date: comment.createdAt.toDate().toLocaleDateString('hr-HR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-    })));
+    
 
     // ✅ ISPRAVKA: Tagged Persons - vlasnik slike koristi admin metodu
 // ✅ FALLBACK PRISTUP: Prvo probaj obične tagove, pa ručno filtriraj
@@ -326,27 +313,7 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
     setHasSelectedPosition(false);
   };
     
-  const handleAddComment = async (text: string) => {
-    if (!photoId || !user) return;
-    
-    try {
-      const authorName = user.displayName || user.email || 'Anonymous User';
-      const commentId = await photoService.addComment(photoId, authorName, text);
-      
-      const newComment = {
-        id: commentId,
-        author: authorName,
-        text,
-        date: "Just now"
-      };
-      
-      setComments([newComment, ...comments]);
-      toast.success(t('photoDetail.commentAdded'));
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error(t('photoDetail.commentFailed'));
-    }
-  };
+  
 
   const handleLike = async () => {
     if (!photoId || !user || likeLoading) return;
@@ -753,11 +720,11 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
           {/* Comments Section */}
           {/* Comments Section */}
 <div className="p-6">
-  <PhotoComments 
-    comments={comments}
-    onAddComment={handleAddComment}
-    photoAuthor={photo.uploadedBy || photo.author}
-  />
+ <PhotoComments 
+  photoId={photoId!}
+  photoAuthor={photo.uploadedBy || photo.author}
+  photoAuthorId={photo.authorId}
+/>
 </div>
 
           {/* Right Column - Sidebar for larger screens */}
