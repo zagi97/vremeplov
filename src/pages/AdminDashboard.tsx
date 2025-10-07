@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner';
 import { Check, X, Edit, Eye, MessageSquare, Users, BarChart3, Expand, Upload, Image, Trash2, LogOut, Tag, User } from 'lucide-react';
 import LazyImage from '../components/LazyImage';
-
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function AdminDashboard() {
 const { user, isAdmin, exitAdminMode } = useAuth();
@@ -35,6 +35,7 @@ const navigate = useNavigate();
     pendingTags: 0,
     totalTags: 0
   });
+   const { t } = useLanguage();
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -108,7 +109,7 @@ const navigate = useNavigate();
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
-      toast.error('Failed to load admin data');
+       toast.error(t('errors.adminDataLoadFailed'));
     } finally {
       setLoading(false);
     }
@@ -117,11 +118,12 @@ const navigate = useNavigate();
   const handleApprovePhoto = async (photoId: string) => {
     try {
       await photoService.updatePhoto(photoId, { isApproved: true });
-      toast.success('Photo approved successfully');
+      toast.success(t('admin.photoApproved'));
       loadAdminData();
     } catch (error) {
       console.error('Error approving photo:', error);
-      toast.error('Failed to approve photo');
+      
+      toast.error(t('errors.photoApprovalFailed'));
     }
   };
 
@@ -134,34 +136,36 @@ const navigate = useNavigate();
       localStorage.setItem('rejectedPhotosCount', (currentCount + 1).toString());
       
       console.log('Photo deleted successfully, updating UI...');
-      toast.success('Photo rejected and deleted');
+      toast.success(t('admin.photoRejected'));
       loadAdminData();
     } catch (error) {
       console.error('Error deleting photo:', error);
       console.error('Full error details:', error);
-      toast.error('Failed to delete photo');
+      
+       toast.error(t('errors.photoDeleteFailed'));
     }
   };
 
   const handleEditPhoto = async (photoId: string, updates: Partial<Photo>) => {
     try {
       await photoService.updatePhoto(photoId, updates);
-      toast.success('Photo updated successfully');
+      toast.success(t('admin.photoUpdated'));
       loadAdminData();
     } catch (error) {
       console.error('Error updating photo:', error);
-      toast.error('Failed to update photo');
+      
+      toast.error(t('errors.photoUpdateFailed'));
     }
   };
 
   const handleDeletePhoto = async (photoId: string) => {
     try {
       await photoService.deletePhoto(photoId);
-      toast.success('Photo deleted successfully');
+      toast.success(t('admin.photoDeleted'));
       loadAdminData();
     } catch (error) {
       console.error('Error deleting photo:', error);
-      toast.error('Failed to delete photo');
+      toast.error(t('errors.photoDeleteFailed'));
     }
   };
 
@@ -169,33 +173,33 @@ const navigate = useNavigate();
   const handleApproveTag = async (tagId: string) => {
     try {
       await photoService.approveTaggedPerson(tagId, user!.uid);
-      toast.success('Tag approved successfully');
+      toast.success(t('admin.tagApproved'));
       loadAdminData();
     } catch (error) {
       console.error('Error approving tag:', error);
-      toast.error('Failed to approve tag');
+      toast.error(t('errors.photoTagApprovalFailed'));
     }
   };
 
   const handleRejectTag = async (tagId: string) => {
     try {
       await photoService.rejectTaggedPerson(tagId);
-      toast.success('Tag rejected and deleted');
+      toast.success(t('admin.tagRejected'));
       loadAdminData();
     } catch (error) {
       console.error('Error rejecting tag:', error);
-      toast.error('Failed to reject tag');
+      toast.error(t('errors.photoTagRejectionFailed'));
     }
   };
 
   const handleEditTag = async (tagId: string, updates: Partial<TaggedPerson>) => {
     try {
       await photoService.updateTaggedPerson(tagId, updates);
-      toast.success('Tag updated successfully');
+      toast.success(t('admin.tagUpdated'));
       loadAdminData();
     } catch (error) {
       console.error('Error updating tag:', error);
-      toast.error('Failed to update tag');
+      toast.error(t('errors.photoTagUpdateFailed'));
     }
   };
 
@@ -203,10 +207,11 @@ const navigate = useNavigate();
     try {
       await exitAdminMode();
       navigate('/');
-      toast.success('Exited admin mode successfully');
+      toast.success(t('admin.adminModeExited'));
     } catch (error) {
       console.error('Error exiting admin mode:', error);
-      toast.error('Failed to exit admin mode');
+      
+      toast.error(t('errors.adminModeExit'));
     }
   };
 
@@ -718,6 +723,7 @@ function PhotoModerationCard({
     description: photo.description,
     year: photo.year
   });
+  const { t } = useLanguage();
 
   // Check if any changes have been made and all fields are valid
   const hasChanges = editData.author !== photo.author || 
@@ -747,10 +753,11 @@ function PhotoModerationCard({
       // Update editData with new image URL
       setEditData(prev => ({ ...prev, imageUrl: newImageUrl }));
       
-      toast.success('Image uploaded successfully!');
+      toast.success(t('admin.imageUploaded'));
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      
+      toast.error(t('upload.error'));
     } finally {
       setUploading(false);
     }
@@ -956,6 +963,7 @@ function PhotoManagementCard({
     description: photo.description,
     year: photo.year
   });
+  const { t } = useLanguage();
 
   // Check if any changes have been made and all fields are valid
   const hasChanges = editData.author !== photo.author || 
@@ -985,10 +993,10 @@ function PhotoManagementCard({
       // Update editData with new image URL
       setEditData(prev => ({ ...prev, imageUrl: newImageUrl }));
       
-      toast.success('Image uploaded successfully!');
+      toast.success(t('admin.imageUploaded'));
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      toast.error(t('upload.error'));
     } finally {
       setUploading(false);
     }

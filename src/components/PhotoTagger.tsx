@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
 import LazyImage from './LazyImage';
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
 interface TaggedPerson {
   id: string;
@@ -39,6 +40,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const { user } = useAuth();
+    const { t } = useLanguage();
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
@@ -55,8 +57,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
     // Store the exact position values
     setTagPosition({ x, y });
     setHasSelectedPosition(true);
-    
-    toast.info("Position selected. Please enter a name for the tag.");
+    toast.info(t("photoDetail.positionSelected"));
   };
   
   const handleSubmitTag = (e: React.FormEvent) => {
@@ -65,7 +66,8 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
 
     if (!newTagName.trim() || !hasSelectedPosition) {
       // Show error if name is empty or position not selected
-      toast.error("Please enter a name and select a position on the image");
+      
+      toast.error(t('photoDetail.enterNameAndPosition'));
       return;
     }
     
@@ -85,7 +87,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
     setHasSelectedPosition(false);
     
     // Show notification about admin approval
-    toast.success(`Tagged ${newTagName} in the photo! The tag will be visible after admin approval.`, {
+    toast.success(translateWithParams(t, 'photoDetail.taggedSuccess', { name: newTagName }), {
       duration: 4000
     });
   };

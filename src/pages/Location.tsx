@@ -16,6 +16,7 @@ import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
 
 import municipalityData from '../../data/municipalities.json';
+import Footer from '@/components/Footer';
 
 // Helper funkcije
 const parseLocationFromUrl = (urlParam: string) => {
@@ -231,21 +232,22 @@ const Location = () => {
       await signInWithGoogle();
       toast.success(t('auth.signInSuccess'));
     } catch (error) {
-      toast.error('Failed to sign in. Please try again.');
+      toast.error(t('comments.signInError'));
+      
     }
   };
 
   const handleUploadSuccess = async () => {
-    setShowAddForm(false);
-    toast.success('Photo uploaded successfully! It will appear after admin review.');
-    
-    try {
-      const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
-      setAllPhotos(locationPhotos);
-    } catch (error) {
-      console.error('Error refreshing photos:', error);
-    }
-  };
+  setShowAddForm(false);
+  toast.success(t('location.uploadSuccess'));
+  
+  try {
+    const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
+    setAllPhotos(locationPhotos);
+  } catch (error) {
+    console.error('Error refreshing photos:', error);
+  }
+};
 
   const clearFilters = () => {
     setFilters({
@@ -287,7 +289,7 @@ const Location = () => {
         setAllPhotos(locationPhotos);
       } catch (error) {
         console.error('Error loading photos:', error);
-        toast.error('Failed to load photos');
+        toast.error(t('errors.photoLoadFailed'));
       } finally {
         setLoading(false);
       }
@@ -656,26 +658,8 @@ const Location = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-10 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-              <p className="mt-2">{t('footer.tagline')}</p>
-            </div>
-            <div className="flex space-x-6">
-              <Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-              <Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-              <Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
-          </div>
-        </div>
-      </footer>
+     {/* Footer */}
+      <Footer/>
     </div>
   );
 };

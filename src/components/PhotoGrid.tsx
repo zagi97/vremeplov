@@ -8,6 +8,7 @@ import { Photo, photoService } from '../services/firebaseService';
 import { toast } from "sonner";
 import { useAuth } from '../contexts/AuthContext';
 import LazyImage from './LazyImage'; // DODANO
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -18,6 +19,7 @@ interface PhotoGridProps {
 const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUpdate }) => {
   const [photosState, setPhotosState] = useState<Photo[]>(photos);
   const { user } = useAuth();
+  const { t } = useLanguage();
   
   // Update local state when photos prop changes
   React.useEffect(() => {
@@ -34,7 +36,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     e.stopPropagation();
     
     if (!user) {
-      toast.error('Please sign in to like photos');
+      toast.error(t('errors.signInRequired'));
       return;
     }
     
@@ -57,13 +59,14 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
       }
       
       if (result.liked) {
-        toast.success('Photo liked!');
+        toast.success(t('photoDetail.photoLiked'));
       } else {
-        toast.success('Photo unliked!');
+        
+        toast.success(t('photoDetail.photoUnliked'));
       }
     } catch (error) {
       console.error('Error liking photo:', error);
-      toast.error('Failed to like photo');
+       toast.error(t('errors.likeFailed'));
     }
   };
 

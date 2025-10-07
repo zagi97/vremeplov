@@ -56,7 +56,8 @@ const AddPostForm = ({ locationName, onClose, onSubmit }: AddPostFormProps) => {
     };
 
     onSubmit(newPost);
-    toast.success("Post added successfully!");
+    
+    toast.success(t('upload.success'));
     onClose();
   };
 

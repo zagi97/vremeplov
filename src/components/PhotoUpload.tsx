@@ -8,7 +8,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { photoService, geocodingService } from '../services/firebaseService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { translateWithParams, useLanguage } from '../contexts/LanguageContext';
 import { CharacterCounter } from "./ui/character-counter";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
@@ -273,7 +273,7 @@ useEffect(() => {
         return;
       }
       console.error('Error searching addresses:', error);
-      toast.error('Failed to search addresses');
+      toast.error(t('errors.addressSearchFailed'));
       setAvailableAddresses([]);
     } finally {
       if (currentRequestRef.current) {
@@ -370,7 +370,12 @@ useEffect(() => {
     if (address.includes('(kliknite za broj')) {
       const streetName = address.split(' (kliknite za broj')[0];
       setNeedsManualPositioning(true);
-      toast.info(`📍 Odaberite točnu lokaciju za ${streetName} ${houseNumber}`);
+     toast.info(
+  translateWithParams(t, 'upload.selectExactLocation', { 
+    street: streetName, 
+    number: houseNumber 
+  })
+);
       return;
     }
 
@@ -386,9 +391,9 @@ useEffect(() => {
       if (coords) {
         setCoordinates(coords);
         console.log('Coordinates found for address:', address, coords);
-        toast.success('📍 Address location found!');
+       toast.success(t('upload.locationFound'));
       } else {
-        toast.warning('Could not find exact coordinates for this address');
+        toast.warning(t('upload.coordinatesNotFound'));
       }
     } catch (error) {
       console.error('Error getting coordinates:', error);
@@ -545,13 +550,13 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
   if (!file) return;
   
   if (!file.type.startsWith('image/')) {
-    toast.error('Molimo odaberite sliku (JPG, PNG, WEBP)');
+    toast.error(t('errors.invalidImageType'));
     return;
   }
   
   // Povećajte limit na 20MB jer sada imamo bolju kompresiju
   if (file.size > 20 * 1024 * 1024) {
-    toast.error('Slika je prevelika (max 20MB). Molimo odaberite manju sliku.');
+    toast.error(t('errors.imageTooLarge'));
     return;
   }
 
@@ -566,7 +571,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     setPreviewUrl(url);
     
     // Pokaži loading toast za kompresiju
-    const loadingToast = toast.loading('Kompresiranje slike...');
+    const loadingToast = toast.loading(t('upload.compressing'));
     
     // Kompresija
     const compressedFile = await compressImage(file);
@@ -582,14 +587,20 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     
     if (compressedFile.size < file.size) {
       const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
-      toast.success(`Slika kompresovana: ${originalSizeMB}MB → ${compressedSizeMB}MB (${reduction}% manje)`);
+      toast.success(
+  translateWithParams(t, 'upload.compressed', { 
+    original: originalSizeMB, 
+    compressed: compressedSizeMB, 
+    reduction: reduction 
+  })
+);
     } else {
-      toast.success('Slika je optimalne veličine');
+      toast.success(t('upload.optimalSize'));
     }
     
   } catch (error) {
     console.error('Greška pri kompresiji:', error);
-    toast.error('Greška pri kompresiji slike');
+    toast.error(t('errors.compressionError'));
     // U slučaju greške, koristi original
     setSelectedFile(file);
   }
@@ -691,10 +702,14 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
       console.log('Database record created successfully with ID:', finalPhotoId);
       
       if (finalCoordinates) {
-        toast.success(`Photo uploaded successfully with location ${selectedAddress}! It will be reviewed and published soon.`);
-      } else {
-        toast.success(t('upload.success'));
-      }
+  toast.success(
+    translateWithParams(t, 'upload.successWithLocation', { 
+      address: selectedAddress 
+    })
+  );
+} else {
+  toast.success(t('upload.success'));
+}
       
       // Reset form
       setSelectedFile(null);
@@ -721,11 +736,16 @@ setFormData({
       const errorCode = (error as any)?.code;
       
       if (errorCode === 'storage/unauthorized') {
-        toast.error('Upload failed: Storage permissions issue. Please try again.');
+        
+        toast.error(t('errors.uploadFailed'));
+        
       } else if (errorCode === 'storage/quota-exceeded') {
-        toast.error('Upload failed: Storage quota exceeded.');
+        
+        toast.error(t('errors.uploadStorageFull'));
       } else if (errorMessage?.includes('network')) {
-        toast.error('Upload failed: Poor internet connection. Please check your connection and try again.');
+        
+        toast.error(t('errors.uploadError'));
+
       } else {
         toast.error(t('upload.error'));
       }
@@ -920,7 +940,12 @@ setFormData({
                     setAddressSearch(`${streetName} ${houseNumber}`);
                     setNeedsManualPositioning(false);
                     closeAddressDropdown();
-                    toast.success(`📍 Lokacija postavljena za ${streetName} ${houseNumber}!`);
+                    toast.success(
+  translateWithParams(t, 'upload.locationSet', { 
+    street: streetName, 
+    number: houseNumber 
+  })
+);
                   }}
                 />
               </div>
@@ -958,11 +983,16 @@ setFormData({
                       // Return to manual positioning mode
                       setNeedsManualPositioning(true);
                       setCoordinates(null);
-                      toast.info(`📍 Odaberite novu lokaciju za ${streetName} ${houseNumber}`);
+                     toast.info(
+  translateWithParams(t, 'upload.selectNewLocation', { 
+    street: streetName, 
+    number: houseNumber 
+  })
+);
                     } else {
                       // No data, completely reset
                       handleClearAddress();
-                      toast.info('📍 Možete ponovo pretražiti adresu');
+                      toast.info(t('upload.canSearchAgain'));
                     }
                   }}
                   className="text-green-700 hover:text-green-800 text-xs"

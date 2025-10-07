@@ -3,6 +3,7 @@ import { User, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/aut
 import { auth, googleProvider } from '../lib/firebase';
 import { toast } from "sonner";
 import { authService } from '../services/firebaseService';
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
@@ -33,6 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
+ const { t } = useLanguage();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -52,10 +55,10 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success('Successfully signed in!');
+      toast.success(t('auth.signInSuccess'));
     } catch (error) {
       console.error('Error signing in:', error);
-      toast.error('Failed to sign in');
+      toast.error(t('errors.signInFailed'));
     }
   };
 
@@ -65,14 +68,14 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
       if (result.success) {
           setIsAdminMode(true);
           sessionStorage.setItem('adminMode', 'true');
-        toast.success('Successfully signed in as admin!');
+        toast.success(t('auth.adminSignInSuccess'));
       } else {
-        toast.error(result.error || 'Failed to sign in');
+       toast.error(t('errors.signInFailed'));
       }
       return result;
     } catch (error) {
       console.error('Error signing in:', error);
-      toast.error('Failed to sign in');
+      toast.error(t('errors.signInFailed'));
       return { success: false, error: 'An unexpected error occurred' };
     }
   };
@@ -82,10 +85,10 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
       setIsAdminMode(false);
       sessionStorage.removeItem('adminMode');
       await signOut(auth);
-      toast.success('Exited admin mode');
+      toast.success(t('auth.adminModeExited'));
     } catch (error) {
       console.error('Error exiting admin mode:', error);
-      toast.error('Failed to exit admin mode');
+       toast.error(t('errors.adminModeExit'));
     }
   };
 
@@ -94,10 +97,12 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
        setIsAdminMode(false);
       sessionStorage.removeItem('adminMode');
       await signOut(auth);
-      toast.success('Successfully signed out!');
+      toast.success(t('auth.signOutSuccess'));
     } catch (error) {
       console.error('Error signing out:', error);
-      toast.error('Failed to sign out');
+      
+       toast.error(t('errors.signOutFailed'));
+
     }
   };
 

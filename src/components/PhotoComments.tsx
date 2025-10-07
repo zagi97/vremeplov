@@ -89,13 +89,13 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
       }, 
       (error) => {
         console.error('Greška pri dohvaćanju komentara:', error);
-        toast.error('Greška pri učitavanju komentara');
+       toast.error(t('comments.loadError'));
         setLoading(false);
       }
     );
 
     return () => unsubscribe();
-  }, [photoId]);
+  }, [photoId, t]);
 
   const handleSignInToComment = async () => {
     try {
@@ -111,12 +111,12 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
     e.preventDefault();
     
     if (!newComment.trim()) {
-      toast.error('Komentar ne može biti prazan');
+      toast.error(t('comments.emptyComment'));
       return;
     }
     
     if (!user) {
-      toast.error('Morate biti prijavljeni');
+      toast.error(t('comments.mustBeSignedIn'));
       return;
     }
 
@@ -136,7 +136,7 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
       toast.success(t('comments.commentAdded'));
     } catch (error) {
       console.error('Greška pri dodavanju komentara:', error);
-      toast.error('Greška pri objavljivanju komentara');
+      toast.error(t('comments.postError'));
     }
   };
 
@@ -188,7 +188,7 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
         {loading ? (
           <div className="text-center py-8">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="text-gray-500 mt-2">Učitavanje komentara...</p>
+            <p className="text-gray-500 mt-2">{t('comments.loading')}</p>
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-8 bg-gray-50 rounded-lg">

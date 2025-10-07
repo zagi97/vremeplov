@@ -15,6 +15,7 @@ import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 import PhotoLocationMap from "../components/PhotoLocationMap";
 import { useNavigate } from 'react-router-dom';
+import Footer from "@/components/Footer";
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -264,9 +265,10 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
     // Dodaj u postojeći state
     setTaggedPersons([...taggedPersons, newTagWithId]);
     
-    toast.success(`Tagged ${newTag.name}! Tag is pending admin approval.`, {
-      duration: 4000
-    });
+    toast.success(
+  translateWithParams(t, 'photoDetail.tagPending', { name: newTag.name }),
+  { duration: 4000 }
+);
   } catch (error) {
     console.error('Error adding tag:', error);
     toast.error(t('photoDetail.tagSaveFailed'));
@@ -798,26 +800,8 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
         )}
       </div>
       
-      <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400 mt-12">
-        <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-              <p className="mt-2">{t('footer.tagline')}</p>
-            </div>
-            <div className="flex space-x-6">
-              {/* In your Location.tsx footer (around line 522-525) */}
-<Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-<Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-<Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-<Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <Footer/>
     </div>
   );
 };

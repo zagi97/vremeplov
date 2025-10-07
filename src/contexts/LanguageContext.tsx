@@ -87,7 +87,7 @@ const translations: Record<Language, TranslationMap> = {
     'photoDetail.cancel': 'Cancel',
     'photoDetail.positionSelected': 'Position selected. Please enter a name for the tag.',
     'photoDetail.enterNameAndPosition': 'Please enter a name and select a position on the image',
-    'photoDetail.taggedSuccess': 'Person tagged successfully!',
+    'photoDetail.taggedSuccess': 'Tagged {name} in the photo! The tag will be visible after admin approval.',
     'photoDetail.tagSaveFailed': 'Failed to add tag',
     'photoDetail.commentAdded': 'Comment added successfully!',
     'photoDetail.commentFailed': 'Failed to add comment',
@@ -96,7 +96,7 @@ const translations: Record<Language, TranslationMap> = {
     'photoDetail.likeFailed': 'Failed to update like',
     'photoDetail.historicalContextDesc': 'This period marked significant developments in the local history of {location}. Many similar photographs from this era document the changing landscape and daily life of inhabitants.',
     'photoDetail.defaultDescription': 'This historical photograph from {year} shows {description} in {location}. It was contributed to the Vremeplov.hr archive by {author}.',
-    
+    'photoDetail.tagPending': 'Tagged {name}! Tag is pending admin approval.',
     // Upload
     'upload.title': 'Share Historical Photo',
     'upload.select': 'Select Photo',
@@ -137,6 +137,8 @@ const translations: Record<Language, TranslationMap> = {
     'auth.adminLogin': 'Admin Login',
     'auth.email': 'Email',
     'auth.password': 'Password',
+    'auth.adminSignInSuccess': 'Successfully signed in as admin!',
+'auth.adminModeExited': 'Exited admin mode',
     
     // Common
     'common.of': 'of',
@@ -187,6 +189,7 @@ const translations: Record<Language, TranslationMap> = {
     'location.clearAllFilters': 'Clear all filters',
     'location.loadingMemories': 'Loading memories...',
     'location.loadMoreMemories': 'Load More Memories',
+    'location.uploadSuccess': 'Photo uploaded successfully! It will appear after admin review.',
 
     // Photo types
     'photoType.allTypes': 'All Types',
@@ -223,11 +226,23 @@ const translations: Record<Language, TranslationMap> = {
     'upload.uploading': 'Uploading...',
     'upload.photoType': 'Photo Type',
 'upload.selectPhotoType': 'Select photo type',
+// Add to LanguageContext.tsx - ENGLISH (en)
+'upload.locationFound': 'Address location found!',
+'upload.coordinatesNotFound': 'Could not find exact coordinates for this address',
+'upload.selectExactLocation': 'Select exact location for {street} {number}',
+'upload.locationSet': 'Location set for {street} {number}!',
+'upload.selectNewLocation': 'Select new location for {street} {number}',
+'upload.canSearchAgain': 'You can search for address again',
+'upload.compressing': 'Compressing image...',
+'upload.compressed': 'Image compressed: {original}MB → {compressed}MB ({reduction}% smaller)',
+'upload.optimalSize': 'Image is optimal size',
+'upload.successWithLocation': 'Photo uploaded successfully with location {address}! It will be reviewed and published soon.',
+
 
     // Text
     'text.characterCounter': 'characters',
 
-    // English translations (add to the 'en' object):
+// English translations (en)
 'comments.title': 'Comments ({count})',
 'comments.placeholder': 'Share your memories or knowledge about this photo...',
 'comments.postComment': 'Post Comment',
@@ -238,6 +253,21 @@ const translations: Record<Language, TranslationMap> = {
 'comments.commentAdded': 'Your comment has been added!',
 'comments.noComments': 'No comments yet. Be the first to share your thoughts!',
 'comments.author': 'Author',
+'comments.emptyComment': 'Comment cannot be empty',
+'comments.mustBeSignedIn': 'You must be signed in',
+'comments.loadError': 'Error loading comments',
+'comments.postError': 'Error posting comment',
+'comments.loading': 'Loading comments...',
+
+'admin.photoApproved': 'Photo approved successfully',
+'admin.photoRejected': 'Photo rejected and deleted',
+'admin.photoUpdated': 'Photo updated successfully',
+'admin.photoDeleted': 'Photo deleted successfully',
+'admin.tagApproved': 'Tag approved successfully',
+'admin.tagRejected': 'Tag rejected and deleted',
+'admin.tagUpdated': 'Tag updated successfully',
+'admin.adminModeExited': 'Exited admin mode successfully',
+'admin.imageUploaded': 'Image uploaded successfully!',
 
 // English translations (add to the 'en' object):
 'locationMap.photoLocation': 'Photo Location',
@@ -522,8 +552,9 @@ const translations: Record<Language, TranslationMap> = {
     'errors.fillAllFields': 'Please fill in all fields and select an image',
     'errors.invalidImageType': 'Please select a valid image file (JPG, PNG, WEBP)',
     'errors.imageTooLarge': 'Image is too large (max 20MB). Please compress the image',
-    'errors.uploadFailed': 'Upload failed: Storage permissions issue or storage quota exceeded',
-    'errors.uploadError': 'Upload failed: Poor internet connection or server issue',
+    'errors.uploadFailed': 'Upload failed: Storage permissions issue. Please try again.',
+    'errors.uploadStorageFull': 'Upload failed: Storage quota exceeded. Please try again later.',
+    'errors.uploadError': 'Upload failed: Poor internet connection. Please check your connection and try again.',
     'errors.compressionError': 'Image compression failed',
     'errors.addressSearchFailed': 'Failed to search addresses',
     'errors.fileRequired': 'Please select a file',
@@ -638,7 +669,7 @@ const translations: Record<Language, TranslationMap> = {
     'photoDetail.cancel': 'Odustani',
     'photoDetail.positionSelected': 'Pozicija je odabrana. Molimo unesite ime za oznaku.',
     'photoDetail.enterNameAndPosition': 'Molimo unesite ime i odaberite poziciju na slici',
-    'photoDetail.taggedSuccess': 'Osoba je uspješno označena!',
+    'photoDetail.taggedSuccess': 'Označena osoba {name} na fotografiji! Oznaka će biti vidljiva nakon odobrenja administratora.',
     'photoDetail.tagSaveFailed': 'Neuspješno dodavanje oznake',
     'photoDetail.commentAdded': 'Komentar je uspješno dodan!',
     'photoDetail.commentFailed': 'Neuspješno dodavanje komentara',
@@ -647,7 +678,7 @@ const translations: Record<Language, TranslationMap> = {
     'photoDetail.likeFailed': 'Neuspješno ažuriranje ocjene',
     'photoDetail.historicalContextDesc': 'Ovo razdoblje je obilježilo značajan razvoj u lokalnoj povijesti mjesta {location}. Mnoge slične fotografije iz tog doba dokumentiraju mijenjajući se krajolik i svakodnevni život stanovnika.',
     'photoDetail.defaultDescription': 'Ova povijesna fotografija iz {year}. prikazuje {description} u {location}. Doprinijela ju je u arhiv Vremeplov.hr osoba {author}.',
-    
+    'photoDetail.tagPending': 'Označena osoba {name}! Oznaka čeka odobrenje admina.',
     // Upload
     'upload.title': 'Podijeli povijesnu fotografiju',
     'upload.select': 'Odaberi fotografiju',
@@ -665,6 +696,17 @@ const translations: Record<Language, TranslationMap> = {
     'upload.enterName': 'Unesite ime osobe',
     'upload.saveTag': 'Spremi oznaku',
     'upload.cancelTag': 'Odustani',
+    // Add to LanguageContext.tsx - CROATIAN (hr)
+'upload.locationFound': 'Lokacija adrese pronađena!',
+'upload.coordinatesNotFound': 'Nije moguće pronaći točne koordinate za ovu adresu',
+'upload.selectExactLocation': 'Odaberite točnu lokaciju za {street} {number}',
+'upload.locationSet': 'Lokacija postavljena za {street} {number}!',
+'upload.selectNewLocation': 'Odaberite novu lokaciju za {street} {number}',
+'upload.canSearchAgain': 'Možete ponovo pretražiti adresu',
+'upload.compressing': 'Kompresiranje slike...',
+'upload.compressed': 'Slika kompresovana: {original}MB → {compressed}MB ({reduction}% manje)',
+'upload.optimalSize': 'Slika je optimalne veličine',
+'upload.successWithLocation': 'Fotografija uspješno učitana s lokacijom {address}! Bit će pregledana i objavljena uskoro.',
     
     // Gallery
     'gallery.noPhotos': 'Nema fotografija',
@@ -688,6 +730,18 @@ const translations: Record<Language, TranslationMap> = {
     'auth.adminLogin': 'Admin prijava',
     'auth.email': 'Email',
     'auth.password': 'Lozinka',
+    'auth.adminSignInSuccess': 'Uspješno prijavljen kao administrator!',
+'auth.adminModeExited': 'Izašli ste iz admin moda',
+
+'admin.photoApproved': 'Fotografija uspješno odobrena',
+'admin.photoRejected': 'Fotografija odbijena i obrisana',
+'admin.photoUpdated': 'Fotografija uspješno ažurirana',
+'admin.photoDeleted': 'Fotografija uspješno obrisana',
+'admin.tagApproved': 'Oznaka uspješno odobrena',
+'admin.tagRejected': 'Oznaka odbijena i obrisana',
+'admin.tagUpdated': 'Oznaka uspješno ažurirana',
+'admin.adminModeExited': 'Uspješno izašli iz admin moda',
+'admin.imageUploaded': 'Slika uspješno učitana!',
     
     // Common
     'common.of': 'od',
@@ -738,6 +792,7 @@ const translations: Record<Language, TranslationMap> = {
     'location.clearAllFilters': 'Očisti sve filtre',
     'location.loadingMemories': 'Učitavanje sjećanja...',
     'location.loadMoreMemories': 'Učitaj više sjećanja',
+    'location.uploadSuccess': 'Fotografija uspješno učitana! Pojavit će se nakon pregleda admina.',
     
     // Photo types
     'photoType.allTypes': 'Svi tipovi',
@@ -778,7 +833,8 @@ const translations: Record<Language, TranslationMap> = {
      // Text
     'text.characterCounter': 'znakova',
 
-    // Croatian translations (add to the 'hr' object):
+ 
+// Croatian translations (hr)
 'comments.title': 'Komentari ({count})',
 'comments.placeholder': 'Podijelite svoja sjećanja ili znanje o ovoj fotografiji...',
 'comments.postComment': 'Objavi komentar',
@@ -789,6 +845,11 @@ const translations: Record<Language, TranslationMap> = {
 'comments.commentAdded': 'Vaš komentar je dodan!',
 'comments.noComments': 'Još nema komentara. Budite prvi koji će podijeliti svoje misli!',
 'comments.author': 'Autor',
+'comments.emptyComment': 'Komentar ne može biti prazan',
+'comments.mustBeSignedIn': 'Morate biti prijavljeni',
+'comments.loadError': 'Greška pri učitavanju komentara',
+'comments.postError': 'Greška pri objavljivanju komentara',
+'comments.loading': 'Učitavanje komentara...',
 
 // Croatian translations (add to the 'hr' object):
 'locationMap.photoLocation': 'Lokacija fotografije',

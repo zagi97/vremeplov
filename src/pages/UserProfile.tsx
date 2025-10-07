@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
+import Footer from "@/components/Footer";
 
 // Activity type display mapping
 const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: string } } = {
@@ -751,25 +752,7 @@ const fixUserStats = async () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-10 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
-              <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-              <p className="mt-2">{t('footer.tagline')}</p>
-            </div>
-            <div className="flex space-x-6">
-              <Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-              <Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-              <Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-              <Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
-          </div>
-        </div>
-      </footer>
+      <Footer/>
     </div>
   );
 };

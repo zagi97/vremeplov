@@ -17,6 +17,7 @@ import municipalityData from '../../data/municipalities.json';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import Footer from './Footer';
 
 // Fix za Leaflet ikone u React-u
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -578,25 +579,7 @@ const MapView: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <footer className="py-10 px-4 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400 mt-12">
-                <div className="container max-w-6xl mx-auto">
-                    <div className="flex flex-col md:flex-row justify-between items-center">
-                        <div className="mb-6 md:mb-0">
-                            <h2 className="text-2xl font-bold text-white">Vremeplov.hr</h2>
-                            <p className="mt-2">{t('footer.tagline')}</p>
-                        </div>
-                        <div className="flex space-x-6">
-                            <Link to="/about" className="hover:text-white transition-colors">{t('footer.about')}</Link>
-                            <Link to="/privacy" className="hover:text-white transition-colors">{t('footer.privacy')}</Link>
-                            <Link to="/terms" className="hover:text-white transition-colors">{t('footer.terms')}</Link>
-                            <Link to="/contact" className="hover:text-white transition-colors">{t('footer.contact')}</Link>
-                        </div>
-                    </div>
-                    <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-                        <p>© {new Date().getFullYear()} Vremeplov.hr. {t('footer.rights')}</p>
-                    </div>
-                </div>
-            </footer>
+      <Footer/>
         </div>
     );
 };
