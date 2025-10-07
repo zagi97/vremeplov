@@ -138,7 +138,7 @@ const translations: Record<Language, TranslationMap> = {
     'auth.email': 'Email',
     'auth.password': 'Password',
     'auth.adminSignInSuccess': 'Successfully signed in as admin!',
-'auth.adminModeExited': 'Exited admin mode',
+
     
     // Common
     'common.of': 'of',
@@ -731,7 +731,7 @@ const translations: Record<Language, TranslationMap> = {
     'auth.email': 'Email',
     'auth.password': 'Lozinka',
     'auth.adminSignInSuccess': 'Uspješno prijavljen kao administrator!',
-'auth.adminModeExited': 'Izašli ste iz admin moda',
+
 
 'admin.photoApproved': 'Fotografija uspješno odobrena',
 'admin.photoRejected': 'Fotografija odbijena i obrisana',

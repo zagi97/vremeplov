@@ -207,7 +207,6 @@ const navigate = useNavigate();
     try {
       await exitAdminMode();
       navigate('/');
-      toast.success(t('admin.adminModeExited'));
     } catch (error) {
       console.error('Error exiting admin mode:', error);
       

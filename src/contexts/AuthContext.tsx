@@ -85,7 +85,7 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
       setIsAdminMode(false);
       sessionStorage.removeItem('adminMode');
       await signOut(auth);
-      toast.success(t('auth.adminModeExited'));
+      toast.success(t('admin.adminModeExited'));
     } catch (error) {
       console.error('Error exiting admin mode:', error);
        toast.error(t('errors.adminModeExit'));
