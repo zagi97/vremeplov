@@ -115,17 +115,41 @@ const navigate = useNavigate();
     }
   };
 
-  const handleApprovePhoto = async (photoId: string) => {
-    try {
-      await photoService.updatePhoto(photoId, { isApproved: true });
-      toast.success(t('admin.photoApproved'));
-      loadAdminData();
-    } catch (error) {
-      console.error('Error approving photo:', error);
-      
-      toast.error(t('errors.photoApprovalFailed'));
+ const handleApprovePhoto = async (photoId: string) => {
+  try {
+    // 1. Prvo dohvati podatke o fotografiji
+    const photo = await photoService.getPhotoById(photoId);
+    if (!photo) {
+      toast.error('Photo not found');
+      return;
     }
-  };
+
+    // 2. Odobri fotografiju
+    await photoService.updatePhoto(photoId, { isApproved: true });
+
+    // 3. ✅ TEK SADA kreiraj aktivnost
+    if (photo.authorId) {
+      const { userService } = await import('../services/userService');
+      
+      await userService.addUserActivity(
+        photo.authorId,
+        'photo_upload',
+        photoId,
+        {
+          photoTitle: photo.description,
+          location: photo.location,
+          targetId: photoId
+        }
+      );
+    }
+
+    toast.success(t('admin.photoApproved'));
+    loadAdminData();
+  } catch (error) {
+    console.error('Error approving photo:', error);
+    toast.error(t('errors.photoApprovalFailed'));
+  }
+};
 
   const handleRejectPhoto = async (photoId: string) => {
     try {

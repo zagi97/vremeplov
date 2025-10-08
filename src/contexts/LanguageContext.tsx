@@ -475,6 +475,9 @@ const translations: Record<Language, TranslationMap> = {
 'profile.statsError': 'Failed to fix user stats',
 'profile.defaultBio': 'Passionate about preserving Croatian heritage through historical photography.',
 'profile.editProfileDescription': 'Update your profile information below.',
+'profile.loadMore': 'Load more activities',
+'profile.loading': 'Loading...',
+'profile.loadMoreError': 'Error loading activities',
 
 // Badge names
 'profile.badgePhotographer': 'Photographer',
@@ -491,6 +494,7 @@ const translations: Record<Language, TranslationMap> = {
 'profile.activityFollowed': 'started following',
 'profile.activityBadge': 'earned a badge',
 'profile.activityComment': 'added a comment',
+'profile.activityTagged': 'tagged someone in',
 
 //Community
 // English translations
@@ -1056,6 +1060,9 @@ const translations: Record<Language, TranslationMap> = {
 'profile.statsError': 'Neuspjeh pri popravljanju statistika',
 'profile.defaultBio': 'Strastveno čuvam hrvatsku baštinu kroz povijesnu fotografiju.',
 'profile.editProfileDescription': 'Ažurirajte svoje informacije o profilu.',
+'profile.loadMore': 'Učitaj više aktivnosti',
+'profile.loading': 'Učitavanje...',
+'profile.loadMoreError': 'Greška pri učitavanju aktivnosti',
 
 // Badge names
 'profile.badgePhotographer': 'Fotograf',
@@ -1067,11 +1074,12 @@ const translations: Record<Language, TranslationMap> = {
 'profile.badgeLegend': 'Legenda baštine',
 
 // Activity translations
-'profile.activityUploaded': 'učitao je fotografiju',
+'profile.activityUploaded': 'učitao/la je fotografiju',
 'profile.activityLiked': 'se svidjela fotografija',
-'profile.activityFollowed': 'počeo je pratiti',
-'profile.activityBadge': 'osvojio je značku',
-'profile.activityComment': 'dodao je komentar',
+'profile.activityFollowed': 'počeo/la je pratiti',
+'profile.activityBadge': 'osvojio/la je značku',
+'profile.activityComment': 'dodao/la je komentar',
+'profile.activityTagged': 'označio/la je osobu u',
 
 //Community
 

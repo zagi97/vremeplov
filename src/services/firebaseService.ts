@@ -432,17 +432,6 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     if (currentUser?.uid) {
       // Import userService dinamički da izbjegneš circular dependency
       const { userService } = await import('./userService');
-      
-      // Dodaj aktivnost
-      await userService.addUserActivity(
-        currentUser.uid,
-        'photo_upload',
-        docRef.id,
-        {
-          photoTitle: photoData.description,
-          location: photoData.location
-        }
-      );
 
       // Ažuriraj user statistike
       await userService.updateUserStats(currentUser.uid, {
@@ -641,16 +630,47 @@ async addTaggedPerson(tagData: Omit<TaggedPerson, 'id' | 'createdAt' | 'isApprov
   }
 }
 
-
-// Approve tagged person
+// Approve tagged person - UPDATED with activity creation
 async approveTaggedPerson(tagId: string, adminUid: string): Promise<void> {
   try {
-    const docRef = doc(this.taggedPersonsCollection, tagId);
-    await updateDoc(docRef, {
+    // 1. Dohvati podatke o tagu
+    const tagRef = doc(this.taggedPersonsCollection, tagId);
+    const tagDoc = await getDoc(tagRef);
+    
+    if (!tagDoc.exists()) {
+      throw new Error('Tag not found');
+    }
+    
+    const tagData = tagDoc.data() as TaggedPerson;
+    
+    // 2. Dohvati podatke o fotografiji za aktivnost
+    const photoDoc = await getDoc(doc(this.photosCollection, tagData.photoId));
+    const photoData = photoDoc.exists() ? photoDoc.data() : null;
+    
+    // 3. Odobri tag
+    await updateDoc(tagRef, {
       isApproved: true,
       moderatedAt: Timestamp.now(),
       moderatedBy: adminUid
     });
+    
+    // 4. ✅ Kreiraj aktivnost tek sada (nakon odobrenja)
+    if (tagData.addedByUid && photoData) {
+      const { userService } = await import('./userService');
+      
+      await userService.addUserActivity(
+        tagData.addedByUid,
+        'person_tagged',
+        tagData.photoId,
+        {
+          photoTitle: photoData.description,
+          location: photoData.location,
+          targetId: tagData.photoId
+        }
+      );
+      
+      console.log('✅ Tag approved and activity created for user:', tagData.addedByUid);
+    }
   } catch (error) {
     console.error('Error approving tagged person:', error);
     throw error;
@@ -960,7 +980,8 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         photoId,
         {
           photoTitle: photoData.description,
-          location: photoData.location
+          location: photoData.location,
+          targetId: photoId
         }
       );
       

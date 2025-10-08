@@ -230,7 +230,6 @@ const Location = () => {
   const handleSignInToAddMemory = async () => {
     try {
       await signInWithGoogle();
-      toast.success(t('auth.signInSuccess'));
     } catch (error) {
       toast.error(t('comments.signInError'));
       

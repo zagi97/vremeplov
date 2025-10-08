@@ -25,7 +25,9 @@ import {
   Crown,
   Award,
   Edit,
-  Users
+  Users,
+  ArrowRight,
+  Tag
 } from "lucide-react";
 import { photoService, Photo } from "../services/firebaseService";
 import { userService, UserProfile, UserActivity } from "../services/userService";
@@ -41,7 +43,8 @@ const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: strin
   photo_like: { text: 'liked a photo', icon: Heart, color: 'text-red-600' },
   user_follow: { text: 'started following', icon: UserPlus, color: 'text-green-600' },
   badge_earned: { text: 'earned a badge', icon: Award, color: 'text-yellow-600' },
-  comment_added: { text: 'added a comment', icon: Star, color: 'text-purple-600' }
+  comment_added: { text: 'added a comment', icon: Star, color: 'text-purple-600' },
+  person_tagged: { text: 'tagged someone in', icon: Tag, color: 'text-orange-600' }
 };
 
 const UserProfilePage = () => {
@@ -62,6 +65,9 @@ const UserProfilePage = () => {
     bio: '',
     location: '',
   });
+  const [hasMoreActivities, setHasMoreActivities] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [activityLimit, setActivityLimit] = useState(10);
 
   // Badge definitions with proper icons - translated
   const getBadgeDetails = (badgeId: string) => {
@@ -84,13 +90,34 @@ const UserProfilePage = () => {
       photo_like: t('profile.activityLiked'),
       user_follow: t('profile.activityFollowed'),
       badge_earned: t('profile.activityBadge'),
-      comment_added: t('profile.activityComment')
+      comment_added: t('profile.activityComment'),
+      person_tagged: t('profile.activityTagged')
     };
     
     return {
       ...ACTIVITY_DISPLAY[activityType],
       text: activityTranslations[activityType] || activityType
     };
+  };
+
+  // Get activity link based on type
+  const getActivityLink = (activity: UserActivity): string | null => {
+    console.log('Activity:', activity.type, 'TargetId:', activity.metadata?.targetId);
+    switch(activity.type) {
+      case 'photo_upload':
+      case 'photo_like':
+      case 'comment_added':
+      case 'person_tagged':
+        return activity.metadata?.targetId
+        ? `/photo/${activity.metadata.targetId}`
+        : null;
+      case 'user_follow':
+      return activity.metadata?.targetId
+        ? `/user/${activity.metadata.targetId}`
+        : null;
+      default:
+        return null;
+    }
   };
 
 useEffect(() => {
@@ -107,14 +134,14 @@ useEffect(() => {
       let userProfile = await userService.getUserProfile(userId);
 
       if (!userProfile && ownProfile && currentUser && !isCancelled) {
-  await userService.createUserProfile(currentUser.uid, {
-    displayName: currentUser.displayName || currentUser.email || 'Unknown User',
-    email: currentUser.email || '',
-    photoURL: currentUser.photoURL || undefined,
-    bio: t('profile.defaultBio')
-  });
-  userProfile = await userService.getUserProfile(userId);
-}
+        await userService.createUserProfile(currentUser.uid, {
+          displayName: currentUser.displayName || currentUser.email || 'Unknown User',
+          email: currentUser.email || '',
+          photoURL: currentUser.photoURL || undefined,
+          bio: t('profile.defaultBio')
+        });
+        userProfile = await userService.getUserProfile(userId);
+      }
       
       if (!userProfile) {
         if (!isCancelled) setProfile(null);
@@ -162,7 +189,11 @@ useEffect(() => {
       }
       
       // Load activities
-      const activities = await userService.getUserActivities(userId, 10);
+      const activities = await userService.getUserActivities(userId, activityLimit);
+      
+      // Check if there are more activities
+      const moreActivities = await userService.getUserActivities(userId, activityLimit + 1);
+      const hasMore = moreActivities.length > activityLimit;
       
       // ✅ Svi state updates odjednom na kraju
       if (!isCancelled) {
@@ -171,6 +202,7 @@ useEffect(() => {
         setUserPhotos(photos);
         setIsFollowing(followStatus);
         setUserActivities(activities);
+        setHasMoreActivities(hasMore);
         setEditForm({
           displayName: finalProfile.displayName,
           bio: finalProfile.bio || '',
@@ -195,7 +227,7 @@ useEffect(() => {
   return () => {
     isCancelled = true;
   };
-}, [userId, currentUser, t]);
+}, [userId, currentUser, t, activityLimit]);
 
   const handleFollowToggle = async () => {
     if (!profile || !currentUser || isOwnProfile || followLoading) return;
@@ -238,7 +270,6 @@ useEffect(() => {
         displayName: editForm.displayName,
         bio: editForm.bio,
         location: editForm.location
-
       });
       
       // Update local state
@@ -257,28 +288,27 @@ useEffect(() => {
     }
   };
 
-    // Add this function inside your UserProfilePage component:
-const fixUserStats = async () => {
-  if (!currentUser) return;
-  
-  try {
-    setLoading(true);
+  // Load more activities
+  const loadMoreActivities = async () => {
+    if (!userId || loadingMore) return;
     
-    // Force recalculate user stats
-    await userService.forceRecalculateUserStats(currentUser.uid);
-    
-    // Reload the profile to see updated stats
-    const updatedProfile = await userService.getUserProfile(currentUser.uid);
-    setProfile(updatedProfile);
-    
-    toast.success(t('profile.statsFixed'));
-  } catch (error) {
-    console.error('Error fixing user stats:', error);
-    toast.error(t('profile.statsError'));
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoadingMore(true);
+    try {
+      const newLimit = activityLimit + 10;
+      const activities = await userService.getUserActivities(userId, newLimit);
+      setUserActivities(activities);
+      setActivityLimit(newLimit);
+      
+      // Check if there are even more
+      const moreActivities = await userService.getUserActivities(userId, newLimit + 1);
+      setHasMoreActivities(moreActivities.length > newLimit);
+    } catch (error) {
+      console.error('Error loading more activities:', error);
+      toast.error(t('profile.loadMoreError'));
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const formatActivityDate = (timestamp: any) => {
     if (!timestamp) return '';
@@ -398,10 +428,10 @@ const fixUserStats = async () => {
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                             <DialogTitle>{t('profile.editProfile')}</DialogTitle>
-    <DialogDescription>
-      {t('profile.editProfileDescription')}
-    </DialogDescription>
+                          <DialogTitle>{t('profile.editProfile')}</DialogTitle>
+                          <DialogDescription>
+                            {t('profile.editProfileDescription')}
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                           <div>
@@ -480,18 +510,34 @@ const fixUserStats = async () => {
             {/* Content Tabs */}
             <div className="lg:w-2/3">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="photos" className="flex items-center gap-2">
-                    <Camera className="h-4 w-4" />
-                    {t('profile.photos')} ({profile.stats.totalPhotos})
+                <TabsList className="grid w-full grid-cols-3 gap-1">
+                  <TabsTrigger 
+                    value="photos" 
+                    title={t('profile.photos')}
+                    className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
+                  >
+                    <Camera className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('profile.photos')}</span>
+                    <span className="sm:hidden">({profile.stats.totalPhotos})</span>
+                    <span className="hidden sm:inline">({profile.stats.totalPhotos})</span>
                   </TabsTrigger>
-                  <TabsTrigger value="stats" className="flex items-center gap-2">
-                    <Trophy className="h-4 w-4" />
-                    {t('profile.statistics')}
+                  
+                  <TabsTrigger 
+                    value="stats" 
+                    title={t('profile.statistics')}
+                    className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
+                  >
+                    <Trophy className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('profile.statistics')}</span>
                   </TabsTrigger>
-                  <TabsTrigger value="activity" className="flex items-center gap-2">
-                    <Star className="h-4 w-4" />
-                    {t('profile.activity')}
+                  
+                  <TabsTrigger 
+                    value="activity" 
+                    title={t('profile.activity')}
+                    className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
+                  >
+                    <Star className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('profile.activity')}</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -693,50 +739,118 @@ const fixUserStats = async () => {
                     </CardHeader>
                     <CardContent>
                       {userActivities.length > 0 ? (
-                        <div className="space-y-4">
-                          {userActivities.map(activity => {
-                            const activityInfo = getActivityDisplay(activity.type);
-                            const IconComponent = activityInfo.icon;
-                            
-                            return (
-                              <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-gray-50 transition-colors">
-                                <div className={`p-2 rounded-full bg-gray-100 ${activityInfo.color}`}>
-                                  <IconComponent className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{profile.displayName}</span>
-                                    <span className="text-gray-600">{activityInfo.text}</span>
-                                    {activity.metadata?.photoTitle && (
-                                      <span className="font-medium text-blue-600">"{activity.metadata.photoTitle}"</span>
-                                    )}
-                                    {activity.metadata?.targetUserName && (
-                                      <span className="font-medium text-blue-600">{activity.metadata.targetUserName}</span>
-                                    )}
-                                    {activity.metadata?.badgeName && (
-                                      <span className="font-medium text-yellow-600">{activity.metadata.badgeName}</span>
-                                    )}
+                        <>
+                          <div className="space-y-3">
+                            {userActivities.map(activity => {
+                              const activityInfo = getActivityDisplay(activity.type);
+                              const IconComponent = activityInfo.icon;
+                              const activityLink = getActivityLink(activity);
+                              
+                              return (
+                                <Link
+                                  key={activity.id}
+                                  to={activityLink || '#'}
+                                  className={`flex gap-3 p-4 border rounded-lg transition-colors ${
+                                    activityLink 
+                                      ? 'hover:bg-gray-50 hover:border-gray-300 cursor-pointer' 
+                                      : 'cursor-default'
+                                  }`}
+                                  onClick={(e) => !activityLink && e.preventDefault()}
+                                >
+                                  {/* Icon */}
+                                  <div className={`p-2 rounded-full bg-gray-100 ${activityInfo.color} flex-shrink-0 h-fit`}>
+                                    <IconComponent className="h-4 w-4" />
                                   </div>
-                                  {activity.metadata?.location && (
-                                    <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                                      <MapPin className="h-3 w-3" />
-                                      {activity.metadata.location}
+                                  
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0">
+                                    {/* Main text - responsive layout */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1 sm:flex-wrap">
+                                      <span className="font-medium text-gray-900">
+                                        {profile.displayName}
+                                      </span>
+                                      <span className="text-gray-600 text-sm sm:text-base">
+                                        {activityInfo.text}
+                                      </span>
+                                      
+                                      {/* Photo/User/Badge name */}
+                                      {activity.metadata?.photoTitle && (
+                                        <span className="font-medium text-blue-600 truncate">
+                                          "{activity.metadata.photoTitle}"
+                                        </span>
+                                      )}
+                                      {activity.metadata?.targetUserName && (
+                                        <span className="font-medium text-blue-600">
+                                          {activity.metadata.targetUserName}
+                                        </span>
+                                      )}
+                                      {activity.metadata?.badgeName && (
+                                        <span className="font-medium text-yellow-600 flex items-center gap-1">
+                                          <Award className="h-3 w-3" />
+                                          {activity.metadata.badgeName}
+                                        </span>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Location */}
+                                    {activity.metadata?.location && (
+                                      <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                        <MapPin className="h-3 w-3 flex-shrink-0" />
+                                        <span className="truncate">{activity.metadata.location}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Timestamp */}
+                                    <div className="text-xs text-gray-400 mt-1">
+                                      {formatActivityDate(activity.createdAt)}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Arrow indicator for clickable items */}
+                                  {activityLink && (
+                                    <div className="flex items-center text-gray-400">
+                                      <ArrowRight className="h-4 w-4" />
                                     </div>
                                   )}
-                                  <div className="text-xs text-gray-400 mt-1">
-                                    {formatActivityDate(activity.createdAt)}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Load More button */}
+                          {hasMoreActivities && (
+                            <div className="text-center mt-6 pt-4 border-t">
+                              <Button 
+                                variant="outline" 
+                                onClick={loadMoreActivities}
+                                disabled={loadingMore}
+                                className="w-full sm:w-auto"
+                              >
+                                {loadingMore ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                                    {t('profile.loading')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Star className="h-4 w-4 mr-2" />
+                                    {t('profile.loadMore')}
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        <div className="text-center py-8">
-                          <Star className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                          <p className="text-gray-500 mb-4">{t('profile.noRecentActivity')}</p>
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Star className="h-8 w-8 text-gray-400" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            {t('profile.noRecentActivity')}
+                          </h3>
                           {isOwnProfile && (
-                            <p className="text-sm text-gray-400">
+                            <p className="text-sm text-gray-500">
                               {t('profile.startUploading')}
                             </p>
                           )}

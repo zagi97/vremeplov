@@ -15,6 +15,7 @@ import { TooltipProvider } from "./ui/tooltip";
 import { SimpleMiniMap } from "./SimpleMiniMap";
 import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker import
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { userService } from '@/services/userService';
 
 interface PhotoUploadProps {
   locationName: string;

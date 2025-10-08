@@ -60,13 +60,14 @@ export interface FollowRelationship {
 export interface UserActivity {
   id?: string;
   userId: string;
-  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added';
-  targetId?: string; // photo ID, user ID, etc.
+  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added'| 'person_tagged'; 
+  
   metadata?: {
     photoTitle?: string;
     targetUserName?: string;
     badgeName?: string;
     location?: string;
+    targetId?: string; // photo ID, user ID, etc.
   };
   createdAt: any;
 }

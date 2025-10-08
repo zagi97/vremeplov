@@ -16,6 +16,7 @@ import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 import PhotoLocationMap from "../components/PhotoLocationMap";
 import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
+import { userService } from "@/services/userService";
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -334,8 +335,8 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
       setUserHasLiked(result.liked);
       
       if (result.liked) {
-        toast.success(t('photoDetail.photoLiked'));
-      } else {
+  toast.success(t('photoDetail.photoLiked'));
+}else {
         toast.success(t('photoDetail.photoUnliked'));
       }
       
