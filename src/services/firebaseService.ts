@@ -100,6 +100,7 @@ export interface Comment {
   id?: string;
   photoId: string;
   author: string;
+  authorId?: string;
   text: string;
   createdAt: Timestamp;
   isApproved: boolean;
@@ -538,46 +539,57 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
     }
   }
 
-  // Add comment to photo
-  async addComment(photoId: string, author: string, text: string): Promise<string> {
+// Add comment to photo
+async addComment(photoId: string, author: string, text: string, userId?: string): Promise<string> {
   try {
+    console.log('💬 Adding comment...', { photoId, author, text, userId });
+    
     const comment: Omit<Comment, 'id'> = {
       photoId,
       author,
+      authorId: userId,  // ✅ DODAJ OVO!
       text,
       createdAt: Timestamp.now(),
       isApproved: true
     };
 
     const docRef = await addDoc(this.commentsCollection, comment);
+    console.log('✅ Comment saved with ID:', docRef.id);
 
     // NOVO: Dodaj aktivnost
-    const currentUser = auth.currentUser;
-    if (currentUser?.uid) {
-      // Get photo details
+    if (userId) {
+      console.log('📸 Fetching photo details for:', photoId);
+      
       const photoDoc = await getDoc(doc(this.photosCollection, photoId));
       const photoData = photoDoc.data();
+      console.log('📸 Photo data:', photoData?.description, photoData?.location);
 
+      console.log('🔄 Importing userService...');
       const { userService } = await import('./userService');
       
+      console.log('🎯 Creating activity...');
       await userService.addUserActivity(
-        currentUser.uid,
+        userId,
         'comment_added',
         photoId,
         {
           photoTitle: photoData?.description || 'Unknown photo',
-          location: photoData?.location
+          location: photoData?.location,
+          targetId: photoId
         }
       );
+      
+      console.log('✅ Activity created successfully!');
+    } else {
+      console.warn('⚠️ No userId provided - activity not created');
     }
 
     return docRef.id;
   } catch (error) {
-    console.error('Error adding comment:', error);
+    console.error('❌ Error adding comment:', error);
     throw error;
   }
 }
-
   // Get comments for photo
   async getCommentsByPhotoId(photoId: string): Promise<Comment[]> {
     try {
@@ -902,9 +914,9 @@ async hasUserLiked(photoId: string, userId: string): Promise<boolean> {
 }
 
 // Toggle like for photo (properly handles both like and unlike)
+// Toggle like - FIXED UNLIKE with better activity deletion
 async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number }> {
   try {
-    // Check if user has already liked this photo
     const hasLiked = await this.hasUserLiked(photoId, userId);
     
     const docRef = doc(this.photosCollection, photoId);
@@ -918,62 +930,97 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
     const currentLikes = photoData.likes || 0;
     
     if (hasLiked) {
-      // ✅ UNLIKE: User has already liked, so remove the like
+      // ========== UNLIKE ==========
+      console.log(`🔄 Unlike process started for photo ${photoId} by user ${userId}`);
       
-      // 1. Remove the like record
+      // 1. Remove like record
       const likeQuery = query(
         this.userLikesCollection,
         where('photoId', '==', photoId),
         where('userId', '==', userId)
       );
       const likeSnapshot = await getDocs(likeQuery);
-      
-      // Delete all like records (should be only one)
       const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
+      console.log(`✅ Removed ${likeSnapshot.size} like records`);
       
-      // 2. Decrement the photo's like count
+      // 2. Decrement like count
       const newLikesCount = Math.max(0, currentLikes - 1);
       await updateDoc(docRef, {
         likes: newLikesCount,
         updatedAt: Timestamp.now()
       });
+      console.log(`✅ Decremented likes: ${currentLikes} → ${newLikesCount}`);
       
-      // 3. Update owner's stats (decrease)
+      // 3. Delete activity - SIMPLIFIED QUERY
+      try {
+        // Dohvati SVE photo_like aktivnosti od usera
+        const activitiesQuery = query(
+          collection(db, 'activities'),
+          where('userId', '==', userId),
+          where('type', '==', 'photo_like')
+        );
+        
+        const activitiesSnapshot = await getDocs(activitiesQuery);
+        console.log(`🔍 Found ${activitiesSnapshot.size} photo_like activities for user`);
+        
+        // Filtriraj one koje se odnose na ovu sliku (client-side filtering)
+        const relevantActivities = activitiesSnapshot.docs.filter(doc => {
+          const data = doc.data();
+          return data.metadata?.targetId === photoId;
+        });
+        
+        console.log(`🎯 Found ${relevantActivities.length} activities for this specific photo`);
+        
+        // Obriši te aktivnosti
+        if (relevantActivities.length > 0) {
+          const deleteActivityPromises = relevantActivities.map(doc => deleteDoc(doc.ref));
+          await Promise.all(deleteActivityPromises);
+          console.log(`✅ Deleted ${relevantActivities.length} activities`);
+        }
+      } catch (activityError) {
+        console.error('⚠️ Error deleting activity (non-critical):', activityError);
+        // Ne throwaj error - unlike je već uspio
+      }
+      
+      // 4. Update owner stats
       if (photoData.authorId) {
-        const { userService } = await import('./userService');
-        const ownerProfile = await userService.getUserProfile(photoData.authorId);
-        if (ownerProfile) {
-          await userService.updateUserStats(photoData.authorId, {
-            totalLikes: Math.max(0, ownerProfile.stats.totalLikes - 1)
-          });
+        try {
+          const { userService } = await import('./userService');
+          const ownerProfile = await userService.getUserProfile(photoData.authorId);
+          if (ownerProfile) {
+            await userService.updateUserStats(photoData.authorId, {
+              totalLikes: Math.max(0, ownerProfile.stats.totalLikes - 1)
+            });
+          }
+        } catch (statsError) {
+          console.error('⚠️ Error updating owner stats (non-critical):', statsError);
         }
       }
       
-      console.log(`Photo ${photoId} unliked by user ${userId}`);
+      console.log(`✅ Unlike completed successfully`);
       return { liked: false, newLikesCount };
       
     } else {
-      // ✅ LIKE: User hasn't liked yet, so add the like
+      // ========== LIKE ==========
+      console.log(`💖 Like process started for photo ${photoId} by user ${userId}`);
       
-      // 1. Record the user like
+      // 1. Record the like
       await addDoc(this.userLikesCollection, {
         photoId,
         userId,
         createdAt: Timestamp.now()
       });
       
-      // 2. Increment the photo's like count
+      // 2. Increment like count
       const newLikesCount = currentLikes + 1;
       await updateDoc(docRef, {
         likes: newLikesCount,
         updatedAt: Timestamp.now()
       });
       
-      // 3. Add activity and update stats
+      // 3. Add activity
       const { userService } = await import('./userService');
-      
-      // Add activity for like
       await userService.addUserActivity(
         userId,
         'photo_like',
@@ -985,24 +1032,22 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         }
       );
       
-      // Update owner's stats (increase)
+      // 4. Update owner stats
       if (photoData.authorId) {
         const ownerProfile = await userService.getUserProfile(photoData.authorId);
         if (ownerProfile) {
           await userService.updateUserStats(photoData.authorId, {
             totalLikes: ownerProfile.stats.totalLikes + 1
           });
-          
-          // Check for new badges
           await userService.checkAndAwardBadges(photoData.authorId);
         }
       }
       
-      console.log(`Photo ${photoId} liked by user ${userId}`);
+      console.log(`✅ Like completed successfully`);
       return { liked: true, newLikesCount };
     }
   } catch (error) {
-    console.error('Error toggling like:', error);
+    console.error('❌ Error toggling like:', error);
     throw error;
   }
 }

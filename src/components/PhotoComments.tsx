@@ -108,37 +108,36 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newComment.trim()) {
-      toast.error(t('comments.emptyComment'));
-      return;
-    }
-    
-    if (!user) {
-      toast.error(t('comments.mustBeSignedIn'));
-      return;
-    }
+  e.preventDefault();
+  
+  if (!newComment.trim()) {
+    toast.error(t('comments.emptyComment'));
+    return;
+  }
+  
+  if (!user) {
+    toast.error(t('comments.mustBeSignedIn'));
+    return;
+  }
 
-    try {
-      const commentsRef = collection(db, 'comments');
-      
-      await addDoc(commentsRef, {
-        photoId: photoId,
-        author: user.displayName || 'Nepoznato',
-        authorId: user.uid,
-        text: newComment.trim(),
-        createdAt: serverTimestamp(),
-        isApproved: true
-      });
-      
-      setNewComment("");
-      toast.success(t('comments.commentAdded'));
-    } catch (error) {
-      console.error('Greška pri dodavanju komentara:', error);
-      toast.error(t('comments.postError'));
-    }
-  };
+  try {
+    // ✅ ZAMIJENI DIREKTAN addDoc S OVIM:
+    const { photoService } = await import('../services/firebaseService');
+    
+    await photoService.addComment(
+      photoId,
+      user.displayName || 'Nepoznato',
+      newComment.trim(),
+      user.uid  // ← Prosljeđujemo userId
+    );
+    
+    setNewComment("");
+    toast.success(t('comments.commentAdded'));
+  } catch (error) {
+    console.error('Greška pri dodavanju komentara:', error);
+    toast.error(t('comments.postError'));
+  }
+};
 
   return (
     <div className="mt-8 px-4 sm:px-0">

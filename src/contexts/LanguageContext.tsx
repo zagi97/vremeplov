@@ -128,6 +128,12 @@ const translations: Record<Language, TranslationMap> = {
     'photo.taggedPeople': 'Tagged People',
     'photo.comments': 'Comments',
     'photo.addComment': 'Add Comment',
+
+    // Photo tag instructions
+    'photo.tag.mobile': '💡 Tip (mobile): Tap on the photo to see tagged persons',
+'photo.tag.desktop': '💡 Tip (desktop): Hover over the photo to see tagged persons',
+'photo.tag.pendingInfo': 'Info: Imaš oznake koje čekaju odobrenje administratora. Narančaste točke prikazuju tvoje oznake na čekanju.',
+
     
     // Auth
     'auth.signInGoogle': 'Sign in with Google',
@@ -726,6 +732,12 @@ const translations: Record<Language, TranslationMap> = {
     'photo.comments': 'Komentari',
     'photo.addComment': 'Dodaj komentar',
     
+    // Photo tag instructions
+    'photo.tag.tip.mobile': '💡 Savjet (mobitel): Dodirni fotografiju da vidiš označene osobe',
+    'photo.tag.tip.desktop': '💡 Savjet (računalo): Prijeđi mišem preko fotografije da vidiš označene osobe',
+    'photo.tag.pendingInfo': 'Info: Imaš oznake koje čekaju odobrenje administratora. Narančaste točke prikazuju tvoje oznake na čekanju.',
+
+
     // Auth
     'auth.signInGoogle': 'Prijavite se s Googleom',
     'auth.signOut': 'Odjava',

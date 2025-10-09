@@ -27,7 +27,8 @@ import {
   Edit,
   Users,
   ArrowRight,
-  Tag
+  Tag,
+  MessageCircle
 } from "lucide-react";
 import { photoService, Photo } from "../services/firebaseService";
 import { userService, UserProfile, UserActivity } from "../services/userService";
@@ -43,7 +44,7 @@ const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: strin
   photo_like: { text: 'liked a photo', icon: Heart, color: 'text-red-600' },
   user_follow: { text: 'started following', icon: UserPlus, color: 'text-green-600' },
   badge_earned: { text: 'earned a badge', icon: Award, color: 'text-yellow-600' },
-  comment_added: { text: 'added a comment', icon: Star, color: 'text-purple-600' },
+  comment_added: { text: 'added a comment', icon: MessageCircle, color: 'text-purple-600' },
   person_tagged: { text: 'tagged someone in', icon: Tag, color: 'text-orange-600' }
 };
 
