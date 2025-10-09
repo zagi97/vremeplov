@@ -380,73 +380,78 @@ const Location = () => {
               <LanguageSelector />
             </div>
           </div>
-          <div className="mt-6 flex justify-between items-end">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">{locationData.displayName}</h2>
-              
-              {/* Informacije o županiji i tipu */}
-              {locationData.isSpecific && locationData.county && locationData.type && (
-                <div className="mb-3">
-                  <div className="flex items-center gap-2 text-gray-300">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-base">{formatCountyName(locationData.county)}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-sm font-medium bg-gray-700/50 px-2 py-1 rounded text-gray-200">
-                      {translateCityType(locationData.type, t)}
-                    </span>
-                  </div>
-                </div>
-              )}
+         <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+  <div className="flex-1 min-w-0">
+    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 break-words">
+      {locationData.displayName}
+    </h2>
+    
+    {/* Informacije o županiji i tipu */}
+    {locationData.isSpecific && locationData.county && locationData.type && (
+      <div className="mb-3">
+        <div className="flex items-center gap-2 text-gray-300 flex-wrap">
+          <MapPin className="h-4 w-4 flex-shrink-0" />
+          <span className="text-sm sm:text-base">{formatCountyName(locationData.county)}</span>
+          <span className="text-gray-400">•</span>
+          <span className="text-xs sm:text-sm font-medium bg-gray-700/50 px-2 py-1 rounded text-gray-200">
+            {translateCityType(locationData.type, t)}
+          </span>
+        </div>
+      </div>
+    )}
 
-              {!locationData.isSpecific && (
-                <div className="mb-3">
-                  {(() => {
-                    const basicInfo = municipalityData.records.find(record => record[3] === actualCityName);
-                    if (basicInfo) {
-                      return (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <MapPin className="h-4 w-4" />
-                          <span className="text-base">{formatCountyName(basicInfo[1] as string)}</span>
-                          <span className="text-gray-400">•</span>
-                          <span className="text-sm font-medium bg-gray-700/50 px-2 py-1 rounded text-gray-200">
-                            {translateCityType(basicInfo[2] as string, t)}
-                          </span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-              )}
+    {!locationData.isSpecific && (
+      <div className="mb-3">
+        {(() => {
+          const basicInfo = municipalityData.records.find(record => record[3] === actualCityName);
+          if (basicInfo) {
+            return (
+              <div className="flex items-center gap-2 text-gray-300 flex-wrap">
+                <MapPin className="h-4 w-4 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{formatCountyName(basicInfo[1] as string)}</span>
+                <span className="text-gray-400">•</span>
+                <span className="text-xs sm:text-sm font-medium bg-gray-700/50 px-2 py-1 rounded text-gray-200">
+                  {translateCityType(basicInfo[2] as string, t)}
+                </span>
+              </div>
+            );
+          }
+          return null;
+        })()}
+      </div>
+    )}
 
-              <p className="text-gray-300">
-                {t('location.exploreHistory')} {locationData.displayName} {t('location.throughPhotos')}
-                {filteredPhotos.length !== allPhotos.length && (
-                  <span className="ml-2 text-blue-300">
-                    ({filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')})
-                  </span>
-                )}
-              </p>
-            </div>
-            
-            {user ? (
-              <Button 
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                {t('location.addMemory')}
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleSignInToAddMemory}
-                className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors flex items-center gap-2"
-              >
-                <LogIn className="h-4 w-4" />
-                {t('location.signInToAdd')}
-              </Button>
-            )}
-          </div>
+    <p className="text-sm sm:text-base text-gray-300 break-words">
+      {t('location.exploreHistory')} {locationData.displayName} {t('location.throughPhotos')}
+      {filteredPhotos.length !== allPhotos.length && (
+        <span className="ml-2 text-blue-300">
+          ({filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')})
+        </span>
+      )}
+    </p>
+  </div>
+  
+  {/* NOVI KOD - Responsive buttons */}
+  <div className="flex-shrink-0 w-full sm:w-auto">
+    {user ? (
+      <Button 
+        onClick={() => setShowAddForm(true)}
+        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
+      >
+        <Plus className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">{t('location.addMemory')}</span>
+      </Button>
+    ) : (
+      <Button 
+        onClick={handleSignInToAddMemory}
+        className="w-full sm:w-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-gray-900 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
+      >
+        <LogIn className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">{t('location.signInToAdd')}</span>
+      </Button>
+    )}
+  </div>
+</div>
         </div>
       </header>
 

@@ -130,11 +130,10 @@ const translations: Record<Language, TranslationMap> = {
     'photo.addComment': 'Add Comment',
 
     // Photo tag instructions
-    'photo.tag.mobile': '💡 Tip (mobile): Tap on the photo to see tagged persons',
-'photo.tag.desktop': '💡 Tip (desktop): Hover over the photo to see tagged persons',
-'photo.tag.pendingInfo': 'Info: Imaš oznake koje čekaju odobrenje administratora. Narančaste točke prikazuju tvoje oznake na čekanju.',
+    'photo.tag.tip.mobile': '💡 Tip (mobile): Tap on the photo to see tagged persons',
+'photo.tag.tip.desktop': '💡 Tip (desktop): Hover over the photo to see tagged persons',
+'photo.tag.pendingInfo': 'Info: You have tags pending administrator approval. Orange dots indicate your pending tags.',
 
-    
     // Auth
     'auth.signInGoogle': 'Sign in with Google',
     'auth.signOut': 'Sign Out',
@@ -247,6 +246,11 @@ const translations: Record<Language, TranslationMap> = {
 
     // Text
     'text.characterCounter': 'characters',
+
+
+
+// en.json
+'nav.memoryMapShort': 'Map',
 
 // English translations (en)
 'comments.title': 'Comments ({count})',
@@ -651,6 +655,9 @@ const translations: Record<Language, TranslationMap> = {
     'home.startJourneyTitle': 'Započnite svoje putovanje kroz vrijeme',
     'home.startJourneyDesc': 'Pridružite se našoj zajednici i pomozite sačuvati vizualnu povijest Hrvatske za buduće generacije.',
     
+    // hr.json
+'nav.memoryMapShort': 'Karta',
+
     // Photo Detail Page
     'photoDetail.loading': 'Učitavanje sjećanja...',
     'photoDetail.notFound': 'Fotografija nije pronađena',
