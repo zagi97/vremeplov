@@ -120,6 +120,35 @@ export interface MonthlyHighlights {
   };
 }
 
+// ========================================
+// 🔒 USER MODERATION INTERFACES
+// ========================================
+
+export type UserStatus = 'active' | 'suspended' | 'banned';
+
+export interface UserSuspension {
+  status: UserStatus;
+  suspendedUntil?: Timestamp | null; // Kada istječe suspenzija
+  suspendReason?: string;
+  suspendedAt?: Timestamp;
+  suspendedBy?: string; // Admin UID
+  bannedAt?: Timestamp;
+  banReason?: string;
+  bannedBy?: string;
+}
+
+// Extended UserProfile s moderation poljima
+export interface UserProfileExtended extends UserProfile {
+  status?: UserStatus;
+  suspendedUntil?: Timestamp | null;
+  suspendReason?: string;
+  suspendedAt?: Timestamp;
+  suspendedBy?: string;
+  bannedAt?: Timestamp;
+  banReason?: string;
+  bannedBy?: string;
+}
+
 class UserService {
   // Create or update user profile
   async createUserProfile(uid: string, userData: Partial<UserProfile>): Promise<void> {
@@ -1010,6 +1039,281 @@ async getYearlyHighlights(): Promise<MonthlyHighlights> {
       photoOfTheMonth: { title: 'Error loading', author: 'Unknown' },
       newMembers: { count: 0, percentageChange: 0 }
     };
+  }
+}
+
+// ========================================
+// 👥 USER MANAGEMENT & MODERATION
+// ========================================
+
+/**
+ * Get all users for admin dashboard
+ */
+async getAllUsersForAdmin(): Promise<UserProfileExtended[]> {
+  try {
+    const usersQuery = query(
+      collection(db, 'users'),
+      orderBy('joinedAt', 'desc')
+    );
+    
+    const userDocs = await getDocs(usersQuery);
+    return userDocs.docs.map(doc => ({
+      uid: doc.id,
+      ...doc.data()
+    } as UserProfileExtended));
+  } catch (error) {
+    console.error('Error getting all users:', error);
+    throw error;
+  }
+}
+
+/**
+ * Suspend user for specific duration
+ * @param userId - User UID
+ * @param days - Number of days (7, 30, 90)
+ * @param reason - Reason for suspension
+ * @param adminUid - Admin who suspended
+ */
+async suspendUser(userId: string, days: number, reason: string, adminUid: string): Promise<void> {
+  try {
+    const suspendUntil = new Date();
+    suspendUntil.setDate(suspendUntil.getDate() + days);
+    
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      status: 'suspended',
+      suspendedAt: Timestamp.now(),
+      suspendedUntil: Timestamp.fromDate(suspendUntil),
+      suspendReason: reason,
+      suspendedBy: adminUid
+    });
+    
+    console.log(`✅ User ${userId} suspended for ${days} days`);
+  } catch (error) {
+    console.error('Error suspending user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Ban user permanently
+ * @param userId - User UID
+ * @param reason - Reason for ban
+ * @param adminUid - Admin who banned
+ */
+async banUser(userId: string, reason: string, adminUid: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      status: 'banned',
+      bannedAt: Timestamp.now(),
+      banReason: reason,
+      bannedBy: adminUid,
+      // Clear suspension data if exists
+      suspendedAt: null,
+      suspendedUntil: null,
+      suspendReason: null,
+      suspendedBy: null
+    });
+    
+    console.log(`✅ User ${userId} banned permanently`);
+  } catch (error) {
+    console.error('Error banning user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Unsuspend user (restore to active)
+ * @param userId - User UID
+ */
+async unsuspendUser(userId: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      status: 'active',
+      suspendedAt: null,
+      suspendedUntil: null,
+      suspendReason: null,
+      suspendedBy: null
+    });
+    
+    console.log(`✅ User ${userId} unsuspended`);
+  } catch (error) {
+    console.error('Error unsuspending user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Unban user (restore to active)
+ * @param userId - User UID
+ */
+async unbanUser(userId: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      status: 'active',
+      bannedAt: null,
+      banReason: null,
+      bannedBy: null
+    });
+    
+    console.log(`✅ User ${userId} unbanned`);
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check if user is currently suspended or banned
+ */
+async checkUserStatus(userId: string): Promise<{ 
+  status: UserStatus; 
+  canPost: boolean;
+  message?: string;
+}> {
+  try {
+    const userProfile = await this.getUserProfile(userId);
+    if (!userProfile) {
+      return { status: 'active', canPost: true };
+    }
+    
+    const extendedProfile = userProfile as UserProfileExtended;
+    
+    // Check if banned
+    if (extendedProfile.status === 'banned') {
+      return {
+        status: 'banned',
+        canPost: false,
+        message: `Your account has been permanently banned. Reason: ${extendedProfile.banReason || 'No reason provided'}`
+      };
+    }
+    
+    // Check if suspended
+    if (extendedProfile.status === 'suspended' && extendedProfile.suspendedUntil) {
+      const suspendUntilDate = extendedProfile.suspendedUntil.toDate();
+      const now = new Date();
+      
+      if (now < suspendUntilDate) {
+        // Still suspended
+        return {
+          status: 'suspended',
+          canPost: false,
+          message: `Your account is suspended until ${suspendUntilDate.toLocaleDateString('hr-HR')}. Reason: ${extendedProfile.suspendReason || 'No reason provided'}`
+        };
+      } else {
+        // Suspension expired - auto unsuspend
+        await this.unsuspendUser(userId);
+        return {
+          status: 'active',
+          canPost: true,
+          message: 'Your suspension has expired. Welcome back!'
+        };
+      }
+    }
+    
+    return { status: 'active', canPost: true };
+  } catch (error) {
+    console.error('Error checking user status:', error);
+    return { status: 'active', canPost: true };
+  }
+}
+
+/**
+ * Delete user account permanently (GDPR compliance)
+ * WARNING: This deletes ALL user data!
+ */
+async deleteUserAccount(userId: string): Promise<void> {
+  try {
+    console.log(`⚠️ Starting permanent deletion of user ${userId}`);
+    
+    // 1. Delete user's photos
+    const { photoService } = await import('./firebaseService');
+    const userPhotos = await photoService.getPhotosByUploader(userId);
+    
+    for (const photo of userPhotos) {
+      if (photo.id) {
+        await photoService.deletePhoto(photo.id);
+      }
+    }
+    console.log(`✅ Deleted ${userPhotos.length} photos`);
+    
+    // 2. Delete user's comments
+    const commentsQuery = query(
+      collection(db, 'comments'),
+      where('userId', '==', userId)
+    );
+    const commentsSnapshot = await getDocs(commentsQuery);
+    for (const commentDoc of commentsSnapshot.docs) {
+      await deleteDoc(commentDoc.ref);
+    }
+    console.log(`✅ Deleted ${commentsSnapshot.size} comments`);
+    
+    // 3. Delete user's tags
+    const tagsQuery = query(
+      collection(db, 'taggedPersons'),
+      where('addedByUid', '==', userId)
+    );
+    const tagsSnapshot = await getDocs(tagsQuery);
+    for (const tagDoc of tagsSnapshot.docs) {
+      await deleteDoc(tagDoc.ref);
+    }
+    console.log(`✅ Deleted ${tagsSnapshot.size} tags`);
+    
+    // 4. Delete user's activities
+    const activitiesQuery = query(
+      collection(db, 'activities'),
+      where('userId', '==', userId)
+    );
+    const activitiesSnapshot = await getDocs(activitiesQuery);
+    for (const activityDoc of activitiesSnapshot.docs) {
+      await deleteDoc(activityDoc.ref);
+    }
+    console.log(`✅ Deleted ${activitiesSnapshot.size} activities`);
+    
+    // 5. Delete user's likes
+    const likesQuery = query(
+      collection(db, 'userLikes'),
+      where('userId', '==', userId)
+    );
+    const likesSnapshot = await getDocs(likesQuery);
+    for (const likeDoc of likesSnapshot.docs) {
+      await deleteDoc(likeDoc.ref);
+    }
+    console.log(`✅ Deleted ${likesSnapshot.size} likes`);
+    
+    // 6. Delete user's views
+    const viewsQuery = query(
+      collection(db, 'userViews'),
+      where('userId', '==', userId)
+    );
+    const viewsSnapshot = await getDocs(viewsQuery);
+    for (const viewDoc of viewsSnapshot.docs) {
+      await deleteDoc(viewDoc.ref);
+    }
+    console.log(`✅ Deleted ${viewsSnapshot.size} views`);
+    
+    // 7. Delete follows
+    const followsQuery = query(
+      collection(db, 'follows'),
+      where('followerId', '==', userId)
+    );
+    const followsSnapshot = await getDocs(followsQuery);
+    for (const followDoc of followsSnapshot.docs) {
+      await deleteDoc(followDoc.ref);
+    }
+    console.log(`✅ Deleted ${followsSnapshot.size} follows`);
+    
+    // 8. Finally, delete user document
+    await deleteDoc(doc(db, 'users', userId));
+    console.log(`✅ Deleted user document`);
+    
+    console.log(`✅ User ${userId} and all associated data deleted permanently`);
+  } catch (error) {
+    console.error('Error deleting user account:', error);
+    throw error;
   }
 }
 }

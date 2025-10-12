@@ -98,7 +98,6 @@ const SearchBar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim() && isValid && selectedLocation) {
-      // ✅ KORISTI urlKey umjesto samo name
       navigate(`/location/${encodeURIComponent(selectedLocation.urlKey)}`);
     }
   };
@@ -116,21 +115,22 @@ const SearchBar = () => {
     setOpen(false);
   };
 
+  // ✅ ISPRAVLJENO: Jednostavnija logika
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
     
-    // Provjeri je li unos točan naziv lokacije iz liste
+    // Automatski otvori dropdown ako ima teksta
+    if (value.trim()) {
+      setOpen(true);
+    }
+    
+    // Provjeri je li unos točan naziv lokacije
     const matchingLocation = allLocations.find(location => 
       location.name === value || location.displayName === value
     );
     
-    if (matchingLocation) {
-      setSelectedLocation(matchingLocation);
-      setIsValid(true);
-    } else {
-      setSelectedLocation(null);
-      setIsValid(false);
-    }
+    setSelectedLocation(matchingLocation || null);
+    setIsValid(!!matchingLocation);
   };
 
   return (
@@ -143,8 +143,15 @@ const SearchBar = () => {
               placeholder={t('search.placeholder')}
               className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
               value={searchQuery}
-              onChange={(e) => handleInputChange(e.target.value)}
-              onClick={() => setOpen(true)}
+              onChange={(e) => {
+                handleInputChange(e.target.value);
+                setOpen(true); // ✅ KLJUČNO: Uvijek otvori dropdown na promjenu
+              }}
+              onFocus={() => {
+                if (searchQuery.trim()) {
+                  setOpen(true); // ✅ Otvori i pri fokusu ako ima teksta
+                }
+              }}
               style={{
                 backgroundColor: '#ffffff',
                 color: '#1f2937'
@@ -153,11 +160,13 @@ const SearchBar = () => {
           </div>
         </PopoverTrigger>
         <PopoverContent className="p-0 w-[300px] md:w-[400px]" align="start">
-          <Command>
+          <Command shouldFilter={false}> {/* ✅ KLJUČNO: Disable default filtering */}
             <CommandInput
               placeholder={t('search.inputPlaceholder')}
               value={searchQuery}
-              onValueChange={handleInputChange}
+              onValueChange={(value) => {
+                handleInputChange(value);
+              }}
               className="h-9"
             />
             <CommandList>

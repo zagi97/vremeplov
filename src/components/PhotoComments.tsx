@@ -21,8 +21,8 @@ import { db } from '../lib/firebase';
 
 interface Comment {
   id: string;
-  author: string;
-  authorId?: string;
+  userId: string;
+  userName?: string;
   text: string;
   date: string;
   timestamp: Timestamp | null;
@@ -67,8 +67,8 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
           
           fetchedComments.push({
             id: doc.id,
-            author: data.author || 'Nepoznato',
-            authorId: data.authorId || '',
+            userId: data.userId || '',  // ✅ PROMIJENI
+            userName: data.userName || 'Nepoznato',  // ✅ DODAJ (ovo će biti popunjeno u addComment)
             text: data.text || '',
             photoId: data.photoId || '',
             timestamp: data.createdAt || null,
@@ -121,14 +121,13 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   }
 
   try {
-    // ✅ ZAMIJENI DIREKTAN addDoc S OVIM:
     const { photoService } = await import('../services/firebaseService');
     
+    // ✅ FIXED: Samo 3 parametra
     await photoService.addComment(
       photoId,
-      user.displayName || 'Nepoznato',
       newComment.trim(),
-      user.uid  // ← Prosljeđujemo userId
+      user.uid
     );
     
     setNewComment("");
@@ -198,7 +197,7 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
           </div>
         ) : (
           comments.map((comment) => {
-            const isPhotoAuthor = photoAuthorId && comment.authorId === photoAuthorId;
+            const isPhotoAuthor = photoAuthorId && comment.userId === photoAuthorId;
             
             return (
               <div 
@@ -210,7 +209,7 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-600 flex-shrink-0" />
                       <span className="font-medium break-words">
-                        {comment.author}
+                        {comment.userName || 'Nepoznato'}
                       </span>
                     </div>
                     {isPhotoAuthor && (

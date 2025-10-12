@@ -1126,20 +1126,23 @@ setFormData({
           </div>
 
           {/* Detailed Description */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              {t('upload.detailedStory')}
-            </label>
-            <Textarea
-              placeholder={t('upload.shareStory')}
-              value={formData.detailedDescription}
-              onChange={(e) => setFormData({...formData, detailedDescription: e.target.value})}
-              maxLength={250}
-              rows={3}
-              className={formData.detailedDescription.length >= 238 ? "border-red-300 focus:border-red-500" : ""}
-            />
-            <CharacterCounter currentLength={formData.detailedDescription.length} maxLength={250} />
-          </div>
+<div>
+  <label className="block text-sm font-medium mb-2">
+    {t('upload.detailedStory')}
+  </label>
+  <Textarea
+    placeholder={t('upload.shareStory')}
+    value={formData.detailedDescription}
+    onChange={(e) => {
+      const value = e.target.value.slice(0, 250);
+      setFormData({...formData, detailedDescription: value});
+    }}
+    maxLength={250}
+    rows={3}
+    className={formData.detailedDescription.length >= 238 ? "border-red-300 focus:border-red-500" : ""}
+  />
+  <CharacterCounter currentLength={formData.detailedDescription.length} maxLength={250} />
+</div>
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-4">

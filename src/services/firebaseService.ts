@@ -99,11 +99,17 @@ export interface Photo {
 export interface Comment {
   id?: string;
   photoId: string;
-  author: string;
-  authorId?: string;
+  userId: string;  // ✅ PROMIJENI
   text: string;
-  createdAt: Timestamp;
-  isApproved: boolean;
+  createdAt: any;
+  // ✅ DODAJ NOVA POLJA:
+  userName?: string;
+  userEmail?: string;
+  photoTitle?: string;
+  photoLocation?: string;
+  isFlagged?: boolean;
+  flaggedAt?: any;
+  isApproved?: boolean;
 }
 
 export interface TaggedPerson {
@@ -540,14 +546,27 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
   }
 
 // Add comment to photo
-async addComment(photoId: string, author: string, text: string, userId?: string): Promise<string> {
+async addComment(photoId: string, text: string, userId: string): Promise<string> {
   try {
-    console.log('💬 Adding comment...', { photoId, author, text, userId });
+    console.log('💬 Adding comment...', { photoId, text, userId });
+
+     // ✅ Dohvati user info da spremiš userName
+    let userName = 'Nepoznato';
+    try {
+      const userDocRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        userName = userData.displayName || userData.email || 'Nepoznato';
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
     
-    const comment: Omit<Comment, 'id'> = {
+   const comment: Omit<Comment, 'id'> = {
       photoId,
-      author,
-      authorId: userId,  // ✅ DODAJ OVO!
+      userId,
+      userName,
       text,
       createdAt: Timestamp.now(),
       isApproved: true
@@ -1466,6 +1485,116 @@ async getUserStats(userUid: string): Promise<{
     };
   }
 }
+// ========================================
+  // 💬 COMMENT MANAGEMENT (Admin)
+  // ========================================
+
+  /**
+   * Get all comments for admin moderation
+   * @returns Array of all comments with user info
+   */
+  async getAllCommentsForAdmin(): Promise<Comment[]> {
+    try {
+      const commentsRef = collection(db, 'comments');
+      const q = query(commentsRef, orderBy('createdAt', 'desc'));
+      const snapshot = await getDocs(q);
+      
+      const comments: Comment[] = [];
+      
+      for (const commentDoc of snapshot.docs) {
+        const data = commentDoc.data();
+      
+      // Dohvati user info
+      let userName = 'Unknown User';
+      let userEmail = '';
+      
+      if (data.userId) {
+        try {
+          // ✅ Sada "doc" funkcija radi!
+          const userDocRef = doc(db, 'users', data.userId);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            userName = userData.displayName || userData.email || 'Unknown User';
+            userEmail = userData.email || '';
+          }
+        } catch (error) {
+          console.error('Error fetching user for comment:', error);
+        }
+      }
+        
+        // Dohvati photo info
+        let photoTitle = 'Unknown Photo';
+        let photoLocation = '';
+        
+        if (data.photoId) {
+          try {
+          // ✅ doc funkcija radi i ovdje!
+          const photoDocRef = doc(db, 'photos', data.photoId);
+          const photoDoc = await getDoc(photoDocRef);
+          if (photoDoc.exists()) {
+            const photoData = photoDoc.data();
+            photoTitle = photoData.description || 'Untitled Photo';
+            photoLocation = photoData.location || '';
+          }
+        } catch (error) {
+          console.error('Error fetching photo for comment:', error);
+        }
+        }
+        
+        comments.push({
+          id: commentDoc.id,
+          ...data,
+          userName,
+          userEmail,
+          photoTitle,
+          photoLocation,
+          createdAt: data.createdAt
+        } as Comment);
+      }
+      
+      console.log(`📋 Loaded ${comments.length} comments for admin`);
+      return comments;
+      
+    } catch (error) {
+      console.error('❌ Error loading comments for admin:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a comment (admin only)
+   * @param commentId - ID of comment to delete
+   */
+  async deleteComment(commentId: string): Promise<void> {
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      await deleteDoc(commentRef);
+      console.log(`✅ Comment ${commentId} deleted successfully`);
+    } catch (error) {
+      console.error('❌ Error deleting comment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Flag a comment as inappropriate
+   */
+  async flagComment(commentId: string): Promise<void> {
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      await updateDoc(commentRef, {
+        isFlagged: true,
+        flaggedAt: Timestamp.now()
+      });
+      console.log(`🚩 Comment ${commentId} flagged successfully`);
+    } catch (error) {
+      console.error('❌ Error flagging comment:', error);
+      throw error;
+    }
+    
+  }
+
 }
 
 // Authentication Services
@@ -1568,6 +1697,8 @@ async createOrUpdateUser(user: any): Promise<void> {
   }
 }
 }
+
+
 
 // Create singleton instances
 export const photoService = new PhotoService();
