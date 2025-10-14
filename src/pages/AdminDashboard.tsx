@@ -51,20 +51,25 @@ const [deleteReason, setDeleteReason] = useState({
 });
 const [comments, setComments] = useState<Comment[]>([]);
 const [loadingComments, setLoadingComments] = useState(false);
-// Comment moderation state
 const [commentPage, setCommentPage] = useState(1);
 const [commentFilter, setCommentFilter] = useState('all');
 const [commentSearch, setCommentSearch] = useState('');
 const [commentSort, setCommentSort] = useState('newest');
-const COMMENTS_PER_PAGE = 20;
-// User management state
+
 const [users, setUsers] = useState<UserProfileExtended[]>([]);
 const [loadingUsers, setLoadingUsers] = useState(false);
 const [userPage, setUserPage] = useState(1);
-const [userFilter, setUserFilter] = useState('all'); // all, active, suspended, banned
+const [userFilter, setUserFilter] = useState('all');
 const [userSearch, setUserSearch] = useState('');
-const [userSort, setUserSort] = useState('newest'); // newest, oldest, most-photos
-const USERS_PER_PAGE = 20;
+const [userSort, setUserSort] = useState('newest');
+
+const [pendingPhotoPage, setPendingPhotoPage] = useState(1);
+const [approvedPhotoPage, setApprovedPhotoPage] = useState(1);
+const [tagPage, setTagPage] = useState(1);
+const COMMENTS_PER_PAGE = 10;
+const USERS_PER_PAGE = 10;
+const PHOTOS_PER_PAGE = 10;
+const TAGS_PER_PAGE = 10;
    const { t } = useLanguage();
 
   useEffect(() => {
@@ -74,8 +79,6 @@ const USERS_PER_PAGE = 20;
     loadUsers();
   }, [isAdmin]);
 
-
-  // Auto-exit admin mode when leaving dashboard
   useEffect(() => {
     const handleBeforeUnload = async () => {
       if (user?.email === 'vremeplov.app@gmail.com') {
@@ -105,7 +108,6 @@ const USERS_PER_PAGE = 20;
     try {
       setLoading(true);
       
-      // Load photos
       const photos = await photoService.getAllPhotosForAdmin();
       console.log('All photos from database:', photos);
       
@@ -117,7 +119,6 @@ const USERS_PER_PAGE = 20;
       
       const approved = photos.filter(photo => photo.isApproved === true || photo.approved === true);
       
-      // Load tags
       const allTaggedPersons = await photoService.getAllTaggedPersonsForAdmin();
       const pendingTaggedPersons = allTaggedPersons.filter(tag => !tag.isApproved);
       
@@ -147,7 +148,6 @@ const USERS_PER_PAGE = 20;
     }
   };
 
-  // Load all comments for moderation
 const loadComments = async () => {
   try {
     setLoadingComments(true);
@@ -161,7 +161,7 @@ const loadComments = async () => {
     setLoadingComments(false);
   }
 };
-// Load all users for admin
+
 const loadUsers = async () => {
   try {
     setLoadingUsers(true);
@@ -178,17 +178,14 @@ const loadUsers = async () => {
 
  const handleApprovePhoto = async (photoId: string) => {
   try {
-    // 1. Prvo dohvati podatke o fotografiji
     const photo = await photoService.getPhotoById(photoId);
     if (!photo) {
       toast.error('Photo not found');
       return;
     }
 
-    // 2. Odobri fotografiju
     await photoService.updatePhoto(photoId, { isApproved: true });
 
-    // 3. ✅ TEK SADA kreiraj aktivnost
     if (photo.authorId) {
       const { userService } = await import('../services/userService');
       
@@ -204,7 +201,6 @@ const loadUsers = async () => {
       );
     }
 
-    // 4. ✅ DODAJ OVO - Pošalji email notifikaciju
     if (photo.authorId) {
       await sendNotification({
         userId: photo.authorId,
@@ -225,14 +221,12 @@ const loadUsers = async () => {
   try {
     console.log('Rejecting (deleting) photo with ID:', photoId);
     
-    // 1. Dohvati photo podatke PRIJE brisanja
     const photo = await photoService.getPhotoById(photoId);
     if (!photo) {
       toast.error('Photo not found');
       return;
     }
     
-    // 2. Pošalji email notifikaciju PRIJE brisanja
     if (photo.authorId && reason) {
       await sendNotification({
         userId: photo.authorId,
@@ -242,7 +236,6 @@ const loadUsers = async () => {
       });
     }
     
-    // 3. Obriši fotografiju
     await photoService.deletePhoto(photoId);
     
     const currentCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
@@ -259,17 +252,14 @@ const loadUsers = async () => {
 
   const handleEditPhoto = async (photoId: string, updates: Partial<Photo>) => {
   try {
-    // 1. Dohvati original photo podatke
     const originalPhoto = await photoService.getPhotoById(photoId);
     if (!originalPhoto) {
       toast.error('Photo not found');
       return;
     }
     
-    // 2. Update photo
     await photoService.updatePhoto(photoId, updates);
     
-    // 3. Kreiraj string s promjenama
     const changes: string[] = [];
     if (updates.author && updates.author !== originalPhoto.author) {
       changes.push(`Autor: "${originalPhoto.author}" → "${updates.author}"`);
@@ -281,7 +271,6 @@ const loadUsers = async () => {
       changes.push(`Godina: "${originalPhoto.year}" → "${updates.year}"`);
     }
     
-    // 4. Pošalji email notifikaciju SAMO ako je approved I ima promjena
     if (originalPhoto.isApproved && originalPhoto.authorId && changes.length > 0) {
       await sendNotification({
         userId: originalPhoto.authorId,
@@ -302,14 +291,12 @@ const loadUsers = async () => {
 
   const handleDeletePhoto = async (photoId: string, reason: string) => {
   try {
-    // 1. Dohvati photo podatke PRIJE brisanja
     const photo = await photoService.getPhotoById(photoId);
     if (!photo) {
       toast.error('Photo not found');
       return;
     }
     
-    // 2. Pošalji email notifikaciju PRIJE brisanja
     if (photo.authorId && reason) {
       await sendNotification({
         userId: photo.authorId,
@@ -320,7 +307,6 @@ const loadUsers = async () => {
       });
     }
     
-    // 3. Obriši fotografiju
     await photoService.deletePhoto(photoId);
     
     toast.success(t('admin.photoDeleted'));
@@ -331,10 +317,8 @@ const loadUsers = async () => {
   }
 };
 
-  // Tag moderation handlers
   const handleApproveTag = async (tagId: string) => {
   try {
-    // 1. Prvo dohvati tag podatke iz pendingTags state-a
     const tag = pendingTags.find(t => t.id === tagId);
     
     if (!tag) {
@@ -342,13 +326,10 @@ const loadUsers = async () => {
       return;
     }
 
-    // 2. Dohvati photo podatke za context
     const photo = await photoService.getPhotoById(tag.photoId);
     
-    // 3. Odobri tag
     await photoService.approveTaggedPerson(tagId, user!.uid);
     
-    // 4. ✅ Pošalji email notifikaciju
     if (tag.addedByUid) {
       await sendNotification({
         userId: tag.addedByUid,
@@ -368,7 +349,6 @@ const loadUsers = async () => {
 
   const handleRejectTag = async (tagId: string) => {
     try {
-      // 1. Dohvati tag podatke
     const tag = pendingTags.find(t => t.id === tagId);
     
     if (!tag) {
@@ -376,18 +356,16 @@ const loadUsers = async () => {
       return;
     }
     
-    // 2. Pošalji email notifikaciju PRIJE brisanja
     if (tag.addedByUid) {
       await sendNotification({
         userId: tag.addedByUid,
         type: 'tag_rejected',
         photoId: tag.photoId,
         taggedPersonName: tag.name,
-        reason: 'Tag je odbijen jer ne zadovoljava kriterije kvalitete.' // Default razlog
+        reason: 'Tag je odbijen jer ne zadovoljava kriterije kvalitete.'
       });
     }
     
-    // 3. Obriši tag
     await photoService.rejectTaggedPerson(tagId);
       toast.success(t('admin.tagRejected'));
       loadAdminData();
@@ -419,11 +397,9 @@ const loadUsers = async () => {
     }
   };
 
-  // Filter and sort comments
   const filteredComments = React.useMemo(() => {
     let filtered = [...comments];
     
-    // Filter by status
     if (commentFilter === 'flagged') {
       filtered = filtered.filter(c => c.isFlagged);
     } else if (commentFilter === 'recent') {
@@ -434,7 +410,6 @@ const loadUsers = async () => {
       });
     }
     
-    // Search filter
     if (commentSearch) {
       const searchLower = commentSearch.toLowerCase();
       filtered = filtered.filter(c =>
@@ -445,7 +420,6 @@ const loadUsers = async () => {
       );
     }
     
-    // Sort
     filtered.sort((a, b) => {
       const dateA = a.createdAt?.toDate?.()?.getTime() || 0;
       const dateB = b.createdAt?.toDate?.()?.getTime() || 0;
@@ -455,18 +429,15 @@ const loadUsers = async () => {
     return filtered;
   }, [comments, commentFilter, commentSearch, commentSort]);
 
-  // Pagination
   const totalCommentPages = Math.ceil(filteredComments.length / COMMENTS_PER_PAGE);
   const paginatedComments = filteredComments.slice(
     (commentPage - 1) * COMMENTS_PER_PAGE,
     commentPage * COMMENTS_PER_PAGE
   );
 
-  // Filter and sort users
 const filteredUsers = React.useMemo(() => {
   let filtered = [...users];
   
-  // Filter by status
   if (userFilter === 'active') {
     filtered = filtered.filter(u => !u.status || u.status === 'active');
   } else if (userFilter === 'suspended') {
@@ -475,7 +446,6 @@ const filteredUsers = React.useMemo(() => {
     filtered = filtered.filter(u => u.status === 'banned');
   }
   
-  // Search filter
   if (userSearch) {
     const searchLower = userSearch.toLowerCase();
     filtered = filtered.filter(u =>
@@ -485,7 +455,6 @@ const filteredUsers = React.useMemo(() => {
     );
   }
   
-  // Sort
   filtered.sort((a, b) => {
     if (userSort === 'newest') {
       const dateA = a.joinedAt?.toDate?.()?.getTime() || 0;
@@ -504,7 +473,6 @@ const filteredUsers = React.useMemo(() => {
   return filtered;
 }, [users, userFilter, userSearch, userSort]);
 
-// User pagination
 const totalUserPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
 const paginatedUsers = filteredUsers.slice(
   (userPage - 1) * USERS_PER_PAGE,
@@ -552,214 +520,336 @@ const paginatedUsers = filteredUsers.slice(
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage photos, tags, users, and content moderation</p>
+  <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="container mx-auto py-4 px-4 sm:py-8">
+      <div className="mb-8">
+  <div className="bg-white rounded-2xl shadow-lg p-4 md:p-8 border-t-4 border-blue-500">
+    {/* ✅ Stack vertikalno na mobitel, horizontalno na desktop */}
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Admin Dashboard
+        </h1>
+        <p className="text-gray-600 text-sm md:text-base mt-2">
+          Manage photos, tags, users, and content moderation
+        </p>
+      </div>
+      
+      {/* ✅ User info i logout na mobitel stack-aju */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+        <span className="text-xs md:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">
+          Welcome, {user?.email}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="flex items-center gap-2 border-blue-300 hover:bg-blue-50 transition-colors w-full sm:w-auto"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Stats Cards */}
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-8">
+  <Card className="border-blue-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Photos</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
+        <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        {stats.totalPhotos}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <Card className="border-orange-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Pending Photos</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center shadow-md">
+        <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold text-orange-600">
+        {stats.pendingPhotos}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <Card className="border-green-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Approved</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center shadow-md">
+        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold text-green-600">
+        {stats.approvedPhotos}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <Card className="border-red-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Rejected</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-red-400 to-rose-600 flex items-center justify-center shadow-md">
+        <X className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold text-red-600">
+        {stats.rejectedPhotos}
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card className="border-purple-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Pending Tags</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shadow-md">
+        <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold text-purple-600">
+        {stats.pendingTags}
+      </div>
+    </CardContent>
+  </Card>
+
+  <Card className="border-indigo-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Tags</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-indigo-400 to-blue-600 flex items-center justify-center shadow-md">
+        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+        {stats.totalTags}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <Card className="border-cyan-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Views</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-md">
+        <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+        {stats.totalViews}
+      </div>
+    </CardContent>
+  </Card>
+  
+  <Card className="border-pink-200 hover:shadow-lg transition-all duration-300 hover:scale-105">
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Likes</CardTitle>
+      <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shadow-md">
+        <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+        {stats.totalLikes}
+      </div>
+    </CardContent>
+  </Card>
+</div>
+{/* Main Content Tabs */}
+<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+  {/* ✅ Scrollable tabs na mobitel */}
+  <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+    <TabsList className="inline-flex w-auto min-w-full md:grid md:grid-cols-5 md:w-full">
+      <TabsTrigger 
+        value="pending"
+        className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+      >
+        <span className="hidden sm:inline">Pending Photos</span>
+        <span className="sm:hidden">Pending</span>
+        <span className="ml-1">({stats.pendingPhotos})</span>
+      </TabsTrigger>
+      <TabsTrigger 
+        value="approved"
+        className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+      >
+        <span className="hidden sm:inline">Approved Photos</span>
+        <span className="sm:hidden">Approved</span>
+        <span className="ml-1">({stats.approvedPhotos})</span>
+      </TabsTrigger>
+      <TabsTrigger 
+        value="tags"
+        className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+      >
+        <span className="hidden sm:inline">Person Tags</span>
+        <span className="sm:hidden">Tags</span>
+        <span className="ml-1">({stats.pendingTags})</span>
+      </TabsTrigger>
+      <TabsTrigger 
+        value="comments"
+        className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+      >
+        Comments
+      </TabsTrigger>
+      <TabsTrigger 
+        value="users"
+        className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+      >
+        Users
+      </TabsTrigger>
+    </TabsList>
+  </div>
+
+  <TabsContent value="pending" className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold">Photos Awaiting Approval</h2>
+      <Badge variant="secondary">{pendingPhotos.length} pending</Badge>
+    </div>
+    
+    {pendingPhotos.length === 0 ? (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium">All caught up!</h3>
+            <p className="text-muted-foreground">No photos pending approval.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user?.email}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+        </CardContent>
+      </Card>
+    ) : (
+      <>
+      <div className="grid gap-6">
+        {pendingPhotos
+          .slice((pendingPhotoPage - 1) * PHOTOS_PER_PAGE, pendingPhotoPage * PHOTOS_PER_PAGE)
+          .map((photo) => (
+            <PhotoModerationCard
+              key={photo.id}
+              photo={photo}
+              onApprove={() => handleApprovePhoto(photo.id!)}
+              onReject={(reason) => handleRejectPhoto(photo.id!, reason)}
+              onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
+            />
+          ))}
+      </div>
+      <Pagination
+        currentPage={pendingPhotoPage}
+        totalPages={Math.ceil(pendingPhotos.length / PHOTOS_PER_PAGE)}
+        onPageChange={setPendingPhotoPage}
+        totalItems={pendingPhotos.length}
+        itemsPerPage={PHOTOS_PER_PAGE}
+        itemName="pending photos"
+      />
+      </>
+    )}
+  </TabsContent>
+
+  <TabsContent value="approved" className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold">Approved Photos</h2>
+      <Badge variant="secondary">{approvedPhotos.length} approved</Badge>
+    </div>
+    
+    {approvedPhotos.length === 0 ? (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Check className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium">No approved photos yet</h3>
+            <p className="text-muted-foreground">Approved photos will appear here.</p>
           </div>
+        </CardContent>
+      </Card>
+    ) : (
+      <>
+        <div className="grid gap-6">
+          {approvedPhotos
+            .slice(
+              (approvedPhotoPage - 1) * PHOTOS_PER_PAGE,
+              approvedPhotoPage * PHOTOS_PER_PAGE
+            )
+            .map((photo) => (
+              <PhotoManagementCard
+                key={photo.id}
+                photo={photo}
+                onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
+                onDelete={(reason) => handleDeletePhoto(photo.id!, reason)}
+              />
+            ))}
         </div>
+        
+        <Pagination
+          currentPage={approvedPhotoPage}
+          totalPages={Math.ceil(approvedPhotos.length / PHOTOS_PER_PAGE)}
+          onPageChange={setApprovedPhotoPage}
+          totalItems={approvedPhotos.length}
+          itemsPerPage={PHOTOS_PER_PAGE}
+          itemName="approved photos"
+        />
+      </>
+    )}
+  </TabsContent>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Photos</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPhotos}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Photos</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.pendingPhotos}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-              <Check className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.approvedPhotos}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-              <X className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">{stats.rejectedPhotos}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Tags</CardTitle>
-              <Tag className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{stats.pendingTags}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tags</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTags}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-              <Eye className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalViews}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Likes</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalLikes}</div>
-            </CardContent>
-          </Card>
+  <TabsContent value="tags" className="space-y-6">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-semibold">Person Tags Awaiting Approval</h2>
+      <Badge variant="secondary">{pendingTags.length} pending</Badge>
+    </div>
+    
+    {pendingTags.length === 0 ? (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium">All caught up!</h3>
+            <p className="text-muted-foreground">No person tags pending approval.</p>
+          </div>
+        </CardContent>
+      </Card>
+    ) : (
+      <>
+        <div className="grid gap-6">
+          {pendingTags
+            .slice((tagPage - 1) * TAGS_PER_PAGE, tagPage * TAGS_PER_PAGE)
+            .map((tag) => (
+              <TagModerationCard
+                key={tag.id}
+                tag={tag}
+                onApprove={() => handleApproveTag(tag.id!)}
+                onReject={() => handleRejectTag(tag.id!)}
+                onEdit={(updates) => handleEditTag(tag.id!, updates)}
+              />
+            ))}
         </div>
-
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="pending">
-              Pending Photos ({stats.pendingPhotos})
-            </TabsTrigger>
-            <TabsTrigger value="approved">
-              Approved Photos ({stats.approvedPhotos})
-            </TabsTrigger>
-            <TabsTrigger value="tags">
-              Person Tags ({stats.pendingTags})
-            </TabsTrigger>
-            <TabsTrigger value="comments">Comments</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="pending" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Photos Awaiting Approval</h2>
-              <Badge variant="secondary">{pendingPhotos.length} pending</Badge>
-            </div>
-            
-            {pendingPhotos.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium">All caught up!</h3>
-                    <p className="text-muted-foreground">No photos pending approval.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6">
-                {pendingPhotos.map((photo) => (
-                  <PhotoModerationCard
-                    key={photo.id}
-                    photo={photo}
-                    onApprove={() => handleApprovePhoto(photo.id!)}
-                    onReject={(reason) => handleRejectPhoto(photo.id!, reason)}
-                    onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="approved" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Approved Photos</h2>
-              <Badge variant="secondary">{approvedPhotos.length} approved</Badge>
-            </div>
-            
-            <div className="grid gap-6">
-              {approvedPhotos.map((photo) => (
-                <PhotoManagementCard
-                  key={photo.id}
-                  photo={photo}
-                  onEdit={(updates) => handleEditPhoto(photo.id!, updates)}
-                  onDelete={(reason) => handleDeletePhoto(photo.id!, reason)}
-                />
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="tags" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Person Tags Awaiting Approval</h2>
-              <Badge variant="secondary">{pendingTags.length} pending</Badge>
-            </div>
-            
-            {pendingTags.length === 0 ? (
-              <Card>
-                <CardContent className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <Check className="h-12 w-12 text-green-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium">All caught up!</h3>
-                    <p className="text-muted-foreground">No person tags pending approval.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid gap-6">
-                {pendingTags.map((tag) => (
-                  <TagModerationCard
-                    key={tag.id}
-                    tag={tag}
-                    onApprove={() => handleApproveTag(tag.id!)}
-                    onReject={() => handleRejectTag(tag.id!)}
-                    onEdit={(updates) => handleEditTag(tag.id!, updates)}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-<TabsContent value="comments" className="space-y-6">
+        
+        <Pagination
+          currentPage={tagPage}
+          totalPages={Math.ceil(pendingTags.length / TAGS_PER_PAGE)}
+          onPageChange={setTagPage}
+          totalItems={pendingTags.length}
+          itemsPerPage={TAGS_PER_PAGE}
+          itemName="pending tags"
+        />
+      </>
+    )}
+  </TabsContent>
+  <TabsContent value="comments" className="space-y-6">
   <div className="flex items-center justify-between">
     <h2 className="text-xl font-semibold">💬 Comment Moderation</h2>
     <Badge variant="secondary">{comments.length} total comments</Badge>
   </div>
   
-  {/* Filter Bar */}
   <FilterBar
     searchValue={commentSearch}
     onSearchChange={(value) => {
@@ -813,10 +903,6 @@ const paginatedUsers = filteredUsers.slice(
         {paginatedComments.map((comment) => (
           <Card key={comment.id} className={`overflow-hidden ${comment.isFlagged ? 'border-red-300 bg-red-50' : ''}`}>
             <CardContent className="p-6">
-              {/* ... existing comment card content ... */}
-              {/* (copy from previous version - header, text, actions) */}
-              
-              {/* Comment Header */}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -851,12 +937,10 @@ const paginatedUsers = filteredUsers.slice(
                 </span>
               </div>
 
-              {/* Comment Text */}
               <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
                 <p className="text-gray-800 leading-relaxed">{comment.text}</p>
               </div>
 
-              {/* Actions */}
               <div className="flex items-center gap-2 justify-end">
                 <Button
                   size="sm"
@@ -868,77 +952,74 @@ const paginatedUsers = filteredUsers.slice(
                 </Button>
                 
                 {!comment.isFlagged && (
-  <Button
-    size="sm"
-    variant="outline"
-    onClick={async () => {
-      try {
-        await photoService.flagComment(comment.id!);
-        toast.success('Comment flagged for review');
-        loadComments();
-      } catch (error) {
-        toast.error('Failed to flag comment');
-      }
-    }}
-  >
-    <Flag className="h-4 w-4 mr-1" />
-    Flag
-  </Button>
-)}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await photoService.flagComment(comment.id!);
+                        toast.success('Comment flagged for review');
+                        loadComments();
+                      } catch (error) {
+                        toast.error('Failed to flag comment');
+                      }
+                    }}
+                  >
+                    <Flag className="h-4 w-4 mr-1" />
+                    Flag
+                  </Button>
+                )}
                 
                 <AlertDialog>
-  <AlertDialogTrigger asChild>
-    <Button size="sm" variant="destructive">
-      <Trash2 className="h-4 w-4 mr-1" />
-      Delete
-    </Button>
-  </AlertDialogTrigger>
-  <AlertDialogContent>
-    <AlertDialogHeader>
-      <AlertDialogTitle>Delete Comment</AlertDialogTitle>
-      <AlertDialogDescription>
-        Are you sure you want to delete this comment? The user will receive an email notification explaining that their comment was removed.
-      </AlertDialogDescription>
-    </AlertDialogHeader>
-    <AlertDialogFooter>
-      <AlertDialogCancel>Cancel</AlertDialogCancel>
-      <AlertDialogAction
-        onClick={async () => {
-          try {
-            // 1. Send email notification BEFORE deleting
-            if (comment.userId) {
-              await sendNotification({
-                userId: comment.userId,
-                type: 'comment_deleted',
-                photoId: comment.photoId,
-                photoTitle: comment.photoTitle
-              });
-            }
-            
-            // 2. Delete comment
-            await photoService.deleteComment(comment.id!);
-            
-            toast.success('Comment deleted and user notified');
-            loadComments();
-          } catch (error) {
-            console.error('Error deleting comment:', error);
-            toast.error('Failed to delete comment');
-          }
-        }}
-        className="bg-red-600 hover:bg-red-700"
-      >
-        Delete Comment
-      </AlertDialogAction>
-    </AlertDialogFooter>
-  </AlertDialogContent>
-</AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="destructive">
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Comment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this comment? The user will receive an email notification explaining that their comment was removed.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          try {
+                            if (comment.userId) {
+                              await sendNotification({
+                                userId: comment.userId,
+                                type: 'comment_deleted',
+                                photoId: comment.photoId,
+                                photoTitle: comment.photoTitle
+                              });
+                            }
+                            
+                            await photoService.deleteComment(comment.id!);
+                            
+                            toast.success('Comment deleted and user notified');
+                            loadComments();
+                          } catch (error) {
+                            console.error('Error deleting comment:', error);
+                            toast.error('Failed to delete comment');
+                          }
+                        }}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Delete Comment
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
       
-      {/* Pagination */}
       <Pagination
         currentPage={commentPage}
         totalPages={totalCommentPages}
@@ -951,13 +1032,12 @@ const paginatedUsers = filteredUsers.slice(
   )}
 </TabsContent>
 
-          <TabsContent value="users" className="space-y-6">
+<TabsContent value="users" className="space-y-6">
   <div className="flex items-center justify-between">
     <h2 className="text-xl font-semibold">👥 User Management</h2>
     <Badge variant="secondary">{users.length} total users</Badge>
   </div>
   
-  {/* Filter Bar */}
   <FilterBar
     searchValue={userSearch}
     onSearchChange={(value) => {
@@ -1018,7 +1098,6 @@ const paginatedUsers = filteredUsers.slice(
               try {
                 await userService.suspendUser(user.uid, days, reason, auth.currentUser!.uid);
                 
-                // Send email notification
                 await sendNotification({
                   userId: user.uid,
                   type: 'user_suspended',
@@ -1036,7 +1115,6 @@ const paginatedUsers = filteredUsers.slice(
               try {
                 await userService.banUser(user.uid, reason, auth.currentUser!.uid);
                 
-                // Send email notification
                 await sendNotification({
                   userId: user.uid,
                   type: 'user_banned',
@@ -1053,7 +1131,6 @@ const paginatedUsers = filteredUsers.slice(
               try {
                 await userService.unsuspendUser(user.uid);
                 
-                // Send email notification
                 await sendNotification({
                   userId: user.uid,
                   type: 'user_unsuspended'
@@ -1069,7 +1146,6 @@ const paginatedUsers = filteredUsers.slice(
               try {
                 await userService.unbanUser(user.uid);
                 
-                // Send email notification
                 await sendNotification({
                   userId: user.uid,
                   type: 'user_unbanned'
@@ -1094,7 +1170,6 @@ const paginatedUsers = filteredUsers.slice(
         ))}
       </div>
       
-      {/* Pagination */}
       <Pagination
         currentPage={userPage}
         totalPages={totalUserPages}
@@ -1106,13 +1181,11 @@ const paginatedUsers = filteredUsers.slice(
     </>
   )}
 </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
+</Tabs>
+</div>
+</div>
+);
 }
-
-// Component for moderating person tags
 function TagModerationCard({ 
   tag, 
   onApprove, 
@@ -1131,7 +1204,6 @@ function TagModerationCard({
   });
   const [photo, setPhoto] = useState<Photo | null>(null);
 
-  // Load photo data for context
   useEffect(() => {
     const loadPhoto = async () => {
       try {
@@ -1155,50 +1227,48 @@ function TagModerationCard({
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex gap-6 p-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
         {photo && (
-          <div className="flex-shrink-0 relative group w-48">
-<Dialog>
-  <DialogTrigger asChild>
-    <div className="relative cursor-pointer w-full h-32">
-      <LazyImage
-        src={photo.imageUrl}
-        alt={photo.description}
-        className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
-        threshold={0.3} // Admin - učitaj kad je 30% vidljivo
-        rootMargin="100px" // Učitaj 100px prije viewport-a
-      />
-      {/* Show tag position */}
-      <div 
-        className="absolute w-6 h-6 bg-red-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
-        style={{ 
-          left: `${tag.x}%`, 
-          top: `${tag.y}%` 
-        }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <Expand className="h-8 w-8 text-white" />
-      </div>
-    </div>
-  </DialogTrigger>
-  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-    <div className="relative">
-      {/* MODAL slika - NE mijenjaj ovu, učitava se tek kad korisnik klikne */}
-      <img
-        src={photo.imageUrl}
-        alt={photo.description}
-        className="w-full h-auto object-contain rounded-lg"
-      />
-      <div 
-        className="absolute w-8 h-8 bg-red-500 border-2 border-white rounded-full -ml-4 -mt-4"
-        style={{ 
-          left: `${tag.x}%`, 
-          top: `${tag.y}%` 
-        }}
-      />
-    </div>
-  </DialogContent>
-</Dialog>
+          <div className="flex-shrink-0 relative group w-full sm:w-48">
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="relative cursor-pointer w-full h-32">
+                  <LazyImage
+                    src={photo.imageUrl}
+                    alt={photo.description}
+                    className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
+                    threshold={0.3}
+                    rootMargin="100px"
+                  />
+                  <div 
+                    className="absolute w-6 h-6 bg-red-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
+                    style={{ 
+                      left: `${tag.x}%`, 
+                      top: `${tag.y}%` 
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Expand className="h-8 w-8 text-white" />
+                  </div>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                <div className="relative">
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.description}
+                    className="w-full h-auto object-contain rounded-lg"
+                  />
+                  <div 
+                    className="absolute w-8 h-8 bg-red-500 border-2 border-white rounded-full -ml-4 -mt-4"
+                    style={{ 
+                      left: `${tag.x}%`, 
+                      top: `${tag.y}%` 
+                    }}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
         
@@ -1329,8 +1399,6 @@ function TagModerationCard({
   );
 }
 
-// Component for moderating pending photos
-// Component for moderating pending photos
 function PhotoModerationCard({ 
   photo, 
   onApprove, 
@@ -1339,13 +1407,13 @@ function PhotoModerationCard({
 }: { 
   photo: Photo; 
   onApprove: () => void; 
-  onReject: (reason: string) => void; // ✅ PROMJENA - prima reason
+  onReject: (reason: string) => void;
   onEdit: (updates: Partial<Photo>) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false); // ✅ NOVO
-  const [rejectReason, setRejectReason] = useState({ // ✅ NOVO
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState({
     lowQuality: false,
     notRelevant: false,
     wrongLocation: false,
@@ -1360,7 +1428,6 @@ function PhotoModerationCard({
   });
   const { t } = useLanguage();
 
-  // Check if any changes have been made and all fields are valid
   const hasChanges = editData.author !== photo.author || 
                     editData.description !== photo.description || 
                     editData.year !== photo.year;
@@ -1371,17 +1438,15 @@ function PhotoModerationCard({
 
   const canSave = hasChanges && isFormValid;
 
-  // ✅ NOVO - Check if at least one reason is selected
-const hasRejectReason = (
-  rejectReason.lowQuality || 
-  rejectReason.notRelevant || 
-  rejectReason.wrongLocation || 
-  rejectReason.duplicate || 
-  rejectReason.inappropriate || 
-  (rejectReason.custom.trim() !== '' && rejectReason.custom.length <= 250)
-);
+  const hasRejectReason = (
+    rejectReason.lowQuality || 
+    rejectReason.notRelevant || 
+    rejectReason.wrongLocation || 
+    rejectReason.duplicate || 
+    rejectReason.inappropriate || 
+    (rejectReason.custom.trim() !== '' && rejectReason.custom.length <= 250)
+  );
 
-  // ✅ NOVO - Build reason text from selected options
   const buildReasonText = () => {
     const reasons: string[] = [];
     if (rejectReason.lowQuality) reasons.push('Niska kvaliteta slike');
@@ -1394,12 +1459,10 @@ const hasRejectReason = (
     return reasons.join('; ');
   };
 
-  // ✅ NOVO - Handle reject with reason
   const handleRejectWithReason = () => {
     const reasonText = buildReasonText();
     onReject(reasonText);
     setShowRejectDialog(false);
-    // Reset form
     setRejectReason({
       lowQuality: false,
       notRelevant: false,
@@ -1434,8 +1497,8 @@ const hasRejectReason = (
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex gap-6 p-6">
-        <div className="flex-shrink-0 relative group w-48">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
+        <div className="flex-shrink-0 relative group w-full sm:w-48">
           <Dialog>
             <DialogTrigger asChild>
               <div className="relative cursor-pointer w-full h-32">
@@ -1469,13 +1532,16 @@ const hasRejectReason = (
           </Dialog>
         </div>
         
-        <div className="flex-1 space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
-                Pending Review
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-1">
+        <div className="flex-1 space-y-4 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+  <div className="flex items-center gap-2">
+    <Badge 
+      variant="outline" 
+      className="text-orange-600 border-orange-600 bg-orange-50 px-2 py-0.5 text-xs"
+    >
+      Pending Review
+    </Badge>
+              <p className="text-xs text-muted-foreground">
                 Uploaded: {photo.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
                   day: '2-digit',
                   month: '2-digit', 
@@ -1484,24 +1550,16 @@ const hasRejectReason = (
               </p>
             </div>
             
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
+            <div className="flex gap-1 sm:gap-2">
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(!isEditing)}>
+      <Edit className="h-4 w-4" />
+    </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    <Check className="h-4 w-4" />
-                    Approve
-                  </Button>
+                   <Button size="sm" variant="outline" className="text-green-600 border-green-600 hover:bg-green-50">
+      <Check className="h-4 w-4" />
+      <span className="hidden sm:inline">Approve</span>
+    </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -1519,17 +1577,12 @@ const hasRejectReason = (
                 </AlertDialogContent>
               </AlertDialog>
               
-              {/* ✅ NOVO - Reject Dialog with Reasons */}
               <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
                 <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    <X className="h-4 w-4" />
-                    Reject
-                  </Button>
+                 <Button size="sm" variant="outline" className="text-red-600 border-red-600 hover:bg-red-50">
+      <X className="h-4 w-4" />
+      <span className="hidden sm:inline">Reject</span>
+    </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="max-w-xl">
                   <AlertDialogHeader>
@@ -1593,26 +1646,26 @@ const hasRejectReason = (
                     </div>
                     
                     <div>
-  <label className="text-sm font-medium block mb-2">Ostalo (ručni unos):</label>
-  <Textarea
-    value={rejectReason.custom}
-    onChange={(e) => {
-      const value = e.target.value.slice(0, 250);
-      setRejectReason(prev => ({ ...prev, custom: value }));
-    }}
-    placeholder="Dodatni razlog odbijanja..."
-    rows={3}
-    maxLength={250}
-    className={`w-full ${rejectReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500' : ''}`}
-  />
-  <p className={`text-sm mt-1 ${
-    rejectReason.custom.length > 240 
-      ? 'text-red-600 font-bold' 
-      : 'text-muted-foreground'
-  }`}>
-    {rejectReason.custom.length}/250 znakova
-  </p>
-</div>
+                      <label className="text-sm font-medium block mb-2">Ostalo (ručni unos):</label>
+                      <Textarea
+                        value={rejectReason.custom}
+                        onChange={(e) => {
+                          const value = e.target.value.slice(0, 250);
+                          setRejectReason(prev => ({ ...prev, custom: value }));
+                        }}
+                        placeholder="Dodatni razlog odbijanja..."
+                        rows={3}
+                        maxLength={250}
+                        className={`w-full ${rejectReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500' : ''}`}
+                      />
+                      <p className={`text-sm mt-1 ${
+                        rejectReason.custom.length > 240 
+                          ? 'text-red-600 font-bold' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        {rejectReason.custom.length}/250 znakova
+                      </p>
+                    </div>
                     
                     {!hasRejectReason && (
                       <p className="text-sm text-red-600">
@@ -1657,21 +1710,19 @@ const hasRejectReason = (
                 <Textarea
                   value={editData.description}
                   onChange={(e) => {
-      // ✅ Ograniči na 250 karaktera
-      const value = e.target.value.slice(0, 250);
-      setEditData(prev => ({ ...prev, description: value }));
-    }}
+                    const value = e.target.value.slice(0, 250);
+                    setEditData(prev => ({ ...prev, description: value }));
+                  }}
                   rows={2}
                   maxLength={250}
                 />
-                {/* ✅ Character counter */}
-  <p className={`text-sm mt-1 ${
-  editData.description.length > 240 
-    ? 'text-red-600 font-bold' 
-    : 'text-muted-foreground'
-}`}>
-  {editData.description.length}/250 znakova
-</p>
+                <p className={`text-sm mt-1 ${
+                  editData.description.length > 240 
+                    ? 'text-red-600 font-bold' 
+                    : 'text-muted-foreground'
+                }`}>
+                  {editData.description.length}/250 znakova
+                </p>
               </div>
               <div>
                 <label className="text-sm font-medium block mb-1">Replace Image</label>
@@ -1700,9 +1751,9 @@ const hasRejectReason = (
               </div>
             </div>
           ) : (
-            <div>
-              <h3 className="font-medium">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0">
+              <h3 className="font-medium truncate">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground truncate">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
@@ -1819,8 +1870,8 @@ const buildDeleteReasonText = () => {
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex gap-6 p-6">
-        <div className="flex-shrink-0 relative group w-48">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
+        <div className="flex-shrink-0 relative group w-full sm:w-48">
 <Dialog>
   <DialogTrigger asChild>
     <div className="relative cursor-pointer w-full h-32">
@@ -2166,7 +2217,11 @@ function UserManagementCard({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 justify-end flex-wrap">
+           {/* View Profile Button - ZAKOMENTIRANO */}
+  {/* TODO: Implement admin-specific user detail view at /admin/users/{uid}
+      For now, all necessary info is visible in the table. */}
           {/* View Activity Button */}
+          {/* 
           <Button
             size="sm"
             variant="outline"
@@ -2175,6 +2230,7 @@ function UserManagementCard({
             <Eye className="h-4 w-4 mr-1" />
             View Profile
           </Button>
+          */}
 
           {/* Conditional Actions based on status */}
           {user.status === 'suspended' ? (
@@ -2313,7 +2369,11 @@ function UserManagementCard({
           )}
 
           {/* Delete Account Button */}
-          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          {/* // ⚠️ NOTE: User deletion is NOT implemented yet.
+          // For now, use BAN for permanent account restrictions.
+          // DELETE functionality requires GDPR compliance and 
+          // cascading deletion of all user data (photos, comments, tags, etc.) */}
+          {/* <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogTrigger asChild>
               <Button size="sm" variant="destructive">
                 <Trash2 className="h-4 w-4 mr-1" />
@@ -2337,7 +2397,7 @@ function UserManagementCard({
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
-          </AlertDialog>
+          </AlertDialog> */}
         </div>
       </CardContent>
     </Card>
