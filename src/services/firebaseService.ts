@@ -1595,6 +1595,21 @@ async getUserStats(userUid: string): Promise<{
     
   }
 
+  async unflagComment(commentId: string): Promise<void> {
+    try {
+      const commentRef = doc(db, 'comments', commentId);
+      await updateDoc(commentRef, {
+        isFlagged: false,
+        flaggedAt: Timestamp.now()
+      });
+      console.log(`🚩 Comment ${commentId} unflagged successfully`);
+    } catch (error) {
+      console.error('❌ Error unflagging comment:', error);
+      throw error;
+    }
+    
+  }
+
 }
 
 // Authentication Services
