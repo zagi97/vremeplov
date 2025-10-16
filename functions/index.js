@@ -5,12 +5,14 @@ const nodemailer = require('nodemailer');
 
 initializeApp();
 
-// ✅ Gmail transporter
+// ✅ SendGrid transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.sendgrid.net',
+  port: 587,
+  secure: false, // use TLS
   auth: {
-    user: 'vremeplov.app@gmail.com',
-    pass: 'mlhntaambyppggcj'
+    user: 'apikey', // Ovo je SendGrid standard - ne mijenjaj!
+    pass: process.env.SENDGRID_API_KEY // API Key iz environment variables
   }
 });
 

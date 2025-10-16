@@ -854,14 +854,14 @@ setFormData({
                   {loadingAddresses ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-                      <span className="text-sm text-gray-600">Searching for addresses...</span>
+                      <span className="text-sm text-gray-600">{t('upload.searchingAddresses')}</span>
                     </div>
                   ) : availableAddresses.length > 0 ? (
                     <div>
                       <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
                         Found {availableAddresses.length} address{availableAddresses.length !== 1 ? 'es' : ''}
                         {searchCache.has(`${debouncedSearchTerm}_${locationName}`) && (
-                          <span className="ml-2 text-green-600">📋 (cached)</span>
+                          <span className="ml-2 text-green-600">📋 ({t('upload.cached')})</span>
                         )}
                       </div>
                       {availableAddresses.map((address, index) => {
@@ -895,7 +895,7 @@ setFormData({
                   ) : addressSearch.length >= 2 ? (
                     <div className="px-4 py-4 text-sm text-gray-500 text-center">
                       <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
-                      No addresses found for "<span className="font-medium">{addressSearch}</span>"
+                      {t('upload.noAddressesFound')} "<span className="font-medium">{addressSearch}</span>"
                       <div className="text-xs text-gray-400 mt-1">{t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva"</div>
                     </div>
                   ) : null}
@@ -923,11 +923,14 @@ setFormData({
                   <MapPin className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-blue-800 mb-1">
-                    📍 {streetName} pronađena! Odaberite točnu lokaciju za broj {houseNumber}
-                  </h4>
+                   <h4 className="font-medium text-blue-800 mb-1">
+          📍 {translateWithParams(t, 'upload.streetFound', { 
+            street: streetName, 
+            number: houseNumber 
+          })}
+        </h4>
                   <p className="text-sm text-blue-700">
-                    Kliknite na kartu gdje se točno nalazi ova fotografija
+                    {t('upload.clickOnMap')}
                   </p>
                 </div>
               </div>
@@ -952,7 +955,7 @@ setFormData({
               </div>
               
               <div className="mt-2 text-xs text-blue-600">
-                💡 Tip: Zoom in za veću točnost. Marker će se pojaviti gdje kliknete.
+                💡 {t('upload.zoomTip')}
               </div>
             </div>
           )}
@@ -966,10 +969,10 @@ setFormData({
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-green-800 mb-1">
-                    ✅ Lokacija postavljena: {selectedAddress}
+                    ✅ {translateWithParams(t, 'upload.locationSetTitle', { address: selectedAddress })}
                   </h4>
                   <p className="text-sm text-green-700">
-                    Koordinate: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+                    {t('upload.coordinates')}: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
                   </p>
                 </div>
                 <Button
@@ -998,7 +1001,7 @@ setFormData({
                   }}
                   className="text-green-700 hover:text-green-800 text-xs"
                 >
-                  Promijeni
+                  {t('upload.changeLocation')}
                 </Button>
               </div>
               
@@ -1022,7 +1025,7 @@ setFormData({
               </div>
               
               <div className="mt-2 text-xs text-green-600">
-                📍 Odabrana lokacija za fotografiju
+                📍 {t('upload.selectedPhotoLocation')}
               </div>
             </div>
           )}
@@ -1031,7 +1034,12 @@ setFormData({
           {coordinates && !selectedAddress && (
             <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
               <MapPin className="h-3 w-3" />
-              <span>📍 Location found: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}</span>
+               <span>
+      {translateWithParams(t, 'upload.locationFoundCoords', { 
+        latitude: coordinates.latitude.toFixed(4), 
+        longitude: coordinates.longitude.toFixed(4) 
+      })}
+    </span>
             </div>
           )}
 

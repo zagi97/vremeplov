@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,14 +13,17 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user, isAdmin, signInAdmin } = useAuth();
+  const navigate = useNavigate(); // ✅ DODAJ OVO
 
     // Debug: Log when component loads
   console.log('AdminLogin component loaded!');
 
-  // Redirect if already authenticated as admin
-  if (user && isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
+  // ✅ ZAMIJENI Navigate logiku sa useEffect
+  useEffect(() => {
+    if (user && isAdmin) {
+      navigate('/admin', { replace: true });
+    }
+  }, [user, isAdmin, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

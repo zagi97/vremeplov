@@ -53,14 +53,25 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   }, []);
 
   const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-      toast.success(t('auth.signInSuccess'));
-    } catch (error) {
-      console.error('Error signing in:', error);
-      toast.error(t('errors.signInFailed'));
+  try {
+    await signInWithPopup(auth, googleProvider);
+    toast.success(t('auth.signInSuccess'));
+  } catch (error: any) {
+    console.error('Error signing in:', error);
+    
+    // ✅ Ignoriraj errore kad korisnik zatvori popup
+    if (
+      error.code === 'auth/popup-closed-by-user' ||
+      error.code === 'auth/cancelled-popup-request'
+    ) {
+      // Ne prikazuj error - korisnik je samo zatvorio popup
+      return;
     }
-  };
+    
+    // ✅ Prikaži error samo za prave greške
+    toast.error(t('errors.signInFailed'));
+  }
+};
 
   const signInAdmin = async (email: string, password: string) => {
     try {

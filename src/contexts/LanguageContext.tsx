@@ -242,6 +242,26 @@ const translations: Record<Language, TranslationMap> = {
 'upload.compressed': 'Image compressed: {original}MB → {compressed}MB ({reduction}% smaller)',
 'upload.optimalSize': 'Image is optimal size',
 'upload.successWithLocation': 'Photo uploaded successfully with location {address}! It will be reviewed and published soon.',
+// ✅ Address search UI
+  'upload.searchingAddresses': 'Searching for addresses...',
+  'upload.foundAddresses': 'Found {count} address',
+  'upload.foundAddressesPlural': 'Found {count} addresses',
+  'upload.cached': 'cached',
+  'upload.noAddressesFound': 'No addresses found for',
+  'upload.waitingDebounce': 'Waiting...',
+  'upload.cacheEntries': 'Cache: {count} entries',
+  
+  // ✅ Manual positioning
+  'upload.streetFound': '{street} found! Select exact location for number {number}',
+  'upload.clickOnMap': 'Click on the map where this photo is exactly located',
+  'upload.zoomTip': 'Tip: Zoom in for greater accuracy. Marker will appear where you click.',
+  
+  // ✅ Location confirmation
+  'upload.locationSetTitle': 'Location set: {address}',
+  'upload.coordinates': 'Coordinates',
+  'upload.changeLocation': 'Change',
+  'upload.selectedPhotoLocation': 'Selected photo location',
+  'upload.locationFoundCoords': 'Location found: {latitude}, {longitude}',
 
 
     // Text
@@ -852,6 +872,26 @@ const translations: Record<Language, TranslationMap> = {
     'upload.uploading': 'Učitavanje...',
     'upload.photoType': 'Tip fotografije',
 'upload.selectPhotoType': 'Odaberite tip fotografije',
+ // ✅ Pretraživanje adresa UI
+  'upload.searchingAddresses': 'Pretraživanje adresa...',
+  'upload.foundAddresses': 'Pronađena {count} adresa',
+  'upload.foundAddressesPlural': 'Pronađeno {count} adresa',
+  'upload.cached': 'keširano',
+  'upload.noAddressesFound': 'Nema pronađenih adresa za',
+  'upload.waitingDebounce': 'Čekanje...',
+  'upload.cacheEntries': 'Keš: {count} unosa',
+  
+  // ✅ Ručno pozicioniranje
+  'upload.streetFound': '{street} pronađena! Odaberite točnu lokaciju za broj {number}',
+  'upload.clickOnMap': 'Kliknite na kartu gdje se točno nalazi ova fotografija',
+  'upload.zoomTip': 'Savjet: Uvećajte za veću točnost. Marker će se pojaviti gdje kliknete.',
+  
+  // ✅ Potvrda lokacije
+  'upload.locationSetTitle': 'Lokacija postavljena: {address}',
+  'upload.coordinates': 'Koordinate',
+  'upload.changeLocation': 'Promijeni',
+  'upload.selectedPhotoLocation': 'Odabrana lokacija za fotografiju',
+  'upload.locationFoundCoords': 'Lokacija pronađena: {latitude}, {longitude}',
 
      // Text
     'text.characterCounter': 'znakova',

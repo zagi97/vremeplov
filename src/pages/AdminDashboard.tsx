@@ -91,23 +91,13 @@ const TAGS_PER_PAGE = 10;
       }
     };
 
-    const handleVisibilityChange = async () => {
-      if (document.hidden && user?.email === 'vremeplov.app@gmail.com') {
-        setTimeout(async () => {
-          await exitAdminMode();
-          navigate('/');
-        }, 100);
-      }
-    };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [user, exitAdminMode, navigate]);
+  }, [user, exitAdminMode]);
 
   const loadAdminData = async () => {
     try {
@@ -419,7 +409,7 @@ const loadUsers = async () => {
   const handleLogout = async () => {
     try {
       await exitAdminMode();
-      navigate('/');
+      navigate('/admin-login');
     } catch (error) {
       console.error('Error exiting admin mode:', error);
       
