@@ -9,7 +9,7 @@ import {
   getDoc, 
   query, 
   where, 
-  orderBy, 
+  orderBy,
   limit,
   startAfter,
   Timestamp} from 'firebase/firestore';
@@ -1345,20 +1345,30 @@ async getAllPhotos(): Promise<Photo[]> {
     }
   }
 
-  async getPhotosByUploader(uploaderUid: string): Promise<Photo[]> {
+async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Photo[]> {
   try {
-    console.log(`Getting photos for user: ${uploaderUid}`);
+    console.log(`Getting photos for user: ${uploaderUid}, limit: ${limitCount}`);
     
     let allPhotos: Photo[] = [];
     
     // 1. GLAVNA METODA - samo po authorId
     try {
-      const authorQuery = query(
-        this.photosCollection, 
-        where('authorId', '==', uploaderUid), 
-        where('isApproved', '==', true),
-        orderBy('createdAt', 'desc')
-      );
+      // ✅ Sada nema konflikta naziva
+      const authorQuery = limitCount 
+        ? query(
+            this.photosCollection, 
+            where('authorId', '==', uploaderUid), 
+            where('isApproved', '==', true),
+            orderBy('createdAt', 'desc'),
+            limit(limitCount)
+          )
+        : query(
+            this.photosCollection, 
+            where('authorId', '==', uploaderUid), 
+            where('isApproved', '==', true),
+            orderBy('createdAt', 'desc')
+          );
+
       const authorSnapshot = await getDocs(authorQuery);
       const authorPhotos = authorSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
       allPhotos = [...allPhotos, ...authorPhotos];
@@ -1367,8 +1377,7 @@ async getAllPhotos(): Promise<Photo[]> {
       console.log('AuthorId query failed:', error);
     }
 
-    // 2. FALLBACK - samo za legacy slike koje nemaju authorId
-    // Ali SAMO za specifični UID - ne za sve korisnike!
+    // 2. FALLBACK - legacy photos (samo za tvoj UID)
     if (uploaderUid === 'JqLBVMJvyFYZKVTQN310XYLI1') {
       try {
         const legacyQuery = query(
@@ -1390,10 +1399,12 @@ async getAllPhotos(): Promise<Photo[]> {
       index === self.findIndex(p => p.id === photo.id)
     );
 
-    console.log(`Total photos for ${uploaderUid}: ${uniquePhotos.length}`);
-    return uniquePhotos;
+    console.log(`✅ Total unique photos: ${uniquePhotos.length}`);
+    
+    // Primijeni limit na kraju ako treba
+    return limitCount ? uniquePhotos.slice(0, limitCount) : uniquePhotos;
   } catch (error) {
-    console.error('Error fetching photos by uploader:', error);
+    console.error('❌ Error fetching photos by uploader:', error);
     return [];
   }
 }

@@ -172,8 +172,7 @@ const translations: Record<Language, TranslationMap> = {
     'search.noLocations': 'No locations found',
 
     // Location stranica
-    'location.exploreHistory': 'Explore the history of',
-    'location.throughPhotos': 'through photos and memories',
+    'location.exploreHistory': 'Explore the history through photos and memories',
     'location.photos': 'photos',
     'location.addMemory': 'Add Memory',
     'location.signInToAdd': 'Sign In to Add Memory',
@@ -508,6 +507,8 @@ const translations: Record<Language, TranslationMap> = {
 'profile.loadMore': 'Load more activities',
 'profile.loading': 'Loading...',
 'profile.loadMoreError': 'Error loading activities',
+'profile.loadMorePhotos': 'Load more photos',
+'profile.photosLoaded': 'Loaded photos',
 
 // Badge names
 'profile.badgePhotographer': 'Photographer',
@@ -639,8 +640,30 @@ const translations: Record<Language, TranslationMap> = {
     // Auth errors
     'errors.signInError': 'Failed to sign in. Please try again.',
     'errors.signInToAddMemory': 'Please sign in to add memories',
+
+    
+
+     "searching": "Searching...",
+    "typing": "Typing...",
+    "found": "found",
+    "noResults": "No results",
+    "foundAddresses": "Found {{count}} addresses",
+    "foundAddresses_one": "Found {{count}} address",
+    "cacheEntries": "Cache: {{count}} entries",
+    "waiting": "Waiting..."
+
   },
   hr: {
+"searching": "Pretraživanje...",
+    "typing": "Tipkate...",
+    "found": "pronađeno",
+    "noResults": "Nema rezultata",
+    "foundAddresses": "Pronađeno {{count}} adresa",
+    "foundAddresses_one": "Pronađena {{count}} adresa",
+    "cacheEntries": "Cache: {{count}} unosa",
+    "waiting": "Čekanje...",
+
+
     'cityType.city': 'Grad',
     'cityType.municipality': 'Općina',
     // Navigation
@@ -813,8 +836,7 @@ const translations: Record<Language, TranslationMap> = {
     'search.noLocations': 'Nema pronađenih lokacija',
 
     // Location stranica
-    'location.exploreHistory': 'Istražite povijest',
-    'location.throughPhotos': 'kroz fotografije i sjećanja',
+    'location.exploreHistory': 'Istražite povijest kroz fotografije i sjećanja',
     'location.photos': 'fotografija',
     'location.addMemory': 'Dodaj sjećanje',
     'location.signInToAdd': 'Prijavite se za dodavanje',
@@ -1122,6 +1144,8 @@ const translations: Record<Language, TranslationMap> = {
 'profile.loadMore': 'Učitaj više aktivnosti',
 'profile.loading': 'Učitavanje...',
 'profile.loadMoreError': 'Greška pri učitavanju aktivnosti',
+'profile.loadMorePhotos': 'Učitaj više slika',
+'profile.photosLoaded': 'Učitane slike',
 
 // Badge names
 'profile.badgePhotographer': 'Fotograf',

@@ -422,13 +422,13 @@ const Location = () => {
     )}
 
     <p className="text-sm sm:text-base text-gray-300 break-words">
-      {t('location.exploreHistory')} {locationData.displayName} {t('location.throughPhotos')}
-      {filteredPhotos.length !== allPhotos.length && (
-        <span className="ml-2 text-blue-300">
-          ({filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')})
-        </span>
-      )}
-    </p>
+  {t('location.exploreHistory')}
+  {filteredPhotos.length !== allPhotos.length && (
+    <span className="ml-2 text-blue-300">
+      ({filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')})
+    </span>
+  )}
+</p>
   </div>
   
   {/* NOVI KOD - Responsive buttons */}

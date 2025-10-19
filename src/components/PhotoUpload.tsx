@@ -841,12 +841,15 @@ setFormData({
 
               {/* Search Status Indicator */}
               {addressSearch.length >= 2 && (
-                <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
-                  {loadingAddresses ? 'Searching...' : 
-                   debouncedSearchTerm !== addressSearch ? 'Typing...' : 
-                   availableAddresses.length > 0 ? `${availableAddresses.length} found` : 'No results'}
-                </div>
-              )}
+  <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
+    {loadingAddresses ? t('searching') : 
+     debouncedSearchTerm !== addressSearch ? t('typing') : 
+     availableAddresses.length > 0 ? 
+       translateWithParams(t, 'foundCount', { count: availableAddresses.length }) : 
+       t('noResults')
+    }
+  </div>
+)}
 
               {/* Dropdown with Results */}
               {showAddressDropdown && (
@@ -858,12 +861,12 @@ setFormData({
                     </div>
                   ) : availableAddresses.length > 0 ? (
                     <div>
-                      <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
-                        Found {availableAddresses.length} address{availableAddresses.length !== 1 ? 'es' : ''}
-                        {searchCache.has(`${debouncedSearchTerm}_${locationName}`) && (
-                          <span className="ml-2 text-green-600">📋 ({t('upload.cached')})</span>
-                        )}
-                      </div>
+                    <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
+  {translateWithParams(t, 'foundAddresses', { count: availableAddresses.length })}
+  {searchCache.has(`${debouncedSearchTerm}_${locationName}`) && (
+    <span className="ml-2 text-green-600">📋 ({t('cached')})</span>
+  )}
+</div>
                       {availableAddresses.map((address, index) => {
                         const isStatusMessage = address.includes('🔍') || address.includes('❌');
                         
@@ -904,15 +907,15 @@ setFormData({
             </div>
 
             <div className="mt-1 text-xs text-gray-500">
-              {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
-              {/* Debug info */}
-              <span className="ml-2 text-gray-400">
-                Cache: {searchCache.size} entries
-                {debouncedSearchTerm !== addressSearch && (
-                  <span className="ml-2 text-orange-500">⏳ Waiting...</span>
-                )}
-              </span>
-            </div>
+  {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
+  {/* Debug info */}
+  <span className="ml-2 text-gray-400">
+    {translateWithParams(t, 'cacheEntries', { count: searchCache.size })}
+    {debouncedSearchTerm !== addressSearch && (
+      <span className="ml-2 text-orange-500">⏳ {t('waiting')}</span>
+    )}
+  </span>
+</div>
           </div>
 
           {/* MANUAL POSITIONING SECTION */}

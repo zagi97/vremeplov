@@ -56,7 +56,7 @@ const CommunityLeaderboard = () => {
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('photos');
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('all-time');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('this-month');
 
   useEffect(() => {
     let isCancelled = false;

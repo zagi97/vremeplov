@@ -1,6 +1,4 @@
-// In your UserProfile.tsx, add this import at the top:
-import LazyImage from "../components/LazyImage";
-// src/pages/UserProfile.tsx - KOMPLETNA verzija
+// src/pages/UserProfile.tsx - KOMPLETNA verzija sa Load More za fotografije
 import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
@@ -30,6 +28,7 @@ import {
   Tag,
   MessageCircle
 } from "lucide-react";
+import LazyImage from "../components/LazyImage";
 import { photoService, Photo } from "../services/firebaseService";
 import { userService, UserProfile, UserActivity } from "../services/userService";
 import { toast } from 'sonner';
@@ -66,9 +65,16 @@ const UserProfilePage = () => {
     bio: '',
     location: '',
   });
+  
+  // ✅ Activity pagination state
   const [hasMoreActivities, setHasMoreActivities] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [activityLimit, setActivityLimit] = useState(10);
+  
+  // ✅ NEW - Photo pagination state
+  const [photoLimit, setPhotoLimit] = useState(12);
+  const [hasMorePhotos, setHasMorePhotos] = useState(false);
+  const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
 
   // Badge definitions with proper icons - translated
   const getBadgeDetails = (badgeId: string) => {
@@ -103,132 +109,133 @@ const UserProfilePage = () => {
 
   // Get activity link based on type
   const getActivityLink = (activity: UserActivity): string | null => {
-    console.log('Activity:', activity.type, 'TargetId:', activity.metadata?.targetId);
     switch(activity.type) {
       case 'photo_upload':
       case 'photo_like':
       case 'comment_added':
       case 'person_tagged':
-        return activity.metadata?.targetId
-        ? `/photo/${activity.metadata.targetId}`
-        : null;
+        return activity.metadata?.targetId ? `/photo/${activity.metadata.targetId}` : null;
       case 'user_follow':
-      return activity.metadata?.targetId
-        ? `/user/${activity.metadata.targetId}`
-        : null;
+        return activity.metadata?.targetId ? `/user/${activity.metadata.targetId}` : null;
       default:
         return null;
     }
   };
 
-useEffect(() => {
-  let isCancelled = false;
-  
-  const loadUserProfile = async () => {
-    if (!userId) return;
+  // ✅ Main useEffect with photo limit dependency
+  useEffect(() => {
+    let isCancelled = false;
     
-    try {
-      if (!isCancelled) setLoading(true);
+    const loadUserProfile = async () => {
+      if (!userId) return;
       
-      const ownProfile = currentUser?.uid === userId;
-      
-      let userProfile = await userService.getUserProfile(userId);
-
-      if (!userProfile && ownProfile && currentUser && !isCancelled) {
-        await userService.createUserProfile(currentUser.uid, {
-          displayName: currentUser.displayName || currentUser.email || 'Unknown User',
-          email: currentUser.email || '',
-          photoURL: currentUser.photoURL || undefined,
-          bio: t('profile.defaultBio')
-        });
-        userProfile = await userService.getUserProfile(userId);
-      }
-      
-      if (!userProfile) {
-        if (!isCancelled) setProfile(null);
-        return;
-      }
-
-      const photos = await photoService.getPhotosByUploader(userId);
-      
-      // Calculate stats...
-      const totalLikes = photos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
-      const totalViews = photos.reduce((sum, photo) => sum + (photo.views || 0), 0);
-      const uniqueLocations = new Set(photos.map(photo => photo.location)).size;
-
-      const needsUpdate = 
-        userProfile.stats.totalPhotos !== photos.length ||
-        userProfile.stats.totalLikes !== totalLikes ||
-        userProfile.stats.totalViews !== totalViews ||
-        userProfile.stats.locationsContributed !== uniqueLocations;
-
-      let finalProfile = userProfile;
-
-      if (needsUpdate) {
-        const updatedStats = {
-          totalPhotos: photos.length,
-          totalLikes: totalLikes, 
-          totalViews: totalViews,
-          locationsContributed: uniqueLocations
-        };
+      try {
+        if (!isCancelled) setLoading(true);
         
-        await userService.updateUserStats(userId, updatedStats);
-        const updatedProfile = await userService.getUserProfile(userId);
-        finalProfile = updatedProfile || userProfile;
-      }
-      
-      if (photos.length > 0 || needsUpdate) {
-        await userService.checkAndAwardBadges(userId);
-        const profileWithBadges = await userService.getUserProfile(userId);
-        finalProfile = profileWithBadges || finalProfile;
-      }
-      
-      // Provjeri follow status
-      let followStatus = false;
-      if (currentUser && !ownProfile) {
-        followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
-      }
-      
-      // Load activities
-      const activities = await userService.getUserActivities(userId, activityLimit);
-      
-      // Check if there are more activities
-      const moreActivities = await userService.getUserActivities(userId, activityLimit + 1);
-      const hasMore = moreActivities.length > activityLimit;
-      
-      // ✅ Svi state updates odjednom na kraju
-      if (!isCancelled) {
-        setIsOwnProfile(ownProfile);
-        setProfile(finalProfile);
-        setUserPhotos(photos);
-        setIsFollowing(followStatus);
-        setUserActivities(activities);
-        setHasMoreActivities(hasMore);
-        setEditForm({
-          displayName: finalProfile.displayName,
-          bio: finalProfile.bio || '',
-          location: finalProfile.location || ''
-        });
-      }
-      
-    } catch (error) {
-      if (!isCancelled) {
-        console.error('Error loading user profile:', error);
-        toast.error(t('profile.loadError'));
-      }
-    } finally {
-      if (!isCancelled) {
-        setLoading(false);
-      }
-    }
-  };
+        const ownProfile = currentUser?.uid === userId;
+        
+        let userProfile = await userService.getUserProfile(userId);
 
-  loadUserProfile();
+        if (!userProfile && ownProfile && currentUser && !isCancelled) {
+          await userService.createUserProfile(currentUser.uid, {
+            displayName: currentUser.displayName || currentUser.email || 'Unknown User',
+            email: currentUser.email || '',
+            photoURL: currentUser.photoURL || undefined,
+            bio: t('profile.defaultBio')
+          });
+          userProfile = await userService.getUserProfile(userId);
+        }
+        
+        if (!userProfile) {
+          if (!isCancelled) setProfile(null);
+          return;
+        }
 
-  return () => {
-    isCancelled = true;
-  };
-}, [userId, currentUser, t, activityLimit]);
+        // ✅ Load photos with limit
+        const photos = await photoService.getPhotosByUploader(userId, photoLimit);
+        
+        // ✅ Check if there are more photos
+        const morePhotos = await photoService.getPhotosByUploader(userId, photoLimit + 1);
+        const hasMore = morePhotos.length > photoLimit;
+        
+        // Calculate stats from ALL photos (not just displayed ones)
+        const allPhotos = await photoService.getPhotosByUploader(userId);
+        const totalLikes = allPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
+        const totalViews = allPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);
+        const uniqueLocations = new Set(allPhotos.map(photo => photo.location)).size;
+
+        const needsUpdate = 
+          userProfile.stats.totalPhotos !== allPhotos.length ||
+          userProfile.stats.totalLikes !== totalLikes ||
+          userProfile.stats.totalViews !== totalViews ||
+          userProfile.stats.locationsContributed !== uniqueLocations;
+
+        let finalProfile = userProfile;
+
+        if (needsUpdate) {
+          const updatedStats = {
+            totalPhotos: allPhotos.length,
+            totalLikes: totalLikes, 
+            totalViews: totalViews,
+            locationsContributed: uniqueLocations
+          };
+          
+          await userService.updateUserStats(userId, updatedStats);
+          const updatedProfile = await userService.getUserProfile(userId);
+          finalProfile = updatedProfile || userProfile;
+        }
+        
+        if (allPhotos.length > 0 || needsUpdate) {
+          await userService.checkAndAwardBadges(userId);
+          const profileWithBadges = await userService.getUserProfile(userId);
+          finalProfile = profileWithBadges || finalProfile;
+        }
+        
+        // Check follow status
+        let followStatus = false;
+        if (currentUser && !ownProfile) {
+          followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
+        }
+        
+        // Load activities
+        const activities = await userService.getUserActivities(userId, activityLimit);
+        const moreActivities = await userService.getUserActivities(userId, activityLimit + 1);
+        const hasMoreAct = moreActivities.length > activityLimit;
+        
+        // ✅ All state updates at once
+        if (!isCancelled) {
+          setIsOwnProfile(ownProfile);
+          setProfile(finalProfile);
+          setUserPhotos(photos);
+          setHasMorePhotos(hasMore);
+          setIsFollowing(followStatus);
+          setUserActivities(activities);
+          setHasMoreActivities(hasMoreAct);
+          setEditForm({
+            displayName: finalProfile.displayName,
+            bio: finalProfile.bio || '',
+            location: finalProfile.location || ''
+          });
+        }
+        
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('Error loading user profile:', error);
+          toast.error(t('profile.loadError'));
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserProfile();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [userId, currentUser, t, activityLimit, photoLimit]); // ✅ Added photoLimit
 
   const handleFollowToggle = async () => {
     if (!profile || !currentUser || isOwnProfile || followLoading) return;
@@ -239,7 +246,6 @@ useEffect(() => {
       if (isFollowing) {
         await userService.unfollowUser(currentUser.uid, userId!);
         setIsFollowing(false);
-        // Update local profile follower count
         setProfile(prev => prev ? {
           ...prev,
           stats: { ...prev.stats, followers: prev.stats.followers - 1 }
@@ -248,7 +254,6 @@ useEffect(() => {
       } else {
         await userService.followUser(currentUser.uid, userId!);
         setIsFollowing(true);
-        // Update local profile follower count
         setProfile(prev => prev ? {
           ...prev,
           stats: { ...prev.stats, followers: prev.stats.followers + 1 }
@@ -273,7 +278,6 @@ useEffect(() => {
         location: editForm.location
       });
       
-      // Update local state
       setProfile(prev => prev ? {
         ...prev,
         displayName: editForm.displayName,
@@ -300,7 +304,6 @@ useEffect(() => {
       setUserActivities(activities);
       setActivityLimit(newLimit);
       
-      // Check if there are even more
       const moreActivities = await userService.getUserActivities(userId, newLimit + 1);
       setHasMoreActivities(moreActivities.length > newLimit);
     } catch (error) {
@@ -308,6 +311,30 @@ useEffect(() => {
       toast.error(t('profile.loadMoreError'));
     } finally {
       setLoadingMore(false);
+    }
+  };
+
+  // ✅ NEW - Load more photos
+  const loadMorePhotos = async () => {
+    if (!userId || loadingMorePhotos) return;
+    
+    setLoadingMorePhotos(true);
+    try {
+      const newLimit = photoLimit + 12;
+      const photos = await photoService.getPhotosByUploader(userId, newLimit);
+      setUserPhotos(photos);
+      setPhotoLimit(newLimit);
+      
+      // Check if there are even more
+      const morePhotos = await photoService.getPhotosByUploader(userId, newLimit + 1);
+      setHasMorePhotos(morePhotos.length > newLimit);
+      
+      toast.success(t('profile.photosLoaded'));
+    } catch (error) {
+      console.error('Error loading more photos:', error);
+      toast.error(t('profile.loadMorePhotosError'));
+    } finally {
+      setLoadingMorePhotos(false);
     }
   };
 
@@ -549,19 +576,19 @@ useEffect(() => {
                         <h3 className="font-semibold mb-2">{t('profile.collectionOverview')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600" data-test="total-photos">
+                            <div className="text-lg font-bold text-blue-600">
                               {profile.stats.totalPhotos}
                             </div>
                             <div className="text-gray-500">{t('profile.totalPhotos')}</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-bold text-green-600" data-test="total-locations">
+                            <div className="text-lg font-bold text-green-600">
                               {profile.stats.locationsContributed}
                             </div>
                             <div className="text-gray-500">{t('profile.locations')}</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-bold text-red-600" data-test="total-likes">
+                            <div className="text-lg font-bold text-red-600">
                               {profile.stats.totalLikes}
                             </div>
                             <div className="text-gray-500">{t('profile.totalLikes')}</div>
@@ -575,7 +602,7 @@ useEffect(() => {
                         </div>
                       </div>
                       
-                      {/* ✅ Updated photo grid with lazy loading */}
+                      {/* Photo Grid with LazyImage */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {userPhotos.map(photo => (
                           <Link 
@@ -584,7 +611,6 @@ useEffect(() => {
                             className="group block"
                           >
                             <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full">
-                              {/* Fixed aspect ratio container */}
                               <div className="aspect-[4/3] overflow-hidden bg-gray-100">
                                 <LazyImage
                                   src={photo.imageUrl}
@@ -626,6 +652,30 @@ useEffect(() => {
                           </Link>
                         ))}
                       </div>
+
+                      {/* ✅ NEW - Load More Photos Button */}
+                      {hasMorePhotos && (
+                        <div className="text-center mt-6 pt-4 border-t">
+                          <Button 
+                            variant="outline" 
+                            onClick={loadMorePhotos}
+                            disabled={loadingMorePhotos}
+                            className="w-full sm:w-auto"
+                          >
+                            {loadingMorePhotos ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                                {t('profile.loading')}
+                              </>
+                            ) : (
+                              <>
+                                <Camera className="h-4 w-4 mr-2" />
+                                {t('profile.loadMorePhotos')}
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="text-center py-12">
@@ -758,14 +808,11 @@ useEffect(() => {
                                   }`}
                                   onClick={(e) => !activityLink && e.preventDefault()}
                                 >
-                                  {/* Icon */}
                                   <div className={`p-2 rounded-full bg-gray-100 ${activityInfo.color} flex-shrink-0 h-fit`}>
                                     <IconComponent className="h-4 w-4" />
                                   </div>
                                   
-                                  {/* Content */}
                                   <div className="flex-1 min-w-0">
-                                    {/* Main text - responsive layout */}
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1 sm:flex-wrap">
                                       <span className="font-medium text-gray-900">
                                         {profile.displayName}
@@ -774,7 +821,6 @@ useEffect(() => {
                                         {activityInfo.text}
                                       </span>
                                       
-                                      {/* Photo/User/Badge name */}
                                       {activity.metadata?.photoTitle && (
                                         <span className="font-medium text-blue-600 truncate">
                                           "{activity.metadata.photoTitle}"
@@ -793,7 +839,6 @@ useEffect(() => {
                                       )}
                                     </div>
                                     
-                                    {/* Location */}
                                     {activity.metadata?.location && (
                                       <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
                                         <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -801,13 +846,11 @@ useEffect(() => {
                                       </div>
                                     )}
                                     
-                                    {/* Timestamp */}
                                     <div className="text-xs text-gray-400 mt-1">
                                       {formatActivityDate(activity.createdAt)}
                                     </div>
                                   </div>
                                   
-                                  {/* Arrow indicator for clickable items */}
                                   {activityLink && (
                                     <div className="flex items-center text-gray-400">
                                       <ArrowRight className="h-4 w-4" />
@@ -818,7 +861,7 @@ useEffect(() => {
                             })}
                           </div>
                           
-                          {/* Load More button */}
+                          {/* Load More Activities Button */}
                           {hasMoreActivities && (
                             <div className="text-center mt-6 pt-4 border-t">
                               <Button 
