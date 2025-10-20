@@ -394,14 +394,187 @@ async deletePhoto(photoId: string): Promise<void> {
   }
 }
 
+
+// firebaseService.ts - DODAJ OVO PRIJE addPhoto metode (oko linije 400)
+
+/**
+ * Provjeri može li user uploadati danas prema tier sistemu
+ */
+async canUserUploadToday(userId: string): Promise<{ 
+  allowed: boolean; 
+  reason?: string;
+  uploadsToday: number;
+  remainingToday: number;
+  userTier: string;
+  dailyLimit: number;
+  nextTierInfo?: string;
+}> {
+  try {
+    // 1. Dohvati user tier iz userService
+    const { userService, getUserTier, USER_TIER_LIMITS, USER_TIER_REQUIREMENTS, UserTier } = await import('./userService');
+    const userProfile = await userService.getUserProfile(userId);
+    
+    if (!userProfile) {
+      return {
+        allowed: false,
+        reason: 'Korisnički profil nije pronađen.',
+        uploadsToday: 0,
+        remainingToday: 0,
+        userTier: 'UNKNOWN',
+        dailyLimit: 0
+      };
+    }
+    
+    // 2. Odredi tier prema broju ODOBRENIH slika
+    const approvedPhotosCount = userProfile.stats?.totalPhotos || 0;
+    const userTier = getUserTier(approvedPhotosCount);
+    const dailyLimit = USER_TIER_LIMITS[userTier];
+    
+    console.log(`User ${userId} tier: ${userTier}, approved photos: ${approvedPhotosCount}, daily limit: ${dailyLimit}`);
+    
+   // 3. Provjeri koliko je uploadao DANAS (uključujući pending)
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+console.log('🔍 Checking uploads since:', today.toISOString());
+
+const userPhotosToday = query(
+  this.photosCollection,
+  where('authorId', '==', userId),
+  where('createdAt', '>=', Timestamp.fromDate(today))
+);
+
+const snapshot = await getDocs(userPhotosToday);
+const uploadsToday = snapshot.size;
+
+// ✅ DEBUG - Isprintaj sve današnje slike
+console.log('📸 Photos uploaded today:', uploadsToday);
+snapshot.docs.forEach(doc => {
+  const data = doc.data();
+  console.log('  - Photo ID:', doc.id, 'Created:', data.createdAt?.toDate?.());
+});
+
+const remainingToday = dailyLimit - uploadsToday;
+    
+    console.log(`Uploads today: ${uploadsToday}/${dailyLimit}, remaining: ${remainingToday}`);
+    
+    // 4. Generiraj poruku o sljedećem tier-u
+    let nextTierInfo: string | undefined;
+    if (userTier === UserTier.NEW_USER) {
+      const needed = USER_TIER_REQUIREMENTS[UserTier.VERIFIED] - approvedPhotosCount;
+      nextTierInfo = `Još ${needed} odobrenih slika do Verified statusa (3 slike/dan)`;
+    } else if (userTier === UserTier.VERIFIED) {
+      const needed = USER_TIER_REQUIREMENTS[UserTier.CONTRIBUTOR] - approvedPhotosCount;
+      nextTierInfo = `Još ${needed} odobrenih slika do Contributor statusa (5 slika/dan)`;
+    } else if (userTier === UserTier.CONTRIBUTOR) {
+      const needed = USER_TIER_REQUIREMENTS[UserTier.POWER_USER] - approvedPhotosCount;
+      nextTierInfo = `Još ${needed} odobrenih slika do Power User statusa (10 slika/dan)`;
+    }
+    
+    // 5. Provjeri limit
+    if (uploadsToday >= dailyLimit) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      return {
+        allowed: false,
+        reason: `Dostignut dnevni limit za ${userTier} tier (${dailyLimit} slika/dan). Pokušaj sutra nakon ponoći.`,
+        uploadsToday,
+        remainingToday: 0,
+        userTier,
+        dailyLimit,
+        nextTierInfo
+      };
+    }
+    
+    return { 
+      allowed: true,
+      uploadsToday,
+      remainingToday,
+      userTier,
+      dailyLimit,
+      nextTierInfo
+    };
+    
+  } catch (error) {
+    console.error('Error checking daily upload limit:', error);
+    // Fallback - dozvoli upload ako nešto pukne
+    return { 
+      allowed: true, 
+      uploadsToday: 0,
+      remainingToday: 1,
+      userTier: 'UNKNOWN',
+      dailyLimit: 1
+    };
+  }
+}
+
+// firebaseService.ts - PhotoService class - DODAJ OVO
+
+/**
+ * Admin approve photo - with stats update
+ */
+async approvePhoto(photoId: string, adminUid: string): Promise<void> {
+  try {
+    console.log(`Admin ${adminUid} approving photo ${photoId}`);
+    
+    // 1. Get photo data to know who owns it
+    const photoDoc = await getDoc(doc(this.photosCollection, photoId));
+    if (!photoDoc.exists()) {
+      throw new Error('Photo not found');
+    }
+    
+    const photoData = photoDoc.data();
+    const photoAuthorId = photoData.authorId;
+    
+    // 2. Approve the photo
+    await updateDoc(doc(this.photosCollection, photoId), {
+      isApproved: true,
+      approved: true,
+      approvedAt: Timestamp.now(),
+      approvedBy: adminUid
+    });
+    
+    console.log(`✅ Photo ${photoId} approved`);
+    
+    // 3. Update author's stats
+    if (photoAuthorId) {
+      const { userService } = await import('./userService');
+      
+      // Force recalculate stats from actual data
+      await userService.forceRecalculateUserStats(photoAuthorId);
+      
+      // Check for new badges
+      await userService.checkAndAwardBadges(photoAuthorId);
+      
+      console.log(`✅ Stats updated for user ${photoAuthorId}`);
+    }
+    
+  } catch (error) {
+    console.error('Error approving photo:', error);
+    throw error;
+  }
+}
+
   // Add new photo
 
 // Ažuriraj addPhoto metodu da invalidira cache
+// ✅ AŽURIRAJ addPhoto metodu
 async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'> & { authorId?: string }): Promise<string> {
   try {
     console.log('Adding photo with data:', photoData);
     const now = Timestamp.now();
     const currentUser = auth.currentUser;
+    
+    if (!currentUser) throw new Error('Not authenticated');
+    
+    // ✅ RATE LIMITING CHECK
+    const limitCheck = await this.canUserUploadToday(currentUser.uid);
+    if (!limitCheck.allowed) {
+      throw new Error(limitCheck.reason);
+    }
+    
+    console.log(`✅ User ${limitCheck.userTier} can upload (${limitCheck.remainingToday - 1} remaining after this upload)`);
     
     const photo: Omit<Photo, 'id'> = {
       imageUrl: photoData.imageUrl,
@@ -412,8 +585,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       author: photoData.author,
       authorId: photoData.authorId || currentUser?.uid,
       location: photoData.location,
-      // ✅ DODAJ COORDINATES
-      coordinates: photoData.coordinates, // Ovo će biti undefined ako nema koordinata
+      coordinates: photoData.coordinates,
       photoType: photoData.photoType,
       taggedPersons: photoData.taggedPersons || [],
       uploadedBy: photoData.uploadedBy || currentUser?.displayName || currentUser?.email || 'Unknown',
@@ -429,7 +601,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     const docRef = await addDoc(this.photosCollection, photo);
     console.log('Photo saved with ID:', docRef.id);
 
-     // Invalidate relevant caches
+    // Invalidate relevant caches
     this.clearLocationCache(photoData.location);
     this.clearRecentPhotosCache();
 
@@ -437,7 +609,6 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
 
     // NOVO: Dodaj aktivnost i ažuriraj statistike
     if (currentUser?.uid) {
-      // Import userService dinamički da izbjegneš circular dependency
       const { userService } = await import('./userService');
 
       // Ažuriraj user statistike

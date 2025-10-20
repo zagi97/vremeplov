@@ -114,6 +114,20 @@ const translations: Record<Language, TranslationMap> = {
     'upload.enterName': 'Enter person\'s name',
     'upload.saveTag': 'Save Tag',
     'upload.cancelTag': 'Cancel',
+  "upload.tierNewUser": "New User",
+  "upload.tierVerified": "Verified User",
+  "upload.tierContributor": "Contributor",
+  "upload.tierPowerUser": "Power User",
+  "upload.dailyLimit": "Daily limit",
+  "upload.uploadedToday": "Uploaded today",
+  "upload.remaining": "Remaining",
+  "upload.limitReached": "Daily Limit Reached",
+  "upload.limitReachedMessage": "You've reached your daily limit. Try again tomorrow after midnight!",
+  "upload.nextTierProgress": "Progress to next tier",
+  "upload.nextTierInfo.newUser": "{needed} more approved photos to reach Verified status (3 photos/day)",
+"upload.nextTierInfo.verified": "{needed} more approved photos to reach Contributor status (5 photos/day)",
+"upload.nextTierInfo.contributor": "{needed} more approved photos to reach Power User status (10 photos/day)",
+"upload.nextTierInfo.maxTier": "You already have Power User status",
     
     // Gallery
     'gallery.noPhotos': 'No photos yet',
@@ -756,6 +770,21 @@ const translations: Record<Language, TranslationMap> = {
     'upload.enterName': 'Unesite ime osobe',
     'upload.saveTag': 'Spremi oznaku',
     'upload.cancelTag': 'Odustani',
+  "upload.tierNewUser": "Novi Korisnik",
+  "upload.tierVerified": "Provjereni Korisnik",
+  "upload.tierContributor": "Doprinositelj",
+  "upload.tierPowerUser": "Power Korisnik",
+  "upload.dailyLimit": "Dnevni limit",
+  "upload.uploadedToday": "Uploadano danas",
+  "upload.remaining": "Preostalo",
+  "upload.limitReached": "Dnevni Limit Postignut",
+  "upload.limitReachedMessage": "Dostigao si dnevni limit. Pokušaj sutra nakon ponoći!",
+  "upload.nextTierProgress": "Napredak do sljedećeg nivoa",
+  "upload.nextTierInfo.newUser": "Još {needed} odobrenih slika do Verified statusa (3 slike/dan)",
+"upload.nextTierInfo.verified": "Još {needed} odobrenih slika do Contributor statusa (5 slika/dan)",
+"upload.nextTierInfo.contributor": "Još {needed} odobrenih slika do Power User statusa (10 slika/dan)",
+"upload.nextTierInfo.maxTier": "Već imaš Power User status",
+
     // Add to LanguageContext.tsx - CROATIAN (hr)
 'upload.locationFound': 'Lokacija adrese pronađena!',
 'upload.coordinatesNotFound': 'Nije moguće pronaći točne koordinate za ovu adresu',
@@ -1146,6 +1175,7 @@ const translations: Record<Language, TranslationMap> = {
 'profile.loadMoreError': 'Greška pri učitavanju aktivnosti',
 'profile.loadMorePhotos': 'Učitaj više slika',
 'profile.photosLoaded': 'Učitane slike',
+
 
 // Badge names
 'profile.badgePhotographer': 'Fotograf',

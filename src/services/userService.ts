@@ -17,6 +17,88 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase'; // Koristi tvoju Firebase konfiguraciju
+import { useLanguage } from "../contexts/LanguageContext";
+
+// ✅ DODAJ OVO ODMAH NAKON IMPORTA
+// ========================================
+// 🎯 USER TIER SYSTEM
+// ========================================
+
+export enum UserTier {
+  NEW_USER = 'NEW_USER',           // 0-4 odobrene slike
+  VERIFIED = 'VERIFIED',           // 5-19 odobrenih slika
+  CONTRIBUTOR = 'CONTRIBUTOR',     // 20-49 odobrenih slika
+  POWER_USER = 'POWER_USER'        // 50+ odobrenih slika
+}
+
+export const USER_TIER_LIMITS = {
+  [UserTier.NEW_USER]: 1,      // 1 slika/dan
+  [UserTier.VERIFIED]: 3,      // 3 slike/dan
+  [UserTier.CONTRIBUTOR]: 5,   // 5 slika/dan
+  [UserTier.POWER_USER]: 10    // 10 slika/dan
+};
+
+export const USER_TIER_REQUIREMENTS = {
+  [UserTier.VERIFIED]: 5,      // Treba 5 odobrenih slika
+  [UserTier.CONTRIBUTOR]: 20,  // Treba 20 odobrenih slika
+  [UserTier.POWER_USER]: 50    // Treba 50 odobrenih slika
+};
+
+/**
+ * Odredi tier korisnika prema broju ODOBRENIH slika
+ * @param approvedPhotosCount - Broj odobrenih slika
+ * @returns UserTier enum
+ */
+export function getUserTier(approvedPhotosCount: number): UserTier {
+  if (approvedPhotosCount >= USER_TIER_REQUIREMENTS[UserTier.POWER_USER]) {
+    return UserTier.POWER_USER;
+  }
+  if (approvedPhotosCount >= USER_TIER_REQUIREMENTS[UserTier.CONTRIBUTOR]) {
+    return UserTier.CONTRIBUTOR;
+  }
+  if (approvedPhotosCount >= USER_TIER_REQUIREMENTS[UserTier.VERIFIED]) {
+    return UserTier.VERIFIED;
+  }
+  return UserTier.NEW_USER;
+}
+
+/**
+ * Dohvati dnevni limit za tier
+ */
+export function getDailyLimitForTier(tier: UserTier): number {
+  return USER_TIER_LIMITS[tier];
+}
+
+/**
+ * Dohvati info o sljedećem tier-u
+ */
+
+export function getNextTierInfo(currentTier: UserTier, approvedPhotos: number): string | undefined {
+  const { t } = useLanguage(); // koristi t iz LanguageContext
+  let needed: number;
+
+  if (currentTier === UserTier.NEW_USER) {
+    needed = USER_TIER_REQUIREMENTS[UserTier.VERIFIED] - approvedPhotos;
+    return t("upload.nextTierInfo.newUser").replace("{{needed}}", needed.toString());
+  }
+
+  if (currentTier === UserTier.VERIFIED) {
+    needed = USER_TIER_REQUIREMENTS[UserTier.CONTRIBUTOR] - approvedPhotos;
+    return t("upload.nextTierInfo.verified").replace("{{needed}}", needed.toString());
+  }
+
+  if (currentTier === UserTier.CONTRIBUTOR) {
+    needed = USER_TIER_REQUIREMENTS[UserTier.POWER_USER] - approvedPhotos;
+    return t("upload.nextTierInfo.contributor").replace("{{needed}}", needed.toString());
+  }
+
+  return t("upload.nextTierInfo.maxTier");
+}
+
+
+// ========================================
+// 🎯 END USER TIER SYSTEM
+// ========================================
 
 // Koristit ću Timestamp iz tvoje Firebase konfiguracije
 const timestamp = () => Timestamp.now();

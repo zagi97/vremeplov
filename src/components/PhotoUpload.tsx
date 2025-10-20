@@ -52,6 +52,39 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
   const { t } = useLanguage();
   const { user } = useAuth();
 
+  // ✅ DODAJ OVO - Tier Status State
+const [uploadLimitInfo, setUploadLimitInfo] = useState<{
+  canUpload: boolean;
+  uploadsToday: number;
+  remainingToday: number;
+  userTier: string;
+  dailyLimit: number;
+  nextTierInfo?: string;
+} | null>(null);
+
+// ✅ DODAJ OVO - Check upload limit on mount and when user changes
+useEffect(() => {
+  const checkUploadLimit = async () => {
+    if (!user) return;
+    
+    try {
+      const limitCheck = await photoService.canUserUploadToday(user.uid);
+      setUploadLimitInfo({
+        canUpload: limitCheck.allowed,
+        uploadsToday: limitCheck.uploadsToday,
+        remainingToday: limitCheck.remainingToday,
+        userTier: limitCheck.userTier,
+        dailyLimit: limitCheck.dailyLimit,
+        nextTierInfo: limitCheck.nextTierInfo
+      });
+    } catch (error) {
+      console.error('Error checking upload limit:', error);
+    }
+  };
+  
+  checkUploadLimit();
+}, [user]);
+
   const PHOTO_TYPES = [
   { value: "street", label: t('photoType.street') },
   { value: "building", label: t('photoType.building') },
@@ -626,134 +659,166 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle form submission - AŽURIRANO s rate limiting
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!user) {
+    toast.error(t('upload.error'));
+    return;
+  }
+  
+  if (!selectedFile) {
+    toast.error(t('upload.error'));
+    return;
+  }
+
+  if (!formData.year || !formData.description || !formData.author) {
+    toast.error(t('upload.fillRequired'));
+    return;
+  }
+
+  if (!navigator.onLine) {
+    toast.error(t('upload.offline'));
+    return;
+  }
+
+  // ✅ NOVO - Rate Limit Check
+  if (uploadLimitInfo && !uploadLimitInfo.canUpload) {
+    toast.error(
+      t('upload.limitReachedMessage') || 
+      `Dostigao si dnevni limit od ${uploadLimitInfo.dailyLimit} ${uploadLimitInfo.dailyLimit === 1 ? 'slike' : 'slika'}. Pokušaj sutra!`
+    );
+    return;
+  }
+
+  setUploading(true);
+
+  try {
+    const photoId = Date.now().toString();
     
-    if (!user) {
-      toast.error(t('upload.error'));
-      return;
+    console.log('Starting upload process for photoId:', photoId);
+    console.log('Selected address:', selectedAddress);
+    console.log('Coordinates:', coordinates);
+    
+    const imageUrl = await photoService.uploadPhotoFile(selectedFile, photoId);
+    console.log('File upload successful, creating database record...');
+    
+    let uploaderName = 'Unknown';
+    if (user?.displayName && user.displayName.trim() !== '') {
+      uploaderName = user.displayName.trim();
+    } else if (user?.email && user.email.trim() !== '') {
+      uploaderName = user.email.split('@')[0].trim();
+    }
+
+    // Prepare coordinates and address
+    let finalCoordinates = undefined;
+    if (coordinates && selectedAddress) {
+      finalCoordinates = {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        address: selectedAddress
+      };
+    }
+
+    const finalPhotoId = await photoService.addPhoto({
+      imageUrl: imageUrl,
+      imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
+      year: formData.year,
+      description: formData.description,
+      detailedDescription: formData.detailedDescription,
+      author: formData.author,
+      authorId: user.uid,
+      location: locationName,
+      coordinates: finalCoordinates,
+      photoType: formData.photoType,
+      taggedPersons: taggedPersons.map(person => ({
+        name: person.name,
+        x: person.x,
+        y: person.y,
+        addedByUid: user.uid,
+        isApproved: false
+      })),
+      uploadedBy: uploaderName,
+      uploadedAt: new Date().toISOString()
+    });
+    
+    console.log('Database record created successfully with ID:', finalPhotoId);
+    
+    if (finalCoordinates) {
+      toast.success(
+        translateWithParams(t, 'upload.successWithLocation', { 
+          address: selectedAddress 
+        })
+      );
+    } else {
+      toast.success(t('upload.success'));
     }
     
-    if (!selectedFile) {
+    // ✅ NOVO - Refresh upload limit after successful upload
+    const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
+    setUploadLimitInfo({
+      canUpload: updatedLimitCheck.allowed,
+      uploadsToday: updatedLimitCheck.uploadsToday,
+      remainingToday: updatedLimitCheck.remainingToday,
+      userTier: updatedLimitCheck.userTier,
+      dailyLimit: updatedLimitCheck.dailyLimit,
+      nextTierInfo: updatedLimitCheck.nextTierInfo
+    });
+    
+    // Reset form
+    setSelectedFile(null);
+    setTaggedPersons([]);
+    handleClearAddress();
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl('');
+    }
+    setFormData({
+      year: '',
+      description: '',
+      detailedDescription: '',
+      author: '',
+      photoType: ''
+    });
+
+    onSuccess?.();
+    
+  } catch (error: unknown) {
+    console.error('Upload error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorCode = (error as any)?.code;
+    
+    // ✅ NOVO - Check if error is about rate limiting
+    if (errorMessage.includes('dnevni limit') || errorMessage.includes('Dostignut')) {
+      toast.error(errorMessage);
+      
+      // Refresh limit info
+      if (user) {
+        const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
+        setUploadLimitInfo({
+          canUpload: updatedLimitCheck.allowed,
+          uploadsToday: updatedLimitCheck.uploadsToday,
+          remainingToday: updatedLimitCheck.remainingToday,
+          userTier: updatedLimitCheck.userTier,
+          dailyLimit: updatedLimitCheck.dailyLimit,
+          nextTierInfo: updatedLimitCheck.nextTierInfo
+        });
+      }
+    } else if (errorCode === 'storage/unauthorized') {
+      toast.error(t('errors.uploadFailed'));
+    } else if (errorCode === 'storage/quota-exceeded') {
+      toast.error(t('errors.uploadStorageFull'));
+    } else if (errorMessage?.includes('network')) {
+      toast.error(t('errors.uploadError'));
+    } else {
       toast.error(t('upload.error'));
-      return;
     }
-
-    if (!formData.year || !formData.description || !formData.author) {
-      toast.error(t('upload.fillRequired'));
-      return;
-    }
-
-    if (!navigator.onLine) {
-      toast.error(t('upload.offline'));
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      const photoId = Date.now().toString();
-      
-      console.log('Starting upload process for photoId:', photoId);
-      console.log('Selected address:', selectedAddress);
-      console.log('Coordinates:', coordinates);
-      
-      const imageUrl = await photoService.uploadPhotoFile(selectedFile, photoId);
-      console.log('File upload successful, creating database record...');
-      
-      let uploaderName = 'Unknown';
-      if (user?.displayName && user.displayName.trim() !== '') {
-        uploaderName = user.displayName.trim();
-      } else if (user?.email && user.email.trim() !== '') {
-        uploaderName = user.email.split('@')[0].trim();
-      }
-
-      // Prepare coordinates and address
-      let finalCoordinates = undefined;
-      if (coordinates && selectedAddress) {
-        finalCoordinates = {
-          latitude: coordinates.latitude,
-          longitude: coordinates.longitude,
-          address: selectedAddress
-        };
-      }
-
-      const finalPhotoId = await photoService.addPhoto({
-        imageUrl: imageUrl,
-        imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
-        year: formData.year,
-        description: formData.description,
-        detailedDescription: formData.detailedDescription,
-        author: formData.author,
-        authorId: user.uid,
-        location: locationName,
-        coordinates: finalCoordinates,
-        photoType: formData.photoType,
-        taggedPersons: taggedPersons.map(person => ({
-          name: person.name,
-          x: person.x,
-          y: person.y,
-          addedByUid: user.uid,
-          isApproved: false
-        })),
-        uploadedBy: uploaderName,
-        uploadedAt: new Date().toISOString()
-      });
-      
-      console.log('Database record created successfully with ID:', finalPhotoId);
-      
-      if (finalCoordinates) {
-  toast.success(
-    translateWithParams(t, 'upload.successWithLocation', { 
-      address: selectedAddress 
-    })
-  );
-} else {
-  toast.success(t('upload.success'));
-}
-      
-      // Reset form
-      setSelectedFile(null);
-      setTaggedPersons([]);
-      handleClearAddress();
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        setPreviewUrl('');
-      }
-setFormData({
-  year: '',
-  description: '',
-  detailedDescription: '',
-  author: '',
-  photoType: ''
-});
-
-      onSuccess?.();
-      
-    } catch (error: unknown) {
-      console.error('Upload error:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const errorCode = (error as any)?.code;
-      
-      if (errorCode === 'storage/unauthorized') {
-        
-        toast.error(t('errors.uploadFailed'));
-        
-      } else if (errorCode === 'storage/quota-exceeded') {
-        
-        toast.error(t('errors.uploadStorageFull'));
-      } else if (errorMessage?.includes('network')) {
-        
-        toast.error(t('errors.uploadError'));
-
-      } else {
-        toast.error(t('upload.error'));
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
+  } finally {
+    setUploading(false);
+  }
+};
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -763,6 +828,118 @@ setFormData({
           {t('upload.addPhotoTo')} {locationName}
         </CardTitle>
       </CardHeader>
+        {/* ✅ DODAJ OVO - TIER STATUS BADGE */}
+      {/* ✅ TIER STATUS BADGE - IMPROVED VERSION */}
+{uploadLimitInfo && (
+  <div className="px-6 pb-4">
+    <div className={`p-4 rounded-lg border-2 ${
+      uploadLimitInfo.canUpload 
+        ? 'bg-blue-50 border-blue-200' 
+        : 'bg-red-50 border-red-200'
+    }`}>
+      {/* Header with Tier Badge */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex-1">
+          {/* Tier Badge */}
+          {uploadLimitInfo.userTier === 'NEW_USER' && (
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gray-200 text-gray-700 mb-2">
+              🆕 {t('upload.tierNewUser')}
+            </div>
+          )}
+          {uploadLimitInfo.userTier === 'VERIFIED' && (
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-500 text-white mb-2">
+              ✅ {t('upload.tierVerified')}
+            </div>
+          )}
+          {uploadLimitInfo.userTier === 'CONTRIBUTOR' && (
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-purple-500 text-white mb-2">
+              🏆 {t('upload.tierContributor')}
+            </div>
+          )}
+          {uploadLimitInfo.userTier === 'POWER_USER' && (
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-yellow-400 to-orange-500 text-white mb-2">
+              👑 {t('upload.tierPowerUser')}
+            </div>
+          )}
+          
+          {/* Stats Text */}
+          <p className="text-sm text-gray-700 font-medium">
+            {t('upload.dailyLimit')}: <span className="font-bold">{uploadLimitInfo.dailyLimit}</span> {uploadLimitInfo.dailyLimit === 1 ? 'slika' : 'slike'}
+          </p>
+          <p className="text-xs text-gray-600 mt-1">
+            {t('upload.uploadedToday')}: <span className="font-semibold">{uploadLimitInfo.uploadsToday}</span> | 
+            {' '}{t('upload.remaining')}: <span className={`font-semibold ${uploadLimitInfo.remainingToday > 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {uploadLimitInfo.remainingToday}
+            </span>
+          </p>
+          
+          {/* Next Tier Info */}
+          {uploadLimitInfo.nextTierInfo && (
+            <p className="text-xs text-blue-600 mt-2 flex items-start gap-1">
+              <span className="flex-shrink-0">💡</span>
+              <span>{uploadLimitInfo.nextTierInfo}</span>
+            </p>
+          )}
+        </div>
+        
+        {/* Progress Circle */}
+        <div className="relative w-16 h-16 flex-shrink-0 ml-4">
+          <svg className="transform -rotate-90 w-16 h-16">
+            {/* Background circle */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              className="text-gray-200"
+            />
+            {/* Progress circle */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+              strokeDasharray={`${2 * Math.PI * 28}`}
+              strokeDashoffset={`${2 * Math.PI * 28 * (1 - uploadLimitInfo.uploadsToday / uploadLimitInfo.dailyLimit)}`}
+              className={uploadLimitInfo.canUpload ? 'text-blue-500' : 'text-red-500'}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-sm font-bold">
+              {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Error Message if limit reached */}
+      {!uploadLimitInfo.canUpload && (
+        <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-md">
+          <div className="flex items-start gap-2">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-red-800">
+                {t('upload.limitReached')}
+              </h3>
+              <p className="mt-1 text-xs text-red-700">
+                {t('upload.limitReachedMessage')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Area */}

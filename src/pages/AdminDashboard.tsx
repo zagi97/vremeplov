@@ -174,35 +174,24 @@ const loadUsers = async () => {
   }
 };
 
- const handleApprovePhoto = async (photoId: string) => {
+const handleApprovePhoto = async (photoId: string) => {
   try {
-    // 1. Prvo dohvati podatke o fotografiji
+    console.log('🟢 Starting approval process for photo:', photoId);
+    
+    // 1. Dohvati podatke o fotografiji
     const photo = await photoService.getPhotoById(photoId);
     if (!photo) {
       toast.error('Photo not found');
       return;
     }
 
-    // 2. Odobri fotografiju
-    await photoService.updatePhoto(photoId, { isApproved: true });
+    // 2. ✅ Koristi approvePhoto koja radi SVE:
+    //    - Odobrava sliku
+    //    - Ažurira user stats (totalPhotos)
+    //    - Provjerava badges
+    await photoService.approvePhoto(photoId, user?.uid || 'admin');
 
-    // 3. ✅ TEK SADA kreiraj aktivnost
-    if (photo.authorId) {
-      const { userService } = await import('../services/userService');
-      
-      await userService.addUserActivity(
-        photo.authorId,
-        'photo_upload',
-        photoId,
-        {
-          photoTitle: photo.description,
-          location: photo.location,
-          targetId: photoId
-        }
-      );
-    }
-
-    // 4. ✅ DODAJ OVO - Pošalji email notifikaciju
+    // 3. Pošalji email notifikaciju
     if (photo.authorId) {
       await sendNotification({
         userId: photo.authorId,
@@ -211,10 +200,11 @@ const loadUsers = async () => {
       });
     }
 
-    toast.success(t('admin.photoApproved'));
+    toast.success('Fotografija odobrena i user statistike ažurirane! 🎉');
     loadAdminData();
+    
   } catch (error) {
-    console.error('Error approving photo:', error);
+    console.error('❌ Error approving photo:', error);
     toast.error(t('errors.photoApprovalFailed'));
   }
 };
