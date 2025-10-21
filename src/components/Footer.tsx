@@ -24,6 +24,12 @@ const Footer = () => {
               {t('footer.about')}
             </Link>
             <Link 
+              to="/faq" 
+              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+            >
+              FAQ
+            </Link>
+            <Link 
               to="/privacy" 
               className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
             >

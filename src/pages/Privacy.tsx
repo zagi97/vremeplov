@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Shield, Database, Trash2, Mail } from 'lucide-react';
+import { ArrowLeft, Shield, Database, Trash2, Mail, Scale, Cloud, Clock } from 'lucide-react';
 import { translateWithParams, useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
@@ -8,12 +8,12 @@ import Footer from '@/components/Footer';
 const Privacy = () => {
   const { t } = useLanguage();
 
-   return (
+  return (
     <div className="min-h-screen bg-[#F8F9FA]">
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">
-                    <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Link to="/">
               <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
                 <ArrowLeft className="h-5 w-5" />
@@ -53,6 +53,102 @@ const Privacy = () => {
               <p className="text-gray-700 leading-relaxed">
                 {t('privacy.dataCollectionText2')}
               </p>
+            </div>
+          </div>
+
+          {/* ✅ NEW: GDPR Rights Section */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <Scale className="h-8 w-8 text-indigo-500" />
+              <h3 className="text-2xl font-bold">{t('privacy.gdprRights')}</h3>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">{t('privacy.gdprRightsText')}</p>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                <li><strong>✓</strong> {t('privacy.rightAccess')}</li>
+                <li><strong>✓</strong> {t('privacy.rightDelete')}</li>
+                <li><strong>✓</strong> {t('privacy.rightExport')}</li>
+                <li><strong>✓</strong> {t('privacy.rightCorrect')}</li>
+              </ul>
+              <div className="bg-indigo-50 p-4 rounded-lg mt-4">
+                <p className="text-sm text-gray-700">
+                  {t('privacy.rightsContact')} <span className="font-medium text-indigo-700">vremeplov.app@gmail.com</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* ✅ NEW: Third-Party Services Section */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <Cloud className="h-8 w-8 text-cyan-500" />
+              <h3 className="text-2xl font-bold">{t('privacy.thirdPartyServices')}</h3>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">{t('privacy.thirdPartyText')}</p>
+              <div className="bg-cyan-50 p-5 rounded-lg space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-cyan-100 rounded">
+                    <Database className="h-5 w-5 text-cyan-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Google Firebase</p>
+                    <p className="text-sm text-gray-600">{t('privacy.firebaseDesc')}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-cyan-100 rounded">
+                    <Shield className="h-5 w-5 text-cyan-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Google Analytics</p>
+                    <p className="text-sm text-gray-600">{t('privacy.analyticsDesc')}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-cyan-100 rounded">
+                    <Shield className="h-5 w-5 text-cyan-700" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">Google Maps API</p>
+                    <p className="text-sm text-gray-600">{t('privacy.mapsDesc')}</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mt-4">
+                {t('privacy.thirdPartyNote')}
+              </p>
+            </div>
+          </div>
+
+          {/* ✅ NEW: Data Retention Section */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <Clock className="h-8 w-8 text-orange-500" />
+              <h3 className="text-2xl font-bold">{t('privacy.dataRetention')}</h3>
+            </div>
+            <div className="space-y-3">
+              <p className="text-gray-700 leading-relaxed">{t('privacy.dataRetentionText')}</p>
+              <div className="bg-orange-50 p-5 rounded-lg space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 text-orange-600">📸</div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{t('privacy.retentionApproved')}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 text-orange-600">👤</div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{t('privacy.retentionAccount')}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 text-orange-600">🗑️</div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{t('privacy.retentionUnapproved')}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

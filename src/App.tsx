@@ -20,6 +20,7 @@ import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import UserProfilePage from "./pages/UserProfile";
 import CommunityLeaderboard from "./pages/CommunityLeaderboard";
 import MapView from './components/MapView';
+import FAQ from './pages/FAQ';
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const AppContent = () => {
 <Route path="/user/:userId" element={<UserProfilePage />} />
 <Route path="/community" element={<CommunityLeaderboard />} />
       <Route path="/about" element={<About />} />
+      <Route path="/faq" element={<FAQ />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/terms" element={<Terms />} />
       <Route path="/contact" element={<Contact />} />

@@ -480,7 +480,22 @@ useEffect(() => {
 
   // Check if form is valid
 const isFormValid = (): boolean => {
-  return !!(selectedFile && formData.year && formData.description && formData.author && formData.photoType !== '') ;
+  // Basic required fields
+  const hasBasicFields = !!(
+    selectedFile && 
+    formData.year && 
+    formData.description && 
+    formData.author && 
+    formData.photoType !== ''
+  );
+  
+  // ✅ NOVO - Address validation
+  // Ako user nije upisao ništa u address search → OK (optional field)
+  // Ako JESTE upisao nešto, mora biti selected iz dropdowna
+  const isAddressValid = addressSearch.trim() === '' || 
+    (addressSearch.trim() !== '' && selectedAddress !== '' && coordinates !== null);
+  
+  return hasBasicFields && isAddressValid;
 };
 
   // Helper function to compress image
@@ -678,6 +693,12 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
+  // ✅ DODAJ OVO - Explicit address validation
+if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
+  toast.error(t('upload.mustSelectAddress'));
+  return;
+}
+
   if (!navigator.onLine) {
     toast.error(t('upload.offline'));
     return;
@@ -711,49 +732,50 @@ const handleSubmit = async (e: React.FormEvent) => {
       uploaderName = user.email.split('@')[0].trim();
     }
 
-    // Prepare coordinates and address
-    let finalCoordinates = undefined;
-    if (coordinates && selectedAddress) {
-      finalCoordinates = {
-        latitude: coordinates.latitude,
-        longitude: coordinates.longitude,
-        address: selectedAddress
-      };
-    }
+   // ✅ Prepare photo data object
+const photoData: any = {
+  imageUrl: imageUrl,
+  imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
+  year: formData.year,
+  description: formData.description,
+  detailedDescription: formData.detailedDescription,
+  author: formData.author,
+  authorId: user.uid,
+  location: locationName,
+  photoType: formData.photoType,
+  taggedPersons: taggedPersons.map(person => ({
+    name: person.name,
+    x: person.x,
+    y: person.y,
+    addedByUid: user.uid,
+    isApproved: false
+  })),
+  uploadedBy: uploaderName,
+  uploadedAt: new Date().toISOString()
+};
 
-    const finalPhotoId = await photoService.addPhoto({
-      imageUrl: imageUrl,
-      imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
-      year: formData.year,
-      description: formData.description,
-      detailedDescription: formData.detailedDescription,
-      author: formData.author,
-      authorId: user.uid,
-      location: locationName,
-      coordinates: finalCoordinates,
-      photoType: formData.photoType,
-      taggedPersons: taggedPersons.map(person => ({
-        name: person.name,
-        x: person.x,
-        y: person.y,
-        addedByUid: user.uid,
-        isApproved: false
-      })),
-      uploadedBy: uploaderName,
-      uploadedAt: new Date().toISOString()
-    });
-    
-    console.log('Database record created successfully with ID:', finalPhotoId);
-    
-    if (finalCoordinates) {
-      toast.success(
-        translateWithParams(t, 'upload.successWithLocation', { 
-          address: selectedAddress 
-        })
-      );
-    } else {
-      toast.success(t('upload.success'));
-    }
+// ✅ DODAJ coordinates SAMO ako postoje
+if (coordinates && selectedAddress) {
+  photoData.coordinates = {
+    latitude: coordinates.latitude,
+    longitude: coordinates.longitude,
+    address: selectedAddress
+  };
+}
+  
+const finalPhotoId = await photoService.addPhoto(photoData);
+console.log('Database record created successfully with ID:', finalPhotoId);
+
+// ✅ ISPRAVNO - koristi coordinates i selectedAddress
+if (coordinates && selectedAddress) {
+  toast.success(
+    translateWithParams(t, 'upload.successWithLocation', { 
+      address: selectedAddress 
+    })
+  );
+} else {
+  toast.success(t('upload.success'));
+}
     
     // ✅ NOVO - Refresh upload limit after successful upload
     const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
@@ -992,7 +1014,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                   placeholder={t('upload.searchAddress')}
                   value={addressSearch}
                   onChange={handleAddressInputChange}
-                  className={`pl-10 ${loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''}`}
+                  className={`pl-10 ${
+    loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''
+  } ${
+    // ✅ DODAJ ERROR STYLING
+    addressSearch.trim() !== '' && !selectedAddress 
+      ? 'border-red-300 focus:border-red-500 bg-red-50' 
+      : ''
+  }`}
+                  
                 />
                 
                 {/* Loading Spinner */}
@@ -1015,7 +1045,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </Button>
                 )}
               </div>
-
+{/* ✅ DODAJ ERROR MESSAGE */}
+{addressSearch.trim() !== '' && !selectedAddress && (
+  <div className="mt-1 flex items-center gap-1 text-xs text-red-600">
+    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+    </svg>
+    {t('upload.mustSelectAddress')}
+  </div>
+)}
               {/* Search Status Indicator */}
               {addressSearch.length >= 2 && (
   <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">

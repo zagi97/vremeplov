@@ -576,7 +576,8 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     
     console.log(`✅ User ${limitCheck.userTier} can upload (${limitCheck.remainingToday - 1} remaining after this upload)`);
     
-    const photo: Omit<Photo, 'id'> = {
+    // ✅ BUILD photo object WITHOUT undefined fields
+    const photo: any = {
       imageUrl: photoData.imageUrl,
       imageStoragePath: photoData.imageStoragePath,
       year: photoData.year,
@@ -585,7 +586,6 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       author: photoData.author,
       authorId: photoData.authorId || currentUser?.uid,
       location: photoData.location,
-      coordinates: photoData.coordinates,
       photoType: photoData.photoType,
       taggedPersons: photoData.taggedPersons || [],
       uploadedBy: photoData.uploadedBy || currentUser?.displayName || currentUser?.email || 'Unknown',
@@ -596,6 +596,11 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       views: 0,
       isApproved: false
     };
+
+    // ✅ DODAJ coordinates SAMO ako postoji
+    if (photoData.coordinates) {
+      photo.coordinates = photoData.coordinates;
+    }
 
     console.log('Final photo object being saved:', photo);
     const docRef = await addDoc(this.photosCollection, photo);

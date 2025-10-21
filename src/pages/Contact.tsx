@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, MessageSquare, Heart, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Mail, MessageSquare, Heart, HelpCircle, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
@@ -13,7 +13,7 @@ const Contact = () => {
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">
-                  <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <Link to="/">
               <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
                 <ArrowLeft className="h-5 w-5" />
@@ -48,6 +48,23 @@ const Contact = () => {
             <div className="bg-blue-50 p-6 rounded-lg inline-block">
               <p className="text-2xl font-bold text-blue-600 mb-2">vremeplov.app@gmail.com</p>
               <p className="text-gray-600">{t('contact.ourEmail')}</p>
+            </div>
+          </div>
+
+          {/* ✅ NEW: Urgent Requests Box */}
+          <div className="mb-12">
+            <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-6 w-6 text-red-600 mt-1 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-lg text-red-800 mb-2">
+                    {t('contact.urgentRequests')}
+                  </h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    {t('contact.urgentRequestsText')}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -111,7 +128,7 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Response Time */}
+          {/* ✅ UPDATED: Response Time */}
           <div className="bg-gray-50 p-6 rounded-lg mb-12">
             <h3 className="text-xl font-bold mb-4">{t('contact.responseTime')}</h3>
             <p className="text-gray-700 leading-relaxed">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -26,8 +26,7 @@ interface Location {
   type: string;
   name: string;
   displayName: string;
-  // ✅ DODAJ UNIQUE KEY ZA URL
-  urlKey: string; // npr: "Privlaka-Zadarska" ili samo "Zagreb"
+  urlKey: string;
 }
 
 // Kreiraj array lokacija s jedinstvenim display nazivima
@@ -43,7 +42,7 @@ const allLocations: Location[] = municipalityData.records.map(record => {
     type,
     name,
     displayName: name,
-    urlKey: name // zasad samo naziv
+    urlKey: name
   };
 });
 
@@ -53,10 +52,8 @@ allLocations.forEach(location => {
   nameCounts.set(location.name, (nameCounts.get(location.name) || 0) + 1);
 });
 
-// ✅ AŽURIRAJ displayName i urlKey za duplikate
 allLocations.forEach(location => {
   if (nameCounts.get(location.name)! > 1) {
-    // Skrati naziv županije
     const countyShort = location.county
       .replace(/^[IVX]+\s/, '')
       .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
@@ -82,7 +79,6 @@ allLocations.forEach(location => {
       .replace('GRAD ZAGREB', 'Zagreb');
     
     location.displayName = `${location.name} (${countyShort})`;
-    // ✅ KLJUČNI DIO: urlKey s nazivom i županijom
     location.urlKey = `${location.name}-${countyShort.replace(/\s+/g, '')}`;
   }
 });
@@ -94,6 +90,9 @@ const SearchBar = () => {
   const [isValid, setIsValid] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const navigate = useNavigate();
+  
+  const containerRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +101,6 @@ const SearchBar = () => {
     }
   };
 
-  // Filtriranje lokacija na temelju unosa korisnika
   const filteredLocations = allLocations.filter((location: Location) =>
     location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     location.displayName.toLowerCase().includes(searchQuery.toLowerCase())
@@ -115,16 +113,13 @@ const SearchBar = () => {
     setOpen(false);
   };
 
-  // ✅ ISPRAVLJENO: Jednostavnija logika
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
     
-    // Automatski otvori dropdown ako ima teksta
     if (value.trim()) {
       setOpen(true);
     }
     
-    // Provjeri je li unos točan naziv lokacije
     const matchingLocation = allLocations.find(location => 
       location.name === value || location.displayName === value
     );
@@ -133,23 +128,53 @@ const SearchBar = () => {
     setIsValid(!!matchingLocation);
   };
 
+  // ✅ Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      if (
+        containerRef.current && 
+        !containerRef.current.contains(target) &&
+        !document.querySelector('[role="dialog"]')?.contains(target)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <form onSubmit={handleSearch} className="relative flex w-full max-w-lg">
-      <Popover open={open} onOpenChange={setOpen}>
+    <form ref={containerRef} onSubmit={handleSearch} className="relative flex w-full max-w-lg">
+      <Popover 
+        open={open} 
+        onOpenChange={(newOpen) => {
+          // ✅ KLJUČNO: Ignoriraj Popover-ove close pokušaje, kontroliramo mi
+          // Dopusti SAMO explicit zatvaranje kroz naše handlere
+          if (newOpen) {
+            setOpen(true);
+          }
+          // Ne zatvaraj automatski - samo kroz naš useEffect ili selectLocation
+        }}
+      >
         <PopoverTrigger asChild>
           <div className="flex-grow">
             <Input
+              ref={inputRef}
               type="text"
               placeholder={t('search.placeholder')}
               className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
               value={searchQuery}
               onChange={(e) => {
                 handleInputChange(e.target.value);
-                setOpen(true); // ✅ KLJUČNO: Uvijek otvori dropdown na promjenu
               }}
               onFocus={() => {
                 if (searchQuery.trim()) {
-                  setOpen(true); // ✅ Otvori i pri fokusu ako ima teksta
+                  setOpen(true);
                 }
               }}
               style={{
@@ -159,8 +184,27 @@ const SearchBar = () => {
             />
           </div>
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-[300px] md:w-[400px]" align="start">
-          <Command shouldFilter={false}> {/* ✅ KLJUČNO: Disable default filtering */}
+        <PopoverContent 
+          className="p-0 w-[300px] md:w-[400px]" 
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          // ✅ KLJUČNO: Blokiraj SVE auto-close evente
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+            setOpen(false);
+          }}
+          onPointerDownOutside={(e) => {
+            // Ne radi ništa - naš useEffect će zatvoriti
+            e.preventDefault();
+          }}
+          onFocusOutside={(e) => {
+            e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <Command shouldFilter={false}>
             <CommandInput
               placeholder={t('search.inputPlaceholder')}
               value={searchQuery}
@@ -177,6 +221,7 @@ const SearchBar = () => {
                     key={`${location.id}-${location.name}`}
                     onSelect={() => selectLocation(location)}
                     className="cursor-pointer text-gray-900 hover:bg-gray-100"
+                    onMouseDown={(e) => e.preventDefault()}
                   >
                     <div className="flex flex-col">
                       <span className="font-medium">{location.name}</span>
