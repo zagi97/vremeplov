@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Tag, X, User, Clock } from "lucide-react";
+import { Tag, X, User, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
 import LazyImage from './LazyImage';
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 
 interface TaggedPerson {
   id: string;
   name: string;
   x: number;
   y: number;
-  isApproved?: boolean; // Add approval status
-  addedByUid?: string; // Add user who created the tag
+  isApproved?: boolean;
+  addedByUid?: string;
 }
 
 interface PhotoTaggerProps {
@@ -24,8 +26,14 @@ interface PhotoTaggerProps {
   imageUrl: string;
   onRemoveFile?: () => void;
   showRemoveButton?: boolean;
-  photoAuthorId?: string; // Add photo author ID to know who owns the photo
+  photoAuthorId?: string;
+  photoId?: string;
 }
+
+// ✅ RATE LIMITING CONSTANTS
+const MAX_TAGS_PER_PHOTO = 10;
+const MAX_TAGS_PER_DAY = 20;
+const MAX_TAGS_PER_HOUR = 10;
 
 const PhotoTagger: React.FC<PhotoTaggerProps> = ({ 
   taggedPersons, 
@@ -33,63 +41,149 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
   imageUrl, 
   onRemoveFile,
   showRemoveButton = true,
-  photoAuthorId
+  photoAuthorId,
+  photoId
 }) => {
   const [isTagging, setIsTagging] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const { user } = useAuth();
-    const { t } = useLanguage();
+  const { t } = useLanguage();
+
+  // ✅ RATE LIMITING STATE
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    tagsInLastHour: number;
+    tagsInLastDay: number;
+    canTag: boolean;
+    reason?: string;
+  }>({
+    tagsInLastHour: 0,
+    tagsInLastDay: 0,
+    canTag: true
+  });
+
+  // ✅ CHECK RATE LIMIT
+  useEffect(() => {
+  console.log('🔍 PhotoTagger useEffect triggered:', { user: !!user, photoId });
+  if (!user || !photoId) {
+    console.log('⚠️ Skipping rate limit check:', { user: !!user, photoId });
+    return;
+  }
+  checkUserTagRateLimit();
+}, [user, photoId, taggedPersons.length]);
+
+  // ✅ FUNKCIJA ZA PROVJERU TAG RATE LIMITA
+  const checkUserTagRateLimit = async () => {
+    if (!user) return;
+
+    try {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const tagsRef = collection(db, 'taggedPersons');
+      
+      // Query za sve tagove korisnika
+      const q = query(
+        tagsRef,
+        where('addedByUid', '==', user.uid)
+      );
+
+      const snapshot = await getDocs(q);
+      const userTags = snapshot.docs
+        .map(doc => ({
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
+        }))
+        .filter(t => t.createdAt && t.createdAt > oneDayAgo);
+
+      const tagsInLastHour = userTags.filter(
+        t => t.createdAt && t.createdAt > oneHourAgo
+      ).length;
+
+      const tagsInLastDay = userTags.length;
+
+      let canTag = true;
+      let reason: string | undefined;
+
+      if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+        canTag = false;
+        reason = `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
+      } else if (tagsInLastHour >= MAX_TAGS_PER_HOUR) {
+        canTag = false;
+        reason = `Dostigao si satni limit (${MAX_TAGS_PER_HOUR} tagova/sat)`;
+      } else if (tagsInLastDay >= MAX_TAGS_PER_DAY) {
+        canTag = false;
+        reason = `Dostigao si dnevni limit (${MAX_TAGS_PER_DAY} tagova/dan)`;
+      }
+
+      setRateLimitInfo({
+        tagsInLastHour,
+        tagsInLastDay,
+        canTag,
+        reason
+      });
+
+    } catch (error) {
+      console.error('Error checking tag rate limit:', error);
+    }
+  };
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
     
-    // Get the image container element
     const rect = e.currentTarget.getBoundingClientRect();
-    
-    // Calculate exact mouse position within the image as percentage
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
-    console.log('Tag position calculated:', { x, y });
-    
-    // Store the exact position values
     setTagPosition({ x, y });
     setHasSelectedPosition(true);
     toast.info(t("photoDetail.positionSelected"));
   };
   
-  const handleSubmitTag = (e: React.FormEvent) => {
+  const handleSubmitTag = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation(); // Stop event propagation
+    e.stopPropagation();
 
     if (!newTagName.trim() || !hasSelectedPosition) {
-      // Show error if name is empty or position not selected
-      
       toast.error(t('photoDetail.enterNameAndPosition'));
       return;
     }
+
+    // ✅ PROVJERA RATE LIMITA
+    if (!rateLimitInfo.canTag) {
+      toast.error(`🚫 ${rateLimitInfo.reason}\n\nPokušaj kasnije! ⏰`, {
+        duration: 5000
+      });
+      return;
+    }
+
+    if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+      toast.error(
+        `🚫 Maksimalno možeš označiti ${MAX_TAGS_PER_PHOTO} osoba na jednoj fotografiji! 🏷️`,
+        { duration: 5000 }
+      );
+      return;
+    }
     
-    // Save the tag with the exact position
     onAddTag({
       name: newTagName,
       x: tagPosition.x,
       y: tagPosition.y,
-      isApproved: false // All new tags require approval
+      isApproved: false
     });
     
-    console.log('Tag saved with position:', tagPosition);
-    
-    // Reset the form
     setNewTagName("");
     setIsTagging(false);
     setHasSelectedPosition(false);
     
-    // Show notification about admin approval
     toast.success(translateWithParams(t, 'photoDetail.taggedSuccess', { name: newTagName }), {
       duration: 4000
     });
+
+    // ✅ REFRESH rate limit
+    await checkUserTagRateLimit();
   };
   
   const cancelTagging = () => {
@@ -98,16 +192,15 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
     setHasSelectedPosition(false);
   };
 
-  // Separate different types of tags
   const approvedTags = taggedPersons.filter(person => person.isApproved !== false);
   const userOwnPendingTags = taggedPersons.filter(person => 
     person.isApproved === false && person.addedByUid === user?.uid
-  ); // User's own pending tags
+  );
   const photoOwnerPendingTags = taggedPersons.filter(person => 
     person.isApproved === false && 
     person.addedByUid !== user?.uid && 
     photoAuthorId === user?.uid
-  ); // Pending tags on user's photo (by others)
+  );
 
  return (
     <>
@@ -115,35 +208,31 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         className="relative cursor-pointer w-full"
         onClick={handleImageClick}
       >
-        {/* ZAMIJENIO img s LazyImage */}
-      <LazyImage
-        src={imageUrl}
-        alt="Preview"
-        className="w-full h-auto max-h-[500px] object-contain mx-auto rounded-lg"
-        threshold={0.1} // Upload/tagging flow - učitaj agresivno
-        rootMargin="0px" // Korisnik gleda direktno na sliku za tagging
-        placeholder={
-          <div className="w-full h-auto max-h-[500px] bg-gray-100 flex items-center justify-center rounded-lg" style={{ minHeight: '300px' }}>
-            <div className="text-center text-gray-500">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
-                <Tag className="h-8 w-8 text-gray-400" />
+        <LazyImage
+          src={imageUrl}
+          alt="Preview"
+          className="w-full h-auto max-h-[500px] object-contain mx-auto rounded-lg"
+          threshold={0.1}
+          rootMargin="0px"
+          placeholder={
+            <div className="w-full h-auto max-h-[500px] bg-gray-100 flex items-center justify-center rounded-lg" style={{ minHeight: '300px' }}>
+              <div className="text-center text-gray-500">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                  <Tag className="h-8 w-8 text-gray-400" />
+                </div>
+                <span className="text-sm font-medium">Loading photo for tagging...</span>
               </div>
-              <span className="text-sm font-medium">Loading photo for tagging...</span>
             </div>
-          </div>
-        }
-      />
+          }
+        />
         
-        {/* Approved tagged persons dots - blue */}
+        {/* Approved tags - blue */}
         {approvedTags.map((person) => (
           <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-blue-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
-                style={{ 
-                  left: `${person.x}%`, 
-                  top: `${person.y}%` 
-                }}
+                style={{ left: `${person.x}%`, top: `${person.y}%` }}
               />
             </TooltipTrigger>
             <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
@@ -157,16 +246,13 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           </Tooltip>
         ))}
 
-        {/* User's own pending tagged persons dots - orange with clock icon */}
+        {/* User pending tags - orange */}
         {userOwnPendingTags.map((person) => (
           <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-orange-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
-                style={{ 
-                  left: `${person.x}%`, 
-                  top: `${person.y}%` 
-                }}
+                style={{ left: `${person.x}%`, top: `${person.y}%` }}
               >
                 <Clock className="h-3 w-3 text-white" />
               </div>
@@ -183,16 +269,13 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           </Tooltip>
         ))}
 
-        {/* Photo owner sees pending tags by others - purple with clock icon */}
+        {/* Photo owner sees pending tags - purple */}
         {photoOwnerPendingTags.map((person) => (
           <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
                 className="absolute w-6 h-6 bg-purple-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
-                style={{ 
-                  left: `${person.x}%`, 
-                  top: `${person.y}%` 
-                }}
+                style={{ left: `${person.x}%`, top: `${person.y}%` }}
               >
                 <Clock className="h-3 w-3 text-white" />
               </div>
@@ -209,36 +292,41 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           </Tooltip>
         ))}
         
-        {/* Current tag position marker */}
+        {/* Current tag position */}
         {isTagging && hasSelectedPosition && (
           <div 
             className="absolute w-6 h-6 bg-green-500 border-2 border-white rounded-full -ml-3 -mt-3 animate-pulse"
-            style={{ 
-              left: `${tagPosition.x}%`, 
-              top: `${tagPosition.y}%` 
-            }}
+            style={{ left: `${tagPosition.x}%`, top: `${tagPosition.y}%` }}
           />
         )}
         
-{/* Tag Button - Only show if user is photo owner or admin */}
-{user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && (
-  <div className="absolute bottom-4 right-4">
-    {!isTagging && (
-      <Button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsTagging(true);
-        }}
-        variant="secondary"
-        className="bg-white/80 hover:bg-white/90"
-      >
-        <Tag className="h-4 w-4 mr-2" />
-        Tag Person
-      </Button>
-    )}
-  </div>
-)}
-      {/* Remove File Button - Only show if onRemoveFile provided and showRemoveButton is true */}
+        {/* Tag Button */}
+        {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && (
+          <div className="absolute bottom-4 right-4">
+            {!isTagging && (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  
+                  if (!rateLimitInfo.canTag) {
+                    toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 4000 });
+                    return;
+                  }
+                  
+                  setIsTagging(true);
+                }}
+                variant="secondary"
+                className="bg-white/80 hover:bg-white/90"
+                disabled={!rateLimitInfo.canTag}
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                Tag Person
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* Remove Button */}
         {showRemoveButton && onRemoveFile && (
           <button
             type="button"
@@ -252,6 +340,28 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           </button>
         )}
       </div>
+
+      {/* ✅ RATE LIMIT WARNING */}
+      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && !rateLimitInfo.canTag && (
+        <div className="mt-3 p-3 bg-orange-50 border-l-4 border-orange-500 rounded">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-orange-800 text-sm">Tagging ograničen</p>
+              <p className="text-xs text-orange-700 mt-1">{rateLimitInfo.reason}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ TAG STATISTICS */}
+      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && rateLimitInfo.canTag && photoId && (
+        <div className="mt-2 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
+          <span>Na ovoj slici: {taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</span>
+          <span>Satno: {rateLimitInfo.tagsInLastHour}/{MAX_TAGS_PER_HOUR}</span>
+          <span>Dnevno: {rateLimitInfo.tagsInLastDay}/{MAX_TAGS_PER_DAY}</span>
+        </div>
+      )}
 
       {/* Pending tags notification */}
       {(userOwnPendingTags.length > 0 || photoOwnerPendingTags.length > 0) && (
@@ -283,7 +393,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         </div>
       )}
 
-      {/* Tagging Interface - Below the image */}
+      {/* Tagging Interface */}
       {isTagging && (
         <div className="mt-4 p-4 border rounded-lg bg-gray-50">
           {!hasSelectedPosition ? (
@@ -310,7 +420,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
               </div>
               <div className="flex gap-2">
                 <Button 
-                   type="button"
+                  type="button"
                   onClick={handleSubmitTag}
                   disabled={!newTagName.trim() || !hasSelectedPosition}
                 >
@@ -324,7 +434,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
                   Cancel
                 </Button>
               </div>
-             </div>
+            </div>
           )}
         </div>
       )}

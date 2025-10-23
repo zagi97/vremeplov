@@ -994,6 +994,7 @@ if (coordinates && selectedAddress) {
                   onAddTag={handleAddTag}
                   imageUrl={previewUrl}
                   onRemoveFile={removeFile}
+                  photoId={undefined}
                 />
               </TooltipProvider>
             )}

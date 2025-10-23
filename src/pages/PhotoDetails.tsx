@@ -17,6 +17,9 @@ import PhotoLocationMap from "../components/PhotoLocationMap";
 import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
 import { userService } from "@/services/userService";
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { AlertTriangle } from "lucide-react";
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -37,6 +40,17 @@ const PhotoDetail = () => {
   const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
+
+    const MAX_TAGS_PER_PHOTO = 10;
+const MAX_TAGS_PER_DAY = 20;
+const MAX_TAGS_PER_HOUR = 10;
+
+const [rateLimitInfo, setRateLimitInfo] = useState({
+  tagsInLastHour: 0,
+  tagsInLastDay: 0,
+  canTag: true,
+  reason: ''
+});
 
   const handleBack = () => {
     if (window.history.length > 1 && document.referrer) {
@@ -60,6 +74,8 @@ const PhotoDetail = () => {
   console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
   
   if (!photoId) return;
+
+
   
   try {
     setLoading(true);
@@ -231,6 +247,11 @@ relatedPhotos.forEach((photo, index) => {
   
   console.log('=== END COORDINATES DEBUG ===');
 }, [photo, relatedPhotos]);
+
+useEffect(() => {
+  if (!user || !photoId) return;
+  checkUserTagRateLimit();
+}, [user, photoId, taggedPersons.length]);
   
 const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; y: number; }, 'id'>) => {
   if (!photoId || !user) return;
@@ -288,27 +309,85 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
     
     toast.info(t('photoDetail.positionSelected'));
   };
-  
-  const handleSubmitTag = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
 
-    if (!newTagName.trim() || !hasSelectedPosition) {
-      toast.error(t('photoDetail.enterNameAndPosition'));
-      return;
+  const checkUserTagRateLimit = async () => {
+  if (!user) return;
+
+  try {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const tagsRef = collection(db, 'taggedPersons');
+    const q = query(tagsRef, where('addedByUid', '==', user.uid));
+
+    const snapshot = await getDocs(q);
+    const userTags = snapshot.docs
+      .map(doc => ({
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      }))
+      .filter(t => t.createdAt && t.createdAt > oneDayAgo);
+
+    const tagsInLastHour = userTags.filter(
+      t => t.createdAt && t.createdAt > oneHourAgo
+    ).length;
+
+    const tagsInLastDay = userTags.length;
+
+    let canTag = true;
+    let reason = '';
+
+    if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+      canTag = false;
+      reason = `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
+    } else if (tagsInLastHour >= MAX_TAGS_PER_HOUR) {
+      canTag = false;
+      reason = `Dostigao si satni limit (${MAX_TAGS_PER_HOUR} tagova/sat)`;
+    } else if (tagsInLastDay >= MAX_TAGS_PER_DAY) {
+      canTag = false;
+      reason = `Dostigao si dnevni limit (${MAX_TAGS_PER_DAY} tagova/dan)`;
     }
-    
-    handleAddTag({
-      name: newTagName,
-      x: tagPosition.x,
-      y: tagPosition.y
-    });
-    
-    setNewTagName("");
-    setIsTagging(false);
-    setHasSelectedPosition(false);
-    toast.success(translateWithParams(t, 'photoDetail.taggedSuccess', { name: newTagName }));
-  };
+
+    setRateLimitInfo({ tagsInLastHour, tagsInLastDay, canTag, reason });
+  } catch (error) {
+    console.error('Error checking tag rate limit:', error);
+  }
+};
+  
+const handleSubmitTag = async (e: React.FormEvent) => {
+  // ✅ RATE LIMIT PROVJERA
+  if (!rateLimitInfo.canTag) {
+    toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 5000 });
+    return;
+  }
+
+  if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+    toast.error(`🚫 Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji!`, { duration: 5000 });
+    return;
+  }
+  
+  e.preventDefault();
+  e.stopPropagation();
+  
+  if (!newTagName.trim() || !hasSelectedPosition) {
+    toast.error(t('photoDetail.enterNameAndPosition'));
+    return;
+  }
+  
+  handleAddTag({
+    name: newTagName,
+    x: tagPosition.x,
+    y: tagPosition.y
+  });
+  
+  setNewTagName("");
+  setIsTagging(false);
+  setHasSelectedPosition(false);
+  toast.success(translateWithParams(t, 'photoDetail.taggedSuccess', { name: newTagName }));
+  
+  await checkUserTagRateLimit();
+};
   
   const cancelTagging = () => {
     setIsTagging(false);
@@ -496,23 +575,50 @@ const handleAddTag = async (newTag: Omit<{ id: number; name: string; x: number; 
                 {user && (user.uid === photo?.authorId || user.email === 'vremeplov.app@gmail.com') && (
                   <div className="absolute bottom-4 right-4 z-30">
                     {!isTagging && (
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsTagging(true);
-                        }}
-                        variant="secondary"
-                        className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
-                      >
-                        <Tag className="h-4 w-4 mr-2" />
-                        {t('photoDetail.tagPerson')}
-                      </Button>
+                     <Button
+  onClick={(e) => {
+    e.stopPropagation();
+    if (!rateLimitInfo.canTag) {
+      toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 4000 });
+      return;
+    }
+    setIsTagging(true);
+  }}
+  variant="secondary"
+  className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
+  disabled={!rateLimitInfo.canTag}
+>
+  <Tag className="h-4 w-4 mr-2" />
+  {t('photoDetail.tagPerson')}
+</Button>
                     )}
                   </div>
                 )}
               </div>
             </div>
           </div>
+
+{/* ✅ Rate Limit Warning - FIXED POSITION */}
+{user && (user.uid === photo?.authorId || user.email === 'vremeplov.app@gmail.com') && !rateLimitInfo.canTag && (
+  <div className="mb-4 p-3 bg-orange-50 border-l-4 border-orange-500 rounded">
+    <div className="flex items-start gap-2">
+      <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="font-medium text-orange-800 text-sm">Tagging ograničen</p>
+        <p className="text-xs text-orange-700 mt-1">{rateLimitInfo.reason}</p>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* ✅ Tag Statistics - FIXED */}
+{user && (user.uid === photo?.authorId || user.email === 'vremeplov.app@gmail.com') && rateLimitInfo.canTag && (
+  <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-gray-600 flex items-center justify-center gap-3">
+    <span>📸 Na slici: <strong>{taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</strong></span>
+    <span>⏰ Satno: <strong>{rateLimitInfo.tagsInLastHour}/{MAX_TAGS_PER_HOUR}</strong></span>
+    <span>📅 Dnevno: <strong>{rateLimitInfo.tagsInLastDay}/{MAX_TAGS_PER_DAY}</strong></span>
+  </div>
+)}
 
           {/* Tagging Interface - Below the image */}
           {isTagging && (
