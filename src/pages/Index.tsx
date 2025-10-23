@@ -7,6 +7,8 @@ import UserProfile from "@/components/UserProfile";
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
 import Footer from "@/components/Footer";
+import NotificationBell from "@/components/NotificationBell";
+
 
 const Index = () => {
   const { t } = useLanguage();
@@ -31,6 +33,7 @@ const Index = () => {
   </span>
               </Link>
               <LanguageSelector />
+              <NotificationBell className="text-white" />
               <UserProfile className="text-white" />
             </div>
           </div>
