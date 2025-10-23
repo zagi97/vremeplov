@@ -9,7 +9,6 @@ import { useLanguage } from "../contexts/LanguageContext";
 import Footer from "@/components/Footer";
 import NotificationBell from "@/components/NotificationBell";
 
-
 const Index = () => {
   const { t } = useLanguage();
   
@@ -25,15 +24,15 @@ const Index = () => {
             <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0 ml-1">
               <Link 
                 to="/map" 
-                className="flex items-center text-white hover:text-blue-300 transition-colors text-xs sm:text-sm font-medium p-1 gap-1"
+                className="flex items-center text-white hover:text-blue-300 transition-colors text-xs sm:text-sm font-medium px-2 py-1 gap-1"
               >
                 <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="text-[10px] sm:text-xs md:text-sm">
-    {t('nav.memoryMapShort')} {/* "Karta" umjesto "Karta sjećanja" */}
-  </span>
+                <span className="hidden sm:inline text-[10px] sm:text-xs md:text-sm">
+                  {t('nav.memoryMapShort')}
+                </span>
               </Link>
               <LanguageSelector />
-              <NotificationBell className="text-white" />
+              <NotificationBell className="text-white hover:text-white" />
               <UserProfile className="text-white" />
             </div>
           </div>

@@ -21,6 +21,7 @@ import UserProfilePage from "./pages/UserProfile";
 import CommunityLeaderboard from "./pages/CommunityLeaderboard";
 import MapView from './components/MapView';
 import FAQ from './pages/FAQ';
+import Notifications from './pages/Notifications'; // ← NOVO!
 
 const queryClient = new QueryClient();
 
@@ -38,8 +39,6 @@ const AppContent = () => {
     );
   }
 
-  // Only protect specific routes that require authentication
-  // Most pages are now public for browsing
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -51,8 +50,9 @@ const AppContent = () => {
       <Route path="/location/:locationName" element={<Location />} />
       <Route path="/photo/:photoId" element={<PhotoDetail />} />
       <Route path="/map" element={<MapView />} />
-<Route path="/user/:userId" element={<UserProfilePage />} />
-<Route path="/community" element={<CommunityLeaderboard />} />
+      <Route path="/user/:userId" element={<UserProfilePage />} />
+      <Route path="/community" element={<CommunityLeaderboard />} />
+      <Route path="/notifications" element={<Notifications />} /> {/* ← NOVO! */}
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/privacy" element={<Privacy />} />

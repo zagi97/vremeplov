@@ -1,5 +1,5 @@
-// src/components/NotificationBell.tsx
-import { useState, useEffect } from 'react';
+// src/components/NotificationBell.tsx - RESPONSIVE POSITIONING
+import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { notificationService, Notification } from '../services/notificationService';
@@ -16,6 +16,7 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const bellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) {
@@ -27,7 +28,6 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
 
     setLoading(true);
 
-    // Subscribe to real-time notifications
     const unsubscribe = notificationService.subscribeToNotifications(
       user.uid,
       (newNotifications) => {
@@ -47,45 +47,59 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     };
   }, [user]);
 
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isOpen]);
+
   if (!user) return null;
 
   return (
-    <div className="relative z-[999]">
+  <div className="relative">
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+      }}
+      className={`relative ${className} hover:bg-white/20 transition-all`}
+      aria-label="Notifications"
+    >
+      <Bell className="h-5 w-5" />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center animate-pulse shadow-lg">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </Button>
 
-  <Button
-    variant="ghost"
-    size="icon"
-    onClick={() => setIsOpen(!isOpen)}
-    className={`relative ${className} hover:bg-white/10`}
-    aria-label="Notifications"
-  >
-    <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-    {unreadCount > 0 && (
-      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center animate-pulse">
-        {unreadCount > 9 ? '9+' : unreadCount}
-      </span>
+    {isOpen && (
+      <>
+        <div 
+          className="fixed inset-0 z-[9998]"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+        
+        <div className="absolute top-full right-0 mt-2 z-[9999]">
+          <NotificationCenter
+            notifications={notifications}
+            unreadCount={unreadCount}
+            loading={loading}
+            onClose={() => setIsOpen(false)}
+          />
+        </div>
+      </>
     )}
-  </Button>
-
-{isOpen && (
-  <>
-    <div 
-      className="fixed inset-0 z-[998] bg-black/20 md:hidden"
-      onClick={() => setIsOpen(false)}
-    />
-    <div className="absolute right-0 top-full mt-2 z-[999]">
-      <NotificationCenter
-        notifications={notifications}
-        unreadCount={unreadCount}
-        loading={loading}
-        onClose={() => setIsOpen(false)}
-      />
-    </div>
-     </>
-  )}
-</div>
-
-  );
+  </div>
+);
 };
 
 export default NotificationBell;

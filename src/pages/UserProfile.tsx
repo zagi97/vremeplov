@@ -36,6 +36,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
 import Footer from "@/components/Footer";
+import { notificationService } from '../services/notificationService';
 
 // Activity type display mapping
 const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: string } } = {
@@ -253,6 +254,24 @@ const UserProfilePage = () => {
         toast.success(t('profile.unfollowed'));
       } else {
         await userService.followUser(currentUser.uid, userId!);
+
+        // ✅✅✅ DODAJ OVAJ NOVI KOD ✅✅✅
+      // Send notification to followed user
+      if (userId) {
+        try {
+          await notificationService.notifyNewFollower(
+            userId,                               // User being followed
+            currentUser.uid,                      // Follower ID
+            currentUser.displayName || 'Anonymous', // Follower name
+            currentUser.photoURL || undefined     // Follower avatar
+          );
+          console.log('✅ Follow notification sent');
+        } catch (notifError) {
+          console.error('⚠️ Failed to send follow notification:', notifError);
+        }
+      }
+      // ✅✅✅ KRAJ NOVOG KODA ✅✅✅
+
         setIsFollowing(true);
         setProfile(prev => prev ? {
           ...prev,

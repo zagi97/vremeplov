@@ -19,6 +19,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { notificationService } from '../services/notificationService';
 
 interface Comment {
   id: string;
@@ -249,12 +250,33 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
 
     try {
       const { photoService } = await import('../services/firebaseService');
-      
-      await photoService.addComment(
-        photoId,
-        newComment.trim(),
-        user.uid
-      );
+
+     // ✅ POSTOJEĆI KOD
+    await photoService.addComment(
+      photoId,
+      newComment.trim(),
+      user.uid
+    );
+    
+    // ✅✅✅ DODAJ OVAJ NOVI KOD ✅✅✅
+    // Send notification to photo owner (if not commenting on own photo)
+    if (photoAuthorId && photoAuthorId !== user.uid) {
+      try {
+        await notificationService.notifyNewComment(
+          photoAuthorId,                    // Photo owner ID
+          user.uid,                         // Commenter ID
+          user.displayName || 'Anonymous',  // Commenter name
+          photoId,                          // Photo ID
+          photoAuthor || 'untitled photo',  // Photo title/description
+          user.photoURL || undefined        // Commenter avatar
+        );
+        console.log('✅ Comment notification sent');
+      } catch (notifError) {
+        console.error('⚠️ Failed to send comment notification:', notifError);
+        // Don't fail the whole operation if notification fails
+      }
+    }
+    // ✅✅✅ KRAJ NOVOG KODA ✅✅✅
       
       setNewComment("");
       toast.success(t('comments.commentAdded'));

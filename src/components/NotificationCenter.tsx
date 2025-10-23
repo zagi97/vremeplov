@@ -1,4 +1,4 @@
-// src/components/NotificationCenter.tsx
+// src/components/NotificationCenter.tsx - FIXED VERSION
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -166,19 +166,12 @@ const NotificationCenter = ({
   const displayNotifications = notifications.slice(0, 5);
 
   return (
-   <div
-  className="
-    absolute
-    top-full mt-2 right-0
-    w-[90vw] max-w-xs sm:w-96
-    bg-white rounded-lg shadow-xl border border-gray-200
-    z-50 max-h-[80vh] sm:max-h-[600px]
-    flex flex-col
-  "
+<div 
+  className="w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[80vh] sm:max-h-[600px] flex flex-col overflow-hidden"
+  onClick={(e) => e.stopPropagation()}
 >
-
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg">
+      <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Obavijesti</h3>
           {unreadCount > 0 && (
@@ -224,6 +217,7 @@ const NotificationCenter = ({
                     !notification.read ? 'bg-blue-50/50' : ''
                   }`}
                   onClick={(e) => {
+                    e.stopPropagation(); // ✅ KEEP THIS
                     if (!notification.read) {
                       handleMarkAsRead(notification.id, e);
                     }
@@ -254,7 +248,7 @@ const NotificationCenter = ({
               );
 
               return link ? (
-                <Link key={notification.id} to={link}>
+                <Link key={notification.id} to={link} onClick={onClose}>
                   {NotificationContent}
                 </Link>
               ) : (

@@ -20,6 +20,7 @@ import { userService } from "@/services/userService";
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { AlertTriangle } from "lucide-react";
+import { notificationService } from '../services/notificationService';
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -397,35 +398,77 @@ const handleSubmitTag = async (e: React.FormEvent) => {
     
   
 
-  const handleLike = async () => {
-    if (!photoId || !user || likeLoading) return;
+ // PhotoDetail.tsx - handleLike funkcija sa DEBUGGINGOM
+
+const handleLike = async () => {
+  console.log('🔵 [LIKE] Button clicked');
+  
+  if (!photoId || !user || likeLoading) {
+    console.log('❌ [LIKE] Early return:', { photoId, user: !!user, likeLoading });
+    return;
+  }
+  
+  if (!user) {
+    console.log('❌ [LIKE] No user');
+    toast.error(t('photoDetail.signInMessage'));
+    return;
+  }
+  
+  try {
+    setLikeLoading(true);
+    console.log('🔵 [LIKE] Toggling like...');
     
-    if (!user) {
-      toast.error(t('photoDetail.signInMessage'));
-      return;
-    }
-    
-    try {
-      setLikeLoading(true);
-      
-      const result = await photoService.toggleLike(photoId, user.uid);
-      
-      setLikes(result.newLikesCount);
-      setUserHasLiked(result.liked);
-      
-      if (result.liked) {
-  toast.success(t('photoDetail.photoLiked'));
-}else {
-        toast.success(t('photoDetail.photoUnliked'));
+    const result = await photoService.toggleLike(photoId, user.uid);
+    console.log('✅ [LIKE] Toggle result:', result);
+
+    // ✅ Send notification ONLY if user liked (not unliked)
+    console.log('🔵 [LIKE] Checking notification conditions:', {
+      'result.liked': result.liked,
+      'photo': !!photo,
+      'photo.uploadedBy': photo?.uploadedBy,
+      'user.uid': user.uid,
+      'isDifferentUser': photo?.uploadedBy !== user.uid
+    });
+
+    if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
+      console.log('🔵 [LIKE] Sending notification...');
+      try {
+        await notificationService.notifyNewLike(
+          photo.uploadedBy,                  // Photo owner ID
+          user.uid,                          // Liker ID
+          user.displayName || 'Anonymous',   // Liker name
+          photoId,                           // Photo ID
+          photo.description || 'untitled',   // Photo description
+          user.photoURL || undefined         // Liker avatar
+        );
+        console.log('✅ [LIKE] Notification sent successfully!');
+      } catch (notifError) {
+        console.error('❌ [LIKE] Failed to send notification:', notifError);
       }
-      
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      toast.error(t('photoDetail.likeFailed'));
-    } finally {
-      setLikeLoading(false);
+    } else {
+      console.log('⏭️ [LIKE] Skipping notification:', {
+        reason: !result.liked ? 'User unliked' : 
+                !photo?.uploadedBy ? 'No photo owner' : 
+                photo.uploadedBy === user.uid ? 'Own photo' : 'Unknown'
+      });
     }
-  };
+    
+    setLikes(result.newLikesCount);
+    setUserHasLiked(result.liked);
+    
+    if (result.liked) {
+      toast.success(t('photoDetail.photoLiked'));
+    } else {
+      toast.success(t('photoDetail.photoUnliked'));
+    }
+    
+  } catch (error) {
+    console.error('❌ [LIKE] Error:', error);
+    toast.error(t('photoDetail.likeFailed'));
+  } finally {
+    setLikeLoading(false);
+  }
+};
 
   if (loading) {
     return (
