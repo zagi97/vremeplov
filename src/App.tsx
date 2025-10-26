@@ -22,6 +22,7 @@ import CommunityLeaderboard from "./pages/CommunityLeaderboard";
 import MapView from './components/MapView';
 import FAQ from './pages/FAQ';
 import Notifications from './pages/Notifications'; // ← NOVO!
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,8 @@ const AppContent = () => {
   }
 
   return (
+    <>
+    <OfflineIndicator />
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/admin" element={
@@ -63,6 +66,7 @@ const AppContent = () => {
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </>
   );
 };
 
