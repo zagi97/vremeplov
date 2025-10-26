@@ -729,10 +729,85 @@ const translations: Record<Language, TranslationMap> = {
     "foundAddresses": "Found {{count}} addresses",
     "foundAddresses_one": "Found {{count}} address",
     "cacheEntries": "Cache: {{count}} entries",
-    "waiting": "Waiting..."
+    "waiting": "Waiting...",
+
+
+'notifications.title': 'Notifications',
+'notifications.markAll': 'Mark all',
+'notifications.viewAll': 'View all notifications',
+'notifications.loading': 'Loading...',
+'notifications.noNotifications': 'No new notifications',
+'notifications.noNotificationsDesc': 'Your notifications will appear here',
+'notifications.allRead': 'All notifications marked as read',
+'notifications.markError': 'Error marking notifications',
+
+// Notification message parts
+'notifications.commented': 'commented on your photo',
+'notifications.liked': 'liked your photo',
+'notifications.following': 'is now following you',
+'notifications.tagged': 'tagged you in the photo',
+'notifications.congratulations': 'Congratulations! You earned a badge:',
+'notifications.yourPhoto': 'Your photo',
+'notifications.approved': 'has been approved',
+'notifications.rejected': 'was rejected',
+'notifications.edited': 'has been edited',
+'notifications.deleted': 'was deleted',
+'notifications.tag': 'Tag of',
+'notifications.yourCommentDeleted': 'Your comment was deleted',
+'notifications.accountBanned': 'Your account has been banned',
+'notifications.accountSuspended': 'Your account has been suspended',
+'notifications.accountActive': 'Your account is active again. Welcome back!',
+'notifications.suspensionLifted': 'Your account suspension has been lifted. Welcome back!',
+'notifications.newNotification': 'New notification',
+'notifications.notAvailable': 'Content not available',
+
+// Time formatting
+'notifications.time.justNow': 'just now',
+'notifications.time.ago': '', // prazno za engleski jer ide "5 min ago"
+'notifications.time.min': 'min ago',
+'notifications.time.hours': 'h ago',
+'notifications.time.days': 'd ago',
 
   },
   hr: {
+    'notifications.notAvailable': 'Sadržaj nije dostupan',
+'notifications.title': 'Obavijesti',
+'notifications.markAll': 'Označi sve',
+'notifications.viewAll': 'Prikaži sve obavijesti',
+'notifications.loading': 'Učitavanje...',
+'notifications.noNotifications': 'Nemaš novih obavijesti',
+'notifications.noNotificationsDesc': 'Ovdje će se pojaviti tvoje obavijesti',
+'notifications.allRead': 'Sve obavijesti označene kao pročitane',
+'notifications.markError': 'Greška pri označavanju obavijesti',
+
+// Notification message parts
+'notifications.commented': 'je komentirao/la tvoju fotografiju',
+'notifications.liked': 'je lajkao/la tvoju fotografiju',
+'notifications.following': 'te sada prati',
+'notifications.tagged': 'te označio/la na fotografiji',
+'notifications.congratulations': 'Čestitamo! Zaradio/la si značku:',
+'notifications.yourPhoto': 'Tvoja fotografija',
+'notifications.approved': 'je odobrena',
+'notifications.rejected': 'je odbijena',
+'notifications.edited': 'je uređena',
+'notifications.deleted': 'je obrisana',
+'notifications.tag': 'Tag osobe',
+'notifications.yourCommentDeleted': 'Tvoj komentar je obrisan',
+'notifications.accountBanned': 'Tvoj račun je bannan',
+'notifications.accountSuspended': 'Tvoj račun je suspendiran',
+'notifications.accountActive': 'Tvoj račun je ponovo aktivan. Dobrodošao/la natrag!',
+'notifications.suspensionLifted': 'Suspenzija tvog računa je uklonjena. Dobrodošao/la natrag!',
+'notifications.newNotification': 'Nova obavijest',
+
+// Time formatting
+'notifications.time.justNow': 'upravo sad',
+'notifications.time.ago': 'prije',
+'notifications.time.min': ' min',
+'notifications.time.hours': ' sat/a',
+'notifications.time.days': ' dan/a',
+
+
+
 "searching": "Pretraživanje...",
     "typing": "Tipkate...",
     "found": "pronađeno",

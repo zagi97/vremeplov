@@ -1,4 +1,4 @@
-// src/pages/Notifications.tsx
+// src/pages/Notifications.tsx - FIXED VERSION
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -39,6 +39,7 @@ const NotificationsPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
   const [markingAllRead, setMarkingAllRead] = useState(false);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false); // ✅ Track marking operation
 
   useEffect(() => {
     if (!user) {
@@ -52,6 +53,12 @@ const NotificationsPage = () => {
     const unsubscribe = notificationService.subscribeToNotifications(
       user.uid,
       (newNotifications) => {
+        // ✅ Ignore listener updates while marking all as read
+        if (isMarkingAllRead) {
+          console.log('🚫 Ignoring listener update during mark all operation');
+          return;
+        }
+        
         setNotifications(newNotifications);
         setLoading(false);
       },
@@ -65,7 +72,7 @@ const NotificationsPage = () => {
     return () => {
       unsubscribe();
     };
-  }, [user, navigate]);
+  }, [user, navigate, isMarkingAllRead]); // ✅ Re-subscribe when isMarkingAllRead changes
 
   // Get icon and color for notification type
   const getNotificationIcon = (type: string) => {
@@ -132,14 +139,35 @@ const NotificationsPage = () => {
     }
   };
 
-  // Get notification link
+  // Get notification link - return null for deleted/rejected photos and edited content
   const getNotificationLink = (notification: Notification): string | null => {
+    // Don't link to deleted, rejected, or edited photos/content
+    const nonClickableTypes = [
+      'photo_deleted',
+      'photo_rejected', 
+      'photo_edited',
+      'comment_deleted',
+      'tag_rejected',
+      'user_banned',
+      'user_suspended',
+      'user_unbanned',
+      'user_unsuspended'
+    ];
+    
+    if (nonClickableTypes.includes(notification.type)) {
+      return null;
+    }
+    
+    // Link to photo for photo-related notifications
     if (notification.photoId) {
       return `/photo/${notification.photoId}`;
     }
+    
+    // Link to user profile for follower notifications
     if (notification.actorId && notification.type === 'new_follower') {
       return `/user/${notification.actorId}`;
     }
+    
     return null;
   };
 
@@ -166,6 +194,13 @@ const NotificationsPage = () => {
     if (!user) return;
     
     setMarkingAllRead(true);
+    setIsMarkingAllRead(true); // ✅ Block listener updates
+    
+    // ✅ Optimistic update - immediately update local state
+    setNotifications(prevNotifications => 
+      prevNotifications.map(n => ({ ...n, read: true }))
+    );
+    
     try {
       await notificationService.markAllNotificationsAsRead(user.uid);
       toast.success('Sve obavijesti označene kao pročitane');
@@ -174,6 +209,11 @@ const NotificationsPage = () => {
       toast.error('Greška pri označavanju obavijesti');
     } finally {
       setMarkingAllRead(false);
+      
+      // ✅ Re-enable listener after 2 seconds
+      setTimeout(() => {
+        setIsMarkingAllRead(false);
+      }, 2000);
     }
   };
 
@@ -284,12 +324,13 @@ const NotificationsPage = () => {
                         const message = getNotificationMessage(notification);
                         const link = getNotificationLink(notification);
                         const timeAgo = formatTimeAgo(notification.createdAt);
+                        const isClickable = link !== null;
 
                         const NotificationContent = (
                           <div 
-                            className={`p-4 sm:p-6 hover:bg-gray-50 transition-colors cursor-pointer ${
-                              !notification.read ? 'bg-blue-50/30' : ''
-                            }`}
+                            className={`p-4 sm:p-6 transition-colors ${
+                              isClickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'
+                            } ${!notification.read ? 'bg-blue-50/30' : ''}`}
                             onClick={(e) => {
                               if (!notification.read) {
                                 handleMarkAsRead(notification.id, e);
@@ -317,7 +358,7 @@ const NotificationsPage = () => {
                           </div>
                         );
 
-                        return link ? (
+                        return isClickable ? (
                           <Link key={notification.id} to={link}>
                             {NotificationContent}
                           </Link>

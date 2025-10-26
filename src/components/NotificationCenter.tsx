@@ -1,8 +1,7 @@
-// src/components/NotificationCenter.tsx - FINAL FIXED VERSION
+// src/components/NotificationCenter.tsx - FINAL with Optimistic Updates
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Camera, 
   Heart, 
   MessageCircle, 
   UserPlus, 
@@ -23,21 +22,25 @@ import { Notification, notificationService } from '../services/notificationServi
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NotificationCenterProps {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
   onClose: () => void;
+  onMarkAllRead?: () => void; // ✅ NEW - callback for optimistic update
 }
 
 const NotificationCenter = ({ 
   notifications, 
   unreadCount, 
   loading,
-  onClose 
+  onClose,
+  onMarkAllRead // ✅ NEW
 }: NotificationCenterProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
@@ -64,60 +67,84 @@ const NotificationCenter = ({
     return iconMap[type] || { icon: AlertCircle, color: 'text-gray-600 bg-gray-50' };
   };
 
-  // Get notification message
+  // Get notification message - using t() for translations
   const getNotificationMessage = (notification: Notification): string => {
     const { type, actorName, photoTitle, badgeName, taggedPersonName, reason } = notification;
 
+    // Helper to format with reason
+    const withReason = (msg: string) => reason ? `${msg}: ${reason}` : msg;
+
     switch (type) {
       case 'new_comment':
-        return `${actorName} je komentirao/la tvoju fotografiju "${photoTitle}"`;
+        return `${actorName} ${t('notifications.commented')} "${photoTitle}"`;
       case 'new_like':
-        return `${actorName} je lajkao/la tvoju fotografiju "${photoTitle}"`;
+        return `${actorName} ${t('notifications.liked')} "${photoTitle}"`;
       case 'new_follower':
-        return `${actorName} te sada prati`;
+        return `${actorName} ${t('notifications.following')}`;
       case 'new_tag':
-        return `${actorName} te označio/la na fotografiji "${photoTitle}"`;
+        return `${actorName} ${t('notifications.tagged')} "${photoTitle}"`;
       case 'badge_earned':
-        return `Čestitamo! Zaradio/la si značku: ${badgeName}`;
+        return `${t('notifications.congratulations')} ${badgeName}`;
       case 'photo_approved':
-        return `Tvoja fotografija "${photoTitle}" je odobrena`;
+        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.approved')}`;
       case 'photo_rejected':
-        return `Tvoja fotografija "${photoTitle}" je odbijena${reason ? `: ${reason}` : ''}`;
+        return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}`);
       case 'photo_edited':
-        return `Tvoja fotografija "${photoTitle}" je uređena`;
+        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}`;
       case 'photo_deleted':
-        return `Tvoja fotografija "${photoTitle}" je obrisana${reason ? `: ${reason}` : ''}`;
+        return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}`);
       case 'tag_approved':
-        return `Tag osobe "${taggedPersonName}" je odobren`;
+        return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.approved')}`;
       case 'tag_rejected':
-        return `Tag osobe "${taggedPersonName}" je odbijen${reason ? `: ${reason}` : ''}`;
+        return withReason(`${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}`);
       case 'comment_deleted':
-        return `Tvoj komentar je obrisan${reason ? `: ${reason}` : ''}`;
+        return withReason(t('notifications.yourCommentDeleted'));
       case 'user_banned':
-        return `Tvoj račun je bannan${reason ? `: ${reason}` : ''}`;
+        return withReason(t('notifications.accountBanned'));
       case 'user_suspended':
-        return `Tvoj račun je suspendiran${reason ? `: ${reason}` : ''}`;
+        return withReason(t('notifications.accountSuspended'));
       case 'user_unbanned':
-        return `Tvoj račun je ponovo aktivan. Dobrodošao/la natrag!`;
+        return t('notifications.accountActive');
       case 'user_unsuspended':
-        return `Suspenzija tvog računa je uklonjena. Dobrodošao/la natrag!`;
+        return t('notifications.suspensionLifted');
       default:
-        return 'Nova obavijest';
+        return t('notifications.newNotification');
     }
   };
 
-  // Get notification link
+  // Get notification link - return null for deleted/rejected photos and edited content
   const getNotificationLink = (notification: Notification): string | null => {
+    // Don't link to deleted, rejected, or edited photos/content
+    const nonClickableTypes = [
+      'photo_deleted',
+      'photo_rejected', 
+      'photo_edited',
+      'comment_deleted',
+      'tag_rejected',
+      'user_banned',
+      'user_suspended',
+      'user_unbanned',
+      'user_unsuspended'
+    ];
+    
+    if (nonClickableTypes.includes(notification.type)) {
+      return null;
+    }
+    
+    // Link to photo for photo-related notifications
     if (notification.photoId) {
       return `/photo/${notification.photoId}`;
     }
+    
+    // Link to user profile for follower notifications
     if (notification.actorId && notification.type === 'new_follower') {
       return `/user/${notification.actorId}`;
     }
+    
     return null;
   };
 
-  // Format time ago
+  // Format time ago - using t() for time labels
   const formatTimeAgo = (timestamp: any): string => {
     if (!timestamp) return '';
     
@@ -128,24 +155,43 @@ const NotificationCenter = ({
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'upravo sad';
-    if (diffMins < 60) return `prije ${diffMins} min`;
-    if (diffHours < 24) return `prije ${diffHours}h`;
-    if (diffDays < 7) return `prije ${diffDays}d`;
-    return date.toLocaleDateString('hr-HR');
+    if (diffMins < 1) return t('notifications.time.justNow');
+    
+    // Different format for Croatian and English
+    if (language === 'hr') {
+      // Hrvatski: "prije X min/h/d"
+      if (diffMins < 60) return `${t('notifications.time.ago')} ${diffMins} ${t('notifications.time.min')}`;
+      if (diffHours < 24) return `${t('notifications.time.ago')} ${diffHours}${t('notifications.time.hours')}`;
+      if (diffDays < 7) return `${t('notifications.time.ago')} ${diffDays}${t('notifications.time.days')}`;
+      // Hrvatski datum: DD.MM.YYYY.
+      return date.toLocaleDateString('hr-HR');
+    } else {
+      // English: "X min ago / Xh ago / Xd ago"
+      if (diffMins < 60) return `${diffMins} ${t('notifications.time.min')}`;
+      if (diffHours < 24) return `${diffHours}${t('notifications.time.hours')}`;
+      if (diffDays < 7) return `${diffDays}${t('notifications.time.days')}`;
+      // English datum: MM/DD/YYYY
+      return date.toLocaleDateString('en-US');
+    }
   };
 
   // Mark all as read
   const handleMarkAllAsRead = async () => {
-    if (unreadCount === 0 || !notifications[0]?.userId) return;
+    if (unreadCount === 0 || !user) return;
     
     setMarkingAllRead(true);
+    
+    // ✅ Optimistic update - immediately update UI
+    if (onMarkAllRead) {
+      onMarkAllRead();
+    }
+    
     try {
-      await notificationService.markAllNotificationsAsRead(notifications[0].userId);
-      toast.success('Sve obavijesti označene kao pročitane');
+      await notificationService.markAllNotificationsAsRead(user.uid);
+      toast.success(t('notifications.allRead'));
     } catch (error) {
       console.error('Error marking all as read:', error);
-      toast.error('Greška pri označavanju obavijesti');
+      toast.error(t('notifications.markError'));
     } finally {
       setMarkingAllRead(false);
     }
@@ -160,18 +206,16 @@ const NotificationCenter = ({
     }
   };
 
-  // ✅ NOVO - Handle notification click with navigation
+  // Handle notification click with navigation
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read
     if (!notification.read) {
       await handleMarkAsRead(notification.id);
     }
 
-    // Get link and navigate
     const link = getNotificationLink(notification);
     if (link) {
       navigate(link);
-      onClose(); // Close dropdown
+      onClose();
     }
   };
 
@@ -186,7 +230,7 @@ const NotificationCenter = ({
       {/* Header */}
       <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Obavijesti</h3>
+          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{t('notifications.title')}</h3>
           {unreadCount > 0 && (
             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
               {unreadCount}
@@ -203,7 +247,7 @@ const NotificationCenter = ({
               className="text-xs sm:text-sm px-2 sm:px-3"
             >
               <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-              <span className="hidden sm:inline">Označi sve</span>
+              <span className="hidden sm:inline">{t('notifications.markAll')}</span>
             </Button>
           )}
         </div>
@@ -214,7 +258,7 @@ const NotificationCenter = ({
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-2">Učitavanje...</p>
+            <p className="text-sm text-gray-500 mt-2">{t('notifications.loading')}</p>
           </div>
         ) : displayNotifications.length > 0 ? (
           <div className="divide-y divide-gray-100">
@@ -222,14 +266,17 @@ const NotificationCenter = ({
               const { icon: IconComponent, color } = getNotificationIcon(notification.type);
               const message = getNotificationMessage(notification);
               const timeAgo = formatTimeAgo(notification.createdAt);
+              const link = getNotificationLink(notification);
+              const isClickable = link !== null;
 
               return (
                 <div
                   key={notification.id}
-                  className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                    !notification.read ? 'bg-blue-50/50' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
+                  title={!isClickable ? t('notifications.notAvailable') : undefined}
+                  className={`p-3 sm:p-4 transition-colors ${
+                    isClickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'
+                  } ${!notification.read ? 'bg-blue-50/50' : ''}`}
+                  onClick={() => isClickable && handleNotificationClick(notification)}
                 >
                   <div className="flex gap-2 sm:gap-3">
                     <div className={`p-1.5 sm:p-2 rounded-full ${color} flex-shrink-0 h-fit`}>
@@ -258,8 +305,8 @@ const NotificationCenter = ({
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Bell className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
             </div>
-            <p className="text-sm text-gray-600 font-medium">Nemaš novih obavijesti</p>
-            <p className="text-xs text-gray-500 mt-1">Ovdje će se pojaviti tvoje obavijesti</p>
+            <p className="text-sm text-gray-600 font-medium">{t('notifications.noNotifications')}</p>
+            <p className="text-xs text-gray-500 mt-1">{t('notifications.noNotificationsDesc')}</p>
           </div>
         )}
       </div>
@@ -272,7 +319,7 @@ const NotificationCenter = ({
             onClick={onClose}
             className="block text-center text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors py-1"
           >
-            Prikaži sve obavijesti
+            {t('notifications.viewAll')}
             <ArrowRight className="inline h-3 w-3 sm:h-4 sm:w-4 ml-1" />
           </Link>
         </div>
