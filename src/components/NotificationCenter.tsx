@@ -1,6 +1,6 @@
-// src/components/NotificationCenter.tsx - FIXED VERSION
+// src/components/NotificationCenter.tsx - FINAL FIXED VERSION
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Camera, 
   Heart, 
@@ -38,6 +38,7 @@ const NotificationCenter = ({
   onClose 
 }: NotificationCenterProps) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
   // Get icon and color for notification type
@@ -151,10 +152,7 @@ const NotificationCenter = ({
   };
 
   // Mark single notification as read
-  const handleMarkAsRead = async (notificationId: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    
+  const handleMarkAsRead = async (notificationId: string) => {
     try {
       await notificationService.markNotificationAsRead(notificationId);
     } catch (error) {
@@ -162,16 +160,31 @@ const NotificationCenter = ({
     }
   };
 
+  // ✅ NOVO - Handle notification click with navigation
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read
+    if (!notification.read) {
+      await handleMarkAsRead(notification.id);
+    }
+
+    // Get link and navigate
+    const link = getNotificationLink(notification);
+    if (link) {
+      navigate(link);
+      onClose(); // Close dropdown
+    }
+  };
+
   // Display only last 5 notifications in dropdown
   const displayNotifications = notifications.slice(0, 5);
 
   return (
-<div 
-  className="w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[80vh] sm:max-h-[600px] flex flex-col overflow-hidden"
-  onClick={(e) => e.stopPropagation()}
->
+    <div 
+      className="w-full sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[80vh] sm:max-h-[600px] flex flex-col overflow-hidden"
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
+      <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Obavijesti</h3>
           {unreadCount > 0 && (
@@ -187,10 +200,10 @@ const NotificationCenter = ({
               size="sm"
               onClick={handleMarkAllAsRead}
               disabled={markingAllRead}
-              className="text-xs sm:text-sm"
+              className="text-xs sm:text-sm px-2 sm:px-3"
             >
-              <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-              Označi sve
+              <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Označi sve</span>
             </Button>
           )}
         </div>
@@ -208,34 +221,26 @@ const NotificationCenter = ({
             {displayNotifications.map((notification) => {
               const { icon: IconComponent, color } = getNotificationIcon(notification.type);
               const message = getNotificationMessage(notification);
-              const link = getNotificationLink(notification);
               const timeAgo = formatTimeAgo(notification.createdAt);
 
-              const NotificationContent = (
-                <div 
+              return (
+                <div
+                  key={notification.id}
                   className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
                     !notification.read ? 'bg-blue-50/50' : ''
                   }`}
-                  onClick={(e) => {
-                    e.stopPropagation(); // ✅ KEEP THIS
-                    if (!notification.read) {
-                      handleMarkAsRead(notification.id, e);
-                    }
-                    if (link) {
-                      onClose();
-                    }
-                  }}
+                  onClick={() => handleNotificationClick(notification)}
                 >
-                  <div className="flex gap-3">
-                    <div className={`p-2 rounded-full ${color} flex-shrink-0 h-fit`}>
-                      <IconComponent className="h-4 w-4" />
+                  <div className="flex gap-2 sm:gap-3">
+                    <div className={`p-1.5 sm:p-2 rounded-full ${color} flex-shrink-0 h-fit`}>
+                      <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-gray-900`}>
+                      <p className={`text-xs sm:text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-gray-900 break-words`}>
                         {message}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">{timeAgo}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{timeAgo}</p>
                     </div>
 
                     {!notification.read && (
@@ -246,20 +251,10 @@ const NotificationCenter = ({
                   </div>
                 </div>
               );
-
-              return link ? (
-                <Link key={notification.id} to={link} onClick={onClose}>
-                  {NotificationContent}
-                </Link>
-              ) : (
-                <div key={notification.id}>
-                  {NotificationContent}
-                </div>
-              );
             })}
           </div>
         ) : (
-          <div className="p-8 text-center">
+          <div className="p-6 sm:p-8 text-center">
             <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <Bell className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
             </div>
@@ -271,14 +266,14 @@ const NotificationCenter = ({
 
       {/* Footer */}
       {displayNotifications.length > 0 && (
-        <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
+        <div className="p-2 sm:p-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
           <Link
             to="/notifications"
             onClick={onClose}
-            className="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors py-1"
+            className="block text-center text-xs sm:text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors py-1"
           >
             Prikaži sve obavijesti
-            <ArrowRight className="inline h-4 w-4 ml-1" />
+            <ArrowRight className="inline h-3 w-3 sm:h-4 sm:w-4 ml-1" />
           </Link>
         </div>
       )}
