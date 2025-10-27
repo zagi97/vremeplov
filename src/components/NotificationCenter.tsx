@@ -1,4 +1,4 @@
-// src/components/NotificationCenter.tsx - FINAL with Optimistic Updates
+// src/components/NotificationCenter.tsx - ULTIMATE FIX
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -29,7 +29,7 @@ interface NotificationCenterProps {
   unreadCount: number;
   loading: boolean;
   onClose: () => void;
-  onMarkAllRead?: () => void; // ✅ NEW - callback for optimistic update
+  onMarkAllRead?: () => Promise<void>;
 }
 
 const NotificationCenter = ({ 
@@ -37,14 +37,13 @@ const NotificationCenter = ({
   unreadCount, 
   loading,
   onClose,
-  onMarkAllRead // ✅ NEW
+  onMarkAllRead
 }: NotificationCenterProps) => {
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
-  // Get icon and color for notification type
   const getNotificationIcon = (type: string) => {
     const iconMap: { [key: string]: { icon: any; color: string } } = {
       new_comment: { icon: MessageCircle, color: 'text-blue-600 bg-blue-50' },
@@ -67,11 +66,8 @@ const NotificationCenter = ({
     return iconMap[type] || { icon: AlertCircle, color: 'text-gray-600 bg-gray-50' };
   };
 
-  // Get notification message - using t() for translations
   const getNotificationMessage = (notification: Notification): string => {
     const { type, actorName, photoTitle, badgeName, taggedPersonName, reason } = notification;
-
-    // Helper to format with reason
     const withReason = (msg: string) => reason ? `${msg}: ${reason}` : msg;
 
     switch (type) {
@@ -112,39 +108,21 @@ const NotificationCenter = ({
     }
   };
 
-  // Get notification link - return null for deleted/rejected photos and edited content
   const getNotificationLink = (notification: Notification): string | null => {
-    // Don't link to deleted, rejected, or edited photos/content
     const nonClickableTypes = [
-      'photo_deleted',
-      'photo_rejected', 
-      'photo_edited',
-      'comment_deleted',
-      'tag_rejected',
-      'user_banned',
-      'user_suspended',
-      'user_unbanned',
-      'user_unsuspended'
+      'photo_deleted', 'photo_rejected', 'photo_edited',
+      'comment_deleted', 'tag_rejected',
+      'user_banned', 'user_suspended', 'user_unbanned', 'user_unsuspended'
     ];
     
-    if (nonClickableTypes.includes(notification.type)) {
-      return null;
-    }
-    
-    // Link to photo for photo-related notifications
-    if (notification.photoId) {
-      return `/photo/${notification.photoId}`;
-    }
-    
-    // Link to user profile for follower notifications
+    if (nonClickableTypes.includes(notification.type)) return null;
+    if (notification.photoId) return `/photo/${notification.photoId}`;
     if (notification.actorId && notification.type === 'new_follower') {
       return `/user/${notification.actorId}`;
     }
-    
     return null;
   };
 
-  // Format time ago - using t() for time labels
   const formatTimeAgo = (timestamp: any): string => {
     if (!timestamp) return '';
     
@@ -157,47 +135,41 @@ const NotificationCenter = ({
 
     if (diffMins < 1) return t('notifications.time.justNow');
     
-    // Different format for Croatian and English
     if (language === 'hr') {
-      // Hrvatski: "prije X min/h/d"
       if (diffMins < 60) return `${t('notifications.time.ago')} ${diffMins} ${t('notifications.time.min')}`;
       if (diffHours < 24) return `${t('notifications.time.ago')} ${diffHours}${t('notifications.time.hours')}`;
       if (diffDays < 7) return `${t('notifications.time.ago')} ${diffDays}${t('notifications.time.days')}`;
-      // Hrvatski datum: DD.MM.YYYY.
       return date.toLocaleDateString('hr-HR');
     } else {
-      // English: "X min ago / Xh ago / Xd ago"
       if (diffMins < 60) return `${diffMins} ${t('notifications.time.min')}`;
       if (diffHours < 24) return `${diffHours}${t('notifications.time.hours')}`;
       if (diffDays < 7) return `${diffDays}${t('notifications.time.days')}`;
-      // English datum: MM/DD/YYYY
       return date.toLocaleDateString('en-US');
     }
   };
 
-  // Mark all as read
+  // ✅ Call parent's mark all handler
   const handleMarkAllAsRead = async () => {
-    if (unreadCount === 0 || !user) return;
+    if (unreadCount === 0 || !onMarkAllRead || markingAllRead) return;
     
     setMarkingAllRead(true);
     
-    // ✅ Optimistic update - immediately update UI
-    if (onMarkAllRead) {
-      onMarkAllRead();
-    }
-    
     try {
-      await notificationService.markAllNotificationsAsRead(user.uid);
+      await onMarkAllRead();
       toast.success(t('notifications.allRead'));
+      
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+      
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error('❌ Error:', error);
       toast.error(t('notifications.markError'));
     } finally {
       setMarkingAllRead(false);
     }
   };
 
-  // Mark single notification as read
   const handleMarkAsRead = async (notificationId: string) => {
     try {
       await notificationService.markNotificationAsRead(notificationId);
@@ -206,7 +178,6 @@ const NotificationCenter = ({
     }
   };
 
-  // Handle notification click with navigation
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
       await handleMarkAsRead(notification.id);
@@ -219,7 +190,6 @@ const NotificationCenter = ({
     }
   };
 
-  // Display only last 5 notifications in dropdown
   const displayNotifications = notifications.slice(0, 5);
 
   return (
@@ -227,7 +197,6 @@ const NotificationCenter = ({
       className="w-full sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[80vh] sm:max-h-[600px] flex flex-col overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Header */}
       <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{t('notifications.title')}</h3>
@@ -253,12 +222,13 @@ const NotificationCenter = ({
         </div>
       </div>
 
-      {/* Notifications List */}
       <div className="overflow-y-auto flex-1">
-        {loading ? (
+        {loading || markingAllRead ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-2">{t('notifications.loading')}</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {markingAllRead ? 'Označavam...' : t('notifications.loading')}
+            </p>
           </div>
         ) : displayNotifications.length > 0 ? (
           <div className="divide-y divide-gray-100">
@@ -311,7 +281,6 @@ const NotificationCenter = ({
         )}
       </div>
 
-      {/* Footer */}
       {displayNotifications.length > 0 && (
         <div className="p-2 sm:p-3 border-t border-gray-200 bg-gray-50 rounded-b-lg">
           <Link

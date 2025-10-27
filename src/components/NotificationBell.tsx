@@ -1,4 +1,4 @@
-// src/components/NotificationBell.tsx - FINAL VERSION with debounced listener
+// src/components/NotificationBell.tsx - ULTIMATE FIX
 import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,8 +16,44 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false); // ✅ Track if marking all
-  const bellRef = useRef<HTMLDivElement>(null);
+  
+  // ✅ Refs to control listener behavior
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const isMarkingRef = useRef(false);
+
+  // ✅ Setup listener
+  const setupListener = () => {
+    if (!user) return;
+
+    console.log('🔄 Setting up notification listener');
+    
+    const unsubscribe = notificationService.subscribeToNotifications(
+      user.uid,
+      (newNotifications) => {
+        // ✅ Ignore updates while batch is running
+        if (isMarkingRef.current) {
+          console.log('🚫 BLOCKED - Batch in progress, ignoring listener update');
+          return;
+        }
+        
+        console.log('📨 Listener update:', {
+          total: newNotifications.length,
+          unread: newNotifications.filter(n => !n.read).length
+        });
+        
+        setNotifications(newNotifications);
+        const unread = newNotifications.filter(n => !n.read).length;
+        setUnreadCount(unread);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('❌ Notification subscription error:', error);
+        setLoading(false);
+      }
+    );
+
+    unsubscribeRef.current = unsubscribe;
+  };
 
   useEffect(() => {
     if (!user) {
@@ -28,31 +64,16 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     }
 
     setLoading(true);
-
-    const unsubscribe = notificationService.subscribeToNotifications(
-      user.uid,
-      (newNotifications) => {
-        // ✅ Ignore listener updates while marking all as read
-        if (isMarkingAllRead) {
-          console.log('🚫 Ignoring listener update during mark all operation');
-          return;
-        }
-        
-        setNotifications(newNotifications);
-        const unread = newNotifications.filter(n => !n.read).length;
-        setUnreadCount(unread);
-        setLoading(false);
-      },
-      (error) => {
-        console.error('Notification subscription error:', error);
-        setLoading(false);
-      }
-    );
+    setupListener();
 
     return () => {
-      unsubscribe();
+      console.log('🧹 Cleaning up notification listener');
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
     };
-  }, [user, isMarkingAllRead]); // ✅ Re-subscribe when isMarkingAllRead changes
+  }, [user]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -65,20 +86,39 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     return () => window.removeEventListener('keydown', handleEsc);
   }, [isOpen]);
 
-  // ✅ Optimistic update with debounce protection
-  const handleMarkAllRead = () => {
-    setIsMarkingAllRead(true); // ✅ Block listener updates
+  // ✅ Mark all with proper batch execution
+  const handleMarkAllRead = async () => {
+    if (!user) return;
+
+    console.log('🔘 Mark all clicked');
     
-    // Instant UI update
-    setNotifications(prevNotifications => 
-      prevNotifications.map(n => ({ ...n, read: true }))
-    );
-    setUnreadCount(0);
-    
-    // ✅ Re-enable listener after 2 seconds (enough time for Firestore batch to complete)
-    setTimeout(() => {
-      setIsMarkingAllRead(false);
-    }, 2000);
+    try {
+      // ✅ Block listener IMMEDIATELY
+      isMarkingRef.current = true;
+      console.log('🔒 Listener BLOCKED');
+
+      // ✅ Execute batch
+      console.log('🚀 Executing batch...');
+      await notificationService.markAllNotificationsAsRead(user.uid);
+      console.log('✅ Batch completed');
+
+      // ✅ Wait a bit for Firestore to propagate
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // ✅ Unblock listener and force refresh
+      console.log('🔓 Listener UNBLOCKED - forcing refresh');
+      isMarkingRef.current = false;
+
+      // ✅ Force re-fetch by unsubscribing and re-subscribing
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+      setupListener();
+
+    } catch (error) {
+      console.error('❌ Error in mark all:', error);
+      isMarkingRef.current = false;
+    }
   };
 
   if (!user) return null;
