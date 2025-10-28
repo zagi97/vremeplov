@@ -196,7 +196,8 @@ const handleApprovePhoto = async (photoId: string) => {
       await sendNotification({
         userId: photo.authorId,
         type: 'photo_approved',
-        photoId: photoId
+        photoId: photoId,
+        photoTitle: photo.description || 'Nepoznata fotografija' // ✅ DODAJ OVO!
       });
     }
 
@@ -226,6 +227,7 @@ const handleApprovePhoto = async (photoId: string) => {
         userId: photo.authorId,
         type: 'photo_rejected',
         photoId: photoId,
+        photoTitle: photo.description || 'Nepoznata fotografija', // ✅ DODAJ OVO!
         reason: reason
       });
     }

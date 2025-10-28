@@ -740,6 +740,8 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.noNotificationsDesc': 'Your notifications will appear here',
 'notifications.allRead': 'All notifications marked as read',
 'notifications.markError': 'Error marking notifications',
+'notifications.unknownPhoto': "Unknown Photo",
+
 
 // Notification message parts
 'notifications.commented': 'commented on your photo',
@@ -779,7 +781,7 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.noNotificationsDesc': 'Ovdje će se pojaviti tvoje obavijesti',
 'notifications.allRead': 'Sve obavijesti označene kao pročitane',
 'notifications.markError': 'Greška pri označavanju obavijesti',
-
+'notifications.unknownPhoto': "Nepoznata fotografija",
 // Notification message parts
 'notifications.commented': 'je komentirao/la tvoju fotografiju',
 'notifications.liked': 'je lajkao/la tvoju fotografiju',
