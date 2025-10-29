@@ -953,7 +953,10 @@ const handleLike = async () => {
                   location: photo.location,
                   coordinates: photo.coordinates
                 }}
-                nearbyPhotos={relatedPhotos.slice(0, 3).map(p => ({
+                nearbyPhotos={relatedPhotos
+          .filter(p => p.coordinates?.latitude && p.coordinates?.longitude) // ✅ Filter out photos without coordinates
+          .slice(0, 3)
+          .map(p => ({
                    id: p.id || '',
     description: p.description,
     imageUrl: p.imageUrl,

@@ -46,7 +46,9 @@ const Contact = () => {
               {t('contact.getInTouchText')}
             </p>
             <div className="bg-blue-50 p-6 rounded-lg inline-block">
-              <p className="text-2xl font-bold text-blue-600 mb-2">vremeplov.app@gmail.com</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600 mb-2 break-words overflow-wrap-anywhere">
+  vremeplov.app@gmail.com
+</p>
               <p className="text-gray-600">{t('contact.ourEmail')}</p>
             </div>
           </div>

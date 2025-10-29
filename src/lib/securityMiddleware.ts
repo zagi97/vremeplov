@@ -34,8 +34,8 @@ const ipRateLimit = new IPRateLimit();
 
 // File validation
 export const validateFile = (file: File): { valid: boolean; error?: string } => {
-  // Size check (5MB limit)
-  const maxSize = 5 * 1024 * 1024;
+  // Size check (20MB limit)
+  const maxSize = 20 * 1024 * 1024;
   if (file.size > maxSize) {
     return { valid: false, error: 'File previše velik. Maksimalno 5MB.' };
   }

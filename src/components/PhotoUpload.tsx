@@ -133,15 +133,22 @@ useEffect(() => {
 
   const closeAddressDropdown = () => {
   setShowAddressDropdown(false);
-  setAvailableAddresses([]);
+  
   setLoadingAddresses(false);
 };
 
-// Dodaj useEffect za handle click outside
 const dropdownRef = useRef<HTMLDivElement>(null);
+const searchInputRef = useRef<HTMLInputElement>(null); // ✅ DODAJ OVO
+// Dodaj useEffect za handle click outside
 useEffect(() => {
   const handleClickOutside = (event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    // ✅ POBOLJŠAN - Provjeri da nije kliknut input NI dropdown
+    if (
+      searchInputRef.current && 
+      !searchInputRef.current.contains(event.target as Node) &&
+      dropdownRef.current && 
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
       closeAddressDropdown();
     }
   };
@@ -151,7 +158,7 @@ useEffect(() => {
   }
 
   return () => {
-    document.removeEventListener('mousedown', handleClickOutside);
+    document.removeEventListener('mousedown', handleClickOutside); // ← Typo ispravljen
   };
 }, [showAddressDropdown]);
 
@@ -344,6 +351,13 @@ useEffect(() => {
       }
     };
   }, []);
+
+  // ✅ NOVI HANDLER - Re-open dropdown on focus
+const handleInputFocus = () => {
+  if (addressSearch.length > 0 && availableAddresses.length > 0) {
+    setShowAddressDropdown(true);
+  }
+};
 
   // Handle input change with immediate loading feedback
   const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1011,10 +1025,12 @@ if (coordinates && selectedAddress) {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
+                  ref={searchInputRef}
                   type="text"
                   placeholder={t('upload.searchAddress')}
                   value={addressSearch}
                   onChange={handleAddressInputChange}
+                  onFocus={handleInputFocus}  // ← Ovaj handler zatvara dropdown
                   className={`pl-10 ${
     loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''
   } ${
@@ -1069,7 +1085,7 @@ if (coordinates && selectedAddress) {
 
               {/* Dropdown with Results */}
               {showAddressDropdown && (
-                <div ref={dropdownRef} className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div ref={dropdownRef} className="absolute z-[1000] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                   {loadingAddresses ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
