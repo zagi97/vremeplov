@@ -42,7 +42,15 @@ const Index = () => {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519181245277-cffeb31da2e3?q=80&w=2070')] bg-cover bg-center opacity-40 z-[-1]"></div>
+        {/* Optimized gradient background - 0 KB instead of 436 KB! */}
+<div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-indigo-900 z-[-1]"></div>
+<div 
+  className="absolute inset-0 opacity-10 z-[-1]"
+  style={{
+    backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+    backgroundSize: '40px 40px'
+  }}
+></div>
         <div className="w-full max-w-full sm:max-w-6xl mx-auto px-4 z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight animate-fade-in">
             Vremeplov<span className="text-gray-300">.hr</span>
