@@ -3,19 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- ✅ DODAJ OVO ODMAH NAKON VIEWPORT META TAGA -->
-<style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  html, body, #root {
-    width: 100%;
-    overflow-x: hidden;
-  }
-</style>
+    
+    <!-- ✅ Critical CSS for layout -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      html, body, #root {
+        width: 100%;
+        overflow-x: hidden;
+      }
+    </style>
+    
     <title>Vremeplov - Hrvatska fotografska baština</title>
     
     <!-- Favicon -->
@@ -26,7 +28,11 @@
     <!-- PWA Meta tags -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#2563eb" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    
+    <!-- ✅ MODERN PWA TAG (replaced deprecated apple-mobile-web-app-capable) -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- iOS Specific -->
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Vremeplov" />
     <link rel="apple-touch-icon" href="/icon-180.png" />
