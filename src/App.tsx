@@ -6,25 +6,40 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import ErrorBoundary from "./components/ErrorBoundary";
-import Index from "./pages/Index";
-import Location from "./pages/Location";
-import PhotoDetail from "./pages/PhotoDetails";
-import About from "./pages/About";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-import AdminDashboard from "./pages/AdminDashboard";
+import { lazy, Suspense } from 'react';
+
+// ✅ LAZY LOAD routes (main performance optimization!)
+const Index = lazy(() => import("./pages/Index"));
+const Location = lazy(() => import("./pages/Location"));
+const PhotoDetail = lazy(() => import("./pages/PhotoDetails"));
+const MapView = lazy(() => import('./components/MapView'));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const UserProfilePage = lazy(() => import("./pages/UserProfile"));
+const CommunityLeaderboard = lazy(() => import("./pages/CommunityLeaderboard"));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const About = lazy(() => import("./pages/About"));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Contact = lazy(() => import("./pages/Contact"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Static imports (lightweight components)
 import AdminLogin from "./pages/AdminLogin";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
-import UserProfilePage from "./pages/UserProfile";
-import CommunityLeaderboard from "./pages/CommunityLeaderboard";
-import MapView from './components/MapView';
-import FAQ from './pages/FAQ';
-import Notifications from './pages/Notifications'; // ← NOVO!
 import { OfflineIndicator } from './components/OfflineIndicator';
 
 const queryClient = new QueryClient();
+
+// Loading component za Suspense
+const PageLoader = () => (
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600">Učitavanje...</p>
+    </div>
+  </div>
+);
 
 const AppContent = () => {
   const { user, loading } = useAuth();
@@ -43,7 +58,8 @@ const AppContent = () => {
   return (
     <>
     <OfflineIndicator />
-    <Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/admin" element={
         <ProtectedAdminRoute>
@@ -65,7 +81,8 @@ const AppContent = () => {
       
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
-    </Routes>
+     </Routes>
+    </Suspense>
     </>
   );
 };

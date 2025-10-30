@@ -1,13 +1,23 @@
+import { lazy, Suspense } from 'react';
 import { MapPin, Archive, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+
+// ✅ Static imports (above the fold - immediate render)
 import SearchBar from "@/components/SearchBar";
-import FeatureCard from "@/components/FeaturedCard";
-import SampleGallery from "@/components/SampleGallery";
 import UserProfile from "@/components/UserProfile";
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
-import Footer from "@/components/Footer";
 import NotificationBell from "@/components/NotificationBell";
+
+// ✅ LAZY LOAD heavy components (below the fold)
+const FeatureCard = lazy(() => import("@/components/FeaturedCard"));
+const SampleGallery = lazy(() => import("@/components/SampleGallery"));
+const Footer = lazy(() => import("@/components/Footer"));
+
+// Simple loader component
+const ComponentLoader = () => (
+  <div className="animate-pulse bg-gray-200 rounded-lg h-64"></div>
+);
 
 const Index = () => {
   const { t } = useLanguage();
@@ -43,14 +53,14 @@ const Index = () => {
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
         {/* Optimized gradient background - 0 KB instead of 436 KB! */}
-<div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-indigo-900 z-[-1]"></div>
-<div 
-  className="absolute inset-0 opacity-10 z-[-1]"
-  style={{
-    backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
-    backgroundSize: '40px 40px'
-  }}
-></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-indigo-900 z-[-1]"></div>
+        <div 
+          className="absolute inset-0 opacity-10 z-[-1]"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }}
+        ></div>
         <div className="w-full max-w-full sm:max-w-6xl mx-auto px-4 z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight animate-fade-in">
             Vremeplov<span className="text-gray-300">.hr</span>
@@ -71,21 +81,23 @@ const Index = () => {
             {t('home.reconnectTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <FeatureCard 
-              icon={<MapPin className="h-10 w-10 text-blue-600" />} 
-              title={t('home.discoverTitle')} 
-              description={t('home.discoverDesc')} 
-            />
-            <FeatureCard 
-              icon={<Archive className="h-10 w-10 text-blue-600" />} 
-              title={t('home.preserveTitle')} 
-              description={t('home.preserveDesc')} 
-            />
-            <FeatureCard 
-              icon={<Users className="h-10 w-10 text-blue-600" />} 
-              title={t('home.connectTitle')} 
-              description={t('home.connectDesc')} 
-            />
+            <Suspense fallback={<ComponentLoader />}>
+              <FeatureCard 
+                icon={<MapPin className="h-10 w-10 text-blue-600" />} 
+                title={t('home.discoverTitle')} 
+                description={t('home.discoverDesc')} 
+              />
+              <FeatureCard 
+                icon={<Archive className="h-10 w-10 text-blue-600" />} 
+                title={t('home.preserveTitle')} 
+                description={t('home.preserveDesc')} 
+              />
+              <FeatureCard 
+                icon={<Users className="h-10 w-10 text-blue-600" />} 
+                title={t('home.connectTitle')} 
+                description={t('home.connectDesc')} 
+              />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -118,7 +130,9 @@ const Index = () => {
           <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
             {t('home.glimpseDesc')}
           </p>
-          <SampleGallery />
+          <Suspense fallback={<ComponentLoader />}>
+            <SampleGallery />
+          </Suspense>
         </div>
       </section>
 
@@ -134,8 +148,10 @@ const Index = () => {
         </div>
       </section>
 
-     {/* Footer */}
-      <Footer/>
+      {/* Footer */}
+      <Suspense fallback={<div className="h-64 bg-gray-100"></div>}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
