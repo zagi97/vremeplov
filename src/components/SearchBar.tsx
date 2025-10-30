@@ -127,7 +127,6 @@ const SearchBar = () => {
                 color: '#1f2937'
               }}
               aria-label={t('search.placeholder')}
-              aria-autocomplete="list"
               aria-controls="location-listbox"
             />
           </div>
