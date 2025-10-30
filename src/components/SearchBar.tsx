@@ -17,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// ✅ NEW: Import loader instead of direct JSON
 import { loadMunicipalities, type Location } from '../utils/municipalityLoader';
 
 const SearchBar = () => {
@@ -28,14 +27,12 @@ const SearchBar = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const navigate = useNavigate();
   
-  // ✅ NEW: State for locations
   const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   
   const containerRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ NEW: Load municipalities on first interaction
   useEffect(() => {
     if (open && allLocations.length === 0 && !loading) {
       setLoading(true);
@@ -109,7 +106,8 @@ const SearchBar = () => {
         }}
       >
         <PopoverTrigger asChild>
-          <div className="flex-grow">
+          {/* ✅ FIX 1: Remove type="button" from div, use proper role */}
+          <div className="flex-grow" role="combobox" aria-expanded={open} aria-haspopup="listbox">
             <Input
               ref={inputRef}
               type="text"
@@ -128,6 +126,9 @@ const SearchBar = () => {
                 backgroundColor: '#ffffff',
                 color: '#1f2937'
               }}
+              aria-label={t('search.placeholder')}
+              aria-autocomplete="list"
+              aria-controls="location-listbox"
             />
           </div>
         </PopoverTrigger>
@@ -158,7 +159,7 @@ const SearchBar = () => {
               }}
               className="h-9"
             />
-            <CommandList>
+            <CommandList id="location-listbox" role="listbox">
               {loading ? (
                 <CommandEmpty>{t('common.loading')}</CommandEmpty>
               ) : (
@@ -171,6 +172,8 @@ const SearchBar = () => {
                         onSelect={() => selectLocation(location)}
                         className="cursor-pointer text-gray-900 hover:bg-gray-100"
                         onMouseDown={(e: { preventDefault: () => any; }) => e.preventDefault()}
+                        role="option"
+                        aria-selected={selectedLocation?.id === location.id}
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">{location.name}</span>
@@ -187,12 +190,14 @@ const SearchBar = () => {
           </Command>
         </PopoverContent>
       </Popover>
+      {/* ✅ FIX 2: Add aria-label to button */}
       <Button
         type="submit"
         className="rounded-l-none h-12 px-4 bg-blue-600 hover:bg-blue-700"
         disabled={!isValid || !searchQuery.trim()}
+        aria-label={t('search.button') || 'Search photos'}
       >
-        <Search className="h-5 w-5" />
+        <Search className="h-5 w-5" aria-hidden="true" />
         <span className="ml-2 hidden md:inline">{t('search.button')}</span>
       </Button>
     </form>
