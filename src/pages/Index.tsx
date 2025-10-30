@@ -68,9 +68,9 @@ const Index = () => {
           </h1>
           
           {/* 🔥 CRITICAL FIX: Removed animate-fade-in from LCP element! */}
-          <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
-            {t('home.description')}
-          </p>
+          <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto hero-text">
+  {t('home.description')}
+</p>
           
           {/* ✅ SearchBar can keep animation - it's below LCP */}
           <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in">
