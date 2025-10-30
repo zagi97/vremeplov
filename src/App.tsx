@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { lazy, Suspense } from 'react';
@@ -42,34 +42,38 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <PageLoader />;
+  }
+  
   return (
     <>
-    <OfflineIndicator />
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/admin" element={
-        <ProtectedAdminRoute>
-          <AdminDashboard />
-        </ProtectedAdminRoute>
-      } />
-      <Route path="/location/:locationName" element={<Location />} />
-      <Route path="/photo/:photoId" element={<PhotoDetail />} />
-      <Route path="/map" element={<MapView />} />
-      <Route path="/user/:userId" element={<UserProfilePage />} />
-      <Route path="/community" element={<CommunityLeaderboard />} />
-      <Route path="/notifications" element={<Notifications />} /> {/* ← NOVO! */}
-      <Route path="/about" element={<About />} />
-      <Route path="/faq" element={<FAQ />} />
-      <Route path="/privacy" element={<Privacy />} />
-      <Route path="/terms" element={<Terms />} />
-      <Route path="/contact" element={<Contact />} />
-      <Route path="/admin-login" element={<AdminLogin />} />
-      
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-     </Routes>
-    </Suspense>
+      <OfflineIndicator />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/admin" element={
+            <ProtectedAdminRoute>
+              <AdminDashboard />
+            </ProtectedAdminRoute>
+          } />
+          <Route path="/location/:locationName" element={<Location />} />
+          <Route path="/photo/:photoId" element={<PhotoDetail />} />
+          <Route path="/map" element={<MapView />} />
+          <Route path="/user/:userId" element={<UserProfilePage />} />
+          <Route path="/community" element={<CommunityLeaderboard />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
     </>
   );
 };
