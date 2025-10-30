@@ -49,7 +49,7 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - OPTIMIZED FOR LCP */}
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
         {/* Optimized gradient background - 0 KB instead of 436 KB! */}
@@ -62,12 +62,17 @@ const Index = () => {
           }}
         ></div>
         <div className="w-full max-w-full sm:max-w-6xl mx-auto px-4 z-10 text-center">
+          {/* ✅ Title can keep animation - it's not LCP element */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight animate-fade-in">
             Vremeplov<span className="text-gray-300">.hr</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto animate-fade-in">
+          
+          {/* 🔥 CRITICAL FIX: Removed animate-fade-in from LCP element! */}
+          <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
             {t('home.description')}
           </p>
+          
+          {/* ✅ SearchBar can keep animation - it's below LCP */}
           <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in">
             <SearchBar />
           </div>
