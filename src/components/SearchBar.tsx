@@ -17,71 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import municipalityData from '../../data/municipalities.json';
-
-// Tip za lokaciju s dodatnim podacima
-interface Location {
-  id: number;
-  county: string;
-  type: string;
-  name: string;
-  displayName: string;
-  urlKey: string;
-}
-
-// Kreiraj array lokacija s jedinstvenim display nazivima
-const allLocations: Location[] = municipalityData.records.map(record => {
-  const id = record[0] as number;
-  const county = record[1] as string;
-  const type = record[2] as string;
-  const name = record[3] as string;
-  
-  return {
-    id,
-    county,
-    type,
-    name,
-    displayName: name,
-    urlKey: name
-  };
-});
-
-// Pronađi duplikate i dodaj im županiju u naziv
-const nameCounts = new Map<string, number>();
-allLocations.forEach(location => {
-  nameCounts.set(location.name, (nameCounts.get(location.name) || 0) + 1);
-});
-
-allLocations.forEach(location => {
-  if (nameCounts.get(location.name)! > 1) {
-    const countyShort = location.county
-      .replace(/^[IVX]+\s/, '')
-      .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
-      .replace('SPLITSKO-DALMATINSKA', 'Splitsko-dalmatinska')
-      .replace('OSJEČKO-BARANJSKA', 'Osječko-baranjska')
-      .replace('VUKOVARSKO-SRIJEMSKA', 'Vukovarsko-srijemska')
-      .replace('POŽEŠKO-SLAVONSKA', 'Požeško-slavonska')
-      .replace('BRODSKO-POSAVSKA', 'Brodsko-posavska')
-      .replace('VIROVITIČKO-PODRAVSKA', 'Virovitičko-podravska')
-      .replace('KOPRIVNIČKO-KRIŽEVAČKA', 'Koprivničko-križevačka')
-      .replace('BJELOVARSKO-BILOGORSKA', 'Bjelovarsko-bilogorska')
-      .replace('PRIMORSKO-GORANSKA', 'Primorsko-goranska')
-      .replace('SISAČKO-MOSLAVAČKA', 'Sisačko-moslavačka')
-      .replace('KRAPINSKO-ZAGORSKA', 'Krapinsko-zagorska')
-      .replace('ŠIBENSKO-KNINSKA', 'Šibensko-kninska')
-      .replace('LIČKO-SENJSKA', 'Ličko-senjska')
-      .replace('KARLOVAČKA', 'Karlovačka')
-      .replace('VARAŽDINSKA', 'Varaždinska')
-      .replace('ZAGREBAČKA', 'Zagrebačka')
-      .replace('MEĐIMURSKA', 'Međimurska')
-      .replace('ISTARSKA', 'Istarska')
-      .replace('ZADARSKA', 'Zadarska')
-      .replace('GRAD ZAGREB', 'Zagreb');
-    
-    location.displayName = `${location.name} (${countyShort})`;
-    location.urlKey = `${location.name}-${countyShort.replace(/\s+/g, '')}`;
-  }
-});
+// ✅ NEW: Import loader instead of direct JSON
+import { loadMunicipalities, type Location } from '../utils/municipalityLoader';
 
 const SearchBar = () => {
   const { t } = useLanguage();
@@ -91,8 +28,22 @@ const SearchBar = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const navigate = useNavigate();
   
+  // ✅ NEW: State for locations
+  const [allLocations, setAllLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(false);
+  
   const containerRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ NEW: Load municipalities on first interaction
+  useEffect(() => {
+    if (open && allLocations.length === 0 && !loading) {
+      setLoading(true);
+      loadMunicipalities()
+        .then(setAllLocations)
+        .finally(() => setLoading(false));
+    }
+  }, [open, allLocations.length, loading]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +79,6 @@ const SearchBar = () => {
     setIsValid(!!matchingLocation);
   };
 
-  // ✅ Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -152,13 +102,10 @@ const SearchBar = () => {
     <form ref={containerRef} onSubmit={handleSearch} className="relative flex w-full max-w-lg">
       <Popover 
         open={open} 
-        onOpenChange={(newOpen) => {
-          // ✅ KLJUČNO: Ignoriraj Popover-ove close pokušaje, kontroliramo mi
-          // Dopusti SAMO explicit zatvaranje kroz naše handlere
+        onOpenChange={(newOpen: any) => {
           if (newOpen) {
             setOpen(true);
           }
-          // Ne zatvaraj automatski - samo kroz naš useEffect ili selectLocation
         }}
       >
         <PopoverTrigger asChild>
@@ -187,20 +134,18 @@ const SearchBar = () => {
         <PopoverContent 
           className="p-0 w-[300px] md:w-[400px]" 
           align="start"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          // ✅ KLJUČNO: Blokiraj SVE auto-close evente
-          onEscapeKeyDown={(e) => {
+          onOpenAutoFocus={(e: { preventDefault: () => any; }) => e.preventDefault()}
+          onEscapeKeyDown={(e: { preventDefault: () => void; }) => {
             e.preventDefault();
             setOpen(false);
           }}
-          onPointerDownOutside={(e) => {
-            // Ne radi ništa - naš useEffect će zatvoriti
+          onPointerDownOutside={(e: { preventDefault: () => void; }) => {
             e.preventDefault();
           }}
-          onFocusOutside={(e) => {
+          onFocusOutside={(e: { preventDefault: () => void; }) => {
             e.preventDefault();
           }}
-          onInteractOutside={(e) => {
+          onInteractOutside={(e: { preventDefault: () => void; }) => {
             e.preventDefault();
           }}
         >
@@ -208,30 +153,36 @@ const SearchBar = () => {
             <CommandInput
               placeholder={t('search.inputPlaceholder')}
               value={searchQuery}
-              onValueChange={(value) => {
+              onValueChange={(value: string) => {
                 handleInputChange(value);
               }}
               className="h-9"
             />
             <CommandList>
-              <CommandEmpty>{t('search.noLocations')}</CommandEmpty>
-              <CommandGroup>
-                {filteredLocations.map((location) => (
-                  <CommandItem
-                    key={`${location.id}-${location.name}`}
-                    onSelect={() => selectLocation(location)}
-                    className="cursor-pointer text-gray-900 hover:bg-gray-100"
-                    onMouseDown={(e) => e.preventDefault()}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium">{location.name}</span>
-                      {location.displayName !== location.name && (
-                        <span className="text-sm text-gray-500">{location.county.replace(/^[IVX]+\s/, '')}</span>
-                      )}
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {loading ? (
+                <CommandEmpty>{t('common.loading')}</CommandEmpty>
+              ) : (
+                <>
+                  <CommandEmpty>{t('search.noLocations')}</CommandEmpty>
+                  <CommandGroup>
+                    {filteredLocations.map((location) => (
+                      <CommandItem
+                        key={`${location.id}-${location.name}`}
+                        onSelect={() => selectLocation(location)}
+                        className="cursor-pointer text-gray-900 hover:bg-gray-100"
+                        onMouseDown={(e: { preventDefault: () => any; }) => e.preventDefault()}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{location.name}</span>
+                          {location.displayName !== location.name && (
+                            <span className="text-sm text-gray-500">{location.county.replace(/^[IVX]+\s/, '')}</span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
