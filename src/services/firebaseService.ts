@@ -722,23 +722,10 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
   }
 
 // Add comment to photo
-async addComment(photoId: string, text: string, userId: string): Promise<string> {
+async addComment(photoId: string, text: string, userId: string, userName: string): Promise<string> {
   try {
-    console.log('💬 Adding comment...', { photoId, text, userId });
+    console.log('💬 Adding comment...', { photoId, text, userId, userName});
 
-     // ✅ Dohvati user info da spremiš userName
-    let userName = 'Nepoznato';
-    try {
-      const userDocRef = doc(db, 'users', userId);
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        userName = userData.displayName || userData.email || 'Nepoznato';
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    }
-    
    const comment: Omit<Comment, 'id'> = {
       photoId,
       userId,
@@ -751,7 +738,6 @@ async addComment(photoId: string, text: string, userId: string): Promise<string>
     const docRef = await addDoc(this.commentsCollection, comment);
     console.log('✅ Comment saved with ID:', docRef.id);
 
-    // NOVO: Dodaj aktivnost
     if (userId) {
       console.log('📸 Fetching photo details for:', photoId);
       

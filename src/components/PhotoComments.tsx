@@ -217,80 +217,78 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
     }
   };
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
+const handleSubmitComment = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!newComment.trim()) {
+    toast.error(t('comments.emptyComment'));
+    return;
+  }
+  
+  if (!user) {
+    toast.error(t('comments.mustBeSignedIn'));
+    return;
+  }
+
+  // ✅ RATE LIMIT PROVJERA
+  if (!rateLimitInfo.canComment) {
+    let errorMessage = '';
     
-    if (!newComment.trim()) {
-      toast.error(t('comments.emptyComment'));
-      return;
-    }
-    
-    if (!user) {
-      toast.error(t('comments.mustBeSignedIn'));
-      return;
+    if (rateLimitInfo.commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
+      errorMessage = `🚫 Možeš objaviti najviše ${MAX_COMMENTS_PER_MINUTE} komentara u minuti.\n\nPričekaj malo! ⏱️`;
+    } else if (rateLimitInfo.commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
+      errorMessage = `🚫 Dostigao si limit od ${MAX_COMMENTS_PER_HOUR} komentara po satu.\n\nPokušaj ponovo kasnije! ⏰`;
+    } else if (rateLimitInfo.commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
+      errorMessage = `🚫 Dostigao si dnevni limit od ${MAX_COMMENTS_PER_DAY} komentara.\n\nVrati se sutra! 📅`;
     }
 
-    // ✅ RATE LIMIT PROVJERA
-    if (!rateLimitInfo.canComment) {
-      let errorMessage = '';
-      
-      if (rateLimitInfo.commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
-        errorMessage = `🚫 Možeš objaviti najviše ${MAX_COMMENTS_PER_MINUTE} komentara u minuti.\n\nPričekaj malo! ⏱️`;
-      } else if (rateLimitInfo.commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
-        errorMessage = `🚫 Dostigao si limit od ${MAX_COMMENTS_PER_HOUR} komentara po satu.\n\nPokušaj ponovo kasnije! ⏰`;
-      } else if (rateLimitInfo.commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
-        errorMessage = `🚫 Dostigao si dnevni limit od ${MAX_COMMENTS_PER_DAY} komentara.\n\nVrati se sutra! 📅`;
-      }
+    toast.error(errorMessage, { duration: 5000 });
+    return;
+  }
 
-      toast.error(errorMessage, { duration: 5000 });
-      return;
-    }
+  setIsSubmitting(true);
 
-    setIsSubmitting(true);
+  try {
+    const { photoService } = await import('../services/firebaseService');
 
-    try {
-      const { photoService } = await import('../services/firebaseService');
-
-     // ✅ POSTOJEĆI KOD
+    // ✅ PROMIJENI - dodaj userName kao 4. parametar
     await photoService.addComment(
       photoId,
       newComment.trim(),
-      user.uid
+      user.uid,
+      user.displayName || user.email || 'Nepoznato'  // ⬅️ DODAJ OVO
     );
     
-    // ✅✅✅ DODAJ OVAJ NOVI KOD ✅✅✅
-    // Send notification to photo owner (if not commenting on own photo)
+    // ✅✅✅ Send notification to photo owner
     if (photoAuthorId && photoAuthorId !== user.uid) {
       try {
         await notificationService.notifyNewComment(
-          photoAuthorId,                    // Photo owner ID
-          user.uid,                         // Commenter ID
-          user.displayName || 'Anonymous',  // Commenter name
-          photoId,                          // Photo ID
-          photoAuthor || 'untitled photo',  // Photo title/description
-          user.photoURL || undefined        // Commenter avatar
+          photoAuthorId,
+          user.uid,
+          user.displayName || 'Anonymous',
+          photoId,
+          photoAuthor || 'untitled photo',
+          user.photoURL || undefined
         );
         console.log('✅ Comment notification sent');
       } catch (notifError) {
         console.error('⚠️ Failed to send comment notification:', notifError);
-        // Don't fail the whole operation if notification fails
       }
     }
-    // ✅✅✅ KRAJ NOVOG KODA ✅✅✅
       
-      setNewComment("");
-      toast.success(t('comments.commentAdded'));
-      
-      // ✅ REFRESH rate limit info after successful comment
-      await checkUserCommentRateLimit();
-      
-    } catch (error) {
-      console.error('Greška pri dodavanju komentara:', error);
-      toast.error(t('comments.postError'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    setNewComment("");
+    toast.success(t('comments.commentAdded'));
+    
+    // ✅ REFRESH rate limit info after successful comment
+    await checkUserCommentRateLimit();
+    
+  } catch (error) {
+    console.error('Greška pri dodavanju komentara:', error);
+    toast.error(t('comments.postError'));
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // ✅ FORMAT REMAINING TIME
   const formatRemainingTime = (date: Date) => {
