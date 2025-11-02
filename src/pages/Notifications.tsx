@@ -237,7 +237,7 @@ const NotificationsPage = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Navigation Header */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="w-full max-w-full sm:max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">

@@ -227,7 +227,7 @@ const translations: Record<Language, TranslationMap> = {
     // PhotoUpload komponenta
     'upload.addPhotoTo': 'Add Historical Photo to',
     'upload.clickToUpload': 'Click to upload a historical photo',
-    'upload.fileTypes': 'PNG, JPG, JPEG up to 20MB',
+    'upload.fileTypes': 'PNG, JPG, WebP up to 20MB',
     'upload.specificAddress': 'Specific Address in',
     'upload.optional': '(Optional)',
     'upload.searchAddress': 'Search for street, landmark, or building...',
@@ -1049,7 +1049,7 @@ const translations: Record<Language, TranslationMap> = {
     // PhotoUpload komponenta
     'upload.addPhotoTo': 'Dodaj povijesnu fotografiju u',
     'upload.clickToUpload': 'Kliknite za učitavanje povijesne fotografije',
-    'upload.fileTypes': 'PNG, JPG, JPEG do 20MB',
+    'upload.fileTypes': 'PNG, JPG, WebP do 20MB',
     'upload.specificAddress': 'Specifična adresa u',
     'upload.optional': '(Neobavezno)',
     'upload.searchAddress': 'Pretražite ulicu, znamenitost ili zgradu...',

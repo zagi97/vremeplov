@@ -323,22 +323,47 @@ export class PhotoService {
   private userViewsCollection = collection(db, 'userViews');
 
   // Upload photo to Firebase Storage
-  async uploadPhotoFile(file: File, photoId: string): Promise<string> {
-    try {
-      const timestamp = Date.now();
-      const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `photos/${photoId}/${fileName}`);
-      
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
-      return downloadURL;
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      throw error;
+async uploadPhotoFile(file: File, photoId: string): Promise<string> {
+  try {
+    // ✅ 1. VALIDATE FILE EXISTS
+    if (!file) {
+      throw new Error('No file provided');
     }
+    
+    // ✅ 2. BLOCK GIF FILES
+    if (file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif')) {
+      throw new Error('🚫 GIF datoteke nisu podržane. Molimo koristite JPG, PNG ili WebP format.');
+    }
+    
+    // ✅ 3. VALIDATE FILE TYPE
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error(`Nepodržan format slike: ${file.type}. Dozvoljeni: JPG, PNG, WebP`);
+    }
+    
+    // ✅ 4. VALIDATE FILE SIZE (20MB)
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+    if (file.size > MAX_SIZE) {
+      const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+      throw new Error(`Slika je prevelika (${sizeMB}MB). Maksimalna veličina je 20MB.`);
+    }
+    
+    // ✅ 5. PROCEED WITH UPLOAD (existing code)
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const storageRef = ref(storage, `photos/${photoId}/${fileName}`);
+    
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    console.log('✅ Photo uploaded successfully:', downloadURL);
+    return downloadURL;
+    
+  } catch (error) {
+    console.error('❌ Error uploading photo:', error);
+    throw error;
   }
-
+}
   // Update photo (useful for adding imageUrl after upload)
   async updatePhoto(photoId: string, updates: Partial<Photo>): Promise<void> {
     try {

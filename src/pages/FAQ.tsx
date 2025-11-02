@@ -80,7 +80,7 @@ const FAQ = () => {
   let questionCounter = 0;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA]">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
       <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
         <div className="container max-w-6xl mx-auto px-4">

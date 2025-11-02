@@ -270,7 +270,7 @@ const MapView: React.FC = () => {
 
     if (photos.length === 0) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA]">
+            <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
                 <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
                     <div className="container max-w-6xl mx-auto px-4">
                         <div className="flex items-center justify-between mb-4">
@@ -289,7 +289,7 @@ const MapView: React.FC = () => {
                     </div>
                 </header>
 
-                <div className="container max-w-6xl mx-auto px-4 py-12 text-center">
+                <div className="container max-w-6xl mx-auto px-4 py-12 text-center flex-1">
                     <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">{t('mapView.noLocatedPhotos')}</h3>
                     <p className="text-gray-600 mb-6">{t('mapView.photosWillAppear')}</p>
@@ -304,7 +304,7 @@ const MapView: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA]">
+        <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
             {/* Header */}
             <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
                 <div className="container max-w-6xl mx-auto px-4">
@@ -363,7 +363,7 @@ const MapView: React.FC = () => {
             </div>
 
             {/* CUSTOM CLUSTERING MAPA */}
-            <div className="container max-w-6xl mx-auto px-4 py-6">
+            <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
                     <div style={{ height: '600px', width: '100%' }}>
                         <MapContainer

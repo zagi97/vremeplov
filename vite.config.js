@@ -93,6 +93,10 @@ export default defineConfig({
       'react-dom',
       'react-router-dom',
       'lucide-react', // Icon library - često se koristi
+      'firebase/app',
+      'firebase/firestore',
+      'firebase/auth',
+      'firebase/storage'
     ],
     exclude: [
       // ✅ KRITIČNO: Ne pre-bundle Firebase module (lazy load ih!)
@@ -100,6 +104,9 @@ export default defineConfig({
       'firebase/auth',
       'firebase/storage',
     ],
+    esbuildOptions: {
+      target: 'esnext'
+    }
   },
   
   server: {

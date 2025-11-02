@@ -612,12 +612,22 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];
   if (!file) return;
   
+  // ❌ Block non-images
   if (!file.type.startsWith('image/')) {
     toast.error(t('errors.invalidImageType'));
     return;
   }
   
-  // Povećajte limit na 20MB jer sada imamo bolju kompresiju
+  // ✅ NOVI KOD - BLOCK GIF FILES
+  if (file.type === 'image/gif') {
+    toast.error('🚫 GIF animacije nisu podržane. Molimo koristite JPG, PNG ili WebP format.', {
+      duration: 5000
+    });
+    event.target.value = ''; // Reset input field
+    return;
+  }
+  
+  // ❌ Block large files (20MB limit)
   if (file.size > 20 * 1024 * 1024) {
     toast.error(t('errors.imageTooLarge'));
     return;
@@ -651,12 +661,12 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (compressedFile.size < file.size) {
       const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
       toast.success(
-  translateWithParams(t, 'upload.compressed', { 
-    original: originalSizeMB, 
-    compressed: compressedSizeMB, 
-    reduction: reduction 
-  })
-);
+        translateWithParams(t, 'upload.compressed', { 
+          original: originalSizeMB, 
+          compressed: compressedSizeMB, 
+          reduction: reduction 
+        })
+      );
     } else {
       toast.success(t('upload.optimalSize'));
     }
@@ -996,7 +1006,7 @@ if (coordinates && selectedAddress) {
                     id="photo-upload"
                     type="file"
                     className="hidden"
-                    accept="image/*"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
                     onChange={handleFileChange}
                   />
                 </div>
