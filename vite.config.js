@@ -88,8 +88,14 @@ export default defineConfig({
           
           // ✅ Radix UI Components (heavy, separate chunk)
           if (id.includes('@radix-ui/')) {
-            return 'ui-radix';
-          }
+  // ✅ Ne grupiraj SVE Radix u jedan chunk!
+  // Svaki Radix component ide u svoj mini-chunk
+  const match = id.match(/@radix-ui\/react-([^/]+)/);
+  if (match) {
+    return `radix-${match[1]}`;
+  }
+  return 'ui-radix';
+}
           
           // ✅ Routing
           if (id.includes('react-router-dom')) {
