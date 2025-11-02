@@ -620,18 +620,17 @@ const Location = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedPhotos.map((photo) => (
-                  <Link 
-                    key={photo.id} 
-                    to={`/photo/${photo.id}`}
-                    className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
-                  >
-                    <div className="aspect-[4/3] overflow-hidden relative">
-                      <LazyImage
-                        src={photo.imageUrl}
-                        alt={`${photo.location}, ${photo.year}`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    </div>
+<Link 
+  key={photo.id} 
+  to={`/photo/${photo.id}`}
+  className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
+>
+<LazyImage
+    src={photo.imageUrl}
+    alt={`${photo.location}, ${photo.year}`}
+    className="transition-transform duration-500 group-hover:scale-110"
+    aspectRatio="4/3"
+  />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
                     <div className="absolute bottom-0 left-0 p-4 w-full">
                       <h3 className="text-white text-lg font-semibold">{photo.description}</h3>

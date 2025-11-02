@@ -19,93 +19,172 @@ export default defineConfig({
     }
   },
   
-  // ✅ BUILD OPTIMIZATIONS - UPGRADED!
+  // ✅ BUILD OPTIMIZATIONS - FULLY OPTIMIZED!
   build: {
-    // ✅ UPGRADE: es2015 → es2020 (moderan browsers, manji bundle!)
-    target: 'es2020', // bilo: 'es2015'
+    // ✅ Target modernije browsere za manji bundle
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
         drop_debugger: true,
-        // ✅ NOVO: Dodatne optimizacije
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-        passes: 2, // Terser će napraviti 2 prolaza za bolju kompresiju
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.trace'],
+        passes: 3, // ✅ UPGRADED: 3 prohoda za maksimalnu kompresiju
+        // ✅ NOVE OPTIMIZACIJE:
+        arguments: true,
+        booleans_as_integers: false,
+        hoist_funs: true,
+        keep_fargs: false,
+        unsafe_arrows: true,
+        unsafe_methods: true,
+        unsafe_proto: true,
       },
       mangle: {
-        // Omogući mangle za bolje minifikacije
         safari10: true,
+        properties: {
+          // ✅ NOVO: Mangle privatna svojstva (dodatna kompresija)
+          regex: /^_/
+        }
       },
+      format: {
+        // ✅ NOVO: Ukloni komentare
+        comments: false,
+        // ✅ NOVO: Maksimalna kompresija
+        ecma: 2020
+      }
     },
     
     rollupOptions: {
       output: {
-        // ✅ OPTIMIZED: Bolji chunk splitting!
-        manualChunks: {
-          // React core (lightweight, often cached)
-          'react-vendor': ['react', 'react-dom'],
+        // ✅ KRITIČNO: POBOLJŠAN chunk splitting!
+        manualChunks: (id) => {
+          // ✅ React Core (mali, često cached)
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-vendor';
+          }
           
-          // ✅ KRITIČNO: Razdvoji Firebase module za lazy loading!
-          'firebase-core': ['firebase/app'],
-          'firebase-firestore': ['firebase/firestore'],
-          'firebase-auth': ['firebase/auth'],
-          'firebase-storage': ['firebase/storage'],
+          // ✅ FIREBASE - Razdvojeno za LAZY LOADING!
+          if (id.includes('firebase/app')) {
+            return 'firebase-core';
+          }
+          if (id.includes('firebase/firestore') || id.includes('@firebase/firestore')) {
+            return 'firebase-firestore';
+          }
+          if (id.includes('firebase/auth') || id.includes('@firebase/auth')) {
+            return 'firebase-auth';
+          }
+          if (id.includes('firebase/storage') || id.includes('@firebase/storage')) {
+            return 'firebase-storage';
+          }
           
-          // UI libraries
-          'ui-icons': ['lucide-react'],
-          'ui-toast': ['sonner'],
+          // ✅ UI Libraries (grupirano po funkcionalnosti)
+          if (id.includes('lucide-react')) {
+            return 'ui-icons';
+          }
+          if (id.includes('sonner')) {
+            return 'ui-toast';
+          }
           
-          // ✅ NOVO: Radix UI components (ako ih koristiš)
-          'ui-radix': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-tabs',
-          ],
+          // ✅ Radix UI Components (heavy, separate chunk)
+          if (id.includes('@radix-ui/')) {
+            return 'ui-radix';
+          }
           
-          // Routing
-          'routing': ['react-router-dom'],
+          // ✅ Routing
+          if (id.includes('react-router-dom')) {
+            return 'routing';
+          }
           
-          // ✅ NOVO: Maps (heavy library, treba biti separate chunk!)
-          'maps': ['leaflet', 'react-leaflet'],
+          // ✅ Maps (heavy library!)
+          if (id.includes('leaflet') || id.includes('react-leaflet')) {
+            return 'maps';
+          }
+          
+          // ✅ NOVO: Vercel Analytics (separate)
+          if (id.includes('@vercel/analytics')) {
+            return 'analytics';
+          }
+          
+          // ✅ Sve ostalo iz node_modules ide u vendor
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         
-        // ✅ NOVO: Bolji file naming za browser caching
-        chunkFileNames: 'assets/js/[name]-[hash].js',
+        // ✅ Optimized file naming za browser caching
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `assets/js/[name]-[hash].js`;
+        },
         entryFileNames: 'assets/js/[name]-[hash].js',
-        assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
+        assetFileNames: (assetInfo) => {
+          // ✅ Organiziraj assets po tipu
+          let extType = assetInfo.name.split('.').at(1);
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+            extType = 'images';
+          } else if (/woff|woff2|eot|ttf|otf/i.test(extType)) {
+            extType = 'fonts';
+          }
+          return `assets/${extType}/[name]-[hash].[ext]`;
+        },
+        
+        // ✅ NOVO: Compact output
+        compact: true,
+        
+        // ✅ NOVO: Hoisting za bolju tree-shaking
+        hoistTransitiveImports: false,
+      },
+      
+      // ✅ NOVO: Tree-shaking optimizacije
+      treeshake: {
+        moduleSideEffects: 'no-external',
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false
       }
     },
     
-    chunkSizeWarningLimit: 1000,
+    // ✅ Chunk size warning threshold
+    chunkSizeWarningLimit: 800, // ✅ Smanjen sa 1000 na 800
     
-    // ✅ NOVO: Sourcemaps (opciono, za debugging u production)
-    sourcemap: false, // Stavi na true ako trebaš source maps
+    // ✅ Sourcemaps OFF za production (manji bundle)
+    sourcemap: false,
+    
+    // ✅ NOVO: CSS code splitting
+    cssCodeSplit: true,
+    
+    // ✅ NOVO: Minify CSS
+    cssMinify: true,
+    
+    // ✅ NOVO: Report compressed size (za debugging)
+    reportCompressedSize: true,
   },
   
-  // ✅ NOVO: Optimization za dependencies
+  // ✅ OPTIMIZED: Dependency pre-bundling
   optimizeDeps: {
     include: [
       'react',
       'react-dom',
       'react-router-dom',
-      'lucide-react', // Icon library - često se koristi
+      'lucide-react',
+      // ✅ NE includiraj Firebase - lazy load ih!
+    ],
+    exclude: [
+      // ✅ Firebase se NE pre-bundlea - lazy load!
       'firebase/app',
       'firebase/firestore',
       'firebase/auth',
-      'firebase/storage'
-    ],
-    exclude: [
-      // ✅ KRITIČNO: Ne pre-bundle Firebase module (lazy load ih!)
-      'firebase/firestore',
-      'firebase/auth',
       'firebase/storage',
+      '@firebase/app',
+      '@firebase/firestore',
+      '@firebase/auth',
+      '@firebase/storage',
     ],
     esbuildOptions: {
-      target: 'esnext'
+      target: 'es2020',
+      // ✅ NOVO: Additional esbuild optimizations
+      drop: ['console', 'debugger'],
+      legalComments: 'none',
     }
   },
   
@@ -115,14 +194,24 @@ export default defineConfig({
     hmr: { 
       overlay: false 
     },
-    // ✅ NOVO: Enable network access (za mobile testing)
-    host: true,
+    host: true, // Enable network access
   },
   
   preview: {
     port: 4173,
     open: true,
-    // ✅ NOVO: Enable network access
-    host: true,
-  }
+    host: true, // Enable network access
+  },
+  
+  // ✅ NOVO: Experimental features
+  experimental: {
+    // Render built-in optimization hints
+    renderBuiltUrl(filename, { hostType }) {
+      if (hostType === 'js') {
+        return { runtime: `window.__assetsPath('${filename}')` };
+      } else {
+        return { relative: true };
+      }
+    },
+  },
 });
