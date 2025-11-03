@@ -17,6 +17,145 @@ import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker impor
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { userService } from '@/services/userService';
 
+// ✅ IMAGE OPTIMIZATION CONFIGURATION
+const IMAGE_CONFIG = {
+  sizes: [
+    { width: 800, suffix: '800w', quality: 0.85 },
+    { width: 1200, suffix: '1200w', quality: 0.85 },
+    { width: 1600, suffix: '1600w', quality: 0.85 },
+  ],
+  webp: { quality: 0.85, enabled: true },
+  jpeg: { quality: 0.90, enabled: true },
+  maxOriginalWidth: 2400,
+  maxOriginalHeight: 2400,
+};
+
+// ✅ UTILITY: Resize image
+const resizeImage = (
+  img: HTMLImageElement,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number,
+  format: 'image/webp' | 'image/jpeg' = 'image/jpeg'
+): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    let width = img.width;
+    let height = img.height;
+
+    if (width > height) {
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      reject(new Error('Could not get canvas context'));
+      return;
+    }
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, width, height);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Canvas to Blob conversion failed'));
+      },
+      format,
+      quality
+    );
+  });
+};
+
+// ✅ UTILITY: Generate multiple sizes
+const generateImageSizes = async (
+  file: File
+): Promise<{
+  original: { blob: Blob; width: number; height: number };
+  webp: Array<{ blob: Blob; suffix: string; width: number }>;
+  jpeg: Array<{ blob: Blob; suffix: string; width: number }>;
+}> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+      img.src = e.target?.result as string;
+    };
+
+    img.onload = async () => {
+      try {
+        const results = {
+          original: { blob: null as any, width: img.width, height: img.height },
+          webp: [] as Array<{ blob: Blob; suffix: string; width: number }>,
+          jpeg: [] as Array<{ blob: Blob; suffix: string; width: number }>,
+        };
+
+        const originalBlob = await resizeImage(
+          img,
+          IMAGE_CONFIG.maxOriginalWidth,
+          IMAGE_CONFIG.maxOriginalHeight,
+          IMAGE_CONFIG.jpeg.quality,
+          'image/jpeg'
+        );
+        results.original.blob = originalBlob;
+
+        for (const size of IMAGE_CONFIG.sizes) {
+          if (img.width < size.width) continue;
+
+          if (IMAGE_CONFIG.webp.enabled) {
+            const webpBlob = await resizeImage(
+              img,
+              size.width,
+              size.width * (img.height / img.width),
+              size.quality,
+              'image/webp'
+            );
+            results.webp.push({
+              blob: webpBlob,
+              suffix: size.suffix,
+              width: size.width,
+            });
+          }
+
+          if (IMAGE_CONFIG.jpeg.enabled) {
+            const jpegBlob = await resizeImage(
+              img,
+              size.width,
+              size.width * (img.height / img.width),
+              IMAGE_CONFIG.jpeg.quality,
+              'image/jpeg'
+            );
+            results.jpeg.push({
+              blob: jpegBlob,
+              suffix: size.suffix,
+              width: size.width,
+            });
+          }
+        }
+
+        resolve(results);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    img.onerror = () => reject(new Error('Failed to load image'));
+    reader.readAsDataURL(file);
+  });
+};
+
 interface PhotoUploadProps {
   locationName: string;
   onSuccess?: () => void;
@@ -746,7 +885,50 @@ if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
     console.log('Selected address:', selectedAddress);
     console.log('Coordinates:', coordinates);
     
-    const imageUrl = await photoService.uploadPhotoFile(selectedFile, photoId);
+    // ✅ STEP 1: Generate all image sizes
+console.log('🔄 Starting image optimization...');
+const imageSizes = await generateImageSizes(selectedFile);
+
+// ✅ STEP 2: Upload all images
+const timestamp = Date.now();
+const baseName = `${locationName}-${timestamp}`;
+
+const uploadedUrls: {
+  original: string;
+  webp: Array<{ url: string; width: number; suffix: string }>;
+  jpeg: Array<{ url: string; width: number; suffix: string }>;
+} = {
+  original: '',
+  webp: [],
+  jpeg: [],
+};
+
+// Upload original
+uploadedUrls.original = await photoService.uploadImage(
+  imageSizes.original.blob,
+  `${baseName}-original.jpg`
+);
+
+// Upload WebP versions
+for (const webp of imageSizes.webp) {
+  const url = await photoService.uploadImage(
+    webp.blob,
+    `${baseName}-${webp.suffix}.webp`
+  );
+  uploadedUrls.webp.push({ url, width: webp.width, suffix: webp.suffix });
+}
+
+// Upload JPEG fallback
+for (const jpeg of imageSizes.jpeg) {
+  const url = await photoService.uploadImage(
+    jpeg.blob,
+    `${baseName}-${jpeg.suffix}.jpg`
+  );
+  uploadedUrls.jpeg.push({ url, width: jpeg.width, suffix: jpeg.suffix });
+}
+
+console.log('✅ All images uploaded:', uploadedUrls);
+const imageUrl = uploadedUrls.original; // For backward compatibility
     console.log('File upload successful, creating database record...');
     
     let uploaderName = 'Unknown';
@@ -759,6 +941,15 @@ if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
    // ✅ Prepare photo data object
 const photoData: any = {
   imageUrl: imageUrl,
+  responsiveImages: {
+    webp: uploadedUrls.webp,
+    jpeg: uploadedUrls.jpeg,
+    original: uploadedUrls.original,
+  },
+  imageDimensions: {
+    width: imageSizes.original.width,
+    height: imageSizes.original.height,
+  },
   imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
   year: formData.year,
   description: formData.description,

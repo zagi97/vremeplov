@@ -1,10 +1,16 @@
 // src/components/LazyImage.tsx
-// ✅ OPTIMIZED VERSION WITH CLS FIX
+// ✅ OPTIMIZED VERSION WITH RESPONSIVE SRCSET SUPPORT
 
 import React, { useState, useEffect, useRef } from 'react';
 
+interface ResponsiveImages {
+  webp?: Array<{ url: string; width: number; suffix: string }>;
+  jpeg?: Array<{ url: string; width: number; suffix: string }>;
+  original?: string;
+}
+
 interface LazyImageProps {
-  src: string;
+  src: string; // Main image URL (for backward compatibility)
   alt: string;
   className?: string;
   onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
@@ -12,7 +18,8 @@ interface LazyImageProps {
   placeholder?: React.ReactNode;
   threshold?: number;
   rootMargin?: string;
-  aspectRatio?: string; // ✅ NEW: Aspect ratio for CLS fix
+  aspectRatio?: string;
+  responsiveImages?: ResponsiveImages; // ✅ NEW: Responsive image URLs
 }
 
 const LazyImage: React.FC<LazyImageProps> = ({ 
@@ -23,7 +30,8 @@ const LazyImage: React.FC<LazyImageProps> = ({
   placeholder,
   threshold = 0.1,
   rootMargin = '100px',
-  aspectRatio = '4/3' // ✅ DEFAULT: 4:3 ratio (most historical photos)
+  aspectRatio = '4/3',
+  responsiveImages // ✅ NEW: Optional responsive images
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
@@ -32,12 +40,12 @@ const LazyImage: React.FC<LazyImageProps> = ({
   const imgRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
-  // ✅ Intersection Observer - detektira kad slika ulazi u viewport
+  // ✅ Intersection Observer - detects when image enters viewport
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !isInView) {
-          console.log('LazyImage: Slika ušla u viewport, započinje učitavanje');
+          console.log('LazyImage: Image entered viewport, starting load');
           setIsInView(true);
           setIsLoading(true);
           observer.disconnect();
@@ -58,23 +66,34 @@ const LazyImage: React.FC<LazyImageProps> = ({
     };
   }, [threshold, rootMargin, isInView]);
 
-  // ✅ Handle kada se slika uspješno učita
+  // ✅ Handle successful image load
   const handleLoad = () => {
-    console.log('LazyImage: Slika uspješno učitana');
+    console.log('LazyImage: Image loaded successfully');
     setIsLoaded(true);
     setIsLoading(false);
     setHasError(false);
   };
 
-  // ✅ Handle greška pri učitavanju
+  // ✅ Handle image load error
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.warn('LazyImage: Greška pri učitavanju slike');
+    console.warn('LazyImage: Error loading image');
     setHasError(true);
     setIsLoading(false);
     
     if (onError) {
       onError(e);
     }
+  };
+
+  // ✅ Generate srcset string for responsive images
+  const generateSrcSet = (images: Array<{ url: string; width: number }> | undefined): string => {
+    if (!images || images.length === 0) return '';
+    return images.map(img => `${img.url} ${img.width}w`).join(', ');
+  };
+
+  // ✅ Generate sizes attribute (responsive breakpoints)
+  const getSizesAttribute = (): string => {
+    return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
   };
 
   // ✅ Default placeholder
@@ -90,15 +109,14 @@ const LazyImage: React.FC<LazyImageProps> = ({
   );
 
   return (
-    // ✅ CRITICAL FIX: Wrapper with aspect-ratio to prevent CLS!
     <div 
       ref={imgRef} 
       className={`relative overflow-hidden ${className}`}
       style={{ 
-        aspectRatio: aspectRatio // ✅ RESERVES SPACE BEFORE IMAGE LOADS!
+        aspectRatio: aspectRatio
       }}
     >
-      {/* ✅ Placeholder - prikazuje se dok se slika ne učita */}
+      {/* ✅ Placeholder */}
       {!isLoaded && !hasError && (
         <div className="absolute inset-0">
           {placeholder || defaultPlaceholder}
@@ -112,19 +130,40 @@ const LazyImage: React.FC<LazyImageProps> = ({
         </div>
       )}
 
-      {/* ✅ Glavna slika - učitava se samo kad je u viewport-u */}
+      {/* ✅ RESPONSIVE IMAGE with WebP support */}
       {isInView && (
-        <img
-          ref={imageRef}
-          src={src}
-          alt={alt}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            isLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading="lazy" // Browser native lazy loading kao backup
-        />
+        <picture>
+          {/* WebP source (modern browsers) */}
+          {responsiveImages?.webp && responsiveImages.webp.length > 0 && (
+            <source
+              type="image/webp"
+              srcSet={generateSrcSet(responsiveImages.webp)}
+              sizes={getSizesAttribute()}
+            />
+          )}
+          
+          {/* JPEG fallback source */}
+          {responsiveImages?.jpeg && responsiveImages.jpeg.length > 0 && (
+            <source
+              type="image/jpeg"
+              srcSet={generateSrcSet(responsiveImages.jpeg)}
+              sizes={getSizesAttribute()}
+            />
+          )}
+          
+          {/* Fallback img tag */}
+          <img
+            ref={imageRef}
+            src={responsiveImages?.original || src}
+            alt={alt}
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+              isLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={handleLoad}
+            onError={handleError}
+            loading="lazy"
+          />
+        </picture>
       )}
 
       {/* ✅ Error state */}
@@ -134,7 +173,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
             <svg className="w-8 h-8 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <span className="text-xs">Slika se ne može učitati</span>
+            <span className="text-xs">Failed to load image</span>
           </div>
         </div>
       )}

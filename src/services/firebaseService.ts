@@ -374,6 +374,18 @@ async uploadPhotoFile(file: File, photoId: string): Promise<string> {
     throw error;
   }
 }
+// Upload generic blob/file to storage
+async uploadImage(blob: Blob, fileName: string): Promise<string> {
+  try {
+    const storageRef = ref(storage, `photos/${fileName}`);
+    const snapshot = await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+  } catch (error) {
+    console.error('Error uploading image blob:', error);
+    throw error;
+  }
+}
   // Update photo (useful for adding imageUrl after upload)
   async updatePhoto(photoId: string, updates: Partial<Photo>): Promise<void> {
     try {
