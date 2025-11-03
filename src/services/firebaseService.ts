@@ -74,6 +74,16 @@ export interface Photo {
   author: string;
   authorId?: string;
   location: string;
+  // ✅ ADD THESE NEW FIELDS:
+  responsiveImages?: {
+    webp: Array<{ url: string; width: number; suffix: string }>;
+    jpeg: Array<{ url: string; width: number; suffix: string }>;
+    original: string;
+  };
+  imageDimensions?: {
+    width: number;
+    height: number;
+  };
   // ✅ DODAJ OVE NOVE KOORDINATE
   coordinates?: {
     latitude: number;

@@ -626,11 +626,12 @@ const Location = () => {
   className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
 >
 <LazyImage
-    src={photo.imageUrl}
-    alt={`${photo.location}, ${photo.year}`}
-    className="transition-transform duration-500 group-hover:scale-110"
-    aspectRatio="4/3"
-  />
+  src={photo.imageUrl}
+  alt={`${photo.location}, ${photo.year}`}
+  className="transition-transform duration-500 group-hover:scale-110"
+  aspectRatio="4/3"
+  responsiveImages={photo.responsiveImages} // ✅ ADD THIS!
+/>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
                     <div className="absolute bottom-0 left-0 p-4 w-full">
                       <h3 className="text-white text-lg font-semibold">{photo.description}</h3>

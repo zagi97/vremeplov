@@ -534,10 +534,12 @@ const handleLike = async () => {
               onClick={handleImageClick}
             >
               <LazyImage
-                src={photo.imageUrl}
-                alt={photo.description}
-                className="w-full h-auto rounded-lg"
-              />
+  src={photo.imageUrl}
+  alt={photo.description}
+  className="w-full h-auto rounded-lg"
+  responsiveImages={photo.responsiveImages}
+  aspectRatio="auto"
+/>
               
               {/* Hover-Only Tagged Persons */}
               <div className="absolute inset-0 rounded-lg overflow-hidden">
@@ -982,22 +984,22 @@ const handleLike = async () => {
                 <h3 className="font-medium text-lg mb-3">{t('photoDetail.relatedPhotos')}</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
-                    <Link 
-                      key={relatedPhoto.id} 
-                      to={`/photo/${relatedPhoto.id}`}
-                      className="block hover:opacity-90 transition-opacity"
-                    >
-                      <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-                        <LazyImage
-                          src={relatedPhoto.imageUrl}
-                          alt={relatedPhoto.description}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-sm font-medium">{relatedPhoto.description}</p>
-                      <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-                    </Link>
-                  ))}
+  <Link 
+    key={relatedPhoto.id} 
+    to={`/photo/${relatedPhoto.id}`}
+    className="block hover:opacity-90 transition-opacity"
+  >
+    <LazyImage
+      src={relatedPhoto.imageUrl}
+      alt={relatedPhoto.description}
+      className="w-full"
+      aspectRatio="4/3"
+      responsiveImages={relatedPhoto.responsiveImages} // ✅ ADD THIS LINE!
+    />
+    <p className="text-sm font-medium mt-2">{relatedPhoto.description}</p>
+    <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
+  </Link>
+))}
                 </div>
               </div>
             )}
