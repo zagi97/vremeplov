@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +7,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
+  CommandInput, // Ovo je ključni element
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -26,12 +25,13 @@ const SearchBar = () => {
   const [isValid, setIsValid] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const navigate = useNavigate();
-  
+   
   const [allLocations, setAllLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
-  
+   
   const containerRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // Više ne koristimo inputRef za gornje polje, CommandInput ga interno koristi
+  // const inputRef = useRef<HTMLInputElement>(null); 
 
   useEffect(() => {
     if (open && allLocations.length === 0 && !loading) {
@@ -63,15 +63,17 @@ const SearchBar = () => {
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
-    
+     
     if (value.trim()) {
       setOpen(true);
+    } else {
+      setOpen(false); // Zatvori popover ako je prazan unos
     }
-    
+     
     const matchingLocation = allLocations.find(location => 
       location.name === value || location.displayName === value
     );
-    
+     
     setSelectedLocation(matchingLocation || null);
     setIsValid(!!matchingLocation);
   };
@@ -79,7 +81,7 @@ const SearchBar = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      
+       
       if (
         containerRef.current && 
         !containerRef.current.contains(target) &&
@@ -99,71 +101,58 @@ const SearchBar = () => {
     <form ref={containerRef} onSubmit={handleSearch} className="relative flex w-full max-w-lg">
       <Popover 
         open={open} 
-        onOpenChange={(newOpen: any) => {
-          if (newOpen) {
-            setOpen(true);
-          }
-        }}
+        onOpenChange={setOpen} // Koristi standardni setOpen iz useState
       >
         <PopoverTrigger asChild>
-          {/* ✅ FIX 1: Remove type="button" from div, use proper role */}
-          <div className="flex-grow" role="combobox" aria-expanded={open} aria-haspopup="listbox">
-            <Input
-              ref={inputRef}
-              type="text"
-              placeholder={t('search.placeholder')}
-              className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
-              value={searchQuery}
-              onChange={(e) => {
-                handleInputChange(e.target.value);
-              }}
-              onFocus={() => {
-                if (searchQuery.trim()) {
-                  setOpen(true);
-                }
-              }}
-              style={{
-                backgroundColor: '#ffffff',
-                color: '#1f2937'
-              }}
-              aria-label={t('search.placeholder')}
-              aria-controls="location-listbox"
-            />
-          </div>
+          {/* ✅ PROMJENA 1: Koristimo samo CommandInput umjesto Input-a u Triggeru */}
+          <CommandInput
+            placeholder={t('search.placeholder')}
+            value={searchQuery}
+            onValueChange={handleInputChange}
+            onFocus={() => {
+              if (searchQuery.trim()) {
+                setOpen(true);
+              }
+            }}
+            // ✅ PROMJENA 2: Stilovi da CommandInput izgleda kao glavni search bar
+            className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
+            style={{
+              backgroundColor: '#ffffff',
+              color: '#1f2937'
+            }}
+            aria-label={t('search.placeholder')}
+          />
         </PopoverTrigger>
         <PopoverContent 
-          className="p-0 w-[300px] md:w-[400px]" 
+          // Postavi istu širinu kao trigger da bi se slagalo
+          className="p-0 w-[calc(100%-80px)] md:w-[calc(100%-100px)] z-50" 
           align="start"
+          // Ovdje su potrebne prilagodbe za Popover, ali ostavljam vaše postojeće
           onOpenAutoFocus={(e: { preventDefault: () => any; }) => e.preventDefault()}
           onEscapeKeyDown={(e: { preventDefault: () => void; }) => {
             e.preventDefault();
             setOpen(false);
           }}
           onPointerDownOutside={(e: { preventDefault: () => void; }) => {
-            e.preventDefault();
+            // Nemojte preventDefault na pointer down outside ako želite da se zatvori
+            // e.preventDefault();
           }}
           onFocusOutside={(e: { preventDefault: () => void; }) => {
-            e.preventDefault();
+            // Nemojte preventDefault na focus outside ako želite da se zatvori
+            // e.preventDefault();
           }}
-          onInteractOutside={(e: { preventDefault: () => void; }) => {
-            e.preventDefault();
+          onInteractOutside={() => {
+            setOpen(false); // Zatvori popover kada se klikne vani
           }}
         >
           <Command shouldFilter={false}>
-            <CommandInput
-              placeholder={t('search.inputPlaceholder')}
-              value={searchQuery}
-              onValueChange={(value: string) => {
-                handleInputChange(value);
-              }}
-              className="h-9"
-            />
+            {/* ✅ PROMJENA 3: Uklonili smo CommandInput iz Command bloka! */}
             <CommandList id="location-listbox" role="listbox">
               {loading ? (
-                <CommandEmpty>{t('common.loading')}</CommandEmpty>
+                <CommandEmpty className="py-2">{t('common.loading')}</CommandEmpty>
               ) : (
                 <>
-                  <CommandEmpty>{t('search.noLocations')}</CommandEmpty>
+                  <CommandEmpty className="py-2">{t('search.noLocations')}</CommandEmpty>
                   <CommandGroup>
                     {filteredLocations.map((location) => (
                       <CommandItem
@@ -189,7 +178,7 @@ const SearchBar = () => {
           </Command>
         </PopoverContent>
       </Popover>
-      {/* ✅ FIX 2: Add aria-label to button */}
+      {/* Dugme ostaje isto */}
       <Button
         type="submit"
         className="rounded-l-none h-12 px-4 bg-blue-600 hover:bg-blue-700"
