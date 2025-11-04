@@ -1,5 +1,5 @@
 // src/components/LazyImage.tsx
-// ✅ OPTIMIZED VERSION WITH RESPONSIVE SRCSET SUPPORT
+// ✅ FIXED VERSION - Ready for production!
 
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -10,16 +10,15 @@ interface ResponsiveImages {
 }
 
 interface LazyImageProps {
-  src: string; // Main image URL (for backward compatibility)
+  src: string;
   alt: string;
   className?: string;
   onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
-  fallbackSrc?: string;
   placeholder?: React.ReactNode;
   threshold?: number;
   rootMargin?: string;
   aspectRatio?: string;
-  responsiveImages?: ResponsiveImages; // ✅ NEW: Responsive image URLs
+  responsiveImages?: ResponsiveImages;
 }
 
 const LazyImage: React.FC<LazyImageProps> = ({ 
@@ -31,109 +30,126 @@ const LazyImage: React.FC<LazyImageProps> = ({
   threshold = 0.1,
   rootMargin = '100px',
   aspectRatio = '4/3',
-  responsiveImages // ✅ NEW: Optional responsive images
+  responsiveImages
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const imgRef = useRef<HTMLDivElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
 
-  // ✅ Intersection Observer - detects when image enters viewport
+  // ✅ Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !isInView) {
-          console.log('LazyImage: Image entered viewport, starting load');
           setIsInView(true);
           setIsLoading(true);
           observer.disconnect();
         }
       },
-      { 
-        threshold,
-        rootMargin
-      }
+      { threshold, rootMargin }
     );
 
     if (imgRef.current) {
       observer.observe(imgRef.current);
     }
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, [threshold, rootMargin, isInView]);
 
-  // ✅ Handle successful image load
+  // ✅ Handle load/error
   const handleLoad = () => {
-    console.log('LazyImage: Image loaded successfully');
     setIsLoaded(true);
     setIsLoading(false);
     setHasError(false);
   };
 
-  // ✅ Handle image load error
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.warn('LazyImage: Error loading image');
+    console.warn('LazyImage: Error loading', src);
     setHasError(true);
     setIsLoading(false);
-    
-    if (onError) {
-      onError(e);
-    }
+    onError?.(e);
   };
 
-  // ✅ Generate srcset string for responsive images
-  const generateSrcSet = (images: Array<{ url: string; width: number }> | undefined): string => {
-    if (!images || images.length === 0) return '';
-    return images.map(img => `${img.url} ${img.width}w`).join(', ');
+  // ✅ FIXED: Generate srcset
+  const generateSrcSet = (images: Array<{ url: string; width: number }> | undefined): string | undefined => {
+    if (!images || images.length === 0) return undefined;
+    return images
+      .sort((a, b) => a.width - b.width) // Sort ascending (800w, 1200w, 1600w)
+      .map(img => `${img.url} ${img.width}w`)
+      .join(', ');
   };
 
-  // ✅ Generate sizes attribute (responsive breakpoints)
+  // ✅ FIXED: Smart sizes based on aspectRatio
   const getSizesAttribute = (): string => {
-    return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
+    if (aspectRatio === '4/3') {
+      // Grid layout (PhotoGrid, Location page)
+      return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
+    }
+    // Photo detail, full-width hero
+    return '(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px';
   };
 
-  // ✅ Default placeholder
+  // ✅ FIXED: Smart fallback src
+  const getFallbackSrc = (): string => {
+    // Priority 1: Use original if exists
+    if (responsiveImages?.original) {
+      return responsiveImages.original;
+    }
+    
+    // Priority 2: Use largest WebP if exists
+    if (responsiveImages?.webp && responsiveImages.webp.length > 0) {
+      const largest = responsiveImages.webp.reduce((prev, curr) => 
+        curr.width > prev.width ? curr : prev
+      );
+      return largest.url;
+    }
+    
+    // Priority 3: Use largest JPEG if exists
+    if (responsiveImages?.jpeg && responsiveImages.jpeg.length > 0) {
+      const largest = responsiveImages.jpeg.reduce((prev, curr) => 
+        curr.width > prev.width ? curr : prev
+      );
+      return largest.url;
+    }
+    
+    // Priority 4: Legacy fallback
+    return src;
+  };
+
+  // ✅ Placeholder
   const defaultPlaceholder = (
-    <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-      <div className="text-gray-400 text-center">
-        <svg className="w-8 h-8 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-        </svg>
-        <span className="text-xs">Loading...</span>
-      </div>
-    </div>
+    <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
   );
+
+  // ✅ FIXED: CSS aspect-ratio syntax
+  const getAspectRatioStyle = () => {
+    if (aspectRatio === 'auto') return {};
+    // Convert "4/3" to "4 / 3" for CSS
+    return { aspectRatio: aspectRatio.replace('/', ' / ') };
+  };
 
   return (
     <div 
       ref={imgRef} 
-      className={`relative overflow-hidden ${className}`}
-      style={{ 
-        aspectRatio: aspectRatio
-      }}
+      className={`relative overflow-hidden bg-gray-100 ${className}`}
+      style={getAspectRatioStyle()}
     >
-      {/* ✅ Placeholder */}
-      {!isLoaded && !hasError && (
-        <div className="absolute inset-0">
-          {placeholder || defaultPlaceholder}
-        </div>
-      )}
+      {/* Placeholder */}
+      {!isLoaded && !hasError && (placeholder || defaultPlaceholder)}
 
-      {/* ✅ Loading indicator */}
+      {/* Loading spinner */}
       {isLoading && !isLoaded && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
         </div>
       )}
 
-      {/* ✅ RESPONSIVE IMAGE with WebP support */}
-      {isInView && (
+      {/* ✅ RESPONSIVE IMAGE */}
+      {isInView && !hasError && (
         <picture>
-          {/* WebP source (modern browsers) */}
+          {/* WebP source */}
           {responsiveImages?.webp && responsiveImages.webp.length > 0 && (
             <source
               type="image/webp"
@@ -151,10 +167,9 @@ const LazyImage: React.FC<LazyImageProps> = ({
             />
           )}
           
-          {/* Fallback img tag */}
+          {/* Img tag with smart fallback */}
           <img
-            ref={imageRef}
-            src={responsiveImages?.original || src}
+            src={getFallbackSrc()}
             alt={alt}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
               isLoaded ? 'opacity-100' : 'opacity-0'
@@ -162,18 +177,19 @@ const LazyImage: React.FC<LazyImageProps> = ({
             onLoad={handleLoad}
             onError={handleError}
             loading="lazy"
+            decoding="async"
           />
         </picture>
       )}
 
-      {/* ✅ Error state */}
+      {/* Error state */}
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
           <div className="text-center">
-            <svg className="w-8 h-8 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <span className="text-xs">Failed to load image</span>
+            <span className="text-xs">Image failed to load</span>
           </div>
         </div>
       )}
