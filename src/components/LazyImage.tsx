@@ -1,5 +1,5 @@
 // src/components/LazyImage.tsx
-// ✅ FIXED VERSION - Ready for production!
+// ✅ FINAL VERSION - With Safety Checks!
 
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -29,7 +29,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
   placeholder,
   threshold = 0.1,
   rootMargin = '100px',
-  aspectRatio = '4/3',
+  aspectRatio = '4/3',  // ← Default value
   responsiveImages
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -72,46 +72,54 @@ const LazyImage: React.FC<LazyImageProps> = ({
     onError?.(e);
   };
 
-  // ✅ FIXED: Generate srcset
+  // ✅ Generate srcset - SAFE VERSION
   const generateSrcSet = (images: Array<{ url: string; width: number }> | undefined): string | undefined => {
     if (!images || images.length === 0) return undefined;
-    return images
-      .sort((a, b) => a.width - b.width) // Sort ascending (800w, 1200w, 1600w)
-      .map(img => `${img.url} ${img.width}w`)
-      .join(', ');
+    
+    try {
+      return images
+        .sort((a, b) => a.width - b.width)
+        .map(img => `${img.url} ${img.width}w`)
+        .join(', ');
+    } catch (err) {
+      console.error('LazyImage: Error generating srcset', err);
+      return undefined;
+    }
   };
 
-  // ✅ FIXED: Smart sizes based on aspectRatio
+  // ✅ Smart sizes based on aspectRatio
   const getSizesAttribute = (): string => {
     if (aspectRatio === '4/3') {
-      // Grid layout (PhotoGrid, Location page)
       return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
     }
-    // Photo detail, full-width hero
     return '(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px';
   };
 
-  // ✅ FIXED: Smart fallback src
+  // ✅ SAFE: Smart fallback src
   const getFallbackSrc = (): string => {
-    // Priority 1: Use original if exists
-    if (responsiveImages?.original) {
-      return responsiveImages.original;
-    }
-    
-    // Priority 2: Use largest WebP if exists
-    if (responsiveImages?.webp && responsiveImages.webp.length > 0) {
-      const largest = responsiveImages.webp.reduce((prev, curr) => 
-        curr.width > prev.width ? curr : prev
-      );
-      return largest.url;
-    }
-    
-    // Priority 3: Use largest JPEG if exists
-    if (responsiveImages?.jpeg && responsiveImages.jpeg.length > 0) {
-      const largest = responsiveImages.jpeg.reduce((prev, curr) => 
-        curr.width > prev.width ? curr : prev
-      );
-      return largest.url;
+    try {
+      // Priority 1: Original
+      if (responsiveImages?.original) {
+        return responsiveImages.original;
+      }
+      
+      // Priority 2: Largest WebP
+      if (responsiveImages?.webp && responsiveImages.webp.length > 0) {
+        const largest = responsiveImages.webp.reduce((prev, curr) => 
+          curr.width > prev.width ? curr : prev
+        );
+        return largest.url;
+      }
+      
+      // Priority 3: Largest JPEG
+      if (responsiveImages?.jpeg && responsiveImages.jpeg.length > 0) {
+        const largest = responsiveImages.jpeg.reduce((prev, curr) => 
+          curr.width > prev.width ? curr : prev
+        );
+        return largest.url;
+      }
+    } catch (err) {
+      console.error('LazyImage: Error in fallback logic', err);
     }
     
     // Priority 4: Legacy fallback
@@ -123,11 +131,26 @@ const LazyImage: React.FC<LazyImageProps> = ({
     <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
   );
 
-  // ✅ FIXED: CSS aspect-ratio syntax
-  const getAspectRatioStyle = () => {
-    if (aspectRatio === 'auto') return {};
-    // Convert "4/3" to "4 / 3" for CSS
-    return { aspectRatio: aspectRatio.replace('/', ' / ') };
+  // ✅ SAFE: CSS aspect-ratio syntax
+  const getAspectRatioStyle = (): React.CSSProperties => {
+    try {
+      // ✅ SAFETY CHECK: Validate aspectRatio prop
+      if (!aspectRatio || aspectRatio === 'auto') {
+        return {};
+      }
+      
+      // ✅ SAFETY CHECK: Only process if it contains '/'
+      if (aspectRatio.includes('/')) {
+        return { aspectRatio: aspectRatio.replace('/', ' / ') };
+      }
+      
+      // ✅ SAFETY CHECK: If already valid format (e.g., "4 / 3")
+      return { aspectRatio };
+      
+    } catch (err) {
+      console.error('LazyImage: Error setting aspect ratio', err);
+      return {};
+    }
   };
 
   return (
@@ -146,7 +169,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
         </div>
       )}
 
-      {/* ✅ RESPONSIVE IMAGE */}
+      {/* ✅ RESPONSIVE IMAGE - Only render if in view */}
       {isInView && !hasError && (
         <picture>
           {/* WebP source */}
@@ -185,11 +208,12 @@ const LazyImage: React.FC<LazyImageProps> = ({
       {/* Error state */}
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
-          <div className="text-center">
-            <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
+          <div className="text-center p-4">
+            <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
-            <span className="text-xs">Image failed to load</span>
+            <p className="text-sm">Failed to load image</p>
+            <p className="text-xs text-gray-400 mt-1">Try refreshing the page</p>
           </div>
         </div>
       )}
