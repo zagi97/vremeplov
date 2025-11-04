@@ -4,6 +4,34 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  
+  // ✅ PURGE CONFIG - Critical for production!
+  purge: {
+    enabled: process.env.NODE_ENV === 'production',
+    content: [
+      "./index.html",
+      "./src/**/*.{js,ts,jsx,tsx}",
+    ],
+    options: {
+      // Keep important classes that might be added dynamically
+      safelist: [
+        'bg-blue-600',
+        'bg-red-600',
+        'bg-green-600',
+        'bg-orange-500',
+        'bg-purple-500',
+        'hover:bg-blue-700',
+        'hover:bg-red-700',
+        'text-blue-600',
+        'text-red-600',
+        'text-green-600',
+        'border-blue-200',
+        'border-red-200',
+        'border-green-200',
+      ],
+    },
+  },
+  
   theme: {
     container: {
       center: true,

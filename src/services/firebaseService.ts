@@ -496,7 +496,7 @@ const uploadsToday = snapshot.size;
 
 // ✅ DEBUG - Isprintaj sve današnje slike
 console.log('📸 Photos uploaded today:', uploadsToday);
-snapshot.docs.forEach(doc => {
+snapshot.docs.forEach((doc: { data: () => any; id: any; }) => {
   const data = doc.data();
   console.log('  - Photo ID:', doc.id, 'Created:', data.createdAt?.toDate?.());
 });
@@ -690,7 +690,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       );
       
       const querySnapshot = await getDocs(photosQuery);
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
         id: doc.id,
         ...doc.data()
       } as Photo));
@@ -733,7 +733,7 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    const photos = querySnapshot.docs.map(doc => ({
+    const photos = querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
       id: doc.id,
       ...doc.data()
     } as Photo));
@@ -829,7 +829,7 @@ async addComment(photoId: string, text: string, userId: string, userName: string
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc: { id: any; data: () => Comment; }) => ({
         id: doc.id,
         ...doc.data()
       } as Comment));
@@ -952,7 +952,7 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -973,7 +973,7 @@ async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAu
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1008,7 +1008,7 @@ async getTaggedPersonsByPhotoIdForAdmin(photoId: string): Promise<TaggedPerson[]
     const querySnapshot = await getDocs(q);
     console.log('Query successful, docs found:', querySnapshot.size);
     
-    const results = querySnapshot.docs.map(doc => {
+    const results = querySnapshot.docs.map((doc: { data: () => any; id: any; }) => {
       const data = doc.data();
       console.log('Tag document:', doc.id, data);
       return {
@@ -1037,7 +1037,7 @@ async getAllTaggedPersonsForAdmin(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1057,7 +1057,7 @@ async getPendingTaggedPersons(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1168,7 +1168,7 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         where('userId', '==', userId)
       );
       const likeSnapshot = await getDocs(likeQuery);
-      const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
+      const deletePromises = likeSnapshot.docs.map((doc: { ref: any; }) => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
       console.log(`✅ Removed ${likeSnapshot.size} like records`);
       
@@ -1193,7 +1193,7 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         console.log(`🔍 Found ${activitiesSnapshot.size} photo_like activities for user`);
         
         // Filtriraj one koje se odnose na ovu sliku (client-side filtering)
-        const relevantActivities = activitiesSnapshot.docs.filter(doc => {
+        const relevantActivities = activitiesSnapshot.docs.filter((doc: { data: () => any; }) => {
           const data = doc.data();
           return data.metadata?.targetId === photoId;
         });
@@ -1202,7 +1202,7 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         
         // Obriši te aktivnosti
         if (relevantActivities.length > 0) {
-          const deleteActivityPromises = relevantActivities.map(doc => deleteDoc(doc.ref));
+          const deleteActivityPromises = relevantActivities.map((doc: { ref: any; }) => deleteDoc(doc.ref));
           await Promise.all(deleteActivityPromises);
           console.log(`✅ Deleted ${relevantActivities.length} activities`);
         }
@@ -1327,7 +1327,7 @@ async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
     const snapshot = await getDocs(photosQuery);
     const photos: Photo[] = [];
     
-    snapshot.forEach(doc => {
+    snapshot.forEach((doc: { id: any; data: () => Photo; }) => {
       photos.push({ id: doc.id, ...doc.data() } as Photo);
     });
     
@@ -1357,7 +1357,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', true)
     );
     const approvedSnapshot = await getDocs(approvedQuery);
-    const approvedTags = approvedSnapshot.docs.map(doc => ({
+    const approvedTags = approvedSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1372,7 +1372,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', false)
     );
     const userPendingSnapshot = await getDocs(userPendingQuery);
-    const userPendingTags = userPendingSnapshot.docs.map(doc => ({
+    const userPendingTags = userPendingSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1387,7 +1387,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', false)
     );
     const photoPendingSnapshot = await getDocs(photoPendingQuery);
-    const photoPendingTags = photoPendingSnapshot.docs.map(doc => ({
+    const photoPendingTags = photoPendingSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
       id: doc.id,
       ...doc.data()
     } as TaggedPerson));
@@ -1437,7 +1437,7 @@ clearRecentPhotosCache() {
       );
       
       const snapshot = await getDocs(photosQuery);
-      const photos = snapshot.docs.map(doc => {
+      const photos = snapshot.docs.map((doc: { data: () => any; id: any; }) => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -1446,7 +1446,7 @@ clearRecentPhotosCache() {
       });
       
       console.log(`Fetched ${photos.length} total photos for admin`);
-      console.log('Sample photo approval status:', photos.slice(0, 3).map(p => ({ 
+      console.log('Sample photo approval status:', photos.slice(0, 3).map((p: { id: any; isApproved: any; approved: any; }) => ({ 
         id: p.id, 
         isApproved: p.isApproved, 
         approved: p.approved 
@@ -1469,7 +1469,7 @@ async getAllPhotos(): Promise<Photo[]> {
     );
     
     const photoSnapshot = await getDocs(photosQuery);
-    return photoSnapshot.docs.map(doc => ({
+    return photoSnapshot.docs.map((doc: { id: any; data: () => any; }) => ({
       id: doc.id,
       ...doc.data()
     })) as Photo[];
@@ -1503,7 +1503,7 @@ async getAllPhotos(): Promise<Photo[]> {
       }
       
       const photoSnapshot = await getDocs(photosQuery);
-      return photoSnapshot.docs.map(doc => ({
+      return photoSnapshot.docs.map((doc: { id: any; data: () => any; }) => ({
         id: doc.id,
         ...doc.data()
       })) as Photo[];
@@ -1524,7 +1524,7 @@ async getAllPhotos(): Promise<Photo[]> {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
         id: doc.id,
         ...doc.data()
       } as Photo));
@@ -1538,13 +1538,13 @@ async getAllPhotos(): Promise<Photo[]> {
         );
         
         const fallbackSnapshot = await getDocs(fallbackQuery);
-        const allPhotos = fallbackSnapshot.docs.map(doc => ({
+        const allPhotos = fallbackSnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
           id: doc.id,
           ...doc.data()
         } as Photo));
 
         // Filter by userId locally
-        return allPhotos.filter(photo => 
+        return allPhotos.filter((photo: { authorId: string; uploadedBy: string; }) => 
           photo.authorId === userId || photo.uploadedBy === userId
         );
       } catch (fallbackError) {
@@ -1579,7 +1579,7 @@ async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Pho
           );
 
       const authorSnapshot = await getDocs(authorQuery);
-      const authorPhotos = authorSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
+      const authorPhotos = authorSnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({ id: doc.id, ...doc.data() } as Photo));
       allPhotos = [...allPhotos, ...authorPhotos];
       console.log(`Found ${authorPhotos.length} photos by authorId for ${uploaderUid}`);
     } catch (error) {
@@ -1595,7 +1595,7 @@ async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Pho
           where('isApproved', '==', true)
         );
         const legacySnapshot = await getDocs(legacyQuery);
-        const legacyPhotos = legacySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Photo));
+        const legacyPhotos = legacySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({ id: doc.id, ...doc.data() } as Photo));
         allPhotos = [...allPhotos, ...legacyPhotos];
         console.log(`Found ${legacyPhotos.length} legacy photos for Kruno`);
       } catch (error) {
@@ -1628,7 +1628,7 @@ async getPhotosByUploaderName(uploaderName: string): Promise<Photo[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
       id: doc.id,
       ...doc.data()
     } as Photo));
@@ -1649,7 +1649,7 @@ async getAllUploaders(): Promise<{ uid: string; displayName: string; photoCount:
     const querySnapshot = await getDocs(q);
     const uploaderMap = new Map<string, { displayName: string; count: number }>();
     
-    querySnapshot.docs.forEach(doc => {
+    querySnapshot.docs.forEach((doc: { data: () => any; }) => {
       const data = doc.data();
       const uploadedBy = data.uploadedBy || 'Unknown';
       const authorId = data.authorId || uploadedBy;
