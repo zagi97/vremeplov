@@ -538,7 +538,7 @@ const handleLike = async () => {
   alt={photo.description}
   className="w-full h-auto rounded-lg"
   responsiveImages={photo.responsiveImages}
-  threshold={0.01}
+ priority={true}
   aspectRatio="4/3"
 />
               

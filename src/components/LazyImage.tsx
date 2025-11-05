@@ -1,6 +1,3 @@
-// src/components/LazyImage.tsx
-// ✅ FINAL VERSION - With Safety Checks!
-
 import React, { useState, useEffect, useRef } from 'react';
 
 interface ResponsiveImages {
@@ -19,6 +16,7 @@ interface LazyImageProps {
   rootMargin?: string;
   aspectRatio?: string;
   responsiveImages?: ResponsiveImages;
+  priority?: boolean; // ✅ NOVO!
 }
 
 const LazyImage: React.FC<LazyImageProps> = ({ 
@@ -29,17 +27,24 @@ const LazyImage: React.FC<LazyImageProps> = ({
   placeholder,
   threshold = 0.1,
   rootMargin = '100px',
-  aspectRatio = '4/3',  // ← Default value
-  responsiveImages
+  aspectRatio = '4/3',
+  responsiveImages,
+  priority = false // ✅ NOVO - default false
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(priority); // ✅ Ako priority=true, odmah renderaj
   const [hasError, setHasError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(priority); // ✅ Ako priority=true, odmah učitaj
   const imgRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Intersection Observer
+  // ✅ Intersection Observer - SKIP ako je priority=true
   useEffect(() => {
+    if (priority) {
+      setIsInView(true);
+      setIsLoading(true);
+      return; // ✅ Ne pokreći observer ako je priority
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !isInView) {
@@ -56,9 +61,8 @@ const LazyImage: React.FC<LazyImageProps> = ({
     }
 
     return () => observer.disconnect();
-  }, [threshold, rootMargin, isInView]);
+  }, [threshold, rootMargin, isInView, priority]);
 
-  // ✅ Handle load/error
   const handleLoad = () => {
     setIsLoaded(true);
     setIsLoading(false);
@@ -72,7 +76,6 @@ const LazyImage: React.FC<LazyImageProps> = ({
     onError?.(e);
   };
 
-  // ✅ Generate srcset - SAFE VERSION
   const generateSrcSet = (images: Array<{ url: string; width: number }> | undefined): string | undefined => {
     if (!images || images.length === 0) return undefined;
     
@@ -87,7 +90,6 @@ const LazyImage: React.FC<LazyImageProps> = ({
     }
   };
 
-  // ✅ Smart sizes based on aspectRatio
   const getSizesAttribute = (): string => {
     if (aspectRatio === '4/3') {
       return '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
@@ -95,15 +97,12 @@ const LazyImage: React.FC<LazyImageProps> = ({
     return '(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 1200px';
   };
 
-  // ✅ SAFE: Smart fallback src
   const getFallbackSrc = (): string => {
     try {
-      // Priority 1: Original
       if (responsiveImages?.original) {
         return responsiveImages.original;
       }
       
-      // Priority 2: Largest WebP
       if (responsiveImages?.webp && responsiveImages.webp.length > 0) {
         const largest = responsiveImages.webp.reduce((prev, curr) => 
           curr.width > prev.width ? curr : prev
@@ -111,7 +110,6 @@ const LazyImage: React.FC<LazyImageProps> = ({
         return largest.url;
       }
       
-      // Priority 3: Largest JPEG
       if (responsiveImages?.jpeg && responsiveImages.jpeg.length > 0) {
         const largest = responsiveImages.jpeg.reduce((prev, curr) => 
           curr.width > prev.width ? curr : prev
@@ -122,29 +120,23 @@ const LazyImage: React.FC<LazyImageProps> = ({
       console.error('LazyImage: Error in fallback logic', err);
     }
     
-    // Priority 4: Legacy fallback
     return src;
   };
 
-  // ✅ Placeholder
   const defaultPlaceholder = (
     <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
   );
 
-  // ✅ SAFE: CSS aspect-ratio syntax
   const getAspectRatioStyle = (): React.CSSProperties => {
     try {
-      // ✅ SAFETY CHECK: Validate aspectRatio prop
       if (!aspectRatio || aspectRatio === 'auto') {
         return {};
       }
       
-      // ✅ SAFETY CHECK: Only process if it contains '/'
       if (aspectRatio.includes('/')) {
         return { aspectRatio: aspectRatio.replace('/', ' / ') };
       }
       
-      // ✅ SAFETY CHECK: If already valid format (e.g., "4 / 3")
       return { aspectRatio };
       
     } catch (err) {
@@ -169,10 +161,9 @@ const LazyImage: React.FC<LazyImageProps> = ({
         </div>
       )}
 
-      {/* ✅ RESPONSIVE IMAGE - Only render if in view */}
+      {/* ✅ RESPONSIVE IMAGE */}
       {isInView && !hasError && (
         <picture>
-          {/* WebP source */}
           {responsiveImages?.webp && responsiveImages.webp.length > 0 && (
             <source
               type="image/webp"
@@ -181,7 +172,6 @@ const LazyImage: React.FC<LazyImageProps> = ({
             />
           )}
           
-          {/* JPEG fallback source */}
           {responsiveImages?.jpeg && responsiveImages.jpeg.length > 0 && (
             <source
               type="image/jpeg"
@@ -190,7 +180,6 @@ const LazyImage: React.FC<LazyImageProps> = ({
             />
           )}
           
-          {/* Img tag with smart fallback */}
           <img
             src={getFallbackSrc()}
             alt={alt}
@@ -199,8 +188,9 @@ const LazyImage: React.FC<LazyImageProps> = ({
             }`}
             onLoad={handleLoad}
             onError={handleError}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"} // ✅ eager ako je priority!
             decoding="async"
+            fetchPriority={priority ? "high" : undefined} // ✅ high priority ako je priority!
           />
         </picture>
       )}
