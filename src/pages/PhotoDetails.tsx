@@ -538,7 +538,9 @@ const handleLike = async () => {
   alt={photo.description}
   className="w-full h-auto rounded-lg"
   responsiveImages={photo.responsiveImages}
-  aspectRatio="auto"
+  threshold={0.01}
+  aspectRatio="4/3"
+/>
 />
               
               {/* Hover-Only Tagged Persons */}
@@ -990,12 +992,12 @@ const handleLike = async () => {
     className="block hover:opacity-90 transition-opacity"
   >
     <LazyImage
-      src={relatedPhoto.imageUrl}
-      alt={relatedPhoto.description}
-      className="w-full"
-      aspectRatio="4/3"
-      responsiveImages={relatedPhoto.responsiveImages} // ✅ ADD THIS LINE!
-    />
+  src={relatedPhoto.imageUrl}
+  alt={relatedPhoto.description}
+  className="w-full"
+  responsiveImages={relatedPhoto.responsiveImages}
+  threshold={0.2}
+/>
     <p className="text-sm font-medium mt-2">{relatedPhoto.description}</p>
     <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
   </Link>
