@@ -541,7 +541,6 @@ const handleLike = async () => {
   threshold={0.01}
   aspectRatio="4/3"
 />
-/>
               
               {/* Hover-Only Tagged Persons */}
               <div className="absolute inset-0 rounded-lg overflow-hidden">
