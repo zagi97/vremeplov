@@ -538,8 +538,6 @@ const handleLike = async () => {
   alt={photo.description}
   className="w-full h-auto rounded-lg"
   responsiveImages={photo.responsiveImages}
- priority={true}
-  aspectRatio="4/3"
 />
               
               {/* Hover-Only Tagged Persons */}
