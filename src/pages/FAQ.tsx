@@ -85,6 +85,17 @@ const FAQ = () => {
       {/* Header */}
       <PageHeader title="Vremeplov.hr" />
 
+      <div className="bg-white border-b border-gray-200 py-12 mt-16">
+        <div className="container max-w-5xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+            {t("faq.title")}
+          </h2>
+          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+            {t("faq.subtitle")}
+          </p>
+        </div>
+      </div>
+
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8">
           
