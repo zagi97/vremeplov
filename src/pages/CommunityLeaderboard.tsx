@@ -231,20 +231,21 @@ const CommunityLeaderboard = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-         <PageHeader title="Vremeplov.hr" />
+         {/* Fixed Header */}
+    <PageHeader title="Vremeplov.hr"/>
 
-      {/* Hero section / page content header */}
-      <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-16">
-        <div className="container max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold flex items-center gap-3 mb-2">
-            <Trophy className="h-8 w-8" />
-            {t("community.leaderboard")}
-          </h2>
-          <p className="text-gray-300 text-base md:text-lg">
-            {t("community.celebratingContributors")}
-          </p>
-        </div>
+    {/* Hero section - sada ima padding-top da se ne preklapa s fixnim headerom */}
+    <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 sm:py-16 mt-16">
+      <div className="container max-w-6xl mx-auto px-4">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold flex items-center gap-3 mb-3">
+          <Trophy className="h-8 w-8 md:h-10 md:w-10" />
+          {t("community.leaderboard")}
+        </h1>
+        <p className="text-gray-300 text-base md:text-lg">
+          {t("community.celebratingContributors")}
+        </p>
       </div>
+    </div>
 
       {/* Time Period Selector */}
       <section className="py-4 sm:py-6 px-4 bg-white border-b">

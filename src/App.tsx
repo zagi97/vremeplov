@@ -28,6 +28,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 import AdminLogin from "./pages/AdminLogin";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import { OfflineIndicator } from './components/OfflineIndicator';
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
+        <ScrollToTop />
           <LanguageProvider>
             <AuthProvider>
               <Toaster />

@@ -271,23 +271,18 @@ const MapView: React.FC = () => {
     if (photos.length === 0) {
         return (
             <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-                <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-                    <div className="container max-w-6xl mx-auto px-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <Link to="/">
-                                    <Button variant="ghost" className="text-white hover:bg-white/10 p-2">
-                                        <ArrowLeft className="h-5 w-5" />
-                                    </Button>
-                                </Link>
-                                <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-                            </div>
-                            <LanguageSelector />
+                 <PageHeader title="Vremeplov.hr" />
+                
+                      <div className="bg-white border-b border-gray-200 py-12 mt-16">
+                        <div className="container max-w-5xl mx-auto px-4 text-center">
+                          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                           {t('mapView.memoryMap')}
+                          </h2>
+                          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+                            {t('mapView.noPhotos')}
+                          </p>
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-2">{t('mapView.memoryMap')}</h2>
-                        <p className="text-gray-300">{t('mapView.noPhotos')}</p>
-                    </div>
-                </header>
+                      </div>
 
                 <div className="container max-w-6xl mx-auto px-4 py-12 text-center flex-1">
                     <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />

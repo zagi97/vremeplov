@@ -386,23 +386,7 @@ const UserProfilePage = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link to="/">
-                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageSelector />
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Vremeplov.hr" />
 
       {/* Profile Section */}
       <section className="py-8 px-4 bg-white flex-1">
