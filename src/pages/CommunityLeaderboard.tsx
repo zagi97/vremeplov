@@ -25,6 +25,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
 import LazyImage from '../components/LazyImage';
 import Footer from "@/components/Footer";
+import PageHeader from "@/components/PageHeader";
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -230,30 +231,20 @@ const CommunityLeaderboard = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-4 sm:py-6">
+         <PageHeader title="Vremeplov.hr" />
+
+      {/* Hero section / page content header */}
+      <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 mt-16">
         <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <div className="flex items-center">
-              <Link to="/">
-                <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                  <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageSelector />
-            </div>
-          </div>
-          <div className="mt-4 sm:mt-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 flex items-center gap-2 sm:gap-3">
-              <Trophy className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 flex-shrink-0" />
-              <span>{t('community.leaderboard')}</span>
-            </h2>
-            <p className="text-sm sm:text-base text-gray-300">{t('community.celebratingContributors')}</p>
-          </div>
+          <h2 className="text-3xl md:text-4xl font-bold flex items-center gap-3 mb-2">
+            <Trophy className="h-8 w-8" />
+            {t("community.leaderboard")}
+          </h2>
+          <p className="text-gray-300 text-base md:text-lg">
+            {t("community.celebratingContributors")}
+          </p>
         </div>
-      </header>
+      </div>
 
       {/* Time Period Selector */}
       <section className="py-4 sm:py-6 px-4 bg-white border-b">

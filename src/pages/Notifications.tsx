@@ -30,6 +30,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import LanguageSelector from '../components/LanguageSelector';
 import UserProfile from '../components/UserProfile';
 import Footer from '../components/Footer';
+import PageHeader from '@/components/PageHeader';
 
 const NotificationsPage = () => {
   const { t } = useLanguage();
@@ -239,29 +240,18 @@ const NotificationsPage = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Navigation Header */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="w-full max-w-full sm:max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate(-1)}
-                className="flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-              <Link to="/" className="text-sm sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
-                Vremeplov.hr
-              </Link>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-              <LanguageSelector />
-              <UserProfile />
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PageHeader title="Vremeplov.hr" />
+                        
+                        <div className="bg-white border-b border-gray-200 py-12 mt-16">
+                          <div className="container max-w-5xl mx-auto px-4 text-center">
+                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                              {t('privacy.title')}
+                            </h2>
+                            <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+                              {t('privacy.subtitle')}
+                            </p>
+                          </div>
+                        </div>
 
       {/* Main Content */}
       <section className="py-6 sm:py-12 px-2 sm:px-4">

@@ -4,6 +4,7 @@ import { ArrowLeft, FileText, AlertTriangle, Copyright, Gavel, Shield } from 'lu
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
+import PageHeader from '@/components/PageHeader';
 
 const Terms = () => {
   const { t } = useLanguage();
@@ -11,25 +12,18 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <Link to="/">
-              <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            <div className="flex items-center gap-4">
-              <LanguageSelector />
+            <PageHeader title="Vremeplov.hr" />
+            
+            <div className="bg-white border-b border-gray-200 py-12 mt-16">
+              <div className="container max-w-5xl mx-auto px-4 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                  {t('terms.title')}
+                </h2>
+                <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+                  {t('terms.subtitle')}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="mt-6">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">{t('terms.title')}</h2>
-            <p className="text-gray-300">{t('terms.subtitle')}</p>
-          </div>
-        </div>
-      </header>
 
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8">

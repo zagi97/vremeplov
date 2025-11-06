@@ -21,6 +21,7 @@ import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore
 import { db } from '../lib/firebase';
 import { AlertTriangle } from "lucide-react";
 import { notificationService } from '../services/notificationService';
+import PageHeader from "@/components/PageHeader";
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -479,31 +480,31 @@ const handleLike = async () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                className="text-white hover:bg-white/10 p-2 mr-2"
-                onClick={handleBack}
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <LanguageSelector />
-            </div>
-          </div>
-          <div className="mt-6">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">{photo.description}</h2>
-            <p className="text-gray-300">{photo.location}, {photo.year}</p>
-          </div>
-        </div>
-      </header>
+<PageHeader title="Vremeplov.hr" />
 
+      {/* Page intro section for photo details */}
+      <div className="bg-white border-b border-gray-200 py-10 mt-16">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="flex items-center gap-3 mb-6">
+            <Button
+              variant="ghost"
+              className="text-gray-700 hover:bg-gray-100 p-2"
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {photo.description}
+            </h2>
+          </div>
+          <p className="text-gray-600 text-base">
+            {photo.location}, {photo.year}
+          </p>
+        </div>
+      </div>
+      
+{/* Main content */}
       <div className="container max-w-5xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           {/* Photo Section with Hover-Only Tags */}
