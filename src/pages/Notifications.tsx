@@ -261,10 +261,10 @@ const NotificationsPage = () => {
                     <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg sm:text-xl">Obavijesti</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl"> {t('notifications.title')}</CardTitle>
                     {unreadCount > 0 && (
                       <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                        {unreadCount} {unreadCount === 1 ? 'nova obavijest' : 'novih obavijesti'}
+                        {unreadCount} {t(unreadCount === 1 ? 'notifications.newNotificationSingular' : 'notifications.newNotifications')}
                       </p>
                     )}
                   </div>
@@ -279,7 +279,7 @@ const NotificationsPage = () => {
                     className="w-full sm:w-auto"
                   >
                     <CheckCheck className="h-4 w-4 mr-2" />
-                    Označi sve kao pročitano
+                     {t('notifications.markAllLikeRead')}
                   </Button>
                 )}
               </div>
@@ -290,10 +290,10 @@ const NotificationsPage = () => {
                 <div className="border-b border-gray-200 px-4 sm:px-6">
                   <TabsList className="w-full sm:w-auto">
                     <TabsTrigger value="all" className="flex-1 sm:flex-none">
-                      Sve ({notifications.length})
+                       {t('notifications.All')} ({notifications.length})
                     </TabsTrigger>
                     <TabsTrigger value="unread" className="flex-1 sm:flex-none">
-                      Nepročitano ({unreadCount})
+                      {t('notifications.Unread')} ({unreadCount})
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -302,7 +302,7 @@ const NotificationsPage = () => {
                   {loading ? (
                     <div className="p-12 text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-sm text-gray-500 mt-4">Učitavanje obavijesti...</p>
+                      <p className="text-sm text-gray-500 mt-4"> {t('notifications.loadNotifications')}</p>
                     </div>
                   ) : filteredNotifications.length > 0 ? (
                     <div className="divide-y divide-gray-100">
@@ -357,20 +357,22 @@ const NotificationsPage = () => {
                       })}
                     </div>
                   ) : (
-                    <div className="p-12 sm:p-16 text-center">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Bell className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
-                      </div>
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                        {activeFilter === 'unread' ? 'Nemaš nepročitanih obavijesti' : 'Nemaš obavijesti'}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {activeFilter === 'unread' 
-                          ? 'Sve obavijesti su pročitane' 
-                          : 'Ovdje će se pojaviti tvoje obavijesti'
-                        }
-                      </p>
-                    </div>
+                    // NOVI KOD ZA PRAZNO STANJE
+<div className="p-12 sm:p-16 text-center">
+    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Bell className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+    </div>
+    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+        {activeFilter === 'unread' 
+            ? t('notifications.zeroUnreadNotifications')
+            : t('notifications.zeroNotifications')}
+    </h3>
+    <p className="text-xs sm:text-sm text-gray-500">
+        {activeFilter === 'unread' 
+            ? t('notifications.notificationsAllRead')
+            : t('notifications.hereAppearNotifications')}
+    </p>
+</div>
                   )}
                 </TabsContent>
               </Tabs>

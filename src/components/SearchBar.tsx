@@ -150,14 +150,6 @@ const SearchBar = () => {
           }}
         >
           <Command shouldFilter={false}>
-            <CommandInput
-              placeholder={t('search.inputPlaceholder')}
-              value={searchQuery}
-              onValueChange={(value: string) => {
-                handleInputChange(value);
-              }}
-              className="h-9"
-            />
             <CommandList id="location-listbox" role="listbox">
               {loading ? (
                 <CommandEmpty>{t('common.loading')}</CommandEmpty>

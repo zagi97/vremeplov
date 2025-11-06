@@ -741,7 +741,17 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.allRead': 'All notifications marked as read',
 'notifications.markError': 'Error marking notifications',
 'notifications.unknownPhoto': "Unknown Photo",
-
+// ✅ NOVI I ISPRAVLJENI KLJUČEVI ZA NotificationsPage
+    'notifications.markAllLikeRead': 'Mark all as read',
+    'notifications.All': 'All',
+    'notifications.Unread': 'Unread',
+    'notifications.loadNotifications': 'Loading notifications...',
+    'notifications.newNotificationSingular': 'new notification',
+    'notifications.newNotifications': 'new notifications',
+    'notifications.zeroUnreadNotifications': 'You have no unread notifications',
+    'notifications.zeroNotifications': 'You have no notifications',
+    'notifications.notificationsAllRead': 'All notifications have been read',
+    'notifications.hereAppearNotifications': 'Your notifications will appear here',
 
 // Notification message parts
 'notifications.commented': 'commented on your photo',
@@ -782,6 +792,17 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.allRead': 'Sve obavijesti označene kao pročitane',
 'notifications.markError': 'Greška pri označavanju obavijesti',
 'notifications.unknownPhoto': "Nepoznata fotografija",
+// ✅ NOVI I ISPRAVLJENI KLJUČEVI ZA NotificationsPage
+    'notifications.markAllLikeRead': 'Označi sve kao pročitano', // Iz gumba
+    'notifications.All': 'Sve', // Iz TabsListe
+    'notifications.Unread': 'Nepročitano', // Iz TabsListe
+    'notifications.loadNotifications': 'Učitavanje obavijesti...', // Iz loading stanja
+    'notifications.newNotificationSingular': 'nova obavijest', // Brojanje obavijesti (jednina)
+    'notifications.newNotifications': 'novih obavijesti', // Brojanje obavijesti (množina)
+    'notifications.zeroUnreadNotifications': 'Nemaš nepročitanih obavijesti', // Prazno stanje (nepročitano)
+    'notifications.zeroNotifications': 'Nemaš obavijesti', // Prazno stanje (sve)
+    'notifications.notificationsAllRead': 'Sve obavijesti su pročitane', // Opis praznog stanja (nepročitano)
+    'notifications.hereAppearNotifications': 'Ovdje će se pojaviti tvoje obavijesti', // Opis praznog stanja (sve)
 // Notification message parts
 'notifications.commented': 'je komentirao/la tvoju fotografiju',
 'notifications.liked': 'je lajkao/la tvoju fotografiju',
