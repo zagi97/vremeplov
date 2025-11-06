@@ -14,7 +14,7 @@ const Privacy = () => {
       {/* Header */}
                   <PageHeader title="Vremeplov.hr" />
                   
-                  <div className="bg-white border-b border-gray-200 py-12 mt-16">
+                  <div className="bg-white border-b border-gray-200 py-12 pt-28">
                     <div className="container max-w-5xl mx-auto px-4 text-center">
                       <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                         {t('privacy.title')}

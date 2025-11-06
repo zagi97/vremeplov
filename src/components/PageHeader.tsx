@@ -9,9 +9,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface PageHeaderProps {
   title?: string;
   showTitle?: boolean;
+  fixed?: boolean; // ✅ NOVI PROP
 }
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true }) => {
+const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed = true }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -20,10 +21,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true }) => {
 
   return (
     <header
-      className={`w-full z-50 fixed top-0 left-0 right-0 ${
+      className={`w-full z-50 ${fixed ? 'fixed' : 'relative'} top-0 left-0 right-0 transition-all duration-300 ${
         isHomePage
-          ? "bg-black/20 backdrop-blur-sm"
-          : "bg-gray-900"
+          ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
+          : "bg-gray-900 border-b border-gray-800"
       } text-white`}
     >
       <div className="w-full max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
@@ -33,7 +34,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true }) => {
             <Button
               variant="ghost"
               onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/10 p-2"
+              className="text-white hover:bg-white/10 p-2 transition-colors"
               aria-label="Natrag"
             >
               <ArrowLeft className="h-5 w-5" />

@@ -238,25 +238,22 @@ const NotificationsPage = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-      {/* Navigation Header */}
-      <PageHeader title="Vremeplov.hr" />
-                        
-                        <div className="bg-white border-b border-gray-200 py-12 mt-16">
-                          <div className="container max-w-5xl mx-auto px-4 text-center">
-                            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                              {t('privacy.title')}
-                            </h2>
-                            <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                              {t('privacy.subtitle')}
-                            </p>
-                          </div>
-                        </div>
+     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    {/* Navigation Header */}
+    <PageHeader title="Vremeplov.hr" />
+                      
+    <div className="bg-white border-b border-gray-200 py-12 pt-28">
+      <div className="container max-w-5xl mx-auto px-4 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+          {t('notifications.title')}
+        </h2>
+      </div>
+    </div>
 
-      {/* Main Content */}
-      <section className="py-6 sm:py-12 px-2 sm:px-4">
-        <div className="w-full max-w-full sm:max-w-4xl mx-auto">
-          <Card>
+    {/* Main Content - dodaj flex-1 da popuni prostor */}
+    <section className="py-6 sm:py-12 px-2 sm:px-4 flex-1">
+      <div className="w-full max-w-full sm:max-w-4xl mx-auto">
+        <Card>
             <CardHeader className="border-b border-gray-200">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">

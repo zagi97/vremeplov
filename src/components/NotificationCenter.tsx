@@ -213,10 +213,10 @@ const NotificationCenter = ({
               size="sm"
               onClick={handleMarkAllAsRead}
               disabled={markingAllRead}
-              className="text-xs sm:text-sm px-2 sm:px-3"
+              className="text-xs px-2 h-8 text-foreground hover:text-blue-800"
             >
-              <CheckCheck className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-              <span className="hidden sm:inline">{t('notifications.markAll')}</span>
+              <CheckCheck className="h-4 w-4 mr-1.5" />
+              <span className="truncate">{t('notifications.markAll')}</span>
             </Button>
           )}
         </div>
@@ -244,7 +244,7 @@ const NotificationCenter = ({
                   key={notification.id}
                   title={!isClickable ? t('notifications.notAvailable') : undefined}
                   className={`p-3 sm:p-4 transition-colors ${
-                    isClickable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default opacity-70'
+                    isClickable ? 'hover:bg-blue-100 hover:shadow-sm cursor-pointer' : 'cursor-default opacity-70'
                   } ${!notification.read ? 'bg-blue-50/50' : ''}`}
                   onClick={() => isClickable && handleNotificationClick(notification)}
                 >

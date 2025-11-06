@@ -1,20 +1,17 @@
 import { lazy, Suspense } from 'react';
 import { MapPin, Archive, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import PageHeader from "@/components/PageHeader"; // ✅ Dodaj import
 
-// ✅ Static imports (above the fold - immediate render)
+// Static imports
 import SearchBar from "@/components/SearchBar";
-import UserProfile from "@/components/UserProfile";
-import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
-import NotificationBell from "@/components/NotificationBell";
 
-// ✅ LAZY LOAD heavy components (below the fold)
+// Lazy loads
 const FeatureCard = lazy(() => import("@/components/FeaturedCard"));
 const SampleGallery = lazy(() => import("@/components/SampleGallery"));
 const Footer = lazy(() => import("@/components/Footer"));
 
-// Simple loader component
 const ComponentLoader = () => (
   <div className="animate-pulse bg-gray-200 rounded-lg h-64"></div>
 );
@@ -24,36 +21,12 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-[#F8F9FA] overflow-x-hidden">
-      {/* Navigation Header */}
-      <nav className="absolute top-0 left-0 right-0 z-50 bg-black/20 backdrop-blur-sm">
-        <div className="w-full max-w-full sm:max-w-6xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="text-sm sm:text-xl md:text-2xl font-bold text-white truncate flex-shrink min-w-0">
-              Vremeplov.hr
-            </Link>
-            <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0 ml-1">
-            <Link 
-  to="/map" 
-  className="flex items-center text-white hover:text-blue-300 transition-colors text-xs sm:text-sm font-medium px-2 py-1 gap-1"
-  aria-label={t('nav.memoryMapShort') || 'Memory Map'}
->
-  <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
-  <span className="hidden sm:inline text-[10px] sm:text-xs md:text-sm">
-    {t('nav.memoryMapShort')}
-  </span>
-</Link>
-              <LanguageSelector />
-              <NotificationBell className="text-white hover:text-white" />
-              <UserProfile className="text-white" />
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* ✅ Koristi PageHeader - automatski je fixed */}
+      <PageHeader title="Vremeplov.hr" />
 
-      {/* Hero Section - OPTIMIZED FOR LCP */}
+      {/* Hero Section - NEMA VIŠE CUSTOM NAV */}
       <section className="relative bg-gradient-to-b from-gray-900 to-gray-800 h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/40 z-0"></div>
-        {/* Optimized gradient background - 0 KB instead of 436 KB! */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-gray-900 to-indigo-900 z-[-1]"></div>
         <div 
           className="absolute inset-0 opacity-10 z-[-1]"
@@ -62,18 +35,17 @@ const Index = () => {
             backgroundSize: '40px 40px'
           }}
         ></div>
+        
+        {/* Content centiran - NEMA padding-top jer je nav uklonjen odavde */}
         <div className="w-full max-w-full sm:max-w-6xl mx-auto px-4 z-10 text-center">
-          {/* ✅ Title can keep animation - it's not LCP element */}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight animate-fade-in">
             Vremeplov<span className="text-gray-300">.hr</span>
           </h1>
           
-          {/* 🔥 CRITICAL FIX: Removed animate-fade-in from LCP element! */}
           <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto">
             {t('home.description')}
           </p>
           
-          {/* ✅ SearchBar can keep animation - it's below LCP */}
           <div className="flex flex-col md:flex-row justify-center gap-4 animate-fade-in">
             <SearchBar />
           </div>

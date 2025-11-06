@@ -230,56 +230,75 @@ const CommunityLeaderboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-      {/* Header */}
-         {/* Fixed Header */}
+    {/* Fixed Header */}
     <PageHeader title="Vremeplov.hr"/>
-
-    {/* Hero section - sada ima padding-top da se ne preklapa s fixnim headerom */}
-    <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 sm:py-16 mt-16">
-      <div className="container max-w-6xl mx-auto px-4">
-        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold flex items-center gap-3 mb-3">
-          <Trophy className="h-8 w-8 md:h-10 md:w-10" />
+{/* Hero section */}
+<div className="bg-white border-b border-gray-200 py-8 pt-24">
+  <div className="container max-w-6xl mx-auto px-4">
+    {/* Desktop layout - flex-row sa space-between */}
+    <div className="hidden md:flex md:items-center md:justify-between">
+      <div>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+          <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
           {t("community.leaderboard")}
         </h1>
-        <p className="text-gray-300 text-base md:text-lg">
+        <p className="text-gray-600 text-sm md:text-base">
           {t("community.celebratingContributors")}
         </p>
       </div>
+      
+      <div className="flex gap-2">
+        {[
+          { value: 'all-time', label: t('community.allTime') },
+          { value: 'this-year', label: t('community.thisYear') },
+          { value: 'this-month', label: t('community.thisMonth') }
+        ].map(period => (
+          <Button
+            key={period.value}
+            variant={timePeriod === period.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimePeriod(period.value as TimePeriod)}
+            className="text-xs sm:text-sm"
+          >
+            {period.label}
+          </Button>
+        ))}
+      </div>
     </div>
 
-      {/* Time Period Selector */}
-      <section className="py-4 sm:py-6 px-4 bg-white border-b">
-        <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <span className="text-sm font-medium text-gray-700">
-                {t('community.timePeriod')}:
-              </span>
-              <div className="flex gap-2">
-                {[
-                  { value: 'all-time', label: t('community.allTime') },
-                  { value: 'this-year', label: t('community.thisYear') },
-                  { value: 'this-month', label: t('community.thisMonth') }
-                ].map(period => (
-                  <Button
-                    key={period.value}
-                    variant={timePeriod === period.value ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setTimePeriod(period.value as TimePeriod)}
-                    className="flex-1 sm:flex-none text-xs sm:text-sm px-3 py-2 min-h-[44px] sm:min-h-[auto]"
-                  >
-                    {period.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="text-xs sm:text-sm text-gray-500 text-center md:text-right">
-              {t('community.updatedDaily')}
-            </div>
-          </div>
-        </div>
-      </section>
+    {/* Mobile layout - SVE CENTRIRANO */}
+    <div className="md:hidden text-center">
+      <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+        <Trophy className="h-6 w-6 text-blue-600" />
+        {t("community.leaderboard")}
+      </h1>
+      <p className="text-gray-600 text-sm mb-4">
+        {t("community.celebratingContributors")}
+      </p>
+      
+      {/* Centrirani buttoni */}
+      <div className="flex gap-2 justify-center">
+        {[
+          { value: 'all-time', label: t('community.allTime') },
+          { value: 'this-year', label: t('community.thisYear') },
+          { value: 'this-month', label: t('community.thisMonth') }
+        ].map(period => (
+          <Button
+            key={period.value}
+            variant={timePeriod === period.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTimePeriod(period.value as TimePeriod)}
+            className="text-xs flex-1 max-w-[120px]"
+          >
+            {period.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+{/* Ukloni cijelu Time Period Selector sekciju */}
 
       {/* Leaderboard Content */}
       <section className="py-6 sm:py-8 px-4">

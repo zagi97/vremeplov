@@ -390,14 +390,14 @@ const UserProfilePage = () => {
       <PageHeader title="Vremeplov.hr" />
 
       {/* Profile Section */}
-      <section className="py-8 px-4 bg-white flex-1">
-        <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Profile Info */}
-            <div className="lg:w-1/3">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Avatar className="w-24 h-24 mx-auto mb-4">
+<section className="pt-20 sm:pt-24 pb-8 px-4 bg-white flex-1">
+  <div className="container max-w-6xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-8">
+      {/* Profile Info */}
+      <div className="lg:w-1/3">
+        <Card>
+          <CardContent className="p-6 text-center">
+            <Avatar className="w-24 h-24 mx-auto mb-4">
                     <AvatarImage src={profile.photoURL} alt={profile.displayName} />
                     <AvatarFallback className="text-2xl">
                       {profile.displayName.charAt(0).toUpperCase()}

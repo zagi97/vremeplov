@@ -272,18 +272,20 @@ const MapView: React.FC = () => {
     if (photos.length === 0) {
         return (
             <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-                 <PageHeader title="Vremeplov.hr" />
-                
-                      <div className="bg-white border-b border-gray-200 py-12 mt-16">
-                        <div className="container max-w-5xl mx-auto px-4 text-center">
-                          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                           {t('mapView.memoryMap')}
-                          </h2>
-                          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                            {t('mapView.noPhotos')}
-                          </p>
-                        </div>
-                      </div>
+    {/* Header NIJE fixed */}
+    <PageHeader title="Vremeplov.hr" fixed={false} />
+    
+    {/* Hero section - BEZ pt-28 jer header nije fixed */}
+    <div className="bg-white border-b border-gray-200 py-12">
+      <div className="container max-w-5xl mx-auto px-4 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+          {t('mapView.memoryMap')}
+        </h2>
+        <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+          {t('mapView.exploreCroatian')}
+        </p>
+      </div>
+    </div>
 
                 <div className="container max-w-6xl mx-auto px-4 py-12 text-center flex-1">
                     <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -300,20 +302,21 @@ const MapView: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-            {/* Header */}
-            <PageHeader title="Vremeplov.hr" />
-            
-                  <div className="bg-white border-b border-gray-200 py-12 mt-16">
-                    <div className="container max-w-5xl mx-auto px-4 text-center">
-                      <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                        {t('mapView.memoryMap')}
-                      </h2>
-                      <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
-                        {t('mapView.exploreCroatian')}
-                      </p>
-                    </div>
-                  </div>
+       <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    {/* Header NIJE fixed */}
+    <PageHeader title="Vremeplov.hr" fixed={false} />
+    
+    {/* Hero section - BEZ pt-28 jer header nije fixed */}
+    <div className="bg-white border-b border-gray-200 py-12">
+      <div className="container max-w-5xl mx-auto px-4 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+          {t('mapView.memoryMap')}
+        </h2>
+        <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+          {t('mapView.exploreCroatian')}
+        </p>
+      </div>
+    </div>
 
             {/* Filters */}
             <div className="bg-white border-b border-gray-200 py-4">
