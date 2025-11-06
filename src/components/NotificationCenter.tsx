@@ -195,7 +195,6 @@ const NotificationCenter = ({
   return (
     <div 
       className="w-full sm:w-96 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-xl border border-gray-200 max-h-[80vh] sm:max-h-[600px] flex flex-col overflow-hidden"
-      onClick={(e) => e.stopPropagation()}
     >
       <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-lg z-10">
         <div className="flex items-center gap-2">

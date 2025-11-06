@@ -1,4 +1,5 @@
-// src/components/NotificationBell.tsx - ULTIMATE FIX
+// src/components/NotificationBell.tsx - KONAČNI POPRAVAK
+
 import { useState, useEffect, useRef } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,37 +13,39 @@ interface NotificationBellProps {
 
 const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   const { user } = useAuth();
+
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  
-  // ✅ Refs to control listener behavior
+
+  // ✅ Refs za kontrolu ponašanja
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const isMarkingRef = useRef(false);
+  const bellRef = useRef<HTMLDivElement>(null); // ⬅️ NOVI REF ZA KLIK IZVANA
 
   // ✅ Setup listener
   const setupListener = () => {
     if (!user) return;
 
     console.log('🔄 Setting up notification listener');
-    
+
     const unsubscribe = notificationService.subscribeToNotifications(
       user.uid,
       (newNotifications) => {
-        // ✅ Ignore updates while batch is running
+        // ✅ Ignoriraj ažuriranja dok je batch u tijeku
         if (isMarkingRef.current) {
           console.log('🚫 BLOCKED - Batch in progress, ignoring listener update');
           return;
         }
-        
+
         console.log('📨 Listener update:', {
           total: newNotifications.length,
-          unread: newNotifications.filter(n => !n.read).length
+          unread: newNotifications.filter((n) => !n.read).length,
         });
-        
+
         setNotifications(newNotifications);
-        const unread = newNotifications.filter(n => !n.read).length;
+        const unread = newNotifications.filter((n) => !n.read).length;
         setUnreadCount(unread);
         setLoading(false);
       },
@@ -55,6 +58,7 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     unsubscribeRef.current = unsubscribe;
   };
 
+  // ✅ 1. UČITAVANJE NOTIFIKACIJA
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
@@ -75,15 +79,31 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     };
   }, [user]);
 
+  // 🚀 2. ZATVARANJE KLIKOM IZVANA ILI ESC TIPKOM (ZAMJENA BACKDROP-a)
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+    if (!isOpen) return; // Samo ako je otvoren
+
+    // A. RUKOVANJE KLIKOM IZVANA (useClickOutside logika)
+    const handleClickOutside = (event: MouseEvent) => {
+      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-    
+
+    // B. RUKOVANJE ESC TIPKOM
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleEsc);
+    };
   }, [isOpen]);
 
   // ✅ Mark all with proper batch execution
@@ -91,7 +111,7 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     if (!user) return;
 
     console.log('🔘 Mark all clicked');
-    
+
     try {
       // ✅ Block listener IMMEDIATELY
       isMarkingRef.current = true;
@@ -103,7 +123,7 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
       console.log('✅ Batch completed');
 
       // ✅ Wait a bit for Firestore to propagate
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // ✅ Unblock listener and force refresh
       console.log('🔓 Listener UNBLOCKED - forcing refresh');
@@ -114,7 +134,6 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
         unsubscribeRef.current();
       }
       setupListener();
-
     } catch (error) {
       console.error('❌ Error in mark all:', error);
       isMarkingRef.current = false;
@@ -124,7 +143,7 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   if (!user) return null;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={bellRef}>
       <Button
         variant="ghost"
         size="icon"
@@ -144,23 +163,16 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
       </Button>
 
       {isOpen && (
-        <>
-          <div 
-            className="fixed inset-0 z-[9998]"
-            onClick={() => setIsOpen(false)}
-            aria-hidden="true"
+        // ✅ UKLONJEN JE fixed inset-0 DIV (BACKDROP)
+        <div className="absolute top-full right-0 mt-2 z-[9999]">
+          <NotificationCenter
+            notifications={notifications}
+            unreadCount={unreadCount}
+            loading={loading}
+            onClose={() => setIsOpen(false)}
+            onMarkAllRead={handleMarkAllRead}
           />
-          
-          <div className="absolute top-full right-0 mt-2 z-[9999]">
-            <NotificationCenter
-              notifications={notifications}
-              unreadCount={unreadCount}
-              loading={loading}
-              onClose={() => setIsOpen(false)}
-              onMarkAllRead={handleMarkAllRead}
-            />
-          </div>
-        </>
+        </div>
       )}
     </div>
   );
