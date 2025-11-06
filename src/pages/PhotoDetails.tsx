@@ -65,169 +65,148 @@ const [rateLimitInfo, setRateLimitInfo] = useState({
     }
   };
   
-  // Load photo data
-  useEffect(() => {
-    const loadPhotoData = async () => {
-  console.log('=== FIREBASE DEBUG ===');
-  console.log('User email:', user?.email);
-  console.log('User UID:', user?.uid);
-  console.log('PhotoId:', photoId);
-  console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
-  
-  if (!photoId) return;
+// PhotoDetail.tsx - IMPROVED useEffect
 
+useEffect(() => {
+  const loadPhotoData = async () => {
+    console.log('=== PHOTO LOAD DEBUG ===');
+    console.log('PhotoId:', photoId);
+    console.log('User:', user?.email);
+    
+    if (!photoId) return;
 
-  
-  try {
-    setLoading(true);
-    
-    const photoData = await photoService.getPhotoById(photoId);
-    if (!photoData) {
-      toast.error(t('photoDetail.notFound'));
-      return;
-    }
-    
-    setPhoto(photoData);
-    setLikes(photoData.likes || 0);
-    setViews(photoData.views || 0);
-    
-    if (user) {
-      const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
-      setUserHasLiked(hasLiked);
+    try {
+      setLoading(true);
       
-      await photoService.incrementViews(photoId, user.uid);
+      // 🔒 Pokušaj učitati sliku
+      const photoData = await photoService.getPhotoById(photoId);
+      
+      // Handle missing photo
+      if (!photoData) {
+        toast.error(t('photoDetail.notFound'));
+        navigate('/');
+        return;
+      }
+      
+      // 🔒 CHECK PENDING STATUS
+      if (photoData.isApproved === false) {
+        const isAdmin = user?.email === 'vremeplov.app@gmail.com';
+        const isOwner = user?.uid === photoData.authorId;
+        
+        console.log('🔒 Pending photo:', {
+          isApproved: photoData.isApproved,
+          isAdmin,
+          isOwner,
+          photoAuthor: photoData.authorId,
+          currentUser: user?.uid
+        });
+        
+        // ✅ Firebase Rules će već blokirati unauthorized pristup
+        // Ovaj kod se izvršava SAMO ako user ima pristup
+        
+        if (isOwner && !isAdmin) {
+          // Vlasnik vidi svoju pending sliku
+          toast.info('Ovo je tvoja fotografija koja čeka odobrenje.', {
+            duration: 5000,
+            icon: '⏳'
+          });
+        } else if (isAdmin) {
+          // Admin vidi pending sliku
+          toast.info('Admin pregled: Pending fotografija', {
+            duration: 3000,
+            icon: '👑'
+          });
+        }
+      }
+      
+      // ✅ NASTAVI S UČITAVANJEM
+      setPhoto(photoData);
+      setLikes(photoData.likes || 0);
+      setViews(photoData.views || 0);
+      
+      if (user) {
+        const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+        setUserHasLiked(hasLiked);
+        
+        await photoService.incrementViews(photoId, user.uid);
+      }
+      
+      // Tagged Persons
+      let taggedPersonsData: any[] = [];
+
+      try {
+        if (user?.email === 'vremeplov.app@gmail.com') {
+          taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+        } else if (photoData.authorId === user?.uid && user) {
+          taggedPersonsData = await photoService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+        } else {
+          taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
+        }
+      } catch (tagError) {
+        console.warn('Could not load tagged persons:', tagError);
+        taggedPersonsData = [];
+      }
+
+      const photoTaggedPersons = photoData.taggedPersons || [];
+
+      const allTaggedPersons = [
+        ...taggedPersonsData,
+        ...photoTaggedPersons.map((person, index) => ({
+          id: `photo_${index}`,
+          name: person.name,
+          x: person.x,
+          y: person.y,
+          photoId: photoId,
+          addedBy: 'System',
+          isApproved: true
+        }))
+      ];
+
+      let visibleTags = allTaggedPersons;
+
+      if (user?.email !== 'vremeplov.app@gmail.com') {
+        visibleTags = allTaggedPersons.filter(tag => {
+          if (tag.isApproved === true) return true;
+          if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
+          if (tag.isApproved === false && photoData.authorId === user?.uid) return true;
+          return false;
+        });
+      }
+      
+      setTaggedPersons(visibleTags);
+      
+      // Load related photos
+      if (photoData.location) {
+        const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
+        const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
+        setRelatedPhotos(related);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Error loading photo:', error);
+      
+      // 🔒 FIRESTORE PERMISSION DENIED
+      if (error?.code === 'permission-denied' || 
+          error?.message?.includes('Missing or insufficient permissions')) {
+        console.log('🔒 Firebase Rules blocked access');
+        toast.error('Nemate pristup ovoj fotografiji.', {
+          duration: 4000,
+          icon: '🔒'
+        });
+        navigate('/');
+        return;
+      }
+      
+      // Generic error
+      toast.error(t('upload.error'));
+      navigate('/');
+    } finally {
+      setLoading(false);
     }
-    
-    // Comments
-    
+  };
 
-    // ✅ ISPRAVKA: Tagged Persons - vlasnik slike koristi admin metodu
-// ✅ FALLBACK PRISTUP: Prvo probaj obične tagove, pa ručno filtriraj
-let taggedPersonsData: any[] = [];
-
-try {
-  console.log('🔍 Attempting to fetch tags for photoId:', photoId);
-  console.log('🔍 User details:', { uid: user?.uid, email: user?.email, isOwner: photoData.authorId === user?.uid });
-  
- if (user?.email === 'vremeplov.app@gmail.com') {
-  // Admin - koristi admin metodu
-  taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
-  console.log('👑 Admin fetched tags:', taggedPersonsData.length);
-} else if (photoData.authorId === user?.uid && user) {
-  // Vlasnik slike - koristi novu metodu
-  console.log('🏠 Photo owner detected, using owner method...');
-  taggedPersonsData = await photoService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
-  console.log('🏠 Photo owner fetched tags:', taggedPersonsData.length);
-} else {
-  // Obični korisnici - samo odobreni tagovi
-  taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
-  console.log('👤 User fetched approved tags:', taggedPersonsData.length);
-}} catch (tagError) {
-  console.warn('Could not load tagged persons from Firestore:', tagError);
-  taggedPersonsData = [];
-}
-
-console.log('📊 Final Firestore tags count:', taggedPersonsData.length);
-
-// Dohvati legacy tagove iz samog photo objekta
-const photoTaggedPersons = photoData.taggedPersons || [];
-
-// Kombiniraj sve tagove
-const allTaggedPersons = [
-  ...taggedPersonsData,
-  ...photoTaggedPersons.map((person, index) => ({
-    id: `photo_${index}`,
-    name: person.name,
-    x: person.x,
-    y: person.y,
-    photoId: photoId,
-    addedBy: 'System',
-    isApproved: true // Legacy tagovi su automatski odobreni
-  }))
-];
-
-// ✅ VRATI ORIGINALNU LOGIKU FILTRIRANJA (ali sada s ispravnim Firestore podacima)
-let visibleTags = allTaggedPersons;
-
-if (user?.email !== 'vremeplov.app@gmail.com') {
-  // Nije admin - prikaži tagove prema pravilima:
-  visibleTags = allTaggedPersons.filter(tag => {
-    // 1. Odobreni tagovi - svi ih vide
-    if (tag.isApproved === true) return true;
-    // 2. Pending tagovi koje je sam korisnik dodao
-    if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
-    // 3. Pending tagovi na korisnikovoj slici (vlasnik vidi sve pending tagove)
-    if (tag.isApproved === false && photoData.authorId === user?.uid) return true;
-    return false;
-  });
-}
-
-// Zamijeniti postojeći === TAG DEBUG === dio s ovim proširenim debugom:
-
-console.log('=== DETAILED TAG DEBUG ===');
-console.log('User UID:', user?.uid);
-console.log('Photo Author ID:', photoData.authorId);
-console.log('Is photo owner:', photoData.authorId === user?.uid);
-console.log('Is admin:', user?.email === 'vremeplov.app@gmail.com');
-
-console.log('Firestore tags details:');
-taggedPersonsData.forEach((tag, index) => {
-  console.log(`Tag ${index}:`, {
-    id: tag.id,
-    name: tag.name,
-    isApproved: tag.isApproved,
-    addedByUid: tag.addedByUid,
-    photoAuthorId: tag.photoAuthorId,
-    x: tag.x,
-    y: tag.y
-  });
-});
-
-console.log('All combined tags details:');
-allTaggedPersons.forEach((tag, index) => {
-  console.log(`Combined tag ${index}:`, {
-    id: tag.id,
-    name: tag.name,
-    isApproved: tag.isApproved,
-    addedByUid: tag.addedByUid,
-    source: tag.id?.includes('photo_') ? 'legacy' : 'firestore'
-  });
-});
-
-console.log('Visible tags after filtering details:');
-visibleTags.forEach((tag, index) => {
-  console.log(`Visible tag ${index}:`, {
-    id: tag.id,
-    name: tag.name,
-    isApproved: tag.isApproved,
-    addedByUid: tag.addedByUid,
-    shouldShowAsPending: tag.isApproved === false && (tag.addedByUid === user?.uid || photoData.authorId === user?.uid)
-  });
-});
-
-console.log('=== END DETAILED TAG DEBUG ===');
-  
-setTaggedPersons(visibleTags);
-
-    
-    // Load related photos from the same location
-    if (photoData.location) {
-      const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
-      // Filter out current photo and take first 6 for related photos
-      const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
-      setRelatedPhotos(related);
-    }
-    
-  } catch (error) {
-    console.error('Error loading photo data:', error);
-    toast.error(t('upload.error'));
-  } finally {
-    setLoading(false);
-  }
-};
-
-    loadPhotoData();
-  }, [photoId, user, t]);
+  loadPhotoData();
+}, [photoId, user, t, navigate]);
 
   useEffect(() => {
 // U PhotoDetail komponenti, prije prosljeđivanja u PhotoLocationMap:
