@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
 import { useState } from 'react';
+import PageHeader from '@/components/PageHeader';
 
 const FAQ = () => {
   const { t } = useLanguage();
@@ -82,25 +83,7 @@ const FAQ = () => {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center justify-between mb-4">
-            <Link to="/">
-              <Button variant="ghost" className="text-white hover:bg-white/10 p-2 mr-2">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-2xl md:text-3xl font-bold">Vremeplov.hr</h1>
-            <div className="flex items-center gap-4">
-              <LanguageSelector />
-            </div>
-          </div>
-          <div className="mt-6">
-            <h2 className="text-3xl md:text-4xl font-bold mb-2">{t('faq.title')}</h2>
-            <p className="text-gray-300">{t('faq.subtitle')}</p>
-          </div>
-        </div>
-      </header>
+      <PageHeader title="Vremeplov.hr" />
 
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-sm p-8">
