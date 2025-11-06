@@ -37,6 +37,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import LanguageSelector from "../components/LanguageSelector";
 import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
+import PageHeader from '@/components/PageHeader';
 
 // Activity type display mapping
 const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: string } } = {
