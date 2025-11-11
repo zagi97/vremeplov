@@ -59,7 +59,7 @@ const Terms = () => {
               {/* ✅ NEW: Copyright Liability Warning */}
               <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                 <p className="text-gray-700 leading-relaxed">
-                  <strong className="text-yellow-800">⚠️ Important:</strong> {t('terms.copyrightLiability')}
+                  <strong className="text-yellow-800">⚠️ </strong> {t('terms.copyrightLiability')}
                 </p>
               </div>
               
