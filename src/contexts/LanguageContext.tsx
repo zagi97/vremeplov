@@ -617,7 +617,7 @@ const translations: Record<Language, TranslationMap> = {
 'community.thisMonth': 'This Month',
 'community.updatedDaily': 'Updated daily at midnight',
 'community.mostPhotos': 'Most Photos',
-'community.mostLiked': 'Most Liked',
+'community.mostLiked': 'Most Active Supporters',
 'community.mostLocations': 'Most Locations',
 'community.newMembers': 'New Members',
 'community.places': 'Places',
@@ -626,6 +626,8 @@ const translations: Record<Language, TranslationMap> = {
 'community.locations': 'locations',
 'community.joined': 'joined',
 'community.badge': 'badge',
+'community.badgesPlural': 'badges',
+'community.badgesMany': 'badges',
 'community.loadingLeaderboard': 'Loading leaderboard...',
 'community.topContributorsByPhotos': 'Top Contributors by Photos',
 'community.mostAppreciatedContributors': 'Most Appreciated Contributors',
@@ -637,7 +639,9 @@ const translations: Record<Language, TranslationMap> = {
 'community.locationsDocumented': 'Locations Documented',
 'community.thisMonthsHighlights': 'This Month\'s Highlights',
 'community.mostActiveLocation': 'Most Active Location',
-'community.newPhotos': 'new photos',
+  'community.newPhoto': 'new photo',
+  'community.newPhotosPlural': 'new photos',
+  'community.newPhotosMany': 'new photos',
 'community.photoOfTheMonth': 'Photo of the Month',
 'community.by': 'by',
 'community.fromLastMonth': 'from last month',
@@ -780,8 +784,10 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.time.hours': 'h ago',
 'notifications.time.days': 'd ago',
 
+'filter.decade' : 's'
   },
   hr: {
+    'filter.decade' : 'e',
     'notifications.notAvailable': 'Sadržaj nije dostupan',
 'notifications.title': 'Obavijesti',
 'notifications.markAll': 'Označi sve',
@@ -1435,7 +1441,7 @@ const translations: Record<Language, TranslationMap> = {
 'community.thisMonth': 'Ovaj mjesec',
 'community.updatedDaily': 'Ažurirano dnevno u ponoć',
 'community.mostPhotos': 'Najviše fotografija',
-'community.mostLiked': 'Najviše sviđanja',
+'community.mostLiked': 'Najaktivniji u podršci',
 'community.mostLocations': 'Najviše lokacija',
 'community.newMembers': 'Novi članovi',
 'community.places': 'Mjesta',
@@ -1444,6 +1450,8 @@ const translations: Record<Language, TranslationMap> = {
 'community.locations': 'lokacije',
 'community.joined': 'pridružio/la se',
 'community.badge': 'značka',
+'community.badgesPlural': 'značke', // 2-4
+'community.badgesMany': 'značaka', // 5+
 'community.loadingLeaderboard': 'Učitavanje ljestvice...',
 'community.topContributorsByPhotos': 'Najbolji doprinositelji po fotografijama',
 'community.mostAppreciatedContributors': 'Najcjenjeniji doprinositelji',
@@ -1455,7 +1463,9 @@ const translations: Record<Language, TranslationMap> = {
 'community.locationsDocumented': 'Dokumentirane lokacije',
 'community.thisMonthsHighlights': 'Istaknuto ovaj mjesec',
 'community.mostActiveLocation': 'Najaktivnija lokacija',
-'community.newPhotos': 'nove fotografije',
+'community.newPhoto': 'nova fotografija',
+  'community.newPhotosPlural': 'nove fotografije', // 2-4
+  'community.newPhotosMany': 'novih fotografija', // 5+
 'community.photoOfTheMonth': 'Fotografija mjeseca',
 'community.by': 'od',
 'community.fromLastMonth': 'od prošlog mjeseca',

@@ -106,6 +106,12 @@ const CommunityLeaderboard = () => {
     };
   }, [timePeriod, t]);
 
+  const getBadgeText = (count: number) => {
+  if (count === 1) return t('community.badge'); // 1 značka
+  if (count >= 2 && count <= 4) return t('community.badgesPlural'); // 2-4 značke
+  return t('community.badgesMany'); // 5+ značaka
+};
+
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -134,6 +140,12 @@ const CommunityLeaderboard = () => {
           return `${user.totalPhotos.toLocaleString()} ${t('profile.photos')}`;
       }
     };
+
+    const getPhotoText = (count: number) => {
+  if (count === 1) return t('community.newPhoto'); // 1 nova fotografija
+  if (count >= 2 && count <= 4) return t('community.newPhotosPlural'); // 2-4 nove fotografije
+  return t('community.newPhotosMany'); // 5+ novih fotografija
+};
 
     return (
       <Card className={`mb-3 sm:mb-4 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
@@ -204,12 +216,12 @@ const CommunityLeaderboard = () => {
                 </div>
               </div>
 
-              {/* Top Badge */}
-              {user.badges.length > 0 && (
-                <Badge variant="secondary" className="hidden lg:flex text-xs">
-                  {user.badges.length} {t('community.badge')}{user.badges.length !== 1 ? 's' : ''}
-                </Badge>
-              )}
+             {/* Top Badge */}
+{user.badges.length > 0 && (
+  <Badge variant="secondary" className="hidden lg:flex text-xs">
+    {user.badges.length} {getBadgeText(user.badges.length)}
+  </Badge>
+)}
             </div>
           </div>
         </CardContent>
@@ -448,8 +460,8 @@ const CommunityLeaderboard = () => {
                         {monthlyHighlights.mostActiveLocation.name}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                        {monthlyHighlights.mostActiveLocation.photoCount} {t('community.newPhotos')}
-                      </div>
+  {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount)}
+</div>
                     </div>
                     
                     <div className="pb-3 sm:pb-4 border-b border-gray-100">

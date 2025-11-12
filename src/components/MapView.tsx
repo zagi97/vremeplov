@@ -338,7 +338,7 @@ const MapView: React.FC = () => {
                     <option value="all">{t('mapView.allDecades')}</option>
                     {getAvailableDecades().map(decade => (
                         <option key={decade} value={decade.toString()}>
-                            {decade}s ({decade}-{decade + 9})
+                            {decade}{t('filter.decade')} ({decade}-{decade + 9})
                         </option>
                     ))}
                 </select>

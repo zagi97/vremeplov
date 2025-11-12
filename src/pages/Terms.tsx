@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, AlertTriangle, Copyright, Gavel, Shield } from 'lucide-react';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { translateWithParams, useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
@@ -163,7 +163,7 @@ const Terms = () => {
               {t('terms.termsUpdatesText')}
             </p>
             <p className="text-sm text-gray-500 mt-4">
-              Last updated: {new Date().toLocaleDateString()}
+              {translateWithParams(t, 'privacy.lastUpdated', { date: new Date().toLocaleDateString() })}
             </p>
           </div>
         </div>
