@@ -318,7 +318,7 @@ const MapView: React.FC = () => {
       </div>
     </div>
 
-           {/* Filters */}
+          {/* Filters */}
 <div className="bg-white border-b border-gray-200 py-4">
     <div className="container max-w-6xl mx-auto px-4">
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -328,19 +328,27 @@ const MapView: React.FC = () => {
                 <span className="font-medium">{t('mapView.filters')}</span>
             </div>
 
-            {/* Decade dropdown */}
-            <select
-                value={selectedDecade}
-                onChange={(e) => setSelectedDecade(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px]"
-            >
-                <option value="all">{t('mapView.allDecades')}</option>
-                {getAvailableDecades().map(decade => (
-                    <option key={decade} value={decade.toString()}>
-                        {decade}s ({decade}-{decade + 9})
-                    </option>
-                ))}
-            </select>
+            {/* Decade dropdown - custom styled */}
+            <div className="relative">
+                <select
+                    value={selectedDecade}
+                    onChange={(e) => setSelectedDecade(e.target.value)}
+                    className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px] cursor-pointer"
+                >
+                    <option value="all">{t('mapView.allDecades')}</option>
+                    {getAvailableDecades().map(decade => (
+                        <option key={decade} value={decade.toString()}>
+                            {decade}s ({decade}-{decade + 9})
+                        </option>
+                    ))}
+                </select>
+                {/* Custom arrow icon */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
 
             {/* Search input */}
             <Input
