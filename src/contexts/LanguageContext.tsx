@@ -784,9 +784,14 @@ const translations: Record<Language, TranslationMap> = {
 'notifications.time.hours': 'h ago',
 'notifications.time.days': 'd ago',
 
-'filter.decade' : 's'
+'filter.decade' : 's',
+
+'upload.addPhotoToCity': 'Add historical photo to the city of',
+  'upload.addPhotoToMunicipality': 'Add historical photo to the municipality of',
   },
   hr: {
+     'upload.addPhotoToCity': 'Dodaj povijesnu fotografiju u grad',
+  'upload.addPhotoToMunicipality': 'Dodaj povijesnu fotografiju u općinu',
     'filter.decade' : 'e',
     'notifications.notAvailable': 'Sadržaj nije dostupan',
 'notifications.title': 'Obavijesti',
