@@ -267,13 +267,29 @@ const parseLocationFromUrl = (urlParam: string) => {
     }
   }
   
+// ✅ Za jednostavne URL-ove (bez "-") poput "Zagreb"
+const simpleRecord = municipalityData.records.find(
+  record => record[3] === urlParam
+);
+
+if (simpleRecord) {
   return {
     cityName: urlParam,
-    county: null,
-    type: null,
+    county: simpleRecord[1] as string,
+    type: simpleRecord[2] as string,
     displayName: urlParam,
     isSpecific: false
   };
+}
+
+// Fallback ako lokacija nije pronađena u bazi
+return {
+  cityName: urlParam,
+  county: null,
+  type: null,
+  displayName: urlParam,
+  isSpecific: false
+};
 };
 
 // Linija 279
