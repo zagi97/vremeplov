@@ -293,7 +293,6 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   const decodedLocationName = decodeURIComponent(locationName);
   const parsedLocation = parseLocationFromUrl(decodedLocationName);
-  const actualCityName = parsedLocation.cityName;
 
   const { user } = useAuth();
 
@@ -1168,7 +1167,7 @@ if (coordinates && selectedAddress) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ImageIcon className="h-5 w-5" />
-            {getUploadTitle(parsedLocation.type, locationName, t)}
+          {getUploadTitle(parsedLocation.type, parsedLocation.displayName, t)}
         </CardTitle>
       </CardHeader>
         {/* ✅ DODAJ OVO - TIER STATUS BADGE */}
