@@ -30,6 +30,19 @@ import PageHeader from "@/components/PageHeader";
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
 
+// ✅ Helper funkcije za pluralizaciju
+const getBadgeText = (count: number, t: any) => {
+  if (count === 1) return t('community.badge');
+  if (count >= 2 && count <= 4) return t('community.badgesPlural');
+  return t('community.badgesMany');
+};
+
+const getPhotoText = (count: number, t: any) => {
+  if (count === 1) return t('community.newPhoto');
+  if (count >= 2 && count <= 4) return t('community.newPhotosPlural');
+  return t('community.newPhotosMany');
+};
+
 const CommunityLeaderboard = () => {
   const { t } = useLanguage();
   const [leaderboardData, setLeaderboardData] = useState<{
@@ -106,11 +119,7 @@ const CommunityLeaderboard = () => {
     };
   }, [timePeriod, t]);
 
-  const getBadgeText = (count: number) => {
-  if (count === 1) return t('community.badge'); // 1 značka
-  if (count >= 2 && count <= 4) return t('community.badgesPlural'); // 2-4 značke
-  return t('community.badgesMany'); // 5+ značaka
-};
+
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -141,11 +150,7 @@ const CommunityLeaderboard = () => {
       }
     };
 
-    const getPhotoText = (count: number) => {
-  if (count === 1) return t('community.newPhoto'); // 1 nova fotografija
-  if (count >= 2 && count <= 4) return t('community.newPhotosPlural'); // 2-4 nove fotografije
-  return t('community.newPhotosMany'); // 5+ novih fotografija
-};
+
 
     return (
       <Card className={`mb-3 sm:mb-4 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
@@ -219,7 +224,7 @@ const CommunityLeaderboard = () => {
              {/* Top Badge */}
 {user.badges.length > 0 && (
   <Badge variant="secondary" className="hidden lg:flex text-xs">
-    {user.badges.length} {getBadgeText(user.badges.length)}
+   {user.badges.length} {getBadgeText(user.badges.length, t)}
   </Badge>
 )}
             </div>
@@ -229,7 +234,7 @@ const CommunityLeaderboard = () => {
     );
   };
 
-  if (loading) {
+/*   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-center px-4">
@@ -238,85 +243,101 @@ const CommunityLeaderboard = () => {
         </div>
       </div>
     );
-  };
+  }; */
+
+  const LeaderboardSkeleton = () => (
+  <Card className="mb-3 sm:mb-4">
+    <CardContent className="p-3 sm:p-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full animate-pulse" />
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full animate-pulse" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-    {/* Fixed Header */}
+  <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
     <PageHeader title="Vremeplov.hr"/>
-{/* Hero section */}
-<div className="bg-white border-b border-gray-200 py-8 pt-24">
-  <div className="container max-w-6xl mx-auto px-4">
-    {/* Desktop layout - flex-row sa space-between */}
-    <div className="hidden md:flex md:items-center md:justify-between">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-          <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
-          {t("community.leaderboard")}
-        </h1>
-        <p className="text-gray-600 text-sm md:text-base">
-          {t("community.celebratingContributors")}
-        </p>
-      </div>
-      
-      <div className="flex gap-2">
-        {[
-          { value: 'all-time', label: t('community.allTime') },
-          { value: 'this-year', label: t('community.thisYear') },
-          { value: 'this-month', label: t('community.thisMonth') }
-        ].map(period => (
-          <Button
-            key={period.value}
-            variant={timePeriod === period.value ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTimePeriod(period.value as TimePeriod)}
-            className="text-xs sm:text-sm"
-          >
-            {period.label}
-          </Button>
-        ))}
-      </div>
-    </div>
+    
+    {/* Hero section */}
+    <div className="bg-white border-b border-gray-200 py-8 pt-24">
+      <div className="container max-w-6xl mx-auto px-4">
+        {/* Desktop layout */}
+        <div className="hidden md:flex md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+              {t("community.leaderboard")}
+            </h1>
+            <p className="text-gray-600 text-sm md:text-base">
+              {t("community.celebratingContributors")}
+            </p>
+          </div>
+          
+          <div className="flex gap-2">
+            {[
+              { value: 'all-time', label: t('community.allTime') },
+              { value: 'this-year', label: t('community.thisYear') },
+              { value: 'this-month', label: t('community.thisMonth') }
+            ].map(period => (
+              <Button
+                key={period.value}
+                variant={timePeriod === period.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimePeriod(period.value as TimePeriod)}
+                disabled={loading}
+                className="text-xs sm:text-sm"
+              >
+                {period.label}
+              </Button>
+            ))}
+          </div>
+        </div>
 
-    {/* Mobile layout - SVE CENTRIRANO */}
-    <div className="md:hidden text-center">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-        <Trophy className="h-6 w-6 text-blue-600" />
-        {t("community.leaderboard")}
-      </h1>
-      <p className="text-gray-600 text-sm mb-4">
-        {t("community.celebratingContributors")}
-      </p>
-      
-      {/* Centrirani buttoni */}
-      <div className="flex gap-2 justify-center">
-        {[
-          { value: 'all-time', label: t('community.allTime') },
-          { value: 'this-year', label: t('community.thisYear') },
-          { value: 'this-month', label: t('community.thisMonth') }
-        ].map(period => (
-          <Button
-            key={period.value}
-            variant={timePeriod === period.value ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTimePeriod(period.value as TimePeriod)}
-            className="text-xs flex-1 max-w-[120px]"
-          >
-            {period.label}
-          </Button>
-        ))}
+        {/* Mobile layout */}
+        <div className="md:hidden text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+            <Trophy className="h-6 w-6 text-blue-600" />
+            {t("community.leaderboard")}
+          </h1>
+          <p className="text-gray-600 text-sm mb-4">
+            {t("community.celebratingContributors")}
+          </p>
+          
+          <div className="flex gap-2 justify-center">
+            {[
+              { value: 'all-time', label: t('community.allTime') },
+              { value: 'this-year', label: t('community.thisYear') },
+              { value: 'this-month', label: t('community.thisMonth') }
+            ].map(period => (
+              <Button
+                key={period.value}
+                variant={timePeriod === period.value ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTimePeriod(period.value as TimePeriod)}
+                disabled={loading}
+                className="text-xs flex-1 max-w-[120px]"
+              >
+                {period.label}
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
 {/* Ukloni cijelu Time Period Selector sekciju */}
 
       {/* Leaderboard Content */}
-      <section className="py-6 sm:py-8 px-4">
-        <div className="container max-w-6xl mx-auto">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1">
+       <section className="py-6 sm:py-8 px-4">
+      <div className="container max-w-6xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1">
               <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{t('community.mostPhotos')}</span>
@@ -342,75 +363,106 @@ const CommunityLeaderboard = () => {
             <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3">
               {/* Main Leaderboard */}
               <div className="lg:col-span-2 order-1">
-                <TabsContent value="photos">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {t('community.topContributorsByPhotos')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {leaderboardData.photos.length > 0 ? (
-                        leaderboardData.photos.map(user => (
-                          <LeaderboardCard key={user.uid} user={user} category="photos" />
-                        ))
-                      ) : (
-                        <div className="text-center py-8 text-gray-500 text-sm">
-                          {t('community.noDataForPeriod')}
-                        </div>
-                      )}
-                    </CardContent>
+              <TabsContent value="photos">
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {t('community.topContributorsByPhotos')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                        // ✅ SKELETON umjesto praznog ekrana
+                      <>
+                        {[...Array(5)].map((_, i) => (
+                          <LeaderboardSkeleton key={i} />
+                        ))}
+                      </>
+                    ) : leaderboardData.photos.length > 0 ? (
+                      leaderboardData.photos.map(user => (
+                        <LeaderboardCard key={user.uid} user={user} category="photos" />
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 text-sm">
+                        {t('community.noDataForPeriod')}
+                      </div>
+                    )}
+                  </CardContent>
                   </Card>
                 </TabsContent>
 
                 <TabsContent value="likes">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {t('community.mostAppreciatedContributors')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {leaderboardData.likes.map(user => (
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {t('community.mostAppreciatedContributors')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <>
+                        {[...Array(5)].map((_, i) => (
+                          <LeaderboardSkeleton key={i} />
+                        ))}
+                      </>
+                    ) : (
+                      leaderboardData.likes.map(user => (
                         <LeaderboardCard key={user.uid} user={user} category="likes" />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <TabsContent value="locations">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {t('community.heritageExplorers')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {leaderboardData.locations.map(user => (
+              <TabsContent value="locations">
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {t('community.heritageExplorers')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <>
+                        {[...Array(5)].map((_, i) => (
+                          <LeaderboardSkeleton key={i} />
+                        ))}
+                      </>
+                    ) : (
+                      leaderboardData.locations.map(user => (
                         <LeaderboardCard key={user.uid} user={user} category="locations" />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <TabsContent value="recent">
-                  <Card>
-                    <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                        <Star className="h-4 w-4 sm:h-5 sm:w-5" />
-                        {t('community.welcomeNewMembers')}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {leaderboardData.recent.map(user => (
+              <TabsContent value="recent">
+                <Card>
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {t('community.welcomeNewMembers')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <>
+                        {[...Array(5)].map((_, i) => (
+                          <LeaderboardSkeleton key={i} />
+                        ))}
+                      </>
+                    ) : (
+                      leaderboardData.recent.map(user => (
                         <LeaderboardCard key={user.uid} user={user} category="recent" />
-                      ))}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
               </div>
 
               {/* Sidebar Stats */}
@@ -460,7 +512,7 @@ const CommunityLeaderboard = () => {
                         {monthlyHighlights.mostActiveLocation.name}
                       </div>
                       <div className="text-xs sm:text-sm text-gray-500 mt-1">
-  {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount)}
+  {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
 </div>
                     </div>
                     

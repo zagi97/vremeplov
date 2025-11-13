@@ -658,7 +658,7 @@ const UserProfilePage = () => {
                       </div>
 
                       {/* ✅ NEW - Load More Photos Button */}
-                      {hasMorePhotos && (
+                      {hasMorePhotos && userPhotos.length > 0 && (
                         <div className="text-center mt-6 pt-4 border-t">
                           <Button 
                             variant="outline" 
