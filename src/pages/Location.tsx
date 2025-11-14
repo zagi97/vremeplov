@@ -222,6 +222,42 @@ const Location = () => {
     sortBy: 'newest'
   });
 
+  // ✅ DODAJ OVO - Upload Limit State
+  const [uploadLimitInfo, setUploadLimitInfo] = useState<{
+    canUpload: boolean;
+    uploadsToday: number;
+    remainingToday: number;
+    userTier: string;
+    dailyLimit: number;
+    nextTierInfo?: string;
+  } | null>(null);
+
+  // ✅ DODAJ OVO - Check limit when user logs in
+  useEffect(() => {
+    const checkUploadLimit = async () => {
+      if (!user) {
+        setUploadLimitInfo(null);
+        return;
+      }
+      
+      try {
+        const limitCheck = await photoService.canUserUploadToday(user.uid);
+        setUploadLimitInfo({
+          canUpload: limitCheck.allowed,
+          uploadsToday: limitCheck.uploadsToday,
+          remainingToday: limitCheck.remainingToday,
+          userTier: limitCheck.userTier,
+          dailyLimit: limitCheck.dailyLimit,
+          nextTierInfo: limitCheck.nextTierInfo
+        });
+      } catch (error) {
+        console.error('Error checking upload limit:', error);
+      }
+    };
+    
+    checkUploadLimit();
+  }, [user]);
+
   // Redirect ako lokacija nije validna
   if (!isValidLocation) {
     return <Navigate to="/not-found" replace />;
@@ -244,6 +280,19 @@ const Location = () => {
   try {
     const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
     setAllPhotos(locationPhotos);
+    
+    // ✅ REFRESH upload limit info
+    if (user) {
+      const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
+      setUploadLimitInfo({
+        canUpload: updatedLimitCheck.allowed,
+        uploadsToday: updatedLimitCheck.uploadsToday,
+        remainingToday: updatedLimitCheck.remainingToday,
+        userTier: updatedLimitCheck.userTier,
+        dailyLimit: updatedLimitCheck.dailyLimit,
+        nextTierInfo: updatedLimitCheck.nextTierInfo
+      });
+    }
   } catch (error) {
     console.error('Error refreshing photos:', error);
   }
@@ -433,25 +482,76 @@ const Location = () => {
             </div>
 
             {/* Right side: buttons */}
-            <div className="flex-shrink-0 w-full sm:w-auto">
-              {user ? (
-                <Button
-                  onClick={() => setShowAddForm(true)}
-                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
-                >
-                  <Plus className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{t("location.addMemory")}</span>
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSignInToAddMemory}
-                  className="w-full sm:w-auto border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
-                >
-                  <LogIn className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{t("location.signInToAdd")}</span>
-                </Button>
+            {/* Right side: buttons */}
+<div className="flex-shrink-0 w-full sm:w-auto">
+  {user ? (
+    <div className="w-full sm:w-auto">
+      {/* ✅ TIER INFO BADGE - Desktop Only */}
+      {uploadLimitInfo && (
+        <div className="hidden sm:block mb-2 text-xs text-right">
+          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            uploadLimitInfo.canUpload 
+              ? 'bg-green-100 text-green-700' 
+              : 'bg-red-100 text-red-700'
+          }`}>
+            {uploadLimitInfo.canUpload ? '✓' : '✕'} {uploadLimitInfo.remainingToday}/{uploadLimitInfo.dailyLimit} {t('upload.remaining')}
+          </span>
+        </div>
+      )}
+      
+      {/* ✅ BUTTON with Tooltip */}
+      <div className="relative group">
+        <Button
+          onClick={() => {
+            if (uploadLimitInfo?.canUpload) {
+              setShowAddForm(true);
+            }
+          }}
+          disabled={uploadLimitInfo ? !uploadLimitInfo.canUpload : false}
+          className={`w-full sm:w-auto flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 ${
+            uploadLimitInfo?.canUpload 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          <Plus className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{t("location.addMemory")}</span>
+        </Button>
+        
+        {/* ✅ TOOLTIP on Hover - Desktop Only */}
+        {uploadLimitInfo && !uploadLimitInfo.canUpload && (
+          <div className="hidden sm:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+            <div className="text-center">
+              <div className="font-semibold mb-1">
+                {t('upload.limitReached')}
+              </div>
+              <div className="text-gray-300">
+                {t('upload.uploadedToday')}: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
+              </div>
+              {uploadLimitInfo.nextTierInfo && (
+                <div className="text-blue-300 mt-1 text-[10px]">
+                  💡 {uploadLimitInfo.nextTierInfo}
+                </div>
               )}
             </div>
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+              <div className="border-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : (
+    <Button
+      onClick={handleSignInToAddMemory}
+      className="w-full sm:w-auto border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
+    >
+      <LogIn className="h-4 w-4 flex-shrink-0" />
+      <span className="truncate">{t("location.signInToAdd")}</span>
+    </Button>
+  )}
+</div>
           </div>
         </div>
       </div>

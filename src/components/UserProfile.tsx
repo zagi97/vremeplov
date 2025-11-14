@@ -23,7 +23,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
         onClick={signInWithGoogle} 
         variant="ghost" 
         size="sm"
-        className={cn("text-white hover:bg-white hover:text-gray-900 transition-colors text-xs sm:text-sm px-2 sm:px-4", className)}
+        className={cn("text-white hover:bg-white/20 transition-colors text-xs sm:text-sm px-2 sm:px-4", className)}
       >
         {t('nav.login')}
       </Button>
@@ -33,7 +33,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className={cn("h-auto p-1 sm:p-2 hover:bg-white hover:text-gray-900 transition-colors", className)}>
+        <Button variant="ghost" size="sm" className={cn("h-auto p-1 sm:p-2 hover:bg-white/20 transition-colors", className)}>
           <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
             <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
             <AvatarFallback className="bg-blue-600 text-white text-xs">
