@@ -232,6 +232,26 @@ const Location = () => {
     nextTierInfo?: string;
   } | null>(null);
 
+  const [showClickTooltip, setShowClickTooltip] = useState(false);
+
+
+  // ✅ Close click tooltip when clicking outside
+useEffect(() => {
+  const handleClickOutside = () => {
+    if (showClickTooltip) {
+      setShowClickTooltip(false);
+    }
+  };
+  
+  if (showClickTooltip) {
+    document.addEventListener('click', handleClickOutside);
+  }
+  
+  return () => {
+    document.removeEventListener('click', handleClickOutside);
+  };
+}, [showClickTooltip]);
+
   // ✅ DODAJ OVO - Check limit when user logs in
   useEffect(() => {
     const checkUploadLimit = async () => {
@@ -504,6 +524,9 @@ const Location = () => {
           onClick={() => {
             if (uploadLimitInfo?.canUpload) {
               setShowAddForm(true);
+            } else {
+              // ✅ Na tablet - toggle tooltip on click
+              setShowClickTooltip(!showClickTooltip);
             }
           }}
           disabled={uploadLimitInfo ? !uploadLimitInfo.canUpload : false}
@@ -517,31 +540,61 @@ const Location = () => {
           <span className="truncate">{t("location.addMemory")}</span>
         </Button>
         
-        {/* ✅ TOOLTIP on Hover - Desktop Only */}
+        {/* ✅ DESKTOP HOVER TOOLTIP - Only on large screens with mouse */}
         {uploadLimitInfo && !uploadLimitInfo.canUpload && (
-          <div className="hidden sm:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+          <div className="hidden lg:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48 z-30">
             <div className="text-center">
               <div className="font-semibold mb-1">
                 {t('upload.limitReached')}
               </div>
-              <div className="text-gray-300">
-                {t('upload.uploadedToday')}: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
+              <div className="text-gray-300 leading-tight">
+                Učitano: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
               </div>
-              {uploadLimitInfo.nextTierInfo && (
-                <div className="text-blue-300 mt-1 text-[10px]">
-                  💡 {uploadLimitInfo.nextTierInfo}
+              {uploadLimitInfo.userTier === 'NEW_USER' && (
+                <div className="text-blue-300 mt-2 text-[9px] leading-tight">
+                  💡 Verificiraj se za više
                 </div>
               )}
             </div>
-            {/* Arrow */}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
               <div className="border-4 border-transparent border-t-gray-900"></div>
             </div>
           </div>
         )}
+        
+        {/* ✅ TABLET CLICK TOOLTIP - Shows BELOW button (640-1024px only) */}
+        {uploadLimitInfo && !uploadLimitInfo.canUpload && showClickTooltip && (
+          <div className="hidden sm:block lg:hidden absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg w-64 z-30 shadow-xl">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowClickTooltip(false);
+              }}
+              className="absolute top-1 right-1 text-gray-400 hover:text-white text-lg leading-none"
+            >
+              ✕
+            </button>
+            <div className="text-center pt-3">
+              <div className="font-semibold mb-1 text-sm">
+                {t('upload.limitReached')}
+              </div>
+              <div className="text-gray-300 text-xs leading-tight">
+                Učitano danas: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
+              </div>
+              {uploadLimitInfo.userTier === 'NEW_USER' && (
+                <div className="text-blue-300 mt-2 text-xs leading-tight">
+                  💡 Verificiraj se za više uploadova
+                </div>
+              )}
+            </div>
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-[-1px]">
+              <div className="border-4 border-transparent border-b-gray-900"></div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ✅ MOBILE INFO CARD - Shows below button on mobile when limit reached */}
+      {/* ✅ MOBILE PERSISTENT CARD - Shows below button on mobile (<640px) */}
       {uploadLimitInfo && !uploadLimitInfo.canUpload && (
         <div className="sm:hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-start gap-2">
@@ -550,7 +603,7 @@ const Location = () => {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <h3 className="text-sm font-medium text-red-800">
                 {t('upload.limitReached')}
               </h3>
