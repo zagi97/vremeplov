@@ -143,28 +143,32 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   if (!user) return null;
 
   return (
-    <div className="relative" ref={bellRef}>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className={`relative ${className} hover:bg-white/20 transition-all`}
-        aria-label="Notifications"
-      >
-        <Bell className="h-5 w-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center animate-pulse shadow-lg">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
-        )}
-      </Button>
+  <div className="relative" ref={bellRef}>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={(e) => {
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+      }}
+      className={`relative ${className} hover:bg-white/20 transition-all`}
+      aria-label="Notifications"
+    >
+      <Bell className="h-5 w-5" />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center animate-pulse shadow-lg">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </Button>
 
-      {isOpen && (
-        // ✅ UKLONJEN JE fixed inset-0 DIV (BACKDROP)
-        <div className="absolute top-full right-0 mt-2 z-[9999]">
+    {isOpen && (
+      // ✅ DODAJ PORTAL-LIKE POSITIONING
+      <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)}>
+        <div 
+          className="absolute top-[60px] right-4 sm:right-8 z-[9999]"
+          onClick={(e) => e.stopPropagation()}
+        >
           <NotificationCenter
             notifications={notifications}
             unreadCount={unreadCount}
@@ -173,9 +177,10 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
             onMarkAllRead={handleMarkAllRead}
           />
         </div>
-      )}
-    </div>
-  );
+      </div>
+    )}
+  </div>
+);
 };
 
 export default NotificationBell;
