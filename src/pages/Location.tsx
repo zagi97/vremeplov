@@ -374,19 +374,9 @@ const Location = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             {/* Left side: location info */}
             <div className="flex-1 min-w-0">
-              {/* Nazad button */}
-              <div className="flex items-center gap-2 mb-4">
-                <Link to="/">
-                  <Button
-                    variant="ghost"
-                    className="text-gray-700 hover:bg-gray-100 p-2"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words">
-                  {locationData.displayName}
-                </h2>
+             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words mb-4">
+  {locationData.displayName}
+</h2>
               </div>
 
               {/* Info o županiji i tipu */}
