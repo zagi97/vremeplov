@@ -681,25 +681,24 @@ const UserProfilePage = () => {
                         </div>
                       )}
                     </>
-                  ) : (
+                  ) : 
                     <div className="text-center py-12">
-                      <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('profile.noPhotosYet')}</h3>
-                      <p className="text-gray-600 mb-4">
-                        {isOwnProfile 
-                          ? t('profile.startSharing')
-                          : t('profile.userHasntShared')
-                        }
-                      </p>
-                      {isOwnProfile && (
-                        <Link to="/upload">
-                          <Button>
-                            <Camera className="h-4 w-4 mr-2" />
-                            {t('profile.uploadFirstPhoto')}
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
+  <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+    {t('profile.noPhotosYet')}
+  </h3>
+  <p className="text-gray-600 mb-4">
+    {isOwnProfile 
+      ? t('profile.startSharing')
+      : t('profile.userHasntShared')
+    }
+  </p>
+  {isOwnProfile && (
+    <p className="text-sm text-gray-500">
+      ({t('profile.uploadFirstPhoto')}
+    </p>
+  )}
+</div>
                   )}
                 </TabsContent>
 
