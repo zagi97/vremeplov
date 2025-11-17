@@ -297,6 +297,7 @@ const MapView: React.FC = () => {
                         </Button>
                     </Link>
                 </div>
+                <Footer />
             </div>
         );
     }
