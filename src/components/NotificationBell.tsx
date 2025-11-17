@@ -163,28 +163,33 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     </Button>
 
     {isOpen && (
-      <>
-        {/* ✅ Backdrop za zatvaranje klikom izvana */}
-        <div 
-          className="fixed inset-0 z-[9998]" 
-          onClick={() => setIsOpen(false)}
-        />
-        
-        {/* ✅ Notification panel - RELATIVNO pozicioniran */}
-        <div 
-          className="absolute top-full right-0 mt-2 z-[9999]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <NotificationCenter
-            notifications={notifications}
-            unreadCount={unreadCount}
-            loading={loading}
-            onClose={() => setIsOpen(false)}
-            onMarkAllRead={handleMarkAllRead}
-          />
-        </div>
-      </>
-    )}
+  <>
+    {/* Backdrop */}
+    <div 
+      className="fixed inset-0 z-[9998]" 
+      onClick={() => setIsOpen(false)}
+    />
+    
+    {/* Notification panel */}
+    <div 
+      className="z-[9999]
+                 fixed sm:absolute
+                 top-[60px] sm:top-full
+                 right-4 sm:right-0
+                 left-4 sm:left-auto
+                 sm:mt-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <NotificationCenter
+        notifications={notifications}
+        unreadCount={unreadCount}
+        loading={loading}
+        onClose={() => setIsOpen(false)}
+        onMarkAllRead={handleMarkAllRead}
+      />
+    </div>
+  </>
+)}
   </div>
 );
 };
