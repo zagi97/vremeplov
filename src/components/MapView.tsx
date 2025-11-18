@@ -184,46 +184,39 @@ const MapView: React.FC = () => {
     }, [filteredPhotos, currentZoom]);
 
     // Load photos with coordinates from Firebase
-    useEffect(() => {
-        const loadPhotos = async () => {
-            try {
-                setLoading(true);
-                const allPhotos = await photoService.getAllPhotos();
-                const photosWithCoords: PhotoWithCoordinates[] = allPhotos
-                    .filter(photo => photo.coordinates?.latitude && photo.coordinates?.longitude)
-                    .map(photo => ({
-                        ...photo,
-                        latitude: photo.coordinates!.latitude,
-                        longitude: photo.coordinates!.longitude,
-                        address: photo.coordinates?.address
-                    }));
+useEffect(() => {
+    const loadPhotos = async () => {
+        try {
+            setLoading(true);
+            const allPhotos = await photoService.getAllPhotos();
+            const photosWithCoords: PhotoWithCoordinates[] = allPhotos
+                .filter(photo => photo.coordinates?.latitude && photo.coordinates?.longitude)
+                .map(photo => ({
+                    ...photo,
+                    latitude: photo.coordinates!.latitude,
+                    longitude: photo.coordinates!.longitude,
+                    address: photo.coordinates?.address
+                }));
 
-                setPhotos(photosWithCoords);
-                setFilteredPhotos(photosWithCoords);
+            setPhotos(photosWithCoords);
+            setFilteredPhotos(photosWithCoords);
 
-                if (photosWithCoords.length > 0) {
-                    const firstPhoto = photosWithCoords[0];
-                    setMapCenter([firstPhoto.latitude, firstPhoto.longitude]);
-                    setMapZoom(10);
-                    setCurrentZoom(10);
-                } else {
-                    // 🆕 Ako nema fotki, postavi mapu na random lokaciju iz baze umjesto fiksnog Zagreba
-                    const randomCoords = getRandomLocationCoordinates();
-                    setMapCenter([randomCoords.latitude, randomCoords.longitude]);
-                    setMapZoom(8);
-                    setCurrentZoom(8);
-                }
+            // ✅ UVIJEK prikaži cijelu Hrvatsku - centar i zoom ostaju isti
+            // Koordinate centra Hrvatske (blizu Karlovca)
+setMapCenter([44.5319, 16.7789]);
+            setMapZoom(7);
+            setCurrentZoom(7);
 
-            } catch (error) {
-                console.error('Error loading photos for map:', error);
-                toast.error(t('errors.photoLoadFailed'));
-            } finally {
-                setLoading(false);
-            }
-        };
+        } catch (error) {
+            console.error('Error loading photos for map:', error);
+            toast.error(t('errors.photoLoadFailed'));
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        loadPhotos();
-    }, []);
+    loadPhotos();
+}, []);
 
     // Filter photos by decade and location
     useEffect(() => {
@@ -370,6 +363,8 @@ const MapView: React.FC = () => {
                         <MapContainer
                             center={mapCenter}
                             zoom={mapZoom}
+                            minZoom={7}         // ⬅️ Minimalni zoom (fiksno)
+                            maxZoom={19}        // ⬅️ Maksimalni zoom
                             style={{ height: '100%', width: '100%' }}
                             className="rounded-xl"
                         >
