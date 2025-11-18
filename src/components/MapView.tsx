@@ -291,11 +291,6 @@ const MapView: React.FC = () => {
                     <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">{t('mapView.noLocatedPhotos')}</h3>
                     <p className="text-gray-600 mb-6">{t('mapView.photosWillAppear')}</p>
-                    <Link to="/location/Čačinci">
-                        <Button className="bg-blue-600 hover:bg-blue-700">
-                            {translateWithParams(t, 'mapView.addPhotosTo', { location: 'Čačinci' })}
-                        </Button>
-                    </Link>
                 </div>
                 <Footer />
             </div>

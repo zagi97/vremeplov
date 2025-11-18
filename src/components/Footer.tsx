@@ -1,8 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Footer = () => {
   const { t } = useLanguage();
+  const location = useLocation();
+  
+  // Helper funkcija za active state
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
 
   return (
     <footer className="py-8 sm:py-12 bg-gradient-to-r from-gray-900 to-gray-800 text-gray-400">
@@ -19,31 +25,51 @@ const Footer = () => {
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <Link 
               to="/about" 
-              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+              className={`transition-colors whitespace-nowrap text-sm sm:text-base ${
+                isActive('/about') 
+                  ? 'text-white font-bold' 
+                  : 'hover:text-white'
+              }`}
             >
               {t('footer.about')}
             </Link>
             <Link 
               to="/faq" 
-              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+              className={`transition-colors whitespace-nowrap text-sm sm:text-base ${
+                isActive('/faq') 
+                  ? 'text-white font-bold' 
+                  : 'hover:text-white'
+              }`}
             >
               FAQ
             </Link>
             <Link 
               to="/privacy" 
-              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+              className={`transition-colors whitespace-nowrap text-sm sm:text-base ${
+                isActive('/privacy') 
+                  ? 'text-white font-bold' 
+                  : 'hover:text-white'
+              }`}
             >
               {t('footer.privacy')}
             </Link>
             <Link 
               to="/terms" 
-              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+              className={`transition-colors whitespace-nowrap text-sm sm:text-base ${
+                isActive('/terms') 
+                  ? 'text-white font-bold' 
+                  : 'hover:text-white'
+              }`}
             >
               {t('footer.terms')}
             </Link>
             <Link 
               to="/contact" 
-              className="hover:text-white transition-colors whitespace-nowrap text-sm sm:text-base"
+              className={`transition-colors whitespace-nowrap text-sm sm:text-base ${
+                isActive('/contact') 
+                  ? 'text-white font-bold' 
+                  : 'hover:text-white'
+              }`}
             >
               {t('footer.contact')}
             </Link>

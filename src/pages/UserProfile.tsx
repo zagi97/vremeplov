@@ -429,84 +429,64 @@ const UserProfilePage = () => {
                   </div>
 
                   {/* Action Buttons */}
-                  {!isOwnProfile && currentUser ? (
-                    <Button
-                      onClick={handleFollowToggle}
-                      disabled={followLoading}
-                      variant={isFollowing ? "outline" : "default"}
-                      className="w-full mb-4"
-                    >
-                      {followLoading ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                      ) : isFollowing ? (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          {t('profile.following')}
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          {t('profile.follow')}
-                        </>
-                      )}
-                    </Button>
-                  ) : isOwnProfile ? (
-                    <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="w-full mb-4">
-                          <Edit className="h-4 w-4 mr-2" />
-                          {t('profile.editProfile')}
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>{t('profile.editProfile')}</DialogTitle>
-                          <DialogDescription>
-                            {t('profile.editProfileDescription')}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div>
-                            <label className="text-sm font-medium">{t('profile.displayName')}</label>
-                            <Input
-                              value={editForm.displayName}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
-                              placeholder={t('profile.displayNamePlaceholder')} 
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">{t('profile.bio')}</label>
-                            <Textarea
-                              value={editForm.bio}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                              placeholder={t('profile.tellAboutYourself')}
-                              rows={3} 
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium">{t('profile.locations')}</label>
-                            <Input
-                              value={editForm.location}
-                              onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-                              placeholder={t('profile.yourLocation')} 
-                            />
-                          </div>
-                          <div className="flex gap-2 pt-4">
-                            <Button onClick={handleEditProfile} className="flex-1">
-                              {t('profile.saveChanges')}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              onClick={() => setEditProfileOpen(false)}
-                              className="flex-1"
-                            >
-                              {t('profile.cancel')}
-                            </Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  ) : null}
+                  {/* Action Buttons */}
+{isOwnProfile && (
+  <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+    <DialogTrigger asChild>
+      <Button variant="outline" className="w-full mb-4">
+        <Edit className="h-4 w-4 mr-2" />
+        {t('profile.editProfile')}
+      </Button>
+    </DialogTrigger>
+    <DialogContent className="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>{t('profile.editProfile')}</DialogTitle>
+        <DialogDescription>
+          {t('profile.editProfileDescription')}
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 py-4">
+        <div>
+          <label className="text-sm font-medium">{t('profile.displayName')}</label>
+          <Input
+            value={editForm.displayName}
+            onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
+            placeholder={t('profile.displayNamePlaceholder')} 
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">{t('profile.bio')}</label>
+          <Textarea
+            value={editForm.bio}
+            onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+            placeholder={t('profile.tellAboutYourself')}
+            rows={3} 
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">{t('profile.locations')}</label>
+          <Input
+            value={editForm.location}
+            onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+            placeholder={t('profile.yourLocation')} 
+          />
+        </div>
+        <div className="flex gap-2 pt-4">
+          <Button onClick={handleEditProfile} className="flex-1">
+            {t('profile.saveChanges')}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setEditProfileOpen(false)}
+            className="flex-1"
+          >
+            {t('profile.cancel')}
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+)}
                 </CardContent>
               </Card>
 
