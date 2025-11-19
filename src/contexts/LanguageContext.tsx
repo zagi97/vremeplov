@@ -789,8 +789,10 @@ const translations: Record<Language, TranslationMap> = {
 
 'upload.addPhotoToCity': 'Add historical photo to the city of',
   'upload.addPhotoToMunicipality': 'Add historical photo to the municipality of',
+  'notifications.markingRead': 'Marking as read...',
   },
   hr: {
+    'notifications.markingRead': 'Označavam...',
      'upload.addPhotoToCity': 'Dodaj povijesnu fotografiju u grad',
   'upload.addPhotoToMunicipality': 'Dodaj povijesnu fotografiju u općinu',
     'filter.decade' : 'e',

@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Camera, 
   Heart, 
   MessageCircle, 
   UserPlus, 
@@ -16,10 +15,7 @@ import {
   Trash2,
   Edit,
   Ban,
-  ArrowLeft,
-  Bell,
-  Filter
-} from 'lucide-react';
+  Bell} from 'lucide-react';
 import { Notification, notificationService } from '../services/notificationService';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -27,13 +23,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import LanguageSelector from '../components/LanguageSelector';
-import UserProfile from '../components/UserProfile';
 import Footer from '../components/Footer';
 import PageHeader from '@/components/PageHeader';
 
 const NotificationsPage = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -65,7 +59,7 @@ const NotificationsPage = () => {
       },
       (error) => {
         console.error('Notification subscription error:', error);
-        toast.error('Greška pri učitavanju obavijesti');
+        toast.error(t('notifications.markError'));
         setLoading(false);
       }
     );
@@ -101,43 +95,44 @@ const NotificationsPage = () => {
   // Get notification message
   const getNotificationMessage = (notification: Notification): string => {
     const { type, actorName, photoTitle, badgeName, taggedPersonName, reason } = notification;
+    const withReason = (msg: string) => reason ? `${msg}: ${reason}` : msg;
 
     switch (type) {
-      case 'new_comment':
-        return `${actorName} je komentirao/la tvoju fotografiju "${photoTitle}"`;
-      case 'new_like':
-        return `${actorName} je lajkao/la tvoju fotografiju "${photoTitle}"`;
-      case 'new_follower':
-        return `${actorName} te sada prati`;
-      case 'new_tag':
-        return `${actorName} te označio/la na fotografiji "${photoTitle}"`;
-      case 'badge_earned':
-        return `Čestitamo! Zaradio/la si značku: ${badgeName}`;
-      case 'photo_approved':
-        return `Tvoja fotografija "${photoTitle}" je odobrena`;
-      case 'photo_rejected':
-        return `Tvoja fotografija "${photoTitle}" je odbijena${reason ? `: ${reason}` : ''}`;
-      case 'photo_edited':
-        return `Tvoja fotografija "${photoTitle}" je uređena`;
-      case 'photo_deleted':
-        return `Tvoja fotografija "${photoTitle}" je obrisana${reason ? `: ${reason}` : ''}`;
-      case 'tag_approved':
-        return `Tag osobe "${taggedPersonName}" je odobren`;
-      case 'tag_rejected':
-        return `Tag osobe "${taggedPersonName}" je odbijen${reason ? `: ${reason}` : ''}`;
-      case 'comment_deleted':
-        return `Tvoj komentar je obrisan${reason ? `: ${reason}` : ''}`;
-      case 'user_banned':
-        return `Tvoj račun je bannan${reason ? `: ${reason}` : ''}`;
-      case 'user_suspended':
-        return `Tvoj račun je suspendiran${reason ? `: ${reason}` : ''}`;
-      case 'user_unbanned':
-        return `Tvoj račun je ponovo aktivan. Dobrodošao/la natrag!`;
-      case 'user_unsuspended':
-        return `Suspenzija tvog računa je uklonjena. Dobrodošao/la natrag!`;
-      default:
-        return 'Nova obavijest';
-    }
+    case 'new_comment':
+      return `${actorName} ${t('notifications.commented')} "${photoTitle}"`;
+    case 'new_like':
+      return `${actorName} ${t('notifications.liked')} "${photoTitle}"`;
+    case 'new_follower':
+      return `${actorName} ${t('notifications.following')}`;
+    case 'new_tag':
+      return `${actorName} ${t('notifications.tagged')} "${photoTitle}"`;
+    case 'badge_earned':
+      return `${t('notifications.congratulations')} ${badgeName}`;
+    case 'photo_approved':
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.approved')}`;
+    case 'photo_rejected':
+      return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}`);
+    case 'photo_edited':
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}`;
+    case 'photo_deleted':
+      return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}`);
+    case 'tag_approved':
+      return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.approved')}`;
+    case 'tag_rejected':
+      return withReason(`${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}`);
+    case 'comment_deleted':
+      return withReason(t('notifications.yourCommentDeleted'));
+    case 'user_banned':
+      return withReason(t('notifications.accountBanned'));
+    case 'user_suspended':
+      return withReason(t('notifications.accountSuspended'));
+    case 'user_unbanned':
+      return t('notifications.accountActive');
+    case 'user_unsuspended':
+      return t('notifications.suspensionLifted');
+    default:
+      return t('notifications.newNotification');
+  }
   };
 
   // Get notification link - return null for deleted/rejected photos and edited content
@@ -174,21 +169,29 @@ const NotificationsPage = () => {
 
   // Format time ago
   const formatTimeAgo = (timestamp: any): string => {
-    if (!timestamp) return '';
-    
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
+  if (!timestamp) return '';
+  
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'upravo sad';
-    if (diffMins < 60) return `prije ${diffMins} min`;
-    if (diffHours < 24) return `prije ${diffHours}h`;
-    if (diffDays < 7) return `prije ${diffDays}d`;
+  if (diffMins < 1) return t('notifications.time.justNow');
+  
+  if (language === 'hr') {
+    if (diffMins < 60) return `${t('notifications.time.ago')} ${diffMins} ${t('notifications.time.min')}`;
+    if (diffHours < 24) return `${t('notifications.time.ago')} ${diffHours}${t('notifications.time.hours')}`;
+    if (diffDays < 7) return `${t('notifications.time.ago')} ${diffDays}${t('notifications.time.days')}`;
     return date.toLocaleDateString('hr-HR', { day: 'numeric', month: 'short', year: 'numeric' });
-  };
+  } else {
+    if (diffMins < 60) return `${diffMins} ${t('notifications.time.min')}`;
+    if (diffHours < 24) return `${diffHours}${t('notifications.time.hours')}`;
+    if (diffDays < 7) return `${diffDays}${t('notifications.time.days')}`;
+    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+};
 
   // Mark all as read
   const handleMarkAllAsRead = async () => {
@@ -204,10 +207,10 @@ const NotificationsPage = () => {
     
     try {
       await notificationService.markAllNotificationsAsRead(user.uid);
-      toast.success('Sve obavijesti označene kao pročitane');
+      toast.success(t('notifications.allRead'))
     } catch (error) {
       console.error('Error marking all as read:', error);
-      toast.error('Greška pri označavanju obavijesti');
+      toast.error(t('notifications.markError'));
     } finally {
       setMarkingAllRead(false);
       

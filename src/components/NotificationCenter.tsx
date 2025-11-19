@@ -40,7 +40,7 @@ const NotificationCenter = ({
   onMarkAllRead
 }: NotificationCenterProps) => {
   const { t, language } = useLanguage();
-  const { user } = useAuth();
+  useAuth();
   const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
@@ -219,7 +219,7 @@ const NotificationCenter = ({
         >
           <CheckCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1" />
           <span className="hidden xs:inline">{t('notifications.markAll')}</span>
-          <span className="xs:hidden">Sve</span>
+          <span className="xs:hidden">{t('notifications.All')}</span>
         </Button>
       )}
     </div>
@@ -230,7 +230,7 @@ const NotificationCenter = ({
         <div className="p-6 sm:p-8 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-xs sm:text-sm text-gray-500 mt-2">
-            {markingAllRead ? 'Označavam...' : t('notifications.loading')}
+            {markingAllRead ? t('notifications.markingRead') : t('notifications.loading')}
           </p>
         </div>
       ) : displayNotifications.length > 0 ? (

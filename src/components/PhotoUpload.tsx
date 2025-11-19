@@ -526,38 +526,53 @@ useEffect(() => {
       const extractedHouseNumber = extractHouseNumber(searchTerm);
       
       if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
-        console.log(`Exact address not found. Searching for street: "${streetOnly}"`);
-        
-        const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
-        const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
-        
-        const streetResponse = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${streetEncodedSearch}&addressdetails=1&limit=5&countrycodes=hr&accept-language=hr`,
-          {
-            headers: {
-              'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
-            },
-            signal: abortController.signal
-          }
-        );
+  console.log(`Exact address not found. Searching for street: "${streetOnly}"`);
+  
+  const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
+  const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
+  
+  const streetResponse = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${streetEncodedSearch}&addressdetails=1&limit=5&countrycodes=hr&accept-language=hr`,
+    {
+      headers: {
+        'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
+      },
+      signal: abortController.signal
+    }
+  );
 
-        if (!abortController.signal.aborted && streetResponse.ok) {
-          const streetData = await streetResponse.json();
-          
-          if (streetData.length > 0) {
-            const streetResult = streetData[0];
-            setStreetOnlyCoordinates({
-              latitude: parseFloat(streetResult.lat),
-              longitude: parseFloat(streetResult.lon)
-            });
-            setHouseNumber(extractedHouseNumber);
-            setStreetName(streetOnly);
-            
-            addresses.add(`${streetOnly} (kliknite za broj ${extractedHouseNumber})`);
-            console.log(`Found street "${streetOnly}". Manual positioning ready.`);
-          }
-        }
-      }
+  if (!abortController.signal.aborted && streetResponse.ok) {
+    const streetData = await streetResponse.json();
+    
+    if (streetData.length > 0) {
+      const streetResult = streetData[0];
+      setStreetOnlyCoordinates({
+        latitude: parseFloat(streetResult.lat),
+        longitude: parseFloat(streetResult.lon)
+      });
+      setHouseNumber(extractedHouseNumber);
+      setStreetName(streetOnly);
+      
+      addresses.add(`${streetOnly} (kliknite za broj ${extractedHouseNumber})`); // ✅ ISPRAVLJENO
+      console.log(`Found street "${streetOnly}". Manual positioning ready.`);
+
+      // ✅ AUTO-TRIGGER manual positioning
+      setNeedsManualPositioning(true);
+      setSelectedAddress(`${streetOnly} ${extractedHouseNumber}`);
+      setAddressSearch(`${streetOnly} ${extractedHouseNumber}`);
+      closeAddressDropdown(); // Zatvori dropdown
+
+      // Prikaži info poruku
+      toast.info(
+        translateWithParams(t, 'upload.selectExactLocation', { 
+          street: streetOnly, 
+          number: extractedHouseNumber 
+        }),
+        { duration: 5000 }
+      );
+    }
+  }
+}
 
       const finalResults = Array.from(addresses).slice(0, 8);
       
@@ -982,6 +997,52 @@ if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
   toast.error(t('upload.mustSelectAddress'));
   return;
 }
+// ✅ DODATNA PROVJERA - je li marker zaista unutar grada
+if (coordinates) {
+  // Provjeri je li fotka u Čačincima (ili bilo kojem odabranom gradu)
+  const cityCoords = streetOnlyCoordinates || { 
+    latitude: 45.6236, 
+    longitude: 17.8403 
+  }; // Fallback na Čačinci
+  
+  const isWithinBounds = (
+    lat: number,
+    lng: number,
+    centerLat: number,
+    centerLng: number,
+    radiusKm: number = 10
+  ): boolean => {
+    const R = 6371;
+    const dLat = (lat - centerLat) * Math.PI / 180;
+    const dLng = (lng - centerLng) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(centerLat * Math.PI / 180) *
+        Math.cos(lat * Math.PI / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance <= radiusKm;
+  };
+  
+  if (!isWithinBounds(
+    coordinates.latitude,
+    coordinates.longitude,
+    cityCoords.latitude,
+    cityCoords.longitude,
+    15 // 15km radius
+  )) {
+    toast.error(
+      `❌ Odabrana lokacija nije unutar ${locationName}! Molimo odaberite lokaciju bliže centru grada.`,
+      { duration: 5000 }
+    );
+    return;
+  }
+}
 
   if (!navigator.onLine) {
     toast.error(t('upload.offline'));
@@ -1239,30 +1300,12 @@ if (coordinates && selectedAddress) {
                   </Button>
                 )}
               </div>
-{/* ✅ DODAJ ERROR MESSAGE */}
-{addressSearch.trim() !== '' && !selectedAddress && (
-  <div className="mt-1 flex items-center gap-1 text-xs text-red-600">
-    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    </svg>
-    {t('upload.mustSelectAddress')}
-  </div>
-)}
-              {/* Search Status Indicator */}
-              {addressSearch.length >= 2 && (
-  <div className="absolute right-12 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
-    {loadingAddresses ? t('searching') : 
-     debouncedSearchTerm !== addressSearch ? t('typing') : 
-     availableAddresses.length > 0 ? 
-       translateWithParams(t, 'foundCount', { count: availableAddresses.length }) : 
-       t('noResults')
-    }
-  </div>
-)}
+
+
 
               {/* Dropdown with Results */}
               {showAddressDropdown && (
-                <div ref={dropdownRef} className="absolute z-[1000] w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div ref={dropdownRef} className="absolute z-[1000] w-full top-[calc(100%+2px)] bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
                   {loadingAddresses ? (
                     <div className="flex items-center justify-center py-4">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
@@ -1270,12 +1313,6 @@ if (coordinates && selectedAddress) {
                     </div>
                   ) : availableAddresses.length > 0 ? (
                     <div>
-                    <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-b border-gray-200">
-  {translateWithParams(t, 'foundAddresses', { count: availableAddresses.length })}
-  {searchCache.has(`${debouncedSearchTerm}_${locationName}`) && (
-    <span className="ml-2 text-green-600">📋 ({t('cached')})</span>
-  )}
-</div>
                       {availableAddresses.map((address, index) => {
                         const isStatusMessage = address.includes('🔍') || address.includes('❌');
                         
@@ -1308,23 +1345,21 @@ if (coordinates && selectedAddress) {
                     <div className="px-4 py-4 text-sm text-gray-500 text-center">
                       <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
                       {t('upload.noAddressesFound')} "<span className="font-medium">{addressSearch}</span>"
-                      <div className="text-xs text-gray-400 mt-1">{t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva"</div>
+                      
                     </div>
                   ) : null}
                 </div>
               )}
             </div>
-
-            <div className="mt-1 text-xs text-gray-500">
-  {t('upload.trySearching')}: "Školska", "Glavni trg", "Crkva", "Mlinska", etc.
-  {/* Debug info */}
-  <span className="ml-2 text-gray-400">
-    {translateWithParams(t, 'cacheEntries', { count: searchCache.size })}
-    {debouncedSearchTerm !== addressSearch && (
-      <span className="ml-2 text-orange-500">⏳ {t('waiting')}</span>
-    )}
-  </span>
-</div>
+{/* ✅ DODAJ ERROR MESSAGE */}
+{addressSearch.trim() !== '' && !selectedAddress && (
+  <div className="mt-1 flex items-center gap-1 text-xs text-red-600">
+    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+    </svg>
+    {t('upload.mustSelectAddress')}
+  </div>
+)}
           </div>
 
           {/* MANUAL POSITIONING SECTION */}
@@ -1350,6 +1385,7 @@ if (coordinates && selectedAddress) {
               <div className="rounded-lg overflow-hidden border border-blue-300">
                 <SimpleMiniMap
                   center={streetOnlyCoordinates}
+                  locationName={locationName}
                   onLocationSelect={(coords) => {
                     setCoordinates(coords);
                     setSelectedAddress(`${streetName} ${houseNumber}`);
@@ -1442,18 +1478,6 @@ if (coordinates && selectedAddress) {
             </div>
           )}
 
-          {/* OLD COORDINATES DISPLAY - remove or adapt */}
-          {coordinates && !selectedAddress && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-green-600 bg-green-50 p-2 rounded">
-              <MapPin className="h-3 w-3" />
-               <span>
-      {translateWithParams(t, 'upload.locationFoundCoords', { 
-        latitude: coordinates.latitude.toFixed(4), 
-        longitude: coordinates.longitude.toFixed(4) 
-      })}
-    </span>
-            </div>
-          )}
 
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
