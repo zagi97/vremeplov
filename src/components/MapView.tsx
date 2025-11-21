@@ -14,7 +14,7 @@ import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 import municipalityData from '../../data/municipalities.json';
 
 // Leaflet imports
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Footer from './Footer';
@@ -88,6 +88,32 @@ const getRandomLocationCoordinates = () => {
     return { latitude: 45.8150, longitude: 15.9819 }; // Default Zagreb koordinate
 };
 
+// Dodaj novu komponentu koja će pratiti resize
+const MapController = () => {
+    const map = useMap();
+    
+    useEffect(() => {
+        const handleResize = () => {
+            const newMinZoom = window.innerWidth < 768 ? 6 : 7;
+            const newZoom = window.innerWidth < 768 ? 6 : 7;
+            
+            map.setMinZoom(newMinZoom);
+            
+            // Ako je trenutni zoom manji od novog minZoom-a, postavi novi zoom
+            if (map.getZoom() < newMinZoom) {
+                map.setZoom(newZoom);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [map]);
+
+    return null;
+};
+
+
+
 
 const MapView: React.FC = () => {
     const { t } = useLanguage();
@@ -97,8 +123,38 @@ const MapView: React.FC = () => {
     const [selectedDecade, setSelectedDecade] = useState<string>('all');
     const [searchLocation, setSearchLocation] = useState('');
     const [mapCenter, setMapCenter] = useState<[number, number]>([45.8150, 15.9819]); // 🆕 Default Zagreb
-    const [mapZoom, setMapZoom] = useState(8);
-    const [currentZoom, setCurrentZoom] = useState(8);
+    const [displayedPhotosCount, setDisplayedPhotosCount] = useState(6);
+const [loadingMore, setLoadingMore] = useState(false);
+
+
+// 🆕 Dinamički zoom ovisno o širini ekrana
+const getInitialZoom = () => {
+  if (typeof window !== 'undefined') {
+    return window.innerWidth < 768 ? 6 : 7; // 6 za mobitel, 7 za desktop
+  }
+  return 7; // Fallback
+};
+
+    const [mapZoom, setMapZoom] = useState(getInitialZoom());
+    const [currentZoom, setCurrentZoom] = useState(getInitialZoom());
+
+    const getMinZoom = () => {
+  return typeof window !== 'undefined' && window.innerWidth < 768 ? 6 : 7;
+};
+
+const handleLoadMore = () => {
+  setLoadingMore(true);
+  
+  // Simulate loading delay
+  setTimeout(() => {
+    setDisplayedPhotosCount(prev => prev + 6);
+    setLoadingMore(false);
+  }, 300);
+};
+
+useEffect(() => {
+  setDisplayedPhotosCount(6);
+}, [filteredPhotos.length]);
 
     // COMPONENT TO TRACK ZOOM CHANGES
     const ZoomTracker = () => {
@@ -201,11 +257,13 @@ useEffect(() => {
             setPhotos(photosWithCoords);
             setFilteredPhotos(photosWithCoords);
 
-            // ✅ UVIJEK prikaži cijelu Hrvatsku - centar i zoom ostaju isti
-            // Koordinate centra Hrvatske (blizu Karlovca)
-setMapCenter([44.5319, 16.7789]);
-            setMapZoom(7);
-            setCurrentZoom(7);
+            // ✅ Centar Hrvatske
+            setMapCenter([44.5319, 16.7789]);
+            
+            // ✅ Dinamički zoom ovisno o screen size-u
+            const zoom = window.innerWidth < 768 ? 6 : 7;
+            setMapZoom(zoom);
+            setCurrentZoom(zoom);
 
         } catch (error) {
             console.error('Error loading photos for map:', error);
@@ -363,7 +421,7 @@ setMapCenter([44.5319, 16.7789]);
                         <MapContainer
                             center={mapCenter}
                             zoom={mapZoom}
-                            minZoom={7}         // ⬅️ Minimalni zoom (fiksno)
+                            minZoom={getMinZoom()}         // ⬅️ Minimalni zoom (fiksno)
                             maxZoom={19}        // ⬅️ Maksimalni zoom
                             style={{ height: '100%', width: '100%' }}
                             className="rounded-xl"
@@ -374,6 +432,7 @@ setMapCenter([44.5319, 16.7789]);
                             />
 
                             <ZoomTracker />
+                            <MapController />
 
                             {clusteredData.map((item, index) => {
                                 if (item.type === 'individual') {
@@ -384,7 +443,7 @@ setMapCenter([44.5319, 16.7789]);
                                             icon={photoIcon}
                                         >
                                             <Popup maxWidth={320} className="photo-popup">
-                                                <div className="p-3">
+                                                <div className="p-2">
                                                     <div className="aspect-[4/3] overflow-hidden rounded-md mb-3">
                                                         <LazyImage
                                                             src={item.photo.imageUrl}
@@ -412,10 +471,6 @@ setMapCenter([44.5319, 16.7789]);
                                                             <User className="h-3 w-3 flex-shrink-0" />
                                                             <span className="truncate">{item.photo.author}</span>
                                                         </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-                                                        <span>❤️ {item.photo.likes || 0}</span>
-                                                        <span>👁️ {item.photo.views || 0}</span>
                                                     </div>
                                                     <Link to={`/photo/${item.photo.id}`}>
                                                         <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
@@ -476,8 +531,8 @@ setMapCenter([44.5319, 16.7789]);
                     </div>
                 </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {filteredPhotos.slice(0, 6).map((photo) => (
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  {filteredPhotos.slice(0, displayedPhotosCount).map((photo) => (
     <div key={photo.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Fiksna visina slike */}
       <div className="h-64 overflow-hidden bg-gray-100">
@@ -533,6 +588,28 @@ setMapCenter([44.5319, 16.7789]);
     </div>
   ))}
 </div>
+
+{/* ✅ LOAD MORE BUTTON */}
+{displayedPhotosCount < filteredPhotos.length && (
+  <div className="text-center mt-8">
+    <Button 
+      onClick={handleLoadMore}
+      disabled={loadingMore}
+      className="bg-blue-600 hover:bg-blue-700 px-8"
+    >
+      {loadingMore ? (
+        <>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          {t('common.loading')}
+        </>
+      ) : (
+        <>
+          📸 {t('mapView.loadMorePhotos')} ({filteredPhotos.length - displayedPhotosCount} {t('mapView.remaining')})
+        </>
+      )}
+    </Button>
+  </div>
+)}
 
                 {/* Statistics */}
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">

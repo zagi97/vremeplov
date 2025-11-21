@@ -481,44 +481,20 @@ const handleLike = async () => {
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       {/* Header */}
 <PageHeader title="Vremeplov.hr" />
-
-      {/* Page intro section for photo details */}
-      <div className="bg-white border-b border-gray-200 py-10 mt-16">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-6">
-            <Button
-              variant="ghost"
-              className="text-gray-700 hover:bg-gray-100 p-2"
-              onClick={handleBack}
-              aria-label="Go back"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-              {photo.description}
-            </h2>
-          </div>
-          <p className="text-gray-600 text-base">
-            {photo.location}, {photo.year}
-          </p>
-        </div>
-      </div>
-      
-{/* Main content */}
-      <div className="container max-w-5xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* Photo Section with Hover-Only Tags */}
-          <div className="relative w-full">
-            <div 
-              className="relative w-full cursor-pointer group"
-              onClick={handleImageClick}
-            >
-              <LazyImage
-  src={photo.imageUrl}
-  alt={photo.description}
-  className="w-full h-auto rounded-lg"
-  responsiveImages={photo.responsiveImages}
-/>
+    {/* Main content - dodaj mt-16 ako header prekrije sadržaj */}
+    <div className="container max-w-5xl mx-auto px-4 py-12 mt-20">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="relative w-full">
+          <div 
+            className="relative w-full cursor-pointer group"
+            onClick={handleImageClick}
+          >
+            <LazyImage
+              src={photo.imageUrl}
+              alt={photo.description}
+              className="w-full h-auto rounded-lg"
+              responsiveImages={photo.responsiveImages}
+            />
               
               {/* Hover-Only Tagged Persons */}
               <div className="absolute inset-0 rounded-lg overflow-hidden">

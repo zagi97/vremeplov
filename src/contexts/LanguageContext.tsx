@@ -790,8 +790,10 @@ const translations: Record<Language, TranslationMap> = {
 'upload.addPhotoToCity': 'Add historical photo to the city of',
   'upload.addPhotoToMunicipality': 'Add historical photo to the municipality of',
   'notifications.markingRead': 'Marking as read...',
+  "upload.addressHelp": "If you don't know the exact address, leave this field empty. The photo will still be visible in the gallery.",
   },
   hr: {
+    "upload.addressHelp": "Ako ne znate točnu adresu, ostavite polje prazno. Fotografija će biti vidljiva u galeriji.",
     'notifications.markingRead': 'Označavam...',
      'upload.addPhotoToCity': 'Dodaj povijesnu fotografiju u grad',
   'upload.addPhotoToMunicipality': 'Dodaj povijesnu fotografiju u općinu',

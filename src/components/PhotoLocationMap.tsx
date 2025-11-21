@@ -126,16 +126,6 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
                         position={[coords.latitude, coords.longitude]}
                         icon={currentPhotoIcon}
                     >
-                        <Popup>
-                            <div className="text-center">
-                                <strong>{photo.description}</strong>
-                                {photo.coordinates?.address && (
-                                    <div className="text-sm text-gray-600 mt-1">
-                                        {photo.coordinates.address}
-                                    </div>
-                                )}
-                            </div>
-                        </Popup>
                     </Marker>
 
                     {/* Nearby photos markers */}
@@ -148,21 +138,7 @@ const PhotoLocationMap: React.FC<PhotoLocationMapProps> = ({ photo, nearbyPhotos
                             ]}
                             icon={nearbyPhotoIcon}
                         >
-                            <Popup>
-                                <div className="text-center">
-                                    <div className="font-medium">{nearbyPhoto.description}</div>
-                                    <div className="text-sm text-gray-600">{nearbyPhoto.year}</div>
-                                    <div className="text-xs text-gray-500 mt-1">
-                                        📍 {nearbyPhoto.coordinates!.latitude.toFixed(4)}, {nearbyPhoto.coordinates!.longitude.toFixed(4)}
-                                    </div>
-                                    <Link
-                                        to={`/photo/${nearbyPhoto.id}`}
-                                        className="text-blue-600 hover:underline text-xs block mt-1"
-                                    >
-                                        {t('locationMap.viewPhoto')}
-                                    </Link>
-                                </div>
-                            </Popup>
+                            
                         </Marker>
                     ))}
                 </MapContainer>

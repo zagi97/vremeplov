@@ -1208,7 +1208,6 @@ if (coordinates && selectedAddress) {
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ImageIcon className="h-5 w-5" />
           {getUploadTitle(parsedLocation.type, parsedLocation.displayName, t)}
         </CardTitle>
       </CardHeader>
@@ -1300,6 +1299,11 @@ if (coordinates && selectedAddress) {
                   </Button>
                 )}
               </div>
+
+              {/* ✅ HELP TEXT - DODAJ OVDJE */}
+  <p className="text-xs text-gray-500 mt-1.5">
+    💡 {t('upload.addressHelp')}
+  </p>
 
 
 

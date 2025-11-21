@@ -35,6 +35,9 @@ const NotificationsPage = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
   const [markingAllRead, setMarkingAllRead] = useState(false);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false); // ✅ Track marking operation
+  const [displayedCount, setDisplayedCount] = useState(20);
+const [loadingMore, setLoadingMore] = useState(false);
+const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -167,6 +170,19 @@ const NotificationsPage = () => {
     return null;
   };
 
+
+  const handleLoadMore = () => {
+  setLoadingMore(true);
+  setTimeout(() => {
+    setDisplayedCount(prev => Math.min(prev + 20, filteredNotifications.length));
+    setLoadingMore(false);
+    
+    if (displayedCount + 20 >= filteredNotifications.length) {
+      setAllNotificationsLoaded(true);
+    }
+  }, 300);
+};
+
   // Format time ago
   const formatTimeAgo = (timestamp: any): string => {
   if (!timestamp) return '';
@@ -240,8 +256,8 @@ const NotificationsPage = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  return (
-     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+return (
+  <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
     {/* Navigation Header */}
     <PageHeader title="Vremeplov.hr" />
                       
@@ -253,63 +269,64 @@ const NotificationsPage = () => {
       </div>
     </div>
 
-    {/* Main Content - dodaj flex-1 da popuni prostor */}
+    {/* Main Content */}
     <section className="py-6 sm:py-12 px-2 sm:px-4 flex-1">
       <div className="w-full max-w-full sm:max-w-4xl mx-auto">
         <Card>
-            <CardHeader className="border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg sm:text-xl"> {t('notifications.title')}</CardTitle>
-                    {unreadCount > 0 && (
-                      <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                        {unreadCount} {t(unreadCount === 1 ? 'notifications.newNotificationSingular' : 'notifications.newNotifications')}
-                      </p>
-                    )}
-                  </div>
+          <CardHeader className="border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-
-                {unreadCount > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleMarkAllAsRead}
-                    disabled={markingAllRead}
-                    className="w-full sm:w-auto"
-                  >
-                    <CheckCheck className="h-4 w-4 mr-2" />
-                     {t('notifications.markAllLikeRead')}
-                  </Button>
-                )}
+                <div>
+                  <CardTitle className="text-lg sm:text-xl">{t('notifications.title')}</CardTitle>
+                  {unreadCount > 0 && (
+                    <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                      {unreadCount} {t(unreadCount === 1 ? 'notifications.newNotificationSingular' : 'notifications.newNotifications')}
+                    </p>
+                  )}
+                </div>
               </div>
-            </CardHeader>
 
-            <CardContent className="p-0">
-              <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as 'all' | 'unread')} className="w-full">
-                <div className="border-b border-gray-200 px-4 sm:px-6">
-                  <TabsList className="w-full sm:w-auto">
-                    <TabsTrigger value="all" className="flex-1 sm:flex-none">
-                       {t('notifications.All')} ({notifications.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="unread" className="flex-1 sm:flex-none">
-                      {t('notifications.Unread')} ({unreadCount})
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMarkAllAsRead}
+                  disabled={markingAllRead}
+                  className="w-full sm:w-auto"
+                >
+                  <CheckCheck className="h-4 w-4 mr-2" />
+                  {t('notifications.markAllLikeRead')}
+                </Button>
+              )}
+            </div>
+          </CardHeader>
 
-                <TabsContent value={activeFilter} className="mt-0">
-                  {loading ? (
-                    <div className="p-12 text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-sm text-gray-500 mt-4"> {t('notifications.loadNotifications')}</p>
-                    </div>
-                  ) : filteredNotifications.length > 0 ? (
+          <CardContent className="p-0">
+            <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as 'all' | 'unread')} className="w-full">
+              <div className="border-b border-gray-200 px-4 sm:px-6">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="all" className="flex-1 sm:flex-none">
+                    {t('notifications.All')} ({notifications.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="unread" className="flex-1 sm:flex-none">
+                    {t('notifications.Unread')} ({unreadCount})
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value={activeFilter} className="mt-0">
+                {loading ? (
+                  <div className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-4">{t('notifications.loadNotifications')}</p>
+                  </div>
+                ) : filteredNotifications.length > 0 ? (
+                  <>
                     <div className="divide-y divide-gray-100">
-                      {filteredNotifications.map((notification) => {
+                      {filteredNotifications.slice(0, displayedCount).map((notification) => {
                         const { icon: IconComponent, color } = getNotificationIcon(notification.type);
                         const message = getNotificationMessage(notification);
                         const link = getNotificationLink(notification);
@@ -359,35 +376,58 @@ const NotificationsPage = () => {
                         );
                       })}
                     </div>
-                  ) : (
-                    // NOVI KOD ZA PRAZNO STANJE
-<div className="p-12 sm:p-16 text-center">
-    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <Bell className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
-    </div>
-    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-        {activeFilter === 'unread' 
-            ? t('notifications.zeroUnreadNotifications')
-            : t('notifications.zeroNotifications')}
-    </h3>
-    <p className="text-xs sm:text-sm text-gray-500">
-        {activeFilter === 'unread' 
-            ? t('notifications.notificationsAllRead')
-            : t('notifications.hereAppearNotifications')}
-    </p>
-</div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+                    
+                    {/* ✅ Load More Button */}
+                    {!allNotificationsLoaded && displayedCount < filteredNotifications.length && (
+                      <div className="p-4 border-t">
+                        <Button
+                          onClick={handleLoadMore}
+                          disabled={loadingMore}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+                              {t('common.loading')}
+                            </>
+                          ) : (
+                            <>
+                              📬 {t('notifications.loadMore')} ({filteredNotifications.length - displayedCount} {t('notifications.remaining')})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="p-12 sm:p-16 text-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Bell className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                      {activeFilter === 'unread' 
+                        ? t('notifications.zeroUnreadNotifications')
+                        : t('notifications.zeroNotifications')}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {activeFilter === 'unread' 
+                        ? t('notifications.notificationsAllRead')
+                        : t('notifications.hereAppearNotifications')}
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
 
-      {/* Footer */}
-      <Footer />
-    </div>
-  );
+    {/* Footer */}
+    <Footer />
+  </div>
+);
 };
 
 export default NotificationsPage;
