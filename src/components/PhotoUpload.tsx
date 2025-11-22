@@ -17,6 +17,7 @@ import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker impor
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { userService } from '@/services/userService';
 import municipalityData from '../../data/municipalities.json';
+import { parseLocationFromUrl } from '@/utils/locationUtils';
 
 // ✅ IMAGE OPTIMIZATION CONFIGURATION
 const IMAGE_CONFIG = {
@@ -183,115 +184,6 @@ const useDebounce = (value: string, delay: number) => {
 // Cache for search results
 const searchCache = new Map<string, string[]>();
 
-
-// Helper funkcije
-const parseLocationFromUrl = (urlParam: string) => {
-  if (urlParam.includes('-')) {
-    const parts = urlParam.split('-');
-    const cityName = parts[0];
-    const countyFromUrl = parts.slice(1).join('-');
-    
-    const record = municipalityData.records.find(record => {
-      const recordName = record[3] as string;
-      const recordCounty = (record[1] as string)
-        .replace(/^[IVX]+\s/, '')
-        .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
-        .replace('SPLITSKO-DALMATINSKA', 'Splitsko-dalmatinska')
-        .replace('OSJEČKO-BARANJSKA', 'Osječko-baranjska')
-        .replace('VUKOVARSKO-SRIJEMSKA', 'Vukovarsko-srijemska')
-        .replace('POŽEŠKO-SLAVONSKA', 'Požeško-slavonska')
-        .replace('BRODSKO-POSAVSKA', 'Brodsko-posavska')
-        .replace('VIROVITIČKO-PODRAVSKA', 'Virovitičko-podravska')
-        .replace('KOPRIVNIČKO-KRIŽEVAČKA', 'Koprivničko-križevačka')
-        .replace('BJELOVARSKO-BILOGORSKA', 'Bjelovarsko-bilogorska')
-        .replace('PRIMORSKO-GORANSKA', 'Primorsko-goranska')
-        .replace('SISAČKO-MOSLAVAČKA', 'Sisačko-moslavačka')
-        .replace('KRAPINSKO-ZAGORSKA', 'Krapinsko-zagorska')
-        .replace('ŠIBENSKO-KNINSKA', 'Šibensko-kninska')
-        .replace('LIČKO-SENJSKA', 'Ličko-senjska')
-        .replace('KARLOVAČKA', 'Karlovačka')
-        .replace('VARAŽDINSKA', 'Varaždinska')
-        .replace('ZAGREBAČKA', 'Zagrebačka')
-        .replace('MEĐIMURSKA', 'Međimurska')
-        .replace('ISTARSKA', 'Istarska')
-        .replace('ZADARSKA', 'Zadarska')
-        .replace('GRAD ZAGREB', 'Zagreb')
-        .replace(/\s+/g, '');
-      
-      return recordName === cityName && recordCounty === countyFromUrl;
-    });
-    
-    if (record) {
-      const formattedCounty = (record[1] as string)
-        .replace(/^[IVX]+\s/, '')
-        .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
-        .replace('SPLITSKO-DALMATINSKA', 'Splitsko-dalmatinska')
-        .replace('OSJEČKO-BARANJSKA', 'Osječko-baranjska')
-        .replace('VUKOVARSKO-SRIJEMSKA', 'Vukovarsko-srijemska')
-        .replace('POŽEŠKO-SLAVONSKA', 'Požeško-slavonska')
-        .replace('BRODSKO-POSAVSKA', 'Brodsko-posavska')
-        .replace('VIROVITIČKO-PODRAVSKA', 'Virovitičko-podravska')
-        .replace('KOPRIVNIČKO-KRIŽEVAČKA', 'Koprivničko-križevačka')
-        .replace('BJELOVARSKO-BILOGORSKA', 'Bjelovarsko-bilogorska')
-        .replace('PRIMORSKO-GORANSKA', 'Primorsko-goranska')
-        .replace('SISAČKO-MOSLAVAČKA', 'Sisačko-moslavačka')
-        .replace('KRAPINSKO-ZAGORSKA', 'Krapinsko-zagorska')
-        .replace('ŠIBENSKO-KNINSKA', 'Šibensko-kninska')
-        .replace('LIČKO-SENJSKA', 'Ličko-senjska')
-        .replace('KARLOVAČKA', 'Karlovačka')
-        .replace('VARAŽDINSKA', 'Varaždinska')
-        .replace('ZAGREBAČKA', 'Zagrebačka')
-        .replace('MEĐIMURSKA', 'Međimurska')
-        .replace('ISTARSKA', 'Istarska')
-        .replace('ZADARSKA', 'Zadarska')
-        .replace('GRAD ZAGREB', 'Zagreb');
-
-      return {
-        cityName,
-        county: record[1] as string,
-        type: record[2] as string,
-        displayName: `${cityName} (${formattedCounty})`,
-        isSpecific: true
-      };
-    } else {
-      const fallbackRecord = municipalityData.records.find(record => record[3] === cityName);
-      if (fallbackRecord) {
-        return {
-          cityName,
-          county: fallbackRecord[1] as string,
-          type: fallbackRecord[2] as string,
-          displayName: cityName,
-          isSpecific: false
-        };
-      }
-    }
-  }
-  
-// ✅ Za jednostavne URL-ove (bez "-") poput "Zagreb"
-const simpleRecord = municipalityData.records.find(
-  record => record[3] === urlParam
-);
-
-if (simpleRecord) {
-  return {
-    cityName: urlParam,
-    county: simpleRecord[1] as string,
-    type: simpleRecord[2] as string,
-    displayName: urlParam,
-    isSpecific: false
-  };
-}
-
-// Fallback ako lokacija nije pronađena u bazi
-return {
-  cityName: urlParam,
-  county: null,
-  type: null,
-  displayName: urlParam,
-  isSpecific: false
-};
-};
-
 // Linija 279
 const getUploadTitle = (type: string | null, location: string, t: any) => {
   const cityType = (type?.toLowerCase() === 'grad') ? 'city' : 'municipality';
@@ -308,7 +200,7 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
 
   const decodedLocationName = decodeURIComponent(locationName);
-  const parsedLocation = parseLocationFromUrl(decodedLocationName);
+  const parsedLocation = parseLocationFromUrl(decodedLocationName, municipalityData);
 
   const { user } = useAuth();
 
