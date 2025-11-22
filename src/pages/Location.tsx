@@ -162,6 +162,61 @@ interface FilterState {
   sortBy: string;
 }
 
+// Location.tsx - Dodaj ovu komponentu prije Location komponente
+
+const LocationSkeleton = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="min-h-screen flex flex-col">
+      <PageHeader title="Vremeplov.hr" />
+
+      {/* Page intro skeleton */}
+      <div className="bg-white border-b border-gray-200 py-10 mt-16 shadow-sm">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="h-10 w-64 bg-gray-200 rounded animate-pulse mb-4" />
+              <div className="h-5 w-48 bg-gray-200 rounded animate-pulse mb-3" />
+              <div className="h-4 w-56 bg-gray-200 rounded animate-pulse" />
+            </div>
+            <div className="h-10 w-40 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filter skeleton */}
+      <section className="py-6 px-4 bg-white border-b">
+        <div className="container max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 h-10 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+      </section>
+
+      {/* Photo grid skeleton */}
+      <section className="py-12 px-4 flex-1 bg-[#F8F9FA]">
+        <div className="container max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(9)].map((_, i) => (
+              <div key={i} className="relative overflow-hidden rounded-lg">
+                <div className="aspect-[4/3] bg-gray-200 animate-pulse" />
+                <div className="absolute bottom-0 left-0 p-4 w-full space-y-2">
+                  <div className="h-5 bg-gray-300 rounded animate-pulse w-3/4" />
+                  <div className="h-4 bg-gray-300 rounded animate-pulse w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
 const Location = () => {
   const { t } = useLanguage();
   const { locationName } = useParams<{ locationName: string }>();
@@ -420,17 +475,10 @@ useEffect(() => {
   }, [filters, allPhotos]);
 
   const hasActiveFilters = filters.searchText || filters.yearRange || filters.photoType !== 'all' || filters.sortBy !== 'newest';
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('location.loadingMemories')}</p>
-        </div>
-      </div>
-    );
-  }
+  
+if (loading) {
+  return <LocationSkeleton />;
+}
 
   return (
     <div className="min-h-screen flex flex-col">

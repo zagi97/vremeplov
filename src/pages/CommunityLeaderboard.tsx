@@ -63,8 +63,8 @@ const CommunityLeaderboard = () => {
     totalLikes: 0
   });
   const [monthlyHighlights, setMonthlyHighlights] = useState<MonthlyHighlights>({
-    mostActiveLocation: { name: 'Loading...', photoCount: 0 },
-    photoOfTheMonth: { title: 'Loading...', author: 'Loading...' },
+    mostActiveLocation: { name: t('common.loading'), photoCount: 0 },
+    photoOfTheMonth: { title: t('common.loading'), author: t('common.loading') },
     newMembers: { count: 0, percentageChange: 0 }
   });
 
@@ -119,8 +119,6 @@ const CommunityLeaderboard = () => {
     };
   }, [timePeriod, t]);
 
-
-
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1:
@@ -149,8 +147,6 @@ const CommunityLeaderboard = () => {
           return `${user.totalPhotos.toLocaleString()} ${t('profile.photos')}`;
       }
     };
-
-
 
     return (
       <Card className={`mb-3 sm:mb-4 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
@@ -221,12 +217,12 @@ const CommunityLeaderboard = () => {
                 </div>
               </div>
 
-             {/* Top Badge */}
-{user.badges.length > 0 && (
-  <Badge variant="secondary" className="hidden lg:flex text-xs">
-   {user.badges.length} {getBadgeText(user.badges.length, t)}
-  </Badge>
-)}
+              {/* Top Badge */}
+              {user.badges.length > 0 && (
+                <Badge variant="secondary" className="hidden lg:flex text-xs">
+                  {user.badges.length} {getBadgeText(user.badges.length, t)}
+                </Badge>
+              )}
             </div>
           </div>
         </CardContent>
@@ -234,110 +230,175 @@ const CommunityLeaderboard = () => {
     );
   };
 
-/*   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
-        <div className="text-center px-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm sm:text-base">{t('community.loadingLeaderboard')}</p>
-        </div>
-      </div>
-    );
-  }; */
-
+  // ✅ LEADERBOARD SKELETON
   const LeaderboardSkeleton = () => (
-  <Card className="mb-3 sm:mb-4">
-    <CardContent className="p-3 sm:p-4">
-      <div className="flex items-center gap-2 sm:gap-4">
-        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full animate-pulse" />
-        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full animate-pulse" />
-        <div className="flex-1 space-y-2">
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-          <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+    <Card className="mb-3 sm:mb-4">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full animate-pulse" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+          </div>
         </div>
-      </div>
-    </CardContent>
-  </Card>
-);
+      </CardContent>
+    </Card>
+  );
+
+  // ✅ SIDEBAR SKELETON - NOVO!
+  const SidebarSkeleton = () => (
+    <>
+      {/* Community Stats Skeleton */}
+      <Card>
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+        </CardHeader>
+        <CardContent className="space-y-3 sm:space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex justify-between">
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Monthly Highlights Skeleton */}
+      <Card>
+        <CardHeader className="pb-3 sm:pb-6">
+          <div className="h-5 w-48 bg-gray-200 rounded animate-pulse" />
+        </CardHeader>
+        <CardContent className="space-y-4 sm:space-y-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="pb-3 sm:pb-4 border-b border-gray-100 last:border-b-0">
+              <div className="h-3 w-32 bg-gray-200 rounded animate-pulse mb-2" />
+              <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-1" />
+              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Badge Showcase - ostaje statičan */}
+      <Card>
+        <CardHeader className="pb-3 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Award className="h-4 w-4 sm:h-5 sm:w-5" />
+            {t('community.achievementSystem')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-xs sm:text-sm text-gray-600 mb-3">
+            {t('community.earnBadges')}
+          </div>
+          <div className="space-y-2 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Camera className="h-2 w-2 text-white" />
+              </div>
+              <span className="truncate">{t('community.photographer')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Medal className="h-2 w-2 text-white" />
+              </div>
+              <span className="truncate">{t('community.localHistorian')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <MapPin className="h-2 w-2 text-white" />
+              </div>
+              <span className="truncate">{t('community.heritageExplorer')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Heart className="h-2 w-2 text-white" />
+              </div>
+              <span className="truncate">{t('community.communityFavorite')}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
 
   return (
-  <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
-    <PageHeader title="Vremeplov.hr"/>
-    
-    {/* Hero section */}
-    <div className="bg-white border-b border-gray-200 py-8 pt-24">
-      <div className="container max-w-6xl mx-auto px-4">
-        {/* Desktop layout */}
-        <div className="hidden md:flex md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+      <PageHeader title="Vremeplov.hr"/>
+      
+      {/* Hero section */}
+      <div className="bg-white border-b border-gray-200 py-8 pt-24">
+        <div className="container max-w-6xl mx-auto px-4">
+          {/* Desktop layout */}
+          <div className="hidden md:flex md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+                {t("community.leaderboard")}
+              </h1>
+              <p className="text-gray-600 text-sm md:text-base">
+                {t("community.celebratingContributors")}
+              </p>
+            </div>
+            
+            <div className="flex gap-2">
+              {[
+                { value: 'all-time', label: t('community.allTime') },
+                { value: 'this-year', label: t('community.thisYear') },
+                { value: 'this-month', label: t('community.thisMonth') }
+              ].map(period => (
+                <Button
+                  key={period.value}
+                  variant={timePeriod === period.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTimePeriod(period.value as TimePeriod)}
+                  disabled={loading}
+                  className="text-xs sm:text-sm"
+                >
+                  {period.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile layout */}
+          <div className="md:hidden text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
+              <Trophy className="h-6 w-6 text-blue-600" />
               {t("community.leaderboard")}
             </h1>
-            <p className="text-gray-600 text-sm md:text-base">
+            <p className="text-gray-600 text-sm mb-4">
               {t("community.celebratingContributors")}
             </p>
-          </div>
-          
-          <div className="flex gap-2">
-            {[
-              { value: 'all-time', label: t('community.allTime') },
-              { value: 'this-year', label: t('community.thisYear') },
-              { value: 'this-month', label: t('community.thisMonth') }
-            ].map(period => (
-              <Button
-                key={period.value}
-                variant={timePeriod === period.value ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod(period.value as TimePeriod)}
-                disabled={loading}
-                className="text-xs sm:text-sm"
-              >
-                {period.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile layout */}
-        <div className="md:hidden text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
-            <Trophy className="h-6 w-6 text-blue-600" />
-            {t("community.leaderboard")}
-          </h1>
-          <p className="text-gray-600 text-sm mb-4">
-            {t("community.celebratingContributors")}
-          </p>
-          
-          <div className="flex gap-2 justify-center">
-            {[
-              { value: 'all-time', label: t('community.allTime') },
-              { value: 'this-year', label: t('community.thisYear') },
-              { value: 'this-month', label: t('community.thisMonth') }
-            ].map(period => (
-              <Button
-                key={period.value}
-                variant={timePeriod === period.value ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod(period.value as TimePeriod)}
-                disabled={loading}
-                className="text-xs flex-1 max-w-[120px]"
-              >
-                {period.label}
-              </Button>
-            ))}
+            
+            <div className="flex gap-2 justify-center">
+              {[
+                { value: 'all-time', label: t('community.allTime') },
+                { value: 'this-year', label: t('community.thisYear') },
+                { value: 'this-month', label: t('community.thisMonth') }
+              ].map(period => (
+                <Button
+                  key={period.value}
+                  variant={timePeriod === period.value ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setTimePeriod(period.value as TimePeriod)}
+                  disabled={loading}
+                  className="text-xs flex-1 max-w-[120px]"
+                >
+                  {period.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-{/* Ukloni cijelu Time Period Selector sekciju */}
 
       {/* Leaderboard Content */}
-       <section className="py-6 sm:py-8 px-4">
-      <div className="container max-w-6xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1">
+      <section className="py-6 sm:py-8 px-4">
+        <div className="container max-w-6xl mx-auto">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1">
               <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden sm:inline">{t('community.mostPhotos')}</span>
@@ -363,226 +424,231 @@ const CommunityLeaderboard = () => {
             <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-3">
               {/* Main Leaderboard */}
               <div className="lg:col-span-2 order-1">
-              <TabsContent value="photos">
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.topContributorsByPhotos')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                        // ✅ SKELETON umjesto praznog ekrana
-                      <>
-                        {[...Array(5)].map((_, i) => (
-                          <LeaderboardSkeleton key={i} />
-                        ))}
-                      </>
-                    ) : leaderboardData.photos.length > 0 ? (
-                      leaderboardData.photos.map(user => (
-                        <LeaderboardCard key={user.uid} user={user} category="photos" />
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 text-sm">
-                        {t('community.noDataForPeriod')}
-                      </div>
-                    )}
-                  </CardContent>
+                <TabsContent value="photos">
+                  <Card>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {t('community.topContributorsByPhotos')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <LeaderboardSkeleton key={i} />
+                          ))}
+                        </>
+                      ) : leaderboardData.photos.length > 0 ? (
+                        leaderboardData.photos.map(user => (
+                          <LeaderboardCard key={user.uid} user={user} category="photos" />
+                        ))
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 text-sm">
+                          {t('community.noDataForPeriod')}
+                        </div>
+                      )}
+                    </CardContent>
                   </Card>
                 </TabsContent>
 
                 <TabsContent value="likes">
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.mostAppreciatedContributors')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <>
-                        {[...Array(5)].map((_, i) => (
-                          <LeaderboardSkeleton key={i} />
-                        ))}
-                      </>
-                    ) : (
-                      leaderboardData.likes.map(user => (
-                        <LeaderboardCard key={user.uid} user={user} category="likes" />
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                  <Card>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {t('community.mostAppreciatedContributors')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <LeaderboardSkeleton key={i} />
+                          ))}
+                        </>
+                      ) : (
+                        leaderboardData.likes.map(user => (
+                          <LeaderboardCard key={user.uid} user={user} category="likes" />
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              <TabsContent value="locations">
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.heritageExplorers')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <>
-                        {[...Array(5)].map((_, i) => (
-                          <LeaderboardSkeleton key={i} />
-                        ))}
-                      </>
-                    ) : (
-                      leaderboardData.locations.map(user => (
-                        <LeaderboardCard key={user.uid} user={user} category="locations" />
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                <TabsContent value="locations">
+                  <Card>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {t('community.heritageExplorers')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <LeaderboardSkeleton key={i} />
+                          ))}
+                        </>
+                      ) : (
+                        leaderboardData.locations.map(user => (
+                          <LeaderboardCard key={user.uid} user={user} category="locations" />
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              <TabsContent value="recent">
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Star className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.welcomeNewMembers')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <>
-                        {[...Array(5)].map((_, i) => (
-                          <LeaderboardSkeleton key={i} />
-                        ))}
-                      </>
-                    ) : (
-                      leaderboardData.recent.map(user => (
-                        <LeaderboardCard key={user.uid} user={user} category="recent" />
-                      ))
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                <TabsContent value="recent">
+                  <Card>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {t('community.welcomeNewMembers')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <LeaderboardSkeleton key={i} />
+                          ))}
+                        </>
+                      ) : (
+                        leaderboardData.recent.map(user => (
+                          <LeaderboardCard key={user.uid} user={user} category="recent" />
+                        ))
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
               </div>
 
-              {/* Sidebar Stats */}
+              {/* ✅ SIDEBAR - CONDITIONAL RENDERING */}
               <div className="space-y-4 sm:space-y-6 order-2 lg:order-2">
-                {/* Community Stats */}
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.communityStats')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 sm:space-y-4">
-                    <div className="flex justify-between text-sm sm:text-base">
-                      <span className="text-gray-600">{t('community.totalMembers')}</span>
-                      <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm sm:text-base">
-                      <span className="text-gray-600">{t('community.photosShared')}</span>
-                      <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm sm:text-base">
-                      <span className="text-gray-600">{t('community.locationsDocumented')}</span>
-                      <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm sm:text-base">
-                      <span className="text-gray-600">{t('profile.totalLikes')}</span>
-                      <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                {loading ? (
+                  <SidebarSkeleton />
+                ) : (
+                  <>
+                    {/* Community Stats */}
+                    <Card>
+                      <CardHeader className="pb-3 sm:pb-6">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                          <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                          {t('community.communityStats')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 sm:space-y-4">
+                        <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-600">{t('community.totalMembers')}</span>
+                          <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-600">{t('community.photosShared')}</span>
+                          <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-600">{t('community.locationsDocumented')}</span>
+                          <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-600">{t('profile.totalLikes')}</span>
+                          <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* This Month's Highlights */}
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.thisMonthsHighlights')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4 sm:space-y-6">
-                    <div className="pb-3 sm:pb-4 border-b border-gray-100">
-                      <div className="text-xs sm:text-sm text-gray-600 mb-2">
-                        {t('community.mostActiveLocation')}
-                      </div>
-                      <div className="font-medium text-base sm:text-lg">
-                        {monthlyHighlights.mostActiveLocation.name}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500 mt-1">
-  {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
-</div>
-                    </div>
-                    
-                    <div className="pb-3 sm:pb-4 border-b border-gray-100">
-                      <div className="text-xs sm:text-sm text-gray-600 mb-2">
-                        {t('community.photoOfTheMonth')}
-                      </div>
-                      <div className="font-medium text-base sm:text-lg">
-                        {monthlyHighlights.photoOfTheMonth.title}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                        {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-xs sm:text-sm text-gray-600 mb-2">
-                        {t('community.newMembers')}
-                      </div>
-                      <div className="font-medium text-base sm:text-lg">
-                        {monthlyHighlights.newMembers.count} {t('community.joined')}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500 mt-1">
-                        {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
-                        {monthlyHighlights.newMembers.percentageChange}% {t('community.fromLastMonth')}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    {/* This Month's Highlights */}
+                    <Card>
+                      <CardHeader className="pb-3 sm:pb-6">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                          {t('community.thisMonthsHighlights')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4 sm:space-y-6">
+                        <div className="pb-3 sm:pb-4 border-b border-gray-100">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                            {t('community.mostActiveLocation')}
+                          </div>
+                          <div className="font-medium text-base sm:text-lg">
+                            {monthlyHighlights.mostActiveLocation.name}
+                          </div>
+                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                            {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
+                          </div>
+                        </div>
+                        
+                        <div className="pb-3 sm:pb-4 border-b border-gray-100">
+                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                            {t('community.photoOfTheMonth')}
+                          </div>
+                          <div className="font-medium text-base sm:text-lg">
+                            {monthlyHighlights.photoOfTheMonth.title}
+                          </div>
+                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                            {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                            {t('community.newMembers')}
+                          </div>
+                          <div className="font-medium text-base sm:text-lg">
+                            {monthlyHighlights.newMembers.count} {t('community.joined')}
+                          </div>
+                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                            {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
+                            {monthlyHighlights.newMembers.percentageChange}% {t('community.fromLastMonth')}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                {/* Badge Showcase */}
-                <Card>
-                  <CardHeader className="pb-3 sm:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <Award className="h-4 w-4 sm:h-5 sm:w-5" />
-                      {t('community.achievementSystem')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-xs sm:text-sm text-gray-600 mb-3">
-                      {t('community.earnBadges')}
-                    </div>
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Camera className="h-2 w-2 text-white" />
+                    {/* Badge Showcase */}
+                    <Card>
+                      <CardHeader className="pb-3 sm:pb-6">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                          <Award className="h-4 w-4 sm:h-5 sm:w-5" />
+                          {t('community.achievementSystem')}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-xs sm:text-sm text-gray-600 mb-3">
+                          {t('community.earnBadges')}
                         </div>
-                        <span className="truncate">{t('community.photographer')}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Medal className="h-2 w-2 text-white" />
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Camera className="h-2 w-2 text-white" />
+                            </div>
+                            <span className="truncate">{t('community.photographer')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Medal className="h-2 w-2 text-white" />
+                            </div>
+                            <span className="truncate">{t('community.localHistorian')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <MapPin className="h-2 w-2 text-white" />
+                            </div>
+                            <span className="truncate">{t('community.heritageExplorer')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Heart className="h-2 w-2 text-white" />
+                            </div>
+                            <span className="truncate">{t('community.communityFavorite')}</span>
+                          </div>
                         </div>
-                        <span className="truncate">{t('community.localHistorian')}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <MapPin className="h-2 w-2 text-white" />
-                        </div>
-                        <span className="truncate">{t('community.heritageExplorer')}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Heart className="h-2 w-2 text-white" />
-                        </div>
-                        <span className="truncate">{t('community.communityFavorite')}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </div>
             </div>
           </Tabs>
