@@ -16,7 +16,7 @@ import { SimpleMiniMap } from "./SimpleMiniMap";
 import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker import
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { userService } from '@/services/userService';
-import municipalityData from '../../data/municipalities.json';
+import { municipalityData } from '../../data/municipalities';
 import { parseLocationFromUrl } from '@/utils/locationUtils';
 
 // ✅ IMAGE OPTIMIZATION CONFIGURATION

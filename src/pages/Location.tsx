@@ -15,10 +15,10 @@ import LazyImage from "../components/LazyImage";
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage } from "../contexts/LanguageContext";
 
-import municipalityData from '../../data/municipalities.json';
+import { municipalityData } from '../../data/municipalities';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
-import { parseLocationFromUrl } from '@/utils/locationUtils';
+import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
 import { PageSkeleton } from '@/components/common/Skeletons';
 
 const translateCityType = (type: string, t: any) => {
@@ -342,7 +342,7 @@ if (loading) {
                   <div className="flex items-center gap-2 text-gray-600 flex-wrap">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
                     <span className="text-sm sm:text-base">
-                      {formatCountyName(locationData.county)}
+                      {normalizeCountyName(locationData.county)}
                     </span>
                     <span className="text-gray-400">•</span>
                     <span className="text-xs sm:text-sm font-medium bg-gray-100 px-2 py-1 rounded text-gray-700">
@@ -364,7 +364,7 @@ if (loading) {
                         <div className="flex items-center gap-2 text-gray-600 flex-wrap">
                           <MapPin className="h-4 w-4 flex-shrink-0" />
                           <span className="text-sm sm:text-base">
-                            {formatCountyName(basicInfo[1] as string)}
+                            {normalizeCountyName(basicInfo[1] as string)}
                           </span>
                           <span className="text-gray-400">•</span>
                           <span className="text-xs sm:text-sm font-medium bg-gray-100 px-2 py-1 rounded text-gray-700">
