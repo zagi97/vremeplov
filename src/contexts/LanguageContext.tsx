@@ -791,8 +791,12 @@ const translations: Record<Language, TranslationMap> = {
   'upload.addPhotoToMunicipality': 'Add historical photo to the municipality of',
   'notifications.markingRead': 'Marking as read...',
   "upload.addressHelp": "If you don't know the exact address, leave this field empty. The photo will still be visible in the gallery.",
+  "upload.markerOutsideBounds": "Marker must be within the selected location! Choose a location closer to the center (within the red circle).",
+  "upload.locationSelected": "Location selected!",
   },
   hr: {
+    "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
+    "upload.locationSelected": "Lokacija odabrana!",
     "upload.addressHelp": "Ako ne znate točnu adresu, ostavite polje prazno. Fotografija će biti vidljiva u galeriji.",
     'notifications.markingRead': 'Označavam...',
      'upload.addPhotoToCity': 'Dodaj povijesnu fotografiju u grad',

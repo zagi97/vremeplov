@@ -1389,7 +1389,6 @@ if (coordinates && selectedAddress) {
               <div className="rounded-lg overflow-hidden border border-blue-300">
                 <SimpleMiniMap
                   center={streetOnlyCoordinates}
-                  locationName={locationName}
                   onLocationSelect={(coords) => {
                     setCoordinates(coords);
                     setSelectedAddress(`${streetName} ${houseNumber}`);
@@ -1403,6 +1402,7 @@ if (coordinates && selectedAddress) {
   })
 );
                   }}
+                  t={t}
                 />
               </div>
               
@@ -1451,17 +1451,17 @@ if (coordinates && selectedAddress) {
                       toast.info(t('upload.canSearchAgain'));
                     }
                   }}
-                  className="text-green-700 hover:text-green-800 text-xs"
+                  className="text-blue-600 hover:text-blue-800 font-semibold underline hover:no-underline transition-all"
                 >
                   {t('upload.changeLocation')}
                 </Button>
               </div>
               
               {/* MINI MAP DISPLAY WITH SELECTED LOCATION */}
-              <div className="rounded-lg overflow-hidden border border-green-300 h-32">
+              <div className="rounded-lg overflow-hidden border border-green-300 h-48">
                 <MapContainer
                   center={[coordinates.latitude, coordinates.longitude]}
-                  zoom={17}
+                  zoom={15}
                   style={{ height: '100%', width: '100%' }}
                   className="rounded-lg"
                   zoomControl={false}

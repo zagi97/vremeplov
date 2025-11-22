@@ -31,8 +31,8 @@ const isWithinBounds = (
 export const SimpleMiniMap: React.FC<{
   center: { latitude: number; longitude: number };
   onLocationSelect: (coords: { latitude: number; longitude: number }) => void;
-  locationName?: string; // ✅ Dodaj za error message
-}> = ({ center, onLocationSelect, locationName = 'ovog područja' }) => {
+  t: (key: string) => string;
+}> = ({ center, onLocationSelect, t}) => {
   const [selectedPosition, setSelectedPosition] = useState<[number, number] | null>(null);
 
   const MapClickHandler = () => {
@@ -43,7 +43,7 @@ export const SimpleMiniMap: React.FC<{
         // ✅ GEO-FENCING CHECK
         if (!isWithinBounds(lat, lng, center.latitude, center.longitude, 15)) {
           toast.error(
-            `❌ Marker mora biti unutar ${locationName}! Odaberite lokaciju bliže centru (unutar crvenog kruga).`,
+            `❌ ${t('upload.markerOutsideBounds')}`,
             { duration: 4000 }
           );
           return;
@@ -51,7 +51,7 @@ export const SimpleMiniMap: React.FC<{
 
         setSelectedPosition([lat, lng]);
         onLocationSelect({ latitude: lat, longitude: lng });
-        toast.success('✅ Lokacija odabrana!');
+        toast.success(`✅ ${t('upload.locationSelected')}`);
       },
     });
     return null;
