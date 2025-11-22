@@ -1,28 +1,14 @@
 // src/components/NotificationCenter.tsx - ULTIMATE FIX
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Heart, 
-  MessageCircle, 
-  UserPlus, 
-  Tag, 
-  Award,
-  CheckCheck,
-  X,
-  AlertCircle,
-  ShieldAlert,
-  ShieldCheck,
-  Trash2,
-  Edit,
-  Ban,
-  ArrowRight,
-  Bell
-} from 'lucide-react';
+import { ArrowRight, Bell } from 'lucide-react';
 import { Notification, notificationService } from '../services/notificationService';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { formatTimeAgo } from '../utils/dateUtils';
+import { getNotificationIcon } from '../constants/activityIcons';
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -43,28 +29,6 @@ const NotificationCenter = ({
   useAuth();
   const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
-
-  const getNotificationIcon = (type: string) => {
-    const iconMap: { [key: string]: { icon: any; color: string } } = {
-      new_comment: { icon: MessageCircle, color: 'text-blue-600 bg-blue-50' },
-      new_like: { icon: Heart, color: 'text-red-600 bg-red-50' },
-      new_follower: { icon: UserPlus, color: 'text-green-600 bg-green-50' },
-      new_tag: { icon: Tag, color: 'text-orange-600 bg-orange-50' },
-      badge_earned: { icon: Award, color: 'text-yellow-600 bg-yellow-50' },
-      photo_approved: { icon: CheckCheck, color: 'text-green-600 bg-green-50' },
-      photo_rejected: { icon: X, color: 'text-red-600 bg-red-50' },
-      photo_edited: { icon: Edit, color: 'text-blue-600 bg-blue-50' },
-      photo_deleted: { icon: Trash2, color: 'text-gray-600 bg-gray-50' },
-      tag_approved: { icon: CheckCheck, color: 'text-green-600 bg-green-50' },
-      tag_rejected: { icon: X, color: 'text-red-600 bg-red-50' },
-      comment_deleted: { icon: Trash2, color: 'text-gray-600 bg-gray-50' },
-      user_banned: { icon: Ban, color: 'text-red-600 bg-red-50' },
-      user_suspended: { icon: ShieldAlert, color: 'text-orange-600 bg-orange-50' },
-      user_unbanned: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' },
-      user_unsuspended: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' }
-    };
-    return iconMap[type] || { icon: AlertCircle, color: 'text-gray-600 bg-gray-50' };
-  };
 
   const getNotificationMessage = (notification: Notification): string => {
     const { type, actorName, photoTitle, badgeName, taggedPersonName, reason } = notification;
@@ -121,31 +85,6 @@ const NotificationCenter = ({
       return `/user/${notification.actorId}`;
     }
     return null;
-  };
-
-  const formatTimeAgo = (timestamp: any): string => {
-    if (!timestamp) return '';
-    
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 1) return t('notifications.time.justNow');
-    
-    if (language === 'hr') {
-      if (diffMins < 60) return `${t('notifications.time.ago')} ${diffMins} ${t('notifications.time.min')}`;
-      if (diffHours < 24) return `${t('notifications.time.ago')} ${diffHours}${t('notifications.time.hours')}`;
-      if (diffDays < 7) return `${t('notifications.time.ago')} ${diffDays}${t('notifications.time.days')}`;
-      return date.toLocaleDateString('hr-HR');
-    } else {
-      if (diffMins < 60) return `${diffMins} ${t('notifications.time.min')}`;
-      if (diffHours < 24) return `${diffHours}${t('notifications.time.hours')}`;
-      if (diffDays < 7) return `${diffDays}${t('notifications.time.days')}`;
-      return date.toLocaleDateString('en-US');
-    }
   };
 
   // ✅ Call parent's mark all handler
@@ -238,7 +177,7 @@ const NotificationCenter = ({
           {displayNotifications.map((notification) => {
             const { icon: IconComponent, color } = getNotificationIcon(notification.type);
             const message = getNotificationMessage(notification);
-            const timeAgo = formatTimeAgo(notification.createdAt);
+            const timeAgo = formatTimeAgo(notification.createdAt, language, t);
             const link = getNotificationLink(notification);
             const isClickable = link !== null;
 
