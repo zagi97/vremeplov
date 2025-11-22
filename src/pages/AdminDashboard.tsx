@@ -19,6 +19,7 @@ import { Pagination } from '../components/ui/pagination';
 import { FilterBar } from '../components/ui/filter-bar';
 import { userService, UserProfileExtended } from '../services/userService';
 import { auth } from '../lib/firebase';
+import { ITEMS_PER_PAGE, TEXT_LIMITS } from '@/constants';
 
 export default function AdminDashboard() {
 const { user, isAdmin, exitAdminMode } = useAuth();
@@ -69,10 +70,10 @@ const [userSort, setUserSort] = useState('newest'); // newest, oldest, most-phot
 const [pendingPhotoPage, setPendingPhotoPage] = useState(1);
 const [approvedPhotoPage, setApprovedPhotoPage] = useState(1);
 const [tagPage, setTagPage] = useState(1);
-const COMMENTS_PER_PAGE = 10;
-const USERS_PER_PAGE = 10;
-const PHOTOS_PER_PAGE = 10;
-const TAGS_PER_PAGE = 10;
+const COMMENTS_PER_PAGE = ITEMS_PER_PAGE.ADMIN_PHOTOS;
+const USERS_PER_PAGE = ITEMS_PER_PAGE.ADMIN_PHOTOS;
+const PHOTOS_PER_PAGE = ITEMS_PER_PAGE.ADMIN_PHOTOS;
+const TAGS_PER_PAGE = ITEMS_PER_PAGE.ADMIN_PHOTOS;
    const { t } = useLanguage();
 
   useEffect(() => {
@@ -1717,7 +1718,7 @@ const hasRejectReason = (
   <Textarea
     value={rejectReason.custom}
     onChange={(e) => {
-      const value = e.target.value.slice(0, 250);
+      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
       setRejectReason(prev => ({ ...prev, custom: value }));
     }}
     placeholder="Dodatni razlog odbijanja..."
@@ -1777,8 +1778,8 @@ const hasRejectReason = (
                 <Textarea
                   value={editData.description}
                   onChange={(e) => {
-      // ✅ Ograniči na 250 karaktera
-      const value = e.target.value.slice(0, 250);
+      // ✅ Ograniči na TEXT_LIMITS.DESCRIPTION karaktera
+      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
       setEditData(prev => ({ ...prev, description: value }));
     }}
                   rows={2}
@@ -2132,8 +2133,8 @@ const buildDeleteReasonText = () => {
                 <Textarea
                   value={editData.description}
                   onChange={(e) => {
-      // ✅ Ograniči na 250 karaktera
-      const value = e.target.value.slice(0, 250);
+      // ✅ Ograniči na TEXT_LIMITS.DESCRIPTION karaktera
+      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
       setEditData(prev => ({ ...prev, description: value }));
     }}
                   placeholder="Description"
@@ -2355,7 +2356,7 @@ function UserManagementCard({
                       <label className="text-sm font-medium block mb-2">Reason:</label>
                       <Textarea
                         value={suspendReason}
-                        onChange={(e) => setSuspendReason(e.target.value.slice(0, 250))}
+                        onChange={(e) => setSuspendReason(e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION))}
                         placeholder="Explain why this user is being suspended..."
                         rows={3}
                         maxLength={250}
@@ -2405,7 +2406,7 @@ function UserManagementCard({
                       <label className="text-sm font-medium block mb-2">Reason:</label>
                       <Textarea
                         value={banReason}
-                        onChange={(e) => setBanReason(e.target.value.slice(0, 250))}
+                        onChange={(e) => setBanReason(e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION))}
                         placeholder="Explain why this user is being banned..."
                         rows={3}
                         maxLength={250}
