@@ -1,4 +1,6 @@
 // src/utils/municipalityLoader.ts
+import { normalizeCountyName, normalizeCountyForComparison } from './locationUtils';
+
 export interface Location {
   id: number;
   county: string;
@@ -43,32 +45,10 @@ export const loadMunicipalities = async (): Promise<Location[]> => {
 
   allLocations.forEach(location => {
     if (nameCounts.get(location.name)! > 1) {
-      const countyShort = location.county
-        .replace(/^[IVX]+\s/, '')
-        .replace('DUBROVAČKO-NERETVANSKA', 'Dubrovačko-neretvanska')
-        .replace('SPLITSKO-DALMATINSKA', 'Splitsko-dalmatinska')
-        .replace('OSJEČKO-BARANJSKA', 'Osječko-baranjska')
-        .replace('VUKOVARSKO-SRIJEMSKA', 'Vukovarsko-srijemska')
-        .replace('POŽEŠKO-SLAVONSKA', 'Požeško-slavonska')
-        .replace('BRODSKO-POSAVSKA', 'Brodsko-posavska')
-        .replace('VIROVITIČKO-PODRAVSKA', 'Virovitičko-podravska')
-        .replace('KOPRIVNIČKO-KRIŽEVAČKA', 'Koprivničko-križevačka')
-        .replace('BJELOVARSKO-BILOGORSKA', 'Bjelovarsko-bilogorska')
-        .replace('PRIMORSKO-GORANSKA', 'Primorsko-goranska')
-        .replace('SISAČKO-MOSLAVAČKA', 'Sisačko-moslavačka')
-        .replace('KRAPINSKO-ZAGORSKA', 'Krapinsko-zagorska')
-        .replace('ŠIBENSKO-KNINSKA', 'Šibensko-kninska')
-        .replace('LIČKO-SENJSKA', 'Ličko-senjska')
-        .replace('KARLOVAČKA', 'Karlovačka')
-        .replace('VARAŽDINSKA', 'Varaždinska')
-        .replace('ZAGREBAČKA', 'Zagrebačka')
-        .replace('MEĐIMURSKA', 'Međimurska')
-        .replace('ISTARSKA', 'Istarska')
-        .replace('ZADARSKA', 'Zadarska')
-        .replace('GRAD ZAGREB', 'Zagreb');
-      
+      const countyShort = normalizeCountyName(location.county);
+
       location.displayName = `${location.name} (${countyShort})`;
-      location.urlKey = `${location.name}-${countyShort.replace(/\s+/g, '')}`;
+      location.urlKey = `${location.name}-${normalizeCountyForComparison(location.county)}`;
     }
   });
 
