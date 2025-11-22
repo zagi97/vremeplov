@@ -8,8 +8,8 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 
-// Import JSON podataka o općinama
-import municipalityData from '../../data/municipalities.json';
+// Import TypeScript podataka o općinama
+import { municipalityData } from '../../data/municipalities';
 
 // --- Funkcija za dohvat koordinata ---
 const findCoordinatesByLocation = (locationName: string) => {

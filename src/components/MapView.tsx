@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 
-// 🆕 Import JSON podataka o općinama
-import municipalityData from '../../data/municipalities.json';
+// 🆕 Import TypeScript podataka o općinama
+import { municipalityData } from '../../data/municipalities';
 
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';

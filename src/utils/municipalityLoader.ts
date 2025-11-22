@@ -19,9 +19,9 @@ export const loadMunicipalities = async (): Promise<Location[]> => {
   }
 
   // ✅ LAZY LOAD: Dynamic import!
-  const municipalityData = await import('../../data/municipalities.json');
-  
-  const allLocations: Location[] = municipalityData.default.records.map((record: any) => {
+  const { municipalityData } = await import('../../data/municipalities');
+
+  const allLocations: Location[] = municipalityData.records.map((record: any) => {
     const id = record[0] as number;
     const county = record[1] as string;
     const type = record[2] as string;
