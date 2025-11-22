@@ -112,8 +112,8 @@ export interface UserProfile {
   bio?: string;
   location?: string;
   website?: string;
-  joinedAt: any;
-  lastActive: any;
+  joinedAt: Timestamp;
+  lastActive: Timestamp;
   stats: {
     totalPhotos: number;
     totalLikes: number;
@@ -135,15 +135,15 @@ export interface FollowRelationship {
   id?: string;
   followerId: string;
   followingId: string;
-  createdAt: any;
+  createdAt: Timestamp;
 }
 
 // User activity interface
 export interface UserActivity {
   id?: string;
   userId: string;
-  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added'| 'person_tagged'; 
-  
+  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added'| 'person_tagged';
+
   metadata?: {
     photoTitle?: string;
     targetUserName?: string;
@@ -151,7 +151,7 @@ export interface UserActivity {
     location?: string;
     targetId?: string; // photo ID, user ID, etc.
   };
-  createdAt: any;
+  createdAt: Timestamp;
 }
 
 // Badge definition interface
@@ -162,7 +162,7 @@ export interface Badge {
   iconName: string;
   color: string;
   requirement: string;
-  checkFunction: (profile: UserProfile, photos: any[]) => boolean;
+  checkFunction: (profile: UserProfile, photos: { id: string }[]) => boolean;
 }
 
 // Leaderboard interfaces
@@ -468,7 +468,7 @@ class UserService {
 async updateUserStats(userId: string, statUpdates: Partial<UserProfile['stats']>): Promise<void> {
   try {
     const userRef = doc(db, 'users', userId);
-    const updates: any = {};
+    const updates: Record<string, number> = {};
     
     // ✅ Set absolute values (not incremental)
     Object.entries(statUpdates).forEach(([key, value]) => {

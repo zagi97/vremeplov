@@ -13,11 +13,13 @@ import {
   limit,
   startAfter,
   Timestamp} from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
+import {
+  ref,
+  uploadBytes,
   getDownloadURL} from 'firebase/storage';
 import { db, storage, auth } from '../lib/firebase';
+import { mapDocumentWithId, mapDocumentsWithId } from '../utils/firestoreMappers';
+import { getErrorMessage, isFirebaseError } from '../types/firebase';
 
 // Cache konfiguracija - ISPRAVKA
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minuta
@@ -109,16 +111,15 @@ export interface Photo {
 export interface Comment {
   id?: string;
   photoId: string;
-  userId: string;  // ✅ PROMIJENI
+  userId: string;
   text: string;
-  createdAt: any;
-  // ✅ DODAJ NOVA POLJA:
+  createdAt: Timestamp;
   userName?: string;
   userEmail?: string;
   photoTitle?: string;
   photoLocation?: string;
   isFlagged?: boolean;
-  flaggedAt?: any;
+  flaggedAt?: Timestamp;
   isApproved?: boolean;
 }
 
@@ -624,7 +625,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
     console.log(`✅ User ${limitCheck.userTier} can upload (${limitCheck.remainingToday - 1} remaining after this upload)`);
     
     // ✅ BUILD photo object WITHOUT undefined fields
-    const photo: any = {
+    const photo = {
       imageUrl: photoData.imageUrl,
       imageStoragePath: photoData.imageStoragePath,
       year: photoData.year,
@@ -690,10 +691,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       );
       
       const querySnapshot = await getDocs(photosQuery);
-      return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-        id: doc.id,
-        ...doc.data()
-      } as Photo));
+      return mapDocumentsWithId<Photo>(querySnapshot.docs);
     } catch (error) {
       console.error('Error fetching photos with coordinates:', error);
       return [];
@@ -733,10 +731,7 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    const photos = querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as Photo));
+    const photos = mapDocumentsWithId<Photo>(querySnapshot.docs);
     
     // Spremi u cache
     locationCache.set(cacheKey, { data: photos, timestamp: Date.now() });
@@ -829,10 +824,7 @@ async addComment(photoId: string, text: string, userId: string, userName: string
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc: { id: any; data: () => Comment; }) => ({
-        id: doc.id,
-        ...doc.data()
-      } as Comment));
+      return mapDocumentsWithId<Comment>(querySnapshot.docs);
     } catch (error) {
       console.error('Error getting comments:', error);
       throw error;
@@ -952,10 +944,7 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting tagged persons:', error);
     return []; // Vrati prazan niz umjesto greške
@@ -973,16 +962,13 @@ async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAu
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(snapshot.docs);
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error in getTaggedPersonsByPhotoIdForUser:', error);
-    
+
     // Graceful fallback - vrati prazan niz umjesto da crasha
-    if (error.code === 'permission-denied') {
+    if (isFirebaseError(error) && error.code === 'permission-denied') {
       console.warn('Permission denied for taggedPersons, returning empty array');
     }
     return [];
@@ -1007,14 +993,10 @@ async getTaggedPersonsByPhotoIdForAdmin(photoId: string): Promise<TaggedPerson[]
     console.log('Query created, attempting to fetch...');
     const querySnapshot = await getDocs(q);
     console.log('Query successful, docs found:', querySnapshot.size);
-    
-    const results = querySnapshot.docs.map((doc: { data: () => any; id: any; }) => {
-      const data = doc.data();
-      console.log('Tag document:', doc.id, data);
-      return {
-        id: doc.id,
-        ...data
-      } as TaggedPerson;
+
+    const results = mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
+    results.forEach(tag => {
+      console.log('Tag document:', tag.id, tag);
     });
     
     console.log('Final results:', results);
@@ -1037,10 +1019,7 @@ async getAllTaggedPersonsForAdmin(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting all tagged persons for admin:', error);
     throw error;
@@ -1057,10 +1036,7 @@ async getPendingTaggedPersons(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting pending tagged persons:', error);
     throw error;
@@ -1168,7 +1144,7 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         where('userId', '==', userId)
       );
       const likeSnapshot = await getDocs(likeQuery);
-      const deletePromises = likeSnapshot.docs.map((doc: { ref: any; }) => deleteDoc(doc.ref));
+      const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
       await Promise.all(deletePromises);
       console.log(`✅ Removed ${likeSnapshot.size} like records`);
       
@@ -1202,7 +1178,7 @@ async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; new
         
         // Obriši te aktivnosti
         if (relevantActivities.length > 0) {
-          const deleteActivityPromises = relevantActivities.map((doc: { ref: any; }) => deleteDoc(doc.ref));
+          const deleteActivityPromises = relevantActivities.map(doc => deleteDoc(doc.ref));
           await Promise.all(deleteActivityPromises);
           console.log(`✅ Deleted ${relevantActivities.length} activities`);
         }
@@ -1326,10 +1302,10 @@ async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
     
     const snapshot = await getDocs(photosQuery);
     const photos: Photo[] = [];
-    
-    snapshot.forEach((doc: { id: any; data: () => Photo; }) => {
-      photos.push({ id: doc.id, ...doc.data() } as Photo);
-    });
+
+
+    const fetchedPhotos = mapDocumentsWithId<Photo>(snapshot.docs);
+    photos.push(...fetchedPhotos);
     
     // Spremi u cache
     recentPhotosCache.data = photos;
@@ -1357,10 +1333,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', true)
     );
     const approvedSnapshot = await getDocs(approvedQuery);
-    const approvedTags = approvedSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    const approvedTags = mapDocumentsWithId<TaggedPerson>(approvedSnapshot.docs);
     
     console.log('🏠 Approved tags:', approvedTags.length);
     
@@ -1372,10 +1345,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', false)
     );
     const userPendingSnapshot = await getDocs(userPendingQuery);
-    const userPendingTags = userPendingSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    const userPendingTags = mapDocumentsWithId<TaggedPerson>(userPendingSnapshot.docs);
     
     console.log('🏠 User pending tags:', userPendingTags.length);
     
@@ -1387,10 +1357,7 @@ async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<Ta
       where('isApproved', '==', false)
     );
     const photoPendingSnapshot = await getDocs(photoPendingQuery);
-    const photoPendingTags = photoPendingSnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    const photoPendingTags = mapDocumentsWithId<TaggedPerson>(photoPendingSnapshot.docs);
     
     console.log('🏠 Photo pending tags:', photoPendingTags.length);
     
@@ -1437,19 +1404,13 @@ clearRecentPhotosCache() {
       );
       
       const snapshot = await getDocs(photosQuery);
-      const photos = snapshot.docs.map((doc: { data: () => any; id: any; }) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data
-        } as Photo;
-      });
-      
+      const photos = mapDocumentsWithId<Photo>(snapshot.docs);
+
       console.log(`Fetched ${photos.length} total photos for admin`);
-      console.log('Sample photo approval status:', photos.slice(0, 3).map((p: { id: any; isApproved: any; approved: any; }) => ({ 
-        id: p.id, 
-        isApproved: p.isApproved, 
-        approved: p.approved 
+      console.log('Sample photo approval status:', photos.slice(0, 3).map(p => ({
+        id: p.id,
+        isApproved: p.isApproved,
+        approved: (p as Photo & { approved?: boolean }).approved
       })));
       
       return photos;
@@ -1469,10 +1430,7 @@ async getAllPhotos(): Promise<Photo[]> {
     );
     
     const photoSnapshot = await getDocs(photosQuery);
-    return photoSnapshot.docs.map((doc: { id: any; data: () => any; }) => ({
-      id: doc.id,
-      ...doc.data()
-    })) as Photo[];
+    return mapDocumentsWithId<Photo>(photoSnapshot.docs);
   } catch (error) {
     console.error('Error fetching all photos:', error);
     throw error;
@@ -1503,10 +1461,7 @@ async getAllPhotos(): Promise<Photo[]> {
       }
       
       const photoSnapshot = await getDocs(photosQuery);
-      return photoSnapshot.docs.map((doc: { id: any; data: () => any; }) => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Photo[];
+      return mapDocumentsWithId<Photo>(photoSnapshot.docs);
     } catch (error) {
       console.error('Error fetching photos with pagination:', error);
       throw error;
@@ -1524,10 +1479,7 @@ async getAllPhotos(): Promise<Photo[]> {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-        id: doc.id,
-        ...doc.data()
-      } as Photo));
+      return mapDocumentsWithId<Photo>(querySnapshot.docs);
     } catch (error) {
       console.error('Error getting user photos:', error);
       // Fallback: try with uploadedBy field
@@ -1538,10 +1490,7 @@ async getAllPhotos(): Promise<Photo[]> {
         );
         
         const fallbackSnapshot = await getDocs(fallbackQuery);
-        const allPhotos = fallbackSnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-          id: doc.id,
-          ...doc.data()
-        } as Photo));
+        const allPhotos = mapDocumentsWithId<Photo>(fallbackSnapshot.docs);
 
         // Filter by userId locally
         return allPhotos.filter((photo: { authorId: string; uploadedBy: string; }) => 
@@ -1579,7 +1528,7 @@ async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Pho
           );
 
       const authorSnapshot = await getDocs(authorQuery);
-      const authorPhotos = authorSnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({ id: doc.id, ...doc.data() } as Photo));
+      const authorPhotos = mapDocumentsWithId<Photo>(authorSnapshot.docs);
       allPhotos = [...allPhotos, ...authorPhotos];
       console.log(`Found ${authorPhotos.length} photos by authorId for ${uploaderUid}`);
     } catch (error) {
@@ -1595,7 +1544,7 @@ async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Pho
           where('isApproved', '==', true)
         );
         const legacySnapshot = await getDocs(legacyQuery);
-        const legacyPhotos = legacySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({ id: doc.id, ...doc.data() } as Photo));
+        const legacyPhotos = mapDocumentsWithId<Photo>(legacySnapshot.docs);
         allPhotos = [...allPhotos, ...legacyPhotos];
         console.log(`Found ${legacyPhotos.length} legacy photos for Kruno`);
       } catch (error) {
@@ -1628,10 +1577,7 @@ async getPhotosByUploaderName(uploaderName: string): Promise<Photo[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as Photo));
+    return mapDocumentsWithId<Photo>(querySnapshot.docs);
   } catch (error) {
     console.error('Error fetching photos by uploader name:', error);
     return [];
@@ -1853,10 +1799,10 @@ export class AuthService {
           error: 'Unauthorized: Admin access only'
         };
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message
+        error: getErrorMessage(error)
       };
     }
   }
@@ -1866,10 +1812,10 @@ export class AuthService {
       const { signOut } = await import('firebase/auth');
       await signOut(auth);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        error: error.message
+        error: getErrorMessage(error)
       };
     }
   }
@@ -1878,7 +1824,7 @@ export class AuthService {
     return auth.currentUser;
   }
 
-  isAdmin(user: any) {
+  isAdmin(user: { email?: string | null } | null) {
     return user?.email === 'vremeplov.app@gmail.com';
   }
 
@@ -1902,7 +1848,7 @@ async getUserById(userId: string): Promise<UserDocument | null> {
 }
 
 // Create or update user document when they sign in:
-async createOrUpdateUser(user: any): Promise<void> {
+async createOrUpdateUser(user: { uid: string; email?: string | null; displayName?: string | null; photoURL?: string | null }): Promise<void> {
   try {
     // Prvo kreiraj/ažuriraj osnovni user document
     const userRef = doc(db, 'users', user.uid);
