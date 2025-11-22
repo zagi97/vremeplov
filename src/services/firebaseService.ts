@@ -13,11 +13,13 @@ import {
   limit,
   startAfter,
   Timestamp} from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
+import {
+  ref,
+  uploadBytes,
   getDownloadURL} from 'firebase/storage';
 import { db, storage, auth } from '../lib/firebase';
+import { mapDocumentWithId, mapDocumentsWithId } from '../utils/firestoreMappers';
+import { getErrorMessage } from '../types/firebase';
 
 // Cache konfiguracija - ISPRAVKA
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minuta
@@ -109,16 +111,15 @@ export interface Photo {
 export interface Comment {
   id?: string;
   photoId: string;
-  userId: string;  // ✅ PROMIJENI
+  userId: string;
   text: string;
-  createdAt: any;
-  // ✅ DODAJ NOVA POLJA:
+  createdAt: Timestamp;
   userName?: string;
   userEmail?: string;
   photoTitle?: string;
   photoLocation?: string;
   isFlagged?: boolean;
-  flaggedAt?: any;
+  flaggedAt?: Timestamp;
   isApproved?: boolean;
 }
 
@@ -690,10 +691,7 @@ async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes'
       );
       
       const querySnapshot = await getDocs(photosQuery);
-      return querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-        id: doc.id,
-        ...doc.data()
-      } as Photo));
+      return mapDocumentsWithId<Photo>(querySnapshot.docs);
     } catch (error) {
       console.error('Error fetching photos with coordinates:', error);
       return [];
@@ -733,10 +731,7 @@ async getPhotosByLocation(location: string): Promise<Photo[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    const photos = querySnapshot.docs.map((doc: { id: any; data: () => Photo; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as Photo));
+    const photos = mapDocumentsWithId<Photo>(querySnapshot.docs);
     
     // Spremi u cache
     locationCache.set(cacheKey, { data: photos, timestamp: Date.now() });
@@ -829,10 +824,7 @@ async addComment(photoId: string, text: string, userId: string, userName: string
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc: { id: any; data: () => Comment; }) => ({
-        id: doc.id,
-        ...doc.data()
-      } as Comment));
+      return mapDocumentsWithId<Comment>(querySnapshot.docs);
     } catch (error) {
       console.error('Error getting comments:', error);
       throw error;
@@ -952,10 +944,7 @@ async getTaggedPersonsByPhotoId(photoId: string): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting tagged persons:', error);
     return []; // Vrati prazan niz umjesto greške
@@ -973,10 +962,7 @@ async getTaggedPersonsByPhotoIdForUser(photoId: string, userId?: string, photoAu
     );
     
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(snapshot.docs);
     
   } catch (error: any) {
     console.error('Error in getTaggedPersonsByPhotoIdForUser:', error);
@@ -1037,10 +1023,7 @@ async getAllTaggedPersonsForAdmin(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting all tagged persons for admin:', error);
     throw error;
@@ -1057,10 +1040,7 @@ async getPendingTaggedPersons(): Promise<TaggedPerson[]> {
     );
     
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc: { id: any; data: () => TaggedPerson; }) => ({
-      id: doc.id,
-      ...doc.data()
-    } as TaggedPerson));
+    return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
   } catch (error) {
     console.error('Error getting pending tagged persons:', error);
     throw error;
