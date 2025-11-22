@@ -38,16 +38,8 @@ import LanguageSelector from "../components/LanguageSelector";
 import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
 import PageHeader from '@/components/PageHeader';
-
-// Activity type display mapping
-const ACTIVITY_DISPLAY: { [key: string]: { text: string; icon: any; color: string } } = {
-  photo_upload: { text: 'uploaded a photo', icon: Camera, color: 'text-blue-600' },
-  photo_like: { text: 'liked a photo', icon: Heart, color: 'text-red-600' },
-  user_follow: { text: 'started following', icon: UserPlus, color: 'text-green-600' },
-  badge_earned: { text: 'earned a badge', icon: Award, color: 'text-yellow-600' },
-  comment_added: { text: 'added a comment', icon: MessageCircle, color: 'text-purple-600' },
-  person_tagged: { text: 'tagged someone in', icon: Tag, color: 'text-orange-600' }
-};
+import { formatActivityDate } from '../utils/dateUtils';
+import { ACTIVITY_DISPLAY } from '../constants/activityIcons';
 
 // Dodaj ovu komponentu iznad UserProfilePage komponente
 const UserProfileSkeleton = () => (
@@ -460,17 +452,6 @@ const UserProfilePage = () => {
     } finally {
       setLoadingMorePhotos(false);
     }
-  };
-
-  const formatActivityDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('hr-HR', { 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   };
 
  // Zamijeni postojeći loading return s ovim:
