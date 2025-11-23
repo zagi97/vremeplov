@@ -27,6 +27,10 @@ interface UseUserProfileDataReturn {
   hasMoreActivities: boolean;
   setProfile: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   setIsFollowing: React.Dispatch<React.SetStateAction<boolean>>;
+  setUserPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
+  setHasMorePhotos: React.Dispatch<React.SetStateAction<boolean>>;
+  setUserActivities: React.Dispatch<React.SetStateAction<UserActivity[]>>;
+  setHasMoreActivities: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useUserProfileData = ({
@@ -165,5 +169,9 @@ export const useUserProfileData = ({
     hasMoreActivities,
     setProfile,
     setIsFollowing,
+    setUserPhotos,
+    setHasMorePhotos,
+    setUserActivities,
+    setHasMoreActivities,
   };
 };
