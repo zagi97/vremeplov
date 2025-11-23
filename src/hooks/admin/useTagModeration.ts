@@ -1,6 +1,6 @@
 // src/hooks/admin/useTagModeration.ts
 import { useState, useCallback } from 'react';
-import { TaggedPerson, photoService } from '@/services/firebaseService';
+import { TaggedPerson, photoService, tagService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -15,7 +15,7 @@ export function useTagModeration() {
   const loadTags = useCallback(async () => {
     try {
       setLoading(true);
-      const allTaggedPersons = await photoService.getAllTaggedPersonsForAdmin();
+      const allTaggedPersons = await tagService.getAllTaggedPersonsForAdmin();
       const pendingTaggedPersons = allTaggedPersons.filter(tag => !tag.isApproved);
 
       setPendingTags(pendingTaggedPersons);
@@ -42,7 +42,7 @@ export function useTagModeration() {
 
       const photo = await photoService.getPhotoById(tag.photoId);
 
-      await photoService.approveTaggedPerson(tagId, adminUid);
+      await tagService.approveTaggedPerson(tagId, adminUid);
 
       if (tag.addedByUid) {
         await sendNotification({
@@ -80,7 +80,7 @@ export function useTagModeration() {
         });
       }
 
-      await photoService.rejectTaggedPerson(tagId);
+      await tagService.rejectTaggedPerson(tagId);
       toast.success(t('admin.tagRejected'));
       await loadTags();
     } catch (error) {
@@ -91,7 +91,7 @@ export function useTagModeration() {
 
   const handleEditTag = useCallback(async (tagId: string, updates: Partial<TaggedPerson>) => {
     try {
-      await photoService.updateTaggedPerson(tagId, updates);
+      await tagService.updateTaggedPerson(tagId, updates);
       toast.success(t('admin.tagUpdated'));
       await loadTags();
     } catch (error) {
