@@ -25,6 +25,7 @@ import { useFileUpload } from '@/hooks/useFileUpload';
 import { isPhotoUploadFormValid, validateCityBounds } from '@/utils/photoUploadValidation';
 import { ManualLocationPicker } from './PhotoUpload/ManualLocationPicker';
 import { LocationConfirmation } from './PhotoUpload/LocationConfirmation';
+import { AddressAutocomplete } from './PhotoUpload/AddressAutocomplete';
 
 interface PhotoUploadProps {
   locationName: string;
@@ -94,12 +95,9 @@ useEffect(() => {
     setTaggedPersons([]);
   }, [removeFileBase]);
 
-  // Address search state (optimized)
+  // Address state (simplified - most logic in AddressAutocomplete)
   const [addressSearch, setAddressSearch] = useState<string>('');
-  const [availableAddresses, setAvailableAddresses] = useState<string[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
-  const [showAddressDropdown, setShowAddressDropdown] = useState(false);
   const [coordinates, setCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
 
   // Manual positioning state
@@ -126,352 +124,44 @@ useEffect(() => {
     photoType: '', // Dodaj ovo
   });
 
-  const closeAddressDropdown = () => {
-  setShowAddressDropdown(false);
-  
-  setLoadingAddresses(false);
-};
-
-const dropdownRef = useRef<HTMLDivElement>(null);
-const searchInputRef = useRef<HTMLInputElement>(null); // ✅ DODAJ OVO
-// Dodaj useEffect za handle click outside
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    // ✅ POBOLJŠAN - Provjeri da nije kliknut input NI dropdown
-    if (
-      searchInputRef.current && 
-      !searchInputRef.current.contains(event.target as Node) &&
-      dropdownRef.current && 
-      !dropdownRef.current.contains(event.target as Node)
-    ) {
-      closeAddressDropdown();
-    }
-  };
-
-  if (showAddressDropdown) {
-    document.addEventListener('mousedown', handleClickOutside);
-  }
-
-  return () => {
-    document.removeEventListener('mousedown', handleClickOutside); // ← Typo ispravljen
-  };
-}, [showAddressDropdown]);
-
-  // Debounce search term - waits 500ms after user stops typing
-  const debouncedSearchTerm = useDebounce(addressSearch, 500);
-  
-  // Ref for tracking current request
-  const currentRequestRef = useRef<AbortController | null>(null);
-  
-  // Flag to prevent search when selecting an address
-  const isSelectingAddressRef = useRef(false);
-
-  // Helper functions
-  const extractStreetName = (fullAddress: string): string => {
-    return fullAddress.replace(/\d+.*$/, '').trim();
-  };
-
-  // Optimized address search function with caching and debouncing
-  const searchAddresses = useCallback(async (searchTerm: string) => {
-    // Check cache first
-    const cacheKey = `${searchTerm}_${locationName}`;
-    if (searchCache.has(cacheKey)) {
-      console.log('📋 Using cached results for:', searchTerm);
-      const cachedResults = searchCache.get(cacheKey);
-      setAvailableAddresses(cachedResults || []);
-      setLoadingAddresses(false);
-      setShowAddressDropdown(true);
-      return;
-    }
-
-    setLoadingAddresses(true);
-    setShowAddressDropdown(true);
-
-    try {
-      // Cancel previous request if still running
-      if (currentRequestRef.current) {
-        currentRequestRef.current.abort();
-      }
-      
-      // Create new AbortController
-      const abortController = new AbortController();
-      currentRequestRef.current = abortController;
-
-      // 1. TRY TO FIND EXACT ADDRESS
-      const fullSearchTerm = `${searchTerm}, ${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(fullSearchTerm);
-      
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
-        {
-          headers: {
-            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
-          },
-          signal: abortController.signal
-        }
-      );
-
-      // Check if request was cancelled
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error('Search request failed');
-      }
-
-      const data = await response.json();
-      
-      // Extract addresses
-      const addresses = new Set<string>();
-      let exactAddressFound = false;
-      
-      data.forEach((item: any) => {
-        if (item.address) {
-          const streetNameFromAPI = item.address.road || item.address.street;
-          const houseNumberFromAPI = item.address.house_number;
-          const amenity = item.address.amenity;
-          const shop = item.address.shop;
-          
-          if (streetNameFromAPI) {
-            if (houseNumberFromAPI) {
-              addresses.add(`${streetNameFromAPI} ${houseNumberFromAPI}`);
-              exactAddressFound = true;
-            } else {
-              addresses.add(streetNameFromAPI);
-            }
-          }
-          
-          if (amenity && amenity.toLowerCase().includes(searchTerm.toLowerCase())) {
-            addresses.add(amenity);
-          }
-          if (shop && shop.toLowerCase().includes(searchTerm.toLowerCase())) {
-            addresses.add(`${shop} (trgovina)`);
-          }
-        }
-      });
-
-      // 2. SEARCH FOR STREET ONLY IF NO EXACT ADDRESS FOUND
-      const streetOnly = extractStreetName(searchTerm);
-      const extractedHouseNumber = extractHouseNumber(searchTerm);
-      
-      if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
-  console.log(`Exact address not found. Searching for street: "${streetOnly}"`);
-  
-  const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
-  const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
-  
-  const streetResponse = await fetch(
-    `https://nominatim.openstreetmap.org/search?format=json&q=${streetEncodedSearch}&addressdetails=1&limit=5&countrycodes=hr&accept-language=hr`,
-    {
-      headers: {
-        'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
-      },
-      signal: abortController.signal
-    }
-  );
-
-  if (!abortController.signal.aborted && streetResponse.ok) {
-    const streetData = await streetResponse.json();
-    
-    if (streetData.length > 0) {
-      const streetResult = streetData[0];
-      setStreetOnlyCoordinates({
-        latitude: parseFloat(streetResult.lat),
-        longitude: parseFloat(streetResult.lon)
-      });
-      setHouseNumber(extractedHouseNumber);
-      setStreetName(streetOnly);
-      
-      addresses.add(`${streetOnly} (kliknite za broj ${extractedHouseNumber})`); // ✅ ISPRAVLJENO
-      console.log(`Found street "${streetOnly}". Manual positioning ready.`);
-
-      // ✅ AUTO-TRIGGER manual positioning
-      setNeedsManualPositioning(true);
-      setSelectedAddress(`${streetOnly} ${extractedHouseNumber}`);
-      setAddressSearch(`${streetOnly} ${extractedHouseNumber}`);
-      closeAddressDropdown(); // Zatvori dropdown
-
-      // Prikaži info poruku
-      toast.info(
-        translateWithParams(t, 'upload.selectExactLocation', { 
-          street: streetOnly, 
-          number: extractedHouseNumber 
-        }),
-        { duration: 5000 }
-      );
-    }
-  }
-}
-
-      const finalResults = Array.from(addresses).slice(0, 8);
-      
-      // Save to cache only if request wasn't cancelled
-      if (!abortController.signal.aborted) {
-        searchCache.set(cacheKey, finalResults);
-        setAvailableAddresses(finalResults);
-        console.log('🔍 Search completed for:', searchTerm, 'Results:', finalResults.length);
-      }
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Search request was cancelled');
-        return;
-      }
-      console.error('Error searching addresses:', error);
-      toast.error(t('errors.addressSearchFailed'));
-      setAvailableAddresses([]);
-    } finally {
-      if (currentRequestRef.current) {
-        setLoadingAddresses(false);
-        currentRequestRef.current = null;
-      }
-    }
-  }, [locationName]);
-
-  // Trigger search when debounced term changes
-  useEffect(() => {
-    // Don't search if we're in the process of selecting an address
-    if (isSelectingAddressRef.current) {
-      console.log('🚫 Skipping search - address being selected');
-      isSelectingAddressRef.current = false; // Reset flag
-      return;
-    }
-    
-    if (debouncedSearchTerm.length >= 2) {
-      console.log('🚀 Starting search for:', debouncedSearchTerm);
-      searchAddresses(debouncedSearchTerm);
-    } else {
-      setAvailableAddresses([]);
-      setShowAddressDropdown(false);
-      setLoadingAddresses(false);
-    }
-  }, [debouncedSearchTerm, searchAddresses]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (currentRequestRef.current) {
-        currentRequestRef.current.abort();
-      }
-    };
-  }, []);
-
-  // ✅ NOVI HANDLER - Re-open dropdown on focus
-const handleInputFocus = () => {
-  if (addressSearch.length > 0 && availableAddresses.length > 0) {
-    setShowAddressDropdown(true);
-  }
-};
-
-  // Handle input change with immediate loading feedback
-  const handleAddressInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    
-    // Reset the selection flag when user manually types
-    isSelectingAddressRef.current = false;
-    
-    setAddressSearch(value);
-    
-    // Clear selected address when user starts typing again
-    if (selectedAddress && value !== selectedAddress) {
-      setSelectedAddress('');
-      setCoordinates(null);
-    }
-    
-    // Show loading immediately if user is typing
-    if (value.length >= 2 && !loadingAddresses) {
-      setLoadingAddresses(true);
-      setShowAddressDropdown(true);
-    }
-    
-    // Hide dropdown if search is too short
-    if (value.length < 2) {
-      setShowAddressDropdown(false);
-      setLoadingAddresses(false);
-      setAvailableAddresses([]); // Clear results
-      
-      // Cancel current request
-      if (currentRequestRef.current) {
-        currentRequestRef.current.abort();
-        currentRequestRef.current = null;
-      }
-    }
-  };
-
-  // SELECT ADDRESS from dropdown
-  const handleAddressSelect = async (address: string) => {
-    console.log('📍 Address selected:', address);
-    
-    // Set flag to prevent search from running when we update addressSearch
-    isSelectingAddressRef.current = true;
-    
-    // Immediately close dropdown and clear loading state
-    closeAddressDropdown();
-    
-    // Set the selected address
+    // Handler for when address is selected from autocomplete
+  const handleAddressSelect = (address: string, coords: { latitude: number; longitude: number } | null) => {
     setSelectedAddress(address);
     setAddressSearch(address);
 
-    // Cancel current request
-    if (currentRequestRef.current) {
-      currentRequestRef.current.abort();
-      currentRequestRef.current = null;
+    if (coords) {
+      setCoordinates(coords);
+      toast.success(t('upload.locationFound'));
+    } else {
+      toast.warning(t('upload.coordinatesNotFound'));
     }
+  };
 
-    // Check if this requires manual positioning
-    if (address.includes('(kliknite za broj')) {
-      const streetName = address.split(' (kliknite za broj')[0];
-      setNeedsManualPositioning(true);
-     toast.info(
-  translateWithParams(t, 'upload.selectExactLocation', { 
-    street: streetName, 
-    number: houseNumber 
-  })
-);
-      return;
-    }
-
-    // Reset manual positioning state
-    setNeedsManualPositioning(false);
-    setStreetOnlyCoordinates(null);
-    setHouseNumber('');
-    setStreetName('');
-
-    // Try to get coordinates for regular address
-    try {
-      const coords = await geocodingService.getCoordinatesFromAddress(address, locationName);
-      if (coords) {
-        setCoordinates(coords);
-        console.log('Coordinates found for address:', address, coords);
-       toast.success(t('upload.locationFound'));
-      } else {
-        toast.warning(t('upload.coordinatesNotFound'));
-      }
-    } catch (error) {
-      console.error('Error getting coordinates:', error);
-    }
+  // Handler for manual positioning (when street found but not exact address)
+  const handleManualPositioning = (
+    streetCoords: { latitude: number; longitude: number },
+    streetName: string,
+    houseNumber: string,
+    fullAddress: string
+  ) => {
+    setStreetOnlyCoordinates(streetCoords);
+    setStreetName(streetName);
+    setHouseNumber(houseNumber);
+    setSelectedAddress(fullAddress);
+    setAddressSearch(fullAddress);
+    setNeedsManualPositioning(true);
   };
 
   // CLEAR ADDRESS
   const handleClearAddress = () => {
     setAddressSearch('');
     setSelectedAddress('');
-    setAvailableAddresses([]);
-    setShowAddressDropdown(false);
     setCoordinates(null);
     setNeedsManualPositioning(false);
     setStreetOnlyCoordinates(null);
     setHouseNumber('');
     setStreetName('');
     setManualMarkerPosition(null);
-    setLoadingAddresses(false);
-
-    // Cancel current request
-    if (currentRequestRef.current) {
-      currentRequestRef.current.abort();
-      currentRequestRef.current = null;
-    }
   };
 
   // Monitor online status
@@ -749,119 +439,47 @@ if (coordinates && selectedAddress) {
             )}
           </div>
 
-          {/* OPTIMIZED ADDRESS SEARCH */}
+          {/* ADDRESS AUTOCOMPLETE */}
           <div>
             <label className="block text-sm font-medium mb-2">
               <Navigation className="inline h-4 w-4 mr-1" />
               {t('upload.specificAddress')} {locationName} {t('upload.optional')}
             </label>
-            
-            <div className="relative">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder={t('upload.searchAddress')}
-                  value={addressSearch}
-                  onChange={handleAddressInputChange}
-                  onFocus={handleInputFocus}  // ← Ovaj handler zatvara dropdown
-                  className={`pl-10 ${
-    loadingAddresses ? 'pr-10' : selectedAddress ? 'pr-10' : ''
-  } ${
-    // ✅ DODAJ ERROR STYLING
-    addressSearch.trim() !== '' && !selectedAddress 
-      ? 'border-red-300 focus:border-red-500 bg-red-50' 
-      : ''
-  }`}
-                  
-                />
-                
-                {/* Loading Spinner */}
-                {loadingAddresses && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  </div>
-                )}
-                
-                {/* Clear Button */}
-                {selectedAddress && !loadingAddresses && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearAddress}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-gray-100"
-                  >
-                    ✕
-                  </Button>
-                )}
+
+            <AddressAutocomplete
+              locationName={locationName}
+              value={addressSearch}
+              onChange={(value) => {
+                setAddressSearch(value);
+                // Clear selected address when user starts typing
+                if (selectedAddress && value !== selectedAddress) {
+                  setSelectedAddress('');
+                  setCoordinates(null);
+                }
+              }}
+              onAddressSelect={handleAddressSelect}
+              onManualPositioning={handleManualPositioning}
+              placeholder={t('upload.searchAddress')}
+              t={t}
+            />
+
+            <p className="text-xs text-gray-500 mt-1.5">
+              💡 {t('upload.addressHelp')}
+            </p>
+
+            {/* Error message if user typed but didn't select */}
+            {addressSearch.trim() !== '' && !selectedAddress && (
+              <div className="mt-1 flex items-center gap-1 text-xs text-red-600">
+                <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {t('upload.mustSelectAddress')}
               </div>
-
-              {/* ✅ HELP TEXT - DODAJ OVDJE */}
-  <p className="text-xs text-gray-500 mt-1.5">
-    💡 {t('upload.addressHelp')}
-  </p>
-
-
-
-              {/* Dropdown with Results */}
-              {showAddressDropdown && (
-                <div ref={dropdownRef} className="absolute z-[1000] w-full top-[calc(100%+2px)] bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  {loadingAddresses ? (
-                    <div className="flex items-center justify-center py-4">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
-                      <span className="text-sm text-gray-600">{t('upload.searchingAddresses')}</span>
-                    </div>
-                  ) : availableAddresses.length > 0 ? (
-                    <div>
-                      {availableAddresses.map((address, index) => {
-                        const isStatusMessage = address.includes('🔍') || address.includes('❌');
-                        
-                        return (
-                          <button
-                            key={index}
-                            type="button"
-                            onClick={() => {
-                              if (!isStatusMessage) {
-                                console.log('🔍 Clicking address:', address);
-                                handleAddressSelect(address);
-                              }
-                            }}
-                            disabled={isStatusMessage}
-                            className={`w-full text-left px-4 py-3 text-sm border-b border-gray-100 last:border-b-0 transition-colors ${
-                              isStatusMessage 
-                                ? 'text-gray-500 cursor-default bg-gray-50' 
-                                : 'hover:bg-blue-50 hover:text-blue-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {!isStatusMessage && <MapPin className="h-3 w-3 text-gray-400" />}
-                              <span className={isStatusMessage ? "font-normal" : "font-medium"}>{address}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : addressSearch.length >= 2 ? (
-                    <div className="px-4 py-4 text-sm text-gray-500 text-center">
-                      <MapPin className="h-4 w-4 mx-auto mb-2 text-gray-400" />
-                      {t('upload.noAddressesFound')} "<span className="font-medium">{addressSearch}</span>"
-                      
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-{/* ✅ DODAJ ERROR MESSAGE */}
-{addressSearch.trim() !== '' && !selectedAddress && (
-  <div className="mt-1 flex items-center gap-1 text-xs text-red-600">
-    <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-    </svg>
-    {t('upload.mustSelectAddress')}
-  </div>
-)}
+            )}
           </div>
 
           {/* MANUAL POSITIONING SECTION */}
@@ -875,7 +493,6 @@ if (coordinates && selectedAddress) {
                 setSelectedAddress(`${streetName} ${houseNumber}`);
                 setAddressSearch(`${streetName} ${houseNumber}`);
                 setNeedsManualPositioning(false);
-                closeAddressDropdown();
               }}
               t={t}
             />
