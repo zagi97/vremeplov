@@ -637,7 +637,7 @@ if (loading) {
                         <>
                           <div className="space-y-3">
                             {userActivities.map(activity => {
-                              const activityInfo = getActivityDisplay(activity.type);
+                              const activityInfo = getActivityDisplay(activity, t);
                               const IconComponent = activityInfo.icon;
                               const activityLink = getActivityLink(activity);
                               

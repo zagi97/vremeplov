@@ -1,7 +1,8 @@
 // src/hooks/usePhotoDetails.ts
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { photoService, Photo } from "@/services/firebaseService";
+import { photoService, Photo, tagService, viewService } from "@/services/firebaseService";
+import { likeService } from '@/services/photo/likeService';
 import { notificationService } from '@/services/notificationService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -90,10 +91,10 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         setViews(photoData.views || 0);
 
         if (user) {
-          const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+          const hasLiked = await likeService.hasUserLiked(photoId, user.uid); 
           setUserHasLiked(hasLiked);
 
-          await photoService.incrementViews(photoId, user.uid);
+          await viewService.incrementViews(photoId, user.uid);
         }
 
         // Tagged Persons
@@ -101,11 +102,11 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
         try {
           if (user?.email === 'vremeplov.app@gmail.com') {
-            taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+            taggedPersonsData = await tagService.getTaggedPersonsByPhotoIdForAdmin(photoId);
           } else if (photoData.authorId === user?.uid && user) {
-            taggedPersonsData = await photoService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+            taggedPersonsData = await tagService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
           } else {
-            taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
+            taggedPersonsData = await tagService.getTaggedPersonsByPhotoId(photoId);
           }
         } catch (tagError) {
           console.warn('Could not load tagged persons:', tagError);
@@ -230,7 +231,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
     try {
       console.log('🔥 Adding tag:', newTag);
-      const tagId = await photoService.addTaggedPerson({
+      const tagId = await tagService.addTaggedPerson({
         photoId,
         name: newTag.name,
         x: newTag.x,
@@ -287,7 +288,8 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
       setLikeLoading(true);
       console.log('🔵 [LIKE] Toggling like...');
 
-      const result = await photoService.toggleLike(photoId, user.uid);
+      // Koristi likeService za prebacivanje lajka
+      const result = await likeService.toggleLike(photoId, user.uid); 
       console.log('✅ [LIKE] Toggle result:', result);
 
       // Send notification ONLY if user liked (not unliked)
