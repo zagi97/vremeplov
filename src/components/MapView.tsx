@@ -27,6 +27,7 @@ import {
     ClusterGroup,
     ClusteredMarker
 } from '@/utils/mapClustering';
+import { MapFilters } from './map/MapFilters';
 
 // Fix Leaflet icons on component mount
 fixLeafletIcons();
@@ -313,53 +314,15 @@ if (loading) {
     </div>
 
           {/* Filters */}
-<div className="bg-white border-b border-gray-200 py-4">
-    <div className="container max-w-6xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            {/* Filter label i ikonica */}
-            <div className="flex items-center gap-2 min-w-fit">
-                <Filter className="h-5 w-5 text-gray-600" />
-                <span className="font-medium">{t('mapView.filters')}</span>
-            </div>
-
-            {/* Decade dropdown - custom styled */}
-            <div className="relative">
-                <select
-                    value={selectedDecade}
-                    onChange={(e) => setSelectedDecade(e.target.value)}
-                    className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px] cursor-pointer"
-                >
-                    <option value="all">{t('mapView.allDecades')}</option>
-                    {getAvailableDecades().map(decade => (
-                        <option key={decade} value={decade.toString()}>
-                            {decade}{t('filter.decade')} ({decade}-{decade + 9})
-                        </option>
-                    ))}
-                </select>
-                {/* Custom arrow icon */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-            </div>
-
-            {/* Search input */}
-            <Input
-                type="text"
-                placeholder={t('mapView.searchByLocation')}
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                className="flex-1 md:flex-initial md:max-w-xs"
-            />
-            
-            {/* Photo count */}
-            <div className="text-sm text-gray-600 md:ml-auto whitespace-nowrap">
-                {translateWithParams(t, 'mapView.showing', { filtered: filteredPhotos.length, total: photos.length })}
-            </div>
-        </div>
-    </div>
-</div>
+          <MapFilters
+            selectedDecade={selectedDecade}
+            onDecadeChange={setSelectedDecade}
+            searchLocation={searchLocation}
+            onSearchChange={setSearchLocation}
+            availableDecades={getAvailableDecades()}
+            filteredCount={filteredPhotos.length}
+            totalCount={photos.length}
+          />
 
             {/* CUSTOM CLUSTERING MAPA */}
             <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
