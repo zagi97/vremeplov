@@ -9,6 +9,7 @@ import { CharacterCounter } from "./ui/character-counter";
 import LazyImage from './LazyImage';
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 import { useTagRateLimit, TAG_RATE_LIMIT_CONFIG } from '@/hooks/useMultiWindowRateLimit';
+import { authService } from '@/services/authService';
 
 interface TaggedPerson {
   id: string;
@@ -231,7 +232,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         )}
         
         {/* Tag Button */}
-        {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && (
+        {user && (user.uid === photoAuthorId || authService.isAdmin(user)) && (
           <div className="absolute bottom-4 right-4">
             {!isTagging && (
               <Button
@@ -274,7 +275,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
       </div>
 
       {/* ✅ RATE LIMIT WARNING */}
-      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && !canTag && (
+      {user && (user.uid === photoAuthorId || authService.isAdmin(user)) && !canTag && (
         <div className="mt-3 p-3 bg-orange-50 border-l-4 border-orange-500 rounded">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -287,7 +288,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
       )}
 
       {/* ✅ TAG STATISTICS */}
-      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && canTag && photoId && (
+      {user && (user.uid === photoAuthorId || authService.isAdmin(user)) && canTag && photoId && (
         <div className="mt-2 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
           <span>Na ovoj slici: {taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</span>
           <span>Satno: {tagsInLastHour}/{MAX_TAGS_PER_HOUR}</span>

@@ -374,10 +374,13 @@ if (coordinates && selectedAddress) {
     
   } catch (error: unknown) {
     console.error('Upload error:', error);
-    
+
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorCode = (error as any)?.code;
-    
+    const isStorageError = (err: unknown): err is { code: string } => {
+      return typeof err === 'object' && err !== null && 'code' in err;
+    };
+    const errorCode = isStorageError(error) ? error.code : undefined;
+
     if (errorCode === 'storage/unauthorized') {
       toast.error(t('errors.uploadFailed'));
     } else if (errorCode === 'storage/quota-exceeded') {

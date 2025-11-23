@@ -1,13 +1,15 @@
 // src/hooks/usePhotoDetails.ts
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { photoService, Photo, tagService, viewService } from "@/services/firebaseService";
+import { photoService, Photo, tagService, viewService, TaggedPerson } from "@/services/firebaseService";
 import { likeService } from '@/services/photo/likeService';
 import { notificationService } from '@/services/notificationService';
+import { authService } from '@/services/authService';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from "sonner";
 import { translateWithParams } from '@/contexts/LanguageContext';
+import { User } from 'firebase/auth';
 
 const MAX_TAGS_PER_PHOTO = 10;
 const MAX_TAGS_PER_DAY = 20;
@@ -15,7 +17,7 @@ const MAX_TAGS_PER_HOUR = 10;
 
 interface UsePhotoDetailsProps {
   photoId: string | undefined;
-  user: any;
+  user: User | null;
   t: (key: string) => string;
 }
 
@@ -25,7 +27,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [relatedPhotos, setRelatedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
+  const [taggedPersons, setTaggedPersons] = useState<TaggedPerson[]>([]);
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
   const [userHasLiked, setUserHasLiked] = useState(false);
@@ -40,10 +42,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
   // Load photo data
   useEffect(() => {
     const loadPhotoData = async () => {
-      console.log('=== PHOTO LOAD DEBUG ===');
-      console.log('PhotoId:', photoId);
-      console.log('User:', user?.email);
-
       if (!photoId) return;
 
       try {
@@ -61,7 +59,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
         // CHECK PENDING STATUS
         if (photoData.isApproved === false) {
-          const isAdmin = user?.email === 'vremeplov.app@gmail.com';
+          const isAdmin = authService.isAdmin(user);
           const isOwner = user?.uid === photoData.authorId;
 
           console.log('🔒 Pending photo:', {
@@ -98,10 +96,10 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         }
 
         // Tagged Persons
-        let taggedPersonsData: any[] = [];
+        let taggedPersonsData: TaggedPerson[] = [];
 
         try {
-          if (user?.email === 'vremeplov.app@gmail.com') {
+          if (authService.isAdmin(user)) {
             taggedPersonsData = await tagService.getTaggedPersonsByPhotoIdForAdmin(photoId);
           } else if (photoData.authorId === user?.uid && user) {
             taggedPersonsData = await tagService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
@@ -130,7 +128,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
         let visibleTags = allTaggedPersons;
 
-        if (user?.email !== 'vremeplov.app@gmail.com') {
+        if (!authService.isAdmin(user)) {
           visibleTags = allTaggedPersons.filter(tag => {
             if (tag.isApproved === true) return true;
             if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
@@ -148,12 +146,16 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
           setRelatedPhotos(related);
         }
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('❌ Error loading photo:', error);
 
         // FIRESTORE PERMISSION DENIED
-        if (error?.code === 'permission-denied' ||
-            error?.message?.includes('Missing or insufficient permissions')) {
+        const isFirebaseError = (err: unknown): err is { code: string; message: string } => {
+          return typeof err === 'object' && err !== null && 'code' in err;
+        };
+
+        if (isFirebaseError(error) &&
+            (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions'))) {
           console.log('🔒 Firebase Rules blocked access');
           toast.error('Nemate pristup ovoj fotografiji.', {
             duration: 4000,

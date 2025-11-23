@@ -36,7 +36,6 @@ export interface Photo {
   likes: number;
   views: number;
   isApproved: boolean;
-  approved?: boolean;
   photoType?: string;
   taggedPersons?: Array<{
     name: string;

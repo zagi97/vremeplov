@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { User, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { toast } from "sonner";
-import { authService } from '../services/firebaseService';
+import { authService } from '../services/authService';
 import { useLanguage } from "../contexts/LanguageContext";
 
 interface AuthContextType {
@@ -44,7 +44,7 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
 
       // Check if we're in admin mode from session storage
       const adminModeFromStorage = sessionStorage.getItem('adminMode') === 'true';
-      setIsAdminMode(adminModeFromStorage && user?.email === 'vremeplov.app@gmail.com');
+      setIsAdminMode(adminModeFromStorage && authService.isAdmin(user));
 
       setLoading(false);
     });
@@ -56,14 +56,18 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   try {
     await signInWithPopup(auth, googleProvider);
     toast.success(t('auth.signInSuccess'));
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error signing in:', error);
-    
+
+    const isAuthError = (err: unknown): err is { code: string } => {
+      return typeof err === 'object' && err !== null && 'code' in err;
+    };
+
     // ✅ Ignoriraj errore kad korisnik zatvori popup
-    if (
+    if (isAuthError(error) && (
       error.code === 'auth/popup-closed-by-user' ||
       error.code === 'auth/cancelled-popup-request'
-    ) {
+    )) {
       // Ne prikazuj error - korisnik je samo zatvorio popup
       return;
     }

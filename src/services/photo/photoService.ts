@@ -303,7 +303,6 @@ export class PhotoService {
 
       await updateDoc(doc(this.photosCollection, photoId), {
         isApproved: true,
-        approved: true,
         approvedAt: Timestamp.now(),
         approvedBy: adminUid
       });

@@ -1020,9 +1020,9 @@ async fixAllPhotoLikeCounts(): Promise<void> {
       );
 
       // Photo of the month (most liked this month)
-      const mostLikedPhoto = thisMonthPhotos.reduce(
+      const mostLikedPhoto = thisMonthPhotos.reduce<Photo | null>(
         (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
-        null as any
+        null
       );
 
       // New members this month
@@ -1094,9 +1094,9 @@ async getYearlyHighlights(): Promise<MonthlyHighlights> {
     );
 
     // Most popular photo of the year (most liked this year)
-    const mostLikedPhoto = thisYearPhotos.reduce(
+    const mostLikedPhoto = thisYearPhotos.reduce<Photo | null>(
       (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
-      null as any
+      null
     );
 
     // New members this year
