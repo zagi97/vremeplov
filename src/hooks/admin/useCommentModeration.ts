@@ -1,6 +1,6 @@
 // src/hooks/admin/useCommentModeration.ts
 import { useState, useCallback, useMemo } from 'react';
-import { Comment, photoService } from '@/services/firebaseService';
+import { Comment, commentService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
 import { ITEMS_PER_PAGE } from '@/constants';
@@ -20,7 +20,7 @@ export function useCommentModeration() {
   const loadComments = useCallback(async () => {
     try {
       setLoading(true);
-      const allComments = await photoService.getAllCommentsForAdmin();
+      const allComments = await commentService.getAllCommentsForAdmin();
       setComments(allComments);
       console.log('✅ Loaded comments:', allComments.length);
     } catch (error) {
@@ -33,7 +33,7 @@ export function useCommentModeration() {
 
   const handleFlagComment = useCallback(async (commentId: string) => {
     try {
-      await photoService.flagComment(commentId);
+      await commentService.flagComment(commentId);
       toast.success('Comment flagged for review');
       await loadComments();
     } catch (error) {
@@ -43,7 +43,7 @@ export function useCommentModeration() {
 
   const handleUnflagComment = useCallback(async (commentId: string) => {
     try {
-      await photoService.unflagComment(commentId);
+      await commentService.unflagComment(commentId);
       toast.success('Comment unflagged');
       await loadComments();
     } catch (error) {
@@ -62,7 +62,7 @@ export function useCommentModeration() {
         });
       }
 
-      await photoService.deleteComment(comment.id!);
+      await commentService.deleteComment(comment.id!);
       toast.success('Comment deleted and user notified');
       await loadComments();
     } catch (error) {
