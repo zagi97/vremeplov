@@ -1,0 +1,128 @@
+// src/components/PhotoDetails/PhotoMetadata.tsx
+import React from 'react';
+import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
+import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
+
+interface TaggedPerson {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  isApproved?: boolean;
+}
+
+interface PhotoMetadataProps {
+  year: number;
+  author: string;
+  location: string;
+  uploadedBy?: string;
+  uploadedAt?: string;
+  description: string;
+  detailedDescription?: string;
+  taggedPersons: TaggedPerson[];
+}
+
+export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
+  year,
+  author,
+  location,
+  uploadedBy,
+  uploadedAt,
+  description,
+  detailedDescription,
+  taggedPersons
+}) => {
+  const { t } = useLanguage();
+
+  // Filter only approved tags
+  const approvedTags = taggedPersons.filter(person => person.isApproved === true);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden m-6">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white p-6">
+        <h3 className="text-xl font-bold mb-2">{t('photoDetail.aboutPhoto')}</h3>
+        <p className="text-gray-300 text-sm">Povijesni detalji i informacije</p>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <Calendar className="h-6 w-6 mx-auto text-blue-600 mb-2" />
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.year')}</p>
+            <p className="text-lg font-bold text-gray-900">{year}</p>
+          </div>
+
+          <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <Camera className="h-6 w-6 mx-auto text-purple-600 mb-2" />
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.author')}</p>
+            <p className="text-sm font-bold text-gray-900">{author}</p>
+          </div>
+
+          <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <MapPin className="h-6 w-6 mx-auto text-green-600 mb-2" />
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.location')}</p>
+            <p className="text-sm font-bold text-gray-900">{location}</p>
+          </div>
+
+          {uploadedBy && (
+            <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+              <Upload className="h-6 w-6 mx-auto text-orange-600 mb-2" />
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.uploadedBy')}</p>
+              <p className="text-xs font-bold text-gray-900">{uploadedBy}</p>
+              {uploadedAt && (
+                <p className="text-xs text-gray-500">
+                  {new Date(uploadedAt).toLocaleDateString('hr-HR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                  })}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <div className="mb-6">
+          <p className="text-gray-700 leading-relaxed">
+            {detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
+              year,
+              description,
+              location,
+              author
+            })}
+          </p>
+        </div>
+
+        {/* Tagged People - only approved tags */}
+        {approvedTags.length > 0 && (
+          <div className="border-t pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                {t('photoDetail.taggedPeople')}
+              </h4>
+              <span className="text-sm text-gray-500">
+                {approvedTags.length} osoba
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {approvedTags.map((person) => (
+                <span
+                  key={person.id || `temp-${person.x}-${person.y}`}
+                  className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors"
+                >
+                  <User className="h-3 w-3" />
+                  {person.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

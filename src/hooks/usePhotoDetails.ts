@@ -1,0 +1,359 @@
+// src/hooks/usePhotoDetails.ts
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { photoService, Photo } from "@/services/firebaseService";
+import { notificationService } from '@/services/notificationService';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { toast } from "sonner";
+import { translateWithParams } from '@/contexts/LanguageContext';
+
+const MAX_TAGS_PER_PHOTO = 10;
+const MAX_TAGS_PER_DAY = 20;
+const MAX_TAGS_PER_HOUR = 10;
+
+interface UsePhotoDetailsProps {
+  photoId: string | undefined;
+  user: any;
+  t: (key: string) => string;
+}
+
+export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
+  const navigate = useNavigate();
+
+  const [photo, setPhoto] = useState<Photo | null>(null);
+  const [relatedPhotos, setRelatedPhotos] = useState<Photo[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [taggedPersons, setTaggedPersons] = useState<any[]>([]);
+  const [likes, setLikes] = useState(0);
+  const [views, setViews] = useState(0);
+  const [userHasLiked, setUserHasLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [rateLimitInfo, setRateLimitInfo] = useState({
+    tagsInLastHour: 0,
+    tagsInLastDay: 0,
+    canTag: true,
+    reason: ''
+  });
+
+  // Load photo data
+  useEffect(() => {
+    const loadPhotoData = async () => {
+      console.log('=== PHOTO LOAD DEBUG ===');
+      console.log('PhotoId:', photoId);
+      console.log('User:', user?.email);
+
+      if (!photoId) return;
+
+      try {
+        setLoading(true);
+
+        // Load photo
+        const photoData = await photoService.getPhotoById(photoId);
+
+        // Handle missing photo
+        if (!photoData) {
+          toast.error(t('photoDetail.notFound'));
+          navigate('/');
+          return;
+        }
+
+        // CHECK PENDING STATUS
+        if (photoData.isApproved === false) {
+          const isAdmin = user?.email === 'vremeplov.app@gmail.com';
+          const isOwner = user?.uid === photoData.authorId;
+
+          console.log('🔒 Pending photo:', {
+            isApproved: photoData.isApproved,
+            isAdmin,
+            isOwner,
+            photoAuthor: photoData.authorId,
+            currentUser: user?.uid
+          });
+
+          if (isOwner && !isAdmin) {
+            toast.info('Ovo je tvoja fotografija koja čeka odobrenje.', {
+              duration: 5000,
+              icon: '⏳'
+            });
+          } else if (isAdmin) {
+            toast.info('Admin pregled: Pending fotografija', {
+              duration: 3000,
+              icon: '👑'
+            });
+          }
+        }
+
+        // Set photo data
+        setPhoto(photoData);
+        setLikes(photoData.likes || 0);
+        setViews(photoData.views || 0);
+
+        if (user) {
+          const hasLiked = await photoService.hasUserLiked(photoId, user.uid);
+          setUserHasLiked(hasLiked);
+
+          await photoService.incrementViews(photoId, user.uid);
+        }
+
+        // Tagged Persons
+        let taggedPersonsData: any[] = [];
+
+        try {
+          if (user?.email === 'vremeplov.app@gmail.com') {
+            taggedPersonsData = await photoService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+          } else if (photoData.authorId === user?.uid && user) {
+            taggedPersonsData = await photoService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+          } else {
+            taggedPersonsData = await photoService.getTaggedPersonsByPhotoId(photoId);
+          }
+        } catch (tagError) {
+          console.warn('Could not load tagged persons:', tagError);
+          taggedPersonsData = [];
+        }
+
+        const photoTaggedPersons = photoData.taggedPersons || [];
+
+        const allTaggedPersons = [
+          ...taggedPersonsData,
+          ...photoTaggedPersons.map((person, index) => ({
+            id: `photo_${index}`,
+            name: person.name,
+            x: person.x,
+            y: person.y,
+            photoId: photoId,
+            addedBy: 'System',
+            isApproved: true
+          }))
+        ];
+
+        let visibleTags = allTaggedPersons;
+
+        if (user?.email !== 'vremeplov.app@gmail.com') {
+          visibleTags = allTaggedPersons.filter(tag => {
+            if (tag.isApproved === true) return true;
+            if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
+            if (tag.isApproved === false && photoData.authorId === user?.uid) return true;
+            return false;
+          });
+        }
+
+        setTaggedPersons(visibleTags);
+
+        // Load related photos
+        if (photoData.location) {
+          const locationPhotos = await photoService.getPhotosByLocation(photoData.location);
+          const related = locationPhotos.filter(p => p.id !== photoId).slice(0, 6);
+          setRelatedPhotos(related);
+        }
+
+      } catch (error: any) {
+        console.error('❌ Error loading photo:', error);
+
+        // FIRESTORE PERMISSION DENIED
+        if (error?.code === 'permission-denied' ||
+            error?.message?.includes('Missing or insufficient permissions')) {
+          console.log('🔒 Firebase Rules blocked access');
+          toast.error('Nemate pristup ovoj fotografiji.', {
+            duration: 4000,
+            icon: '🔒'
+          });
+          navigate('/');
+          return;
+        }
+
+        // Generic error
+        toast.error(t('upload.error'));
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPhotoData();
+  }, [photoId, user, t, navigate]);
+
+  // Check rate limits
+  const checkUserTagRateLimit = async () => {
+    if (!user) return;
+
+    try {
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const tagsRef = collection(db, 'taggedPersons');
+      const q = query(tagsRef, where('addedByUid', '==', user.uid));
+
+      const snapshot = await getDocs(q);
+      const userTags = snapshot.docs
+        .map(doc => ({
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate()
+        }))
+        .filter(t => t.createdAt && t.createdAt > oneDayAgo);
+
+      const tagsInLastHour = userTags.filter(
+        t => t.createdAt && t.createdAt > oneHourAgo
+      ).length;
+
+      const tagsInLastDay = userTags.length;
+
+      let canTag = true;
+      let reason = '';
+
+      if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+        canTag = false;
+        reason = `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
+      } else if (tagsInLastHour >= MAX_TAGS_PER_HOUR) {
+        canTag = false;
+        reason = `Dostigao si satni limit (${MAX_TAGS_PER_HOUR} tagova/sat)`;
+      } else if (tagsInLastDay >= MAX_TAGS_PER_DAY) {
+        canTag = false;
+        reason = `Dostigao si dnevni limit (${MAX_TAGS_PER_DAY} tagova/dan)`;
+      }
+
+      setRateLimitInfo({ tagsInLastHour, tagsInLastDay, canTag, reason });
+    } catch (error) {
+      console.error('Error checking tag rate limit:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !photoId) return;
+    checkUserTagRateLimit();
+  }, [user, photoId, taggedPersons.length]);
+
+  // Handle adding tags
+  const handleAddTag = async (newTag: { name: string; x: number; y: number }) => {
+    if (!photoId || !user) return;
+
+    try {
+      console.log('🔥 Adding tag:', newTag);
+      const tagId = await photoService.addTaggedPerson({
+        photoId,
+        name: newTag.name,
+        x: newTag.x,
+        y: newTag.y,
+        description: '',
+        addedBy: user.displayName || user.email || 'User'
+      });
+
+      console.log('🔥 Tag saved with ID:', tagId);
+
+      // Add tag to local state with pending status
+      const newTagWithId = {
+        id: tagId,
+        name: newTag.name,
+        x: newTag.x,
+        y: newTag.y,
+        photoId,
+        addedBy: user.displayName || user.email || 'User',
+        addedByUid: user.uid,
+        isApproved: false,
+        createdAt: new Date()
+      };
+
+      console.log('🔥 Adding to local state:', newTagWithId);
+
+      setTaggedPersons([...taggedPersons, newTagWithId]);
+
+      toast.success(
+        translateWithParams(t, 'photoDetail.tagPending', { name: newTag.name }),
+        { duration: 4000 }
+      );
+    } catch (error) {
+      console.error('Error adding tag:', error);
+      toast.error(t('photoDetail.tagSaveFailed'));
+    }
+  };
+
+  // Handle like
+  const handleLike = async () => {
+    console.log('🔵 [LIKE] Button clicked');
+
+    if (!photoId || !user || likeLoading) {
+      console.log('❌ [LIKE] Early return:', { photoId, user: !!user, likeLoading });
+      return;
+    }
+
+    if (!user) {
+      console.log('❌ [LIKE] No user');
+      toast.error(t('photoDetail.signInMessage'));
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      console.log('🔵 [LIKE] Toggling like...');
+
+      const result = await photoService.toggleLike(photoId, user.uid);
+      console.log('✅ [LIKE] Toggle result:', result);
+
+      // Send notification ONLY if user liked (not unliked)
+      console.log('🔵 [LIKE] Checking notification conditions:', {
+        'result.liked': result.liked,
+        'photo': !!photo,
+        'photo.uploadedBy': photo?.uploadedBy,
+        'user.uid': user.uid,
+        'isDifferentUser': photo?.uploadedBy !== user.uid
+      });
+
+      if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
+        console.log('🔵 [LIKE] Sending notification...');
+        try {
+          await notificationService.notifyNewLike(
+            photo.uploadedBy,
+            user.uid,
+            user.displayName || 'Anonymous',
+            photoId,
+            photo.description || 'untitled',
+            user.photoURL || undefined
+          );
+          console.log('✅ [LIKE] Notification sent successfully!');
+        } catch (notifError) {
+          console.error('❌ [LIKE] Failed to send notification:', notifError);
+        }
+      } else {
+        console.log('⏭️ [LIKE] Skipping notification:', {
+          reason: !result.liked ? 'User unliked' :
+                  !photo?.uploadedBy ? 'No photo owner' :
+                  photo.uploadedBy === user.uid ? 'Own photo' : 'Unknown'
+        });
+      }
+
+      setLikes(result.newLikesCount);
+      setUserHasLiked(result.liked);
+
+      if (result.liked) {
+        toast.success(t('photoDetail.photoLiked'));
+      } else {
+        toast.success(t('photoDetail.photoUnliked'));
+      }
+
+    } catch (error) {
+      console.error('❌ [LIKE] Error:', error);
+      toast.error(t('photoDetail.likeFailed'));
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  return {
+    photo,
+    relatedPhotos,
+    loading,
+    taggedPersons,
+    likes,
+    views,
+    userHasLiked,
+    likeLoading,
+    rateLimitInfo,
+    handleAddTag,
+    handleLike,
+    checkUserTagRateLimit,
+    MAX_TAGS_PER_PHOTO,
+    MAX_TAGS_PER_HOUR,
+    MAX_TAGS_PER_DAY
+  };
+};
