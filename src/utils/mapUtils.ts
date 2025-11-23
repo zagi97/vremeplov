@@ -1,6 +1,8 @@
 // src/utils/mapUtils.ts
 import L from 'leaflet';
 
+type MunicipalityRecordWithCoords = [number, string, string, string, number, number];
+
 /**
  * Custom cluster icon creation
  */
@@ -43,14 +45,11 @@ export const photoIcon = new L.Icon({
 /**
  * Get random location coordinates from municipality data
  */
-export const getRandomLocationCoordinates = (municipalityRecords: any[]) => {
+export const getRandomLocationCoordinates = (municipalityRecords: MunicipalityRecordWithCoords[]) => {
   if (municipalityRecords.length > 0) {
     const randomIndex = Math.floor(Math.random() * municipalityRecords.length);
     const record = municipalityRecords[randomIndex];
-    // Check if coordinates are numbers
-    if (typeof record[4] === 'number' && typeof record[5] === 'number') {
-      return { latitude: record[4], longitude: record[5] };
-    }
+    return { latitude: record[4], longitude: record[5] };
   }
   return { latitude: 45.8150, longitude: 15.9819 }; // Default Zagreb coordinates
 };

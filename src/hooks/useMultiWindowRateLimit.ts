@@ -33,7 +33,7 @@ export interface MultiWindowRateLimitConfig {
   /** Time windows to check (ordered by priority) */
   timeWindows: TimeWindow[];
   /** Additional query filters */
-  additionalFilters?: { field: string; value: any }[];
+  additionalFilters?: { field: string; value: unknown }[];
 }
 
 /**

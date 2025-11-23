@@ -5,6 +5,19 @@ import { Timestamp } from 'firebase/firestore';
 // TYPES & INTERFACES
 // ========================================
 
+interface NominatimAddress {
+  road?: string;
+  street?: string;
+  house_number?: string;
+  amenity?: string;
+  shop?: string;
+  building?: string;
+}
+
+interface NominatimResult {
+  address?: NominatimAddress;
+}
+
 export interface Photo {
   id?: string;
   imageUrl: string;
@@ -186,7 +199,7 @@ export const geocodingService = {
       // Extract unique addresses
       const addresses = new Set<string>();
 
-      data.forEach((item: any) => {
+      (data as NominatimResult[]).forEach((item) => {
         if (item.address) {
           const streetName = item.address.road || item.address.street;
           const houseNumber = item.address.house_number;

@@ -7,6 +7,21 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { searchCache, extractHouseNumber } from '@/utils/photoUploadHelpers';
 import { translateWithParams } from '@/contexts/LanguageContext';
 
+interface NominatimAddress {
+  road?: string;
+  street?: string;
+  house_number?: string;
+  amenity?: string;
+  shop?: string;
+  building?: string;
+}
+
+interface NominatimResult {
+  address?: NominatimAddress;
+  lat?: string;
+  lon?: string;
+}
+
 interface AddressAutocompleteProps {
   locationName: string;
   value: string;
@@ -118,7 +133,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const addresses = new Set<string>();
       let exactAddressFound = false;
 
-      data.forEach((item: any) => {
+      (data as NominatimResult[]).forEach((item) => {
         if (item.address) {
           const streetNameFromAPI = item.address.road || item.address.street;
           const houseNumberFromAPI = item.address.house_number;
