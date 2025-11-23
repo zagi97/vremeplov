@@ -1,4 +1,4 @@
-import { userService, LeaderboardUser, CommunityStats, MonthlyHighlights } from "../services/userService";
+import { userService, LeaderboardUser, CommunityStats, MonthlyHighlights } from "../services/user";
 // src/pages/CommunityLeaderboard.tsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';

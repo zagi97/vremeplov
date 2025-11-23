@@ -1,6 +1,6 @@
 // src/hooks/admin/useUserManagement.ts
 import { useState, useCallback, useMemo } from 'react';
-import { userService, UserProfileExtended } from '@/services/userService';
+import { userService, UserProfileExtended } from '@/services/user';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
 import { auth } from '@/lib/firebase';

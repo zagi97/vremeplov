@@ -196,7 +196,7 @@ export class PhotoService {
     nextTierInfo?: string;
   }> {
     try {
-      const { userService, getUserTier, USER_TIER_LIMITS, USER_TIER_REQUIREMENTS, UserTier } = await import('../userService');
+      const { userService, getUserTier, USER_TIER_LIMITS, USER_TIER_REQUIREMENTS, UserTier } = await import('../user');
       const userProfile = await userService.getUserProfile(userId);
 
       if (!userProfile) {
@@ -296,7 +296,7 @@ export class PhotoService {
 
       // Update author's stats
       if (photoAuthorId) {
-        const { userService } = await import('../userService');
+        const { userService } = await import('../user');
         await userService.forceRecalculateUserStats(photoAuthorId);
         await userService.checkAndAwardBadges(photoAuthorId);
       }
@@ -357,7 +357,7 @@ export class PhotoService {
 
       // Update user stats and activities
       if (currentUser?.uid) {
-        const { userService } = await import('../userService');
+        const { userService } = await import('../user');
         await userService.updateUserStats(currentUser.uid, {
           totalPhotos: 1
         });

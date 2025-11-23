@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { photoService, Photo } from '../services/firebaseService';
-import { userService, UserProfile, UserActivity } from '../services/userService';
+import { userService, UserProfile, UserActivity } from '../services/user';
 import { User } from 'firebase/auth';
 
 interface UseUserProfileDataParams {

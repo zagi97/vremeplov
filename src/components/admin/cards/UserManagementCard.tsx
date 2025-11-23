@@ -1,6 +1,6 @@
 // src/components/admin/cards/UserManagementCard.tsx
 import React, { useState } from 'react';
-import { UserProfileExtended } from '@/services/userService';
+import { UserProfileExtended } from '@/services/user';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

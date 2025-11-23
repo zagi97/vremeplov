@@ -88,7 +88,7 @@ export class TagService {
 
       // Create activity after approval
       if (tagData.addedByUid && photoData) {
-        const { userService } = await import('../userService');
+        const { userService } = await import('../user');
 
         await userService.addUserActivity(
           tagData.addedByUid,
