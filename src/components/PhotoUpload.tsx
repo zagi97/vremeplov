@@ -15,7 +15,7 @@ import { TooltipProvider } from "./ui/tooltip";
 import { SimpleMiniMap } from "./SimpleMiniMap";
 import YearPicker from "../components/YearPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { userService } from '@/services/userService';
+import { userService } from '@/services/user';
 import { municipalityData } from '../../data/municipalities';
 import { parseLocationFromUrl } from '@/utils/locationUtils';
 import { useDebounce } from '@/hooks/useDebounce';

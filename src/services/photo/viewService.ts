@@ -70,7 +70,7 @@ export class ViewService {
 
         // Update stats for photo owner
         if (photoData.authorId) {
-          const { userService } = await import('../userService');
+          const { userService } = await import('../user');
           await userService.updateUserStats(photoData.authorId, {
             totalViews: 1
           });

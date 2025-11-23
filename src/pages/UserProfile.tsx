@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import LazyImage from "../components/LazyImage";
 import { photoService } from "../services/firebaseService";
-import { userService, UserActivity } from "../services/userService";
+import { userService, UserActivity } from "../services/user";
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";

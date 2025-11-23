@@ -45,7 +45,7 @@ export class CommentService {
         const photoDoc = await getDoc(doc(this.photosCollection, photoId));
         const photoData = photoDoc.data();
 
-        const { userService } = await import('../userService');
+        const { userService } = await import('../user');
 
         await userService.addUserActivity(
           userId,

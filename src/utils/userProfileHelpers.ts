@@ -12,7 +12,7 @@ import {
   Trophy,
   Award,
 } from 'lucide-react';
-import { UserActivity } from '@/services/userService';
+import { UserActivity } from '@/services/user';
 import { ACTIVITY_DISPLAY } from '@/constants/activityIcons';
 
 export interface BadgeDetails {

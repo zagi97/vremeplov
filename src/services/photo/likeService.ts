@@ -104,7 +104,7 @@ export class LikeService {
         // 4. Update owner stats
         if (photoData.authorId) {
           try {
-            const { userService } = await import('../userService');
+            const { userService } = await import('../user');
             const ownerProfile = await userService.getUserProfile(photoData.authorId);
             if (ownerProfile) {
               await userService.updateUserStats(photoData.authorId, {
@@ -136,7 +136,7 @@ export class LikeService {
         });
 
         // 3. Add activity
-        const { userService } = await import('../userService');
+        const { userService } = await import('../user');
         await userService.addUserActivity(
           userId,
           'photo_like',

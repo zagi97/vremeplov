@@ -113,7 +113,7 @@ export class AuthService {
 
       if (!userDoc.exists()) {
         // Create new user document with full profile
-        const { userService } = await import('./userService');
+        const { userService } = await import('./user');
         await userService.createUserProfile(user.uid, {
           ...userData,
           bio: '',
