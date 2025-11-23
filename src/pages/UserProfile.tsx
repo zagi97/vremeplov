@@ -273,7 +273,6 @@ if (loading) {
                   </div>
 
                   {/* Action Buttons */}
-                  {/* Action Buttons */}
 {isOwnProfile && (
   <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
     <DialogTrigger asChild>
@@ -295,7 +294,7 @@ if (loading) {
           <Input
             value={editForm.displayName}
             onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
-            placeholder={t('profile.displayNamePlaceholder')} 
+            placeholder={t('profile.displayNamePlaceholder')}
           />
         </div>
         <div>
@@ -304,7 +303,7 @@ if (loading) {
             value={editForm.bio}
             onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
             placeholder={t('profile.tellAboutYourself')}
-            rows={3} 
+            rows={3}
           />
         </div>
         <div>
@@ -312,7 +311,7 @@ if (loading) {
           <Input
             value={editForm.location}
             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
-            placeholder={t('profile.yourLocation')} 
+            placeholder={t('profile.yourLocation')}
           />
         </div>
         <div className="flex gap-2 pt-4">
@@ -330,6 +329,24 @@ if (loading) {
       </div>
     </DialogContent>
   </Dialog>
+)}
+
+{!isOwnProfile && currentUser && (
+  <Button
+    variant={isFollowing ? "outline" : "default"}
+    className="w-full mb-4"
+    onClick={handleFollowToggle}
+    disabled={followLoading}
+  >
+    {followLoading ? (
+      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
+    ) : isFollowing ? (
+      <UserCheck className="h-4 w-4 mr-2" />
+    ) : (
+      <UserPlus className="h-4 w-4 mr-2" />
+    )}
+    {isFollowing ? t('profile.unfollow') : t('profile.follow')}
+  </Button>
 )}
                 </CardContent>
               </Card>
