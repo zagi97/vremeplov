@@ -23,6 +23,8 @@ import { IMAGE_CONFIG, resizeImage, generateImageSizes } from '@/utils/imageOpti
 import { searchCache, getUploadTitle, extractHouseNumber, getPhotoTypeOptions } from '@/utils/photoUploadHelpers';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { isPhotoUploadFormValid, validateCityBounds } from '@/utils/photoUploadValidation';
+import { ManualLocationPicker } from './PhotoUpload/ManualLocationPicker';
+import { LocationConfirmation } from './PhotoUpload/LocationConfirmation';
 
 interface PhotoUploadProps {
   locationName: string;
@@ -864,118 +866,35 @@ if (coordinates && selectedAddress) {
 
           {/* MANUAL POSITIONING SECTION */}
           {needsManualPositioning && streetOnlyCoordinates && (
-            <div className="mt-4 p-4 border border-blue-200 rounded-lg bg-blue-50">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-1 bg-blue-600 text-white rounded">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <div className="flex-1">
-                   <h4 className="font-medium text-blue-800 mb-1">
-          📍 {translateWithParams(t, 'upload.streetFound', { 
-            street: streetName, 
-            number: houseNumber 
-          })}
-        </h4>
-                  <p className="text-sm text-blue-700">
-                    {t('upload.clickOnMap')}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="rounded-lg overflow-hidden border border-blue-300">
-                <SimpleMiniMap
-                  center={streetOnlyCoordinates}
-                  onLocationSelect={(coords) => {
-                    setCoordinates(coords);
-                    setSelectedAddress(`${streetName} ${houseNumber}`);
-                    setAddressSearch(`${streetName} ${houseNumber}`);
-                    setNeedsManualPositioning(false);
-                    closeAddressDropdown();
-                    toast.success(
-  translateWithParams(t, 'upload.locationSet', { 
-    street: streetName, 
-    number: houseNumber 
-  })
-);
-                  }}
-                  t={t}
-                />
-              </div>
-              
-              <div className="mt-2 text-xs text-blue-600">
-                💡 {t('upload.zoomTip')}
-              </div>
-            </div>
+            <ManualLocationPicker
+              streetOnlyCoordinates={streetOnlyCoordinates}
+              streetName={streetName}
+              houseNumber={houseNumber}
+              onLocationSelect={(coords) => {
+                setCoordinates(coords);
+                setSelectedAddress(`${streetName} ${houseNumber}`);
+                setAddressSearch(`${streetName} ${houseNumber}`);
+                setNeedsManualPositioning(false);
+                closeAddressDropdown();
+              }}
+              t={t}
+            />
           )}
 
           {/* LOCATION CONFIRMATION SECTION */}
           {coordinates && selectedAddress && !needsManualPositioning && (
-            <div className="mt-4 p-4 border border-green-200 rounded-lg bg-green-50">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="p-1 bg-green-600 text-white rounded">
-                  <MapPin className="h-4 w-4" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-green-800 mb-1">
-                    ✅ {translateWithParams(t, 'upload.locationSetTitle', { address: selectedAddress })}
-                  </h4>
-                  <p className="text-sm text-green-700">
-                    {t('upload.coordinates')}: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    console.log('Promijeni button clicked');
-                    
-                    // Check if we have data for manual positioning
-                    if (streetName && houseNumber) {
-                      // Return to manual positioning mode
-                      setNeedsManualPositioning(true);
-                      setCoordinates(null);
-                     toast.info(
-  translateWithParams(t, 'upload.selectNewLocation', { 
-    street: streetName, 
-    number: houseNumber 
-  })
-);
-                    } else {
-                      // No data, completely reset
-                      handleClearAddress();
-                      toast.info(t('upload.canSearchAgain'));
-                    }
-                  }}
-                  className="text-blue-600 hover:text-blue-800 font-semibold underline hover:no-underline transition-all"
-                >
-                  {t('upload.changeLocation')}
-                </Button>
-              </div>
-              
-              {/* MINI MAP DISPLAY WITH SELECTED LOCATION */}
-              <div className="rounded-lg overflow-hidden border border-green-300 h-48">
-                <MapContainer
-                  center={[coordinates.latitude, coordinates.longitude]}
-                  zoom={15}
-                  style={{ height: '100%', width: '100%' }}
-                  className="rounded-lg"
-                  zoomControl={false}
-                  dragging={false}
-                  scrollWheelZoom={false}
-                >
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; OpenStreetMap'
-                  />
-                  <Marker position={[coordinates.latitude, coordinates.longitude]} />
-                </MapContainer>
-              </div>
-              
-              <div className="mt-2 text-xs text-green-600">
-                📍 {t('upload.selectedPhotoLocation')}
-              </div>
-            </div>
+            <LocationConfirmation
+              coordinates={coordinates}
+              selectedAddress={selectedAddress}
+              streetName={streetName}
+              houseNumber={houseNumber}
+              onChangeLocation={() => {
+                setNeedsManualPositioning(true);
+                setCoordinates(null);
+              }}
+              onReset={handleClearAddress}
+              t={t}
+            />
           )}
 
 
