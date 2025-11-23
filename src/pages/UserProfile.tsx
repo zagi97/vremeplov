@@ -8,29 +8,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Calendar, 
-  Camera, 
-  Heart, 
-  Trophy,
-  Star,
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  Edit,
   UserPlus,
   UserCheck,
-  Medal,
-  Eye,
-  Crown,
-  Award,
-  Edit,
-  Users,
   ArrowRight,
   Tag,
   MessageCircle
 } from "lucide-react";
 import LazyImage from "../components/LazyImage";
-import { photoService, Photo } from "../services/firebaseService";
-import { userService, UserProfile, UserActivity } from "../services/userService";
+import { photoService } from "../services/firebaseService";
+import { userService, UserActivity } from "../services/userService";
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -39,8 +30,11 @@ import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
 import PageHeader from '@/components/PageHeader';
 import { formatActivityDate } from '../utils/dateUtils';
-import { ACTIVITY_DISPLAY } from '../constants/activityIcons';
 import { UserProfileSkeleton } from '@/components/UserProfile/UserProfileSkeleton';
+import { useUserProfileData } from '@/hooks/useUserProfileData';
+import { getActivityDisplay, getActivityLink } from '@/utils/userProfileHelpers';
+import { ProfileStats } from '@/components/UserProfile/ProfileStats';
+import { ProfileBadges } from '@/components/UserProfile/ProfileBadges';
 
 
 
@@ -49,13 +43,9 @@ const UserProfilePage = () => {
   const { t } = useLanguage();
   const { userId } = useParams<{ userId: string }>();
   const { user: currentUser } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [userPhotos, setUserPhotos] = useState<Photo[]>([]);
-  const [userActivities, setUserActivities] = useState<UserActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isOwnProfile, setIsOwnProfile] = useState(false);
+
+  // Pagination state
   const [activeTab, setActiveTab] = useState('photos');
-  const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -63,177 +53,41 @@ const UserProfilePage = () => {
     bio: '',
     location: '',
   });
-  
-  // ✅ Activity pagination state
-  const [hasMoreActivities, setHasMoreActivities] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [activityLimit, setActivityLimit] = useState(10);
-  
-  // ✅ NEW - Photo pagination state
   const [photoLimit, setPhotoLimit] = useState(12);
-  const [hasMorePhotos, setHasMorePhotos] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
 
-  // Badge definitions with proper icons - translated
-  const getBadgeDetails = (badgeId: string) => {
-    const badges: { [key: string]: any } = {
-      photographer: { name: t('profile.badgePhotographer'), icon: Camera, color: 'bg-blue-500' },
-      historian: { name: t('profile.badgeHistorian'), icon: Medal, color: 'bg-purple-500' },
-      explorer: { name: t('profile.badgeExplorer'), icon: MapPin, color: 'bg-green-500' },
-      popular: { name: t('profile.badgePopular'), icon: Heart, color: 'bg-red-500' },
-      social: { name: t('profile.badgeSocial'), icon: Users, color: 'bg-pink-500' },
-      veteran: { name: t('profile.badgeVeteran'), icon: Crown, color: 'bg-yellow-500' },
-      legend: { name: t('profile.badgeLegend'), icon: Trophy, color: 'bg-orange-500' }
-    };
-    return badges[badgeId] || { name: badgeId, icon: Award, color: 'bg-gray-500' };
-  };
+  // Use custom hook for profile data
+  const {
+    profile,
+    userPhotos,
+    userActivities,
+    loading,
+    isOwnProfile,
+    isFollowing,
+    hasMorePhotos,
+    hasMoreActivities,
+    setProfile,
+    setIsFollowing,
+  } = useUserProfileData({
+    userId,
+    currentUser,
+    photoLimit,
+    activityLimit,
+    t,
+  });
 
-  // Translated activity display
-  const getActivityDisplay = (activityType: string) => {
-    const activityTranslations: { [key: string]: string } = {
-      photo_upload: t('profile.activityUploaded'),
-      photo_like: t('profile.activityLiked'),
-      user_follow: t('profile.activityFollowed'),
-      badge_earned: t('profile.activityBadge'),
-      comment_added: t('profile.activityComment'),
-      person_tagged: t('profile.activityTagged')
-    };
-    
-    return {
-      ...ACTIVITY_DISPLAY[activityType],
-      text: activityTranslations[activityType] || activityType
-    };
-  };
-
-  // Get activity link based on type
-  const getActivityLink = (activity: UserActivity): string | null => {
-    switch(activity.type) {
-      case 'photo_upload':
-      case 'photo_like':
-      case 'comment_added':
-      case 'person_tagged':
-        return activity.metadata?.targetId ? `/photo/${activity.metadata.targetId}` : null;
-      case 'user_follow':
-        return activity.metadata?.targetId ? `/user/${activity.metadata.targetId}` : null;
-      default:
-        return null;
-    }
-  };
-
-  // ✅ Main useEffect with photo limit dependency
+  // Sync edit form when profile loads
   useEffect(() => {
-    let isCancelled = false;
-    
-    const loadUserProfile = async () => {
-      if (!userId) return;
-      
-      try {
-        if (!isCancelled) setLoading(true);
-        
-        const ownProfile = currentUser?.uid === userId;
-        
-        let userProfile = await userService.getUserProfile(userId);
-
-        if (!userProfile && ownProfile && currentUser && !isCancelled) {
-          await userService.createUserProfile(currentUser.uid, {
-            displayName: currentUser.displayName || currentUser.email || 'Unknown User',
-            email: currentUser.email || '',
-            photoURL: currentUser.photoURL || undefined,
-            bio: t('profile.defaultBio')
-          });
-          userProfile = await userService.getUserProfile(userId);
-        }
-        
-        if (!userProfile) {
-          if (!isCancelled) setProfile(null);
-          return;
-        }
-
-        // ✅ Load photos with limit
-        const photos = await photoService.getPhotosByUploader(userId, photoLimit);
-        
-        // ✅ Check if there are more photos
-        const morePhotos = await photoService.getPhotosByUploader(userId, photoLimit + 1);
-        const hasMore = morePhotos.length > photoLimit;
-        
-        // Calculate stats from ALL photos (not just displayed ones)
-        const allPhotos = await photoService.getPhotosByUploader(userId);
-        const totalLikes = allPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
-        const totalViews = allPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);
-        const uniqueLocations = new Set(allPhotos.map(photo => photo.location)).size;
-
-        const needsUpdate = 
-          userProfile.stats.totalPhotos !== allPhotos.length ||
-          userProfile.stats.totalLikes !== totalLikes ||
-          userProfile.stats.totalViews !== totalViews ||
-          userProfile.stats.locationsContributed !== uniqueLocations;
-
-        let finalProfile = userProfile;
-
-        if (needsUpdate) {
-          const updatedStats = {
-            totalPhotos: allPhotos.length,
-            totalLikes: totalLikes, 
-            totalViews: totalViews,
-            locationsContributed: uniqueLocations
-          };
-          
-          await userService.updateUserStats(userId, updatedStats);
-          const updatedProfile = await userService.getUserProfile(userId);
-          finalProfile = updatedProfile || userProfile;
-        }
-        
-        if (allPhotos.length > 0 || needsUpdate) {
-          await userService.checkAndAwardBadges(userId);
-          const profileWithBadges = await userService.getUserProfile(userId);
-          finalProfile = profileWithBadges || finalProfile;
-        }
-        
-        // Check follow status
-        let followStatus = false;
-        if (currentUser && !ownProfile) {
-          followStatus = await userService.checkIfFollowing(currentUser.uid, userId);
-        }
-        
-        // Load activities
-        const activities = await userService.getUserActivities(userId, activityLimit);
-        const moreActivities = await userService.getUserActivities(userId, activityLimit + 1);
-        const hasMoreAct = moreActivities.length > activityLimit;
-        
-        // ✅ All state updates at once
-        if (!isCancelled) {
-          setIsOwnProfile(ownProfile);
-          setProfile(finalProfile);
-          setUserPhotos(photos);
-          setHasMorePhotos(hasMore);
-          setIsFollowing(followStatus);
-          setUserActivities(activities);
-          setHasMoreActivities(hasMoreAct);
-          setEditForm({
-            displayName: finalProfile.displayName,
-            bio: finalProfile.bio || '',
-            location: finalProfile.location || ''
-          });
-        }
-        
-      } catch (error) {
-        if (!isCancelled) {
-          console.error('Error loading user profile:', error);
-          toast.error(t('profile.loadError'));
-        }
-      } finally {
-        if (!isCancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUserProfile();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [userId, currentUser, t, activityLimit, photoLimit]); // ✅ Added photoLimit
+    if (profile) {
+      setEditForm({
+        displayName: profile.displayName,
+        bio: profile.bio || '',
+        location: profile.location || '',
+      });
+    }
+  }, [profile]);
 
   const handleFollowToggle = async () => {
     if (!profile || !currentUser || isOwnProfile || followLoading) return;
