@@ -41,10 +41,9 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
       (newNotifications) => {
         // ✅ Ignore listener updates while marking all as read
         if (isMarkingAllRead) {
-          console.log('🚫 Ignoring listener update during mark all operation');
           return;
         }
-        
+
         setNotifications(newNotifications);
         setLoading(false);
       },

@@ -1,6 +1,8 @@
 // src/utils/municipalityLoader.ts
 import { normalizeCountyName, normalizeCountyForComparison } from './locationUtils';
 
+type MunicipalityRecord = [number, string, string, string];
+
 export interface Location {
   id: number;
   county: string;
@@ -21,11 +23,11 @@ export const loadMunicipalities = async (): Promise<Location[]> => {
   // ✅ LAZY LOAD: Dynamic import!
   const { municipalityData } = await import('../../data/municipalities');
 
-  const allLocations: Location[] = municipalityData.records.map((record: any) => {
-    const id = record[0] as number;
-    const county = record[1] as string;
-    const type = record[2] as string;
-    const name = record[3] as string;
+  const allLocations: Location[] = (municipalityData.records as MunicipalityRecord[]).map((record) => {
+    const id = record[0];
+    const county = record[1];
+    const type = record[2];
+    const name = record[3];
     
     return {
       id,

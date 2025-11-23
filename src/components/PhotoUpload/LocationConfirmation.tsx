@@ -31,8 +31,6 @@ export const LocationConfirmation: React.FC<LocationConfirmationProps> = ({
   t,
 }) => {
   const handleChangeClick = () => {
-    console.log('Promijeni button clicked');
-
     // Check if we have data for manual positioning
     if (streetName && houseNumber) {
       // Return to manual positioning mode

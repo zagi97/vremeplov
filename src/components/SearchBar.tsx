@@ -97,9 +97,9 @@ const SearchBar = () => {
 
   return (
     <form ref={containerRef} onSubmit={handleSearch} className="relative flex w-full max-w-lg">
-      <Popover 
-        open={open} 
-        onOpenChange={(newOpen: any) => {
+      <Popover
+        open={open}
+        onOpenChange={(newOpen: boolean) => {
           if (newOpen) {
             setOpen(true);
           }

@@ -235,11 +235,14 @@ useEffect(() => {
         let filtered = photos;
 
         if (selectedDecade !== 'all') {
-            const decade = parseInt(selectedDecade);
-            filtered = filtered.filter(photo => {
-                const photoYear = parseInt(photo.year);
-                return photoYear >= decade && photoYear < decade + 10;
-            });
+            const decade = parseInt(selectedDecade, 10);
+            if (!isNaN(decade)) {
+                filtered = filtered.filter(photo => {
+                    const photoYear = parseInt(photo.year, 10);
+                    if (isNaN(photoYear)) return false;
+                    return photoYear >= decade && photoYear < decade + 10;
+                });
+            }
         }
 
         if (searchLocation.trim()) {

@@ -9,10 +9,21 @@ import DatePicker from "./DatePicker";
 import FormFields from "./FormFields";
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
+interface PostData {
+  id: number;
+  description: string;
+  year: string;
+  author: string;
+  location: string;
+  imageUrl: string;
+  comments: unknown[];
+  taggedPersons: unknown[];
+}
+
 interface AddPostFormProps {
   locationName: string;
   onClose: () => void;
-  onSubmit: (postData: any) => void;
+  onSubmit: (postData: PostData) => void;
 }
 
 const AddPostForm = ({ locationName, onClose, onSubmit }: AddPostFormProps) => {

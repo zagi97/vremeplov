@@ -11,10 +11,8 @@ const initializeFirebase = async () => {
   try {
     const { db } = await import('./lib/firebase');
     const { collection } = await import('firebase/firestore');
-    
-    console.log('🔥 Testing Firebase...');
+
     const testRef = collection(db, 'test');
-    console.log('✅ Firebase connected successfully!');
   } catch (error) {
     console.error('❌ Firebase error:', error);
   }
@@ -23,25 +21,21 @@ const initializeFirebase = async () => {
 // ✅ Service Worker message handler
 const setupMessageHandler = (): void => {
   if (!navigator.serviceWorker) return;
-  
+
   navigator.serviceWorker.addEventListener('message', (event) => {
-    console.log('📨 Message from service worker:', event.data);
-    
     switch (event.data.type) {
       case 'CACHE_UPDATED':
-        console.log('💾 Cache updated:', event.data.cacheName);
         break;
       case 'BACKGROUND_SYNC_SUCCESS':
-        console.log('✅ Background sync completed:', event.data.tag);
-        window.dispatchEvent(new CustomEvent('sync-completed', { 
-          detail: { tag: event.data.tag } 
+        window.dispatchEvent(new CustomEvent('sync-completed', {
+          detail: { tag: event.data.tag }
         }));
         break;
       case 'BACKGROUND_SYNC_FAILED':
         console.error('❌ Background sync failed:', event.data.tag, event.data.error);
         break;
       default:
-        console.log('Unknown message type:', event.data.type);
+        break;
     }
   });
 };
@@ -58,9 +52,7 @@ const initializeServiceWorker = async () => {
       scope: '/',
       updateViaCache: 'none'
     });
-    
-    console.log('✅ Service Worker registered successfully:', registration.scope);
-    
+
     // Setup update handler
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
@@ -68,11 +60,9 @@ const initializeServiceWorker = async () => {
 
       newWorker.addEventListener('statechange', () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-          console.log('🔄 New app update available!');
-          
           // Pošalji custom event da komponente mogu reagirati
           window.dispatchEvent(new CustomEvent('app-update-available'));
-          
+
           // Opcionalno: Automatski prompt (možeš ovo prebaciti u komponentu)
           if (confirm('Nova verzija aplikacije je dostupna. Želite li ažurirati?')) {
             window.location.reload();
@@ -85,7 +75,6 @@ const initializeServiceWorker = async () => {
     if (registration.sync) {
       await registration.sync.register('background-sync-photos');
       await registration.sync.register('background-sync-offline-actions');
-      console.log('📱 Background sync registered successfully');
     } else {
       console.warn('⚠️ Background sync not supported in this browser');
     }

@@ -7,6 +7,21 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { searchCache, extractHouseNumber } from '@/utils/photoUploadHelpers';
 import { translateWithParams } from '@/contexts/LanguageContext';
 
+interface NominatimAddress {
+  road?: string;
+  street?: string;
+  house_number?: string;
+  amenity?: string;
+  shop?: string;
+  building?: string;
+}
+
+interface NominatimResult {
+  address?: NominatimAddress;
+  lat?: string;
+  lon?: string;
+}
+
 interface AddressAutocompleteProps {
   locationName: string;
   value: string;
@@ -73,7 +88,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     // Check cache first
     const cacheKey = `${searchTerm}_${locationName}`;
     if (searchCache.has(cacheKey)) {
-      console.log('📋 Using cached results for:', searchTerm);
       const cachedResults = searchCache.get(cacheKey);
       setAvailableAddresses(cachedResults || []);
       setLoadingAddresses(false);
@@ -119,7 +133,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const addresses = new Set<string>();
       let exactAddressFound = false;
 
-      data.forEach((item: any) => {
+      (data as NominatimResult[]).forEach((item) => {
         if (item.address) {
           const streetNameFromAPI = item.address.road || item.address.street;
           const houseNumberFromAPI = item.address.house_number;
@@ -149,8 +163,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const extractedHouseNumber = extractHouseNumber(searchTerm);
 
       if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
-        console.log(`Exact address not found. Searching for street: "${streetOnly}"`);
-
         const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
         const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
 
@@ -175,7 +187,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             };
 
             addresses.add(`${streetOnly} (kliknite za broj ${extractedHouseNumber})`);
-            console.log(`Found street "${streetOnly}". Manual positioning ready.`);
 
             // Trigger manual positioning
             const fullAddress = `${streetOnly} ${extractedHouseNumber}`;
@@ -199,12 +210,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       if (!abortController.signal.aborted) {
         searchCache.set(cacheKey, finalResults);
         setAvailableAddresses(finalResults);
-        console.log('🔍 Search completed for:', searchTerm, 'Results:', finalResults.length);
       }
 
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('Search request was cancelled');
         return;
       }
       console.error('Error searching addresses:', error);
@@ -221,13 +230,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Trigger search when debounced term changes
   useEffect(() => {
     if (isSelectingAddressRef.current) {
-      console.log('🚫 Skipping search - address being selected');
       isSelectingAddressRef.current = false;
       return;
     }
 
     if (debouncedSearchTerm.length >= 2) {
-      console.log('🚀 Starting search for:', debouncedSearchTerm);
       searchAddresses(debouncedSearchTerm);
     } else {
       setAvailableAddresses([]);
@@ -274,7 +281,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleSelect = async (address: string) => {
-    console.log('📍 Address selected:', address);
     isSelectingAddressRef.current = true;
     closeDropdown();
 
@@ -308,7 +314,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           };
 
           onAddressSelect(address, coords);
-          console.log('✅ Coordinates found:', coords);
         } else {
           onAddressSelect(address, null);
           console.warn('No coordinates found for address');

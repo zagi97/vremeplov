@@ -23,7 +23,6 @@ export function useUserManagement() {
       setLoading(true);
       const allUsers = await userService.getAllUsersForAdmin();
       setUsers(allUsers);
-      console.log('✅ Loaded users:', allUsers.length);
     } catch (error) {
       console.error('Error loading users:', error);
       toast.error('Failed to load users');
