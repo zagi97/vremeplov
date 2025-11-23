@@ -13,182 +13,20 @@ import { CharacterCounter } from "./ui/character-counter";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
 import { SimpleMiniMap } from "./SimpleMiniMap";
-import YearPicker from "../components/YearPicker"; // ✅ Added YearPicker import
+import YearPicker from "../components/YearPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { userService } from '@/services/userService';
 import { municipalityData } from '../../data/municipalities';
 import { parseLocationFromUrl } from '@/utils/locationUtils';
-
-// ✅ IMAGE OPTIMIZATION CONFIGURATION
-const IMAGE_CONFIG = {
-  sizes: [
-    { width: 800, suffix: '800w', quality: 0.85 },
-    { width: 1200, suffix: '1200w', quality: 0.85 },
-    { width: 1600, suffix: '1600w', quality: 0.85 },
-  ],
-  webp: { quality: 0.85, enabled: true },
-  jpeg: { quality: 0.90, enabled: true },
-  maxOriginalWidth: 2400,
-  maxOriginalHeight: 2400,
-};
-
-// ✅ UTILITY: Resize image
-const resizeImage = (
-  img: HTMLImageElement,
-  maxWidth: number,
-  maxHeight: number,
-  quality: number,
-  format: 'image/webp' | 'image/jpeg' = 'image/jpeg'
-): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    let width = img.width;
-    let height = img.height;
-
-    if (width > height) {
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-    } else {
-      if (height > maxHeight) {
-        width = (width * maxHeight) / height;
-        height = maxHeight;
-      }
-    }
-
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      reject(new Error('Could not get canvas context'));
-      return;
-    }
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(img, 0, 0, width, height);
-
-    canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas to Blob conversion failed'));
-      },
-      format,
-      quality
-    );
-  });
-};
-
-// ✅ UTILITY: Generate multiple sizes
-const generateImageSizes = async (
-  file: File
-): Promise<{
-  original: { blob: Blob; width: number; height: number };
-  webp: Array<{ blob: Blob; suffix: string; width: number }>;
-  jpeg: Array<{ blob: Blob; suffix: string; width: number }>;
-}> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const reader = new FileReader();
-
-    reader.onload = async (e) => {
-      img.src = e.target?.result as string;
-    };
-
-    img.onload = async () => {
-      try {
-        const results = {
-          original: { blob: null as any, width: img.width, height: img.height },
-          webp: [] as Array<{ blob: Blob; suffix: string; width: number }>,
-          jpeg: [] as Array<{ blob: Blob; suffix: string; width: number }>,
-        };
-
-        const originalBlob = await resizeImage(
-          img,
-          IMAGE_CONFIG.maxOriginalWidth,
-          IMAGE_CONFIG.maxOriginalHeight,
-          IMAGE_CONFIG.jpeg.quality,
-          'image/jpeg'
-        );
-        results.original.blob = originalBlob;
-
-        for (const size of IMAGE_CONFIG.sizes) {
-          if (img.width < size.width) continue;
-
-          if (IMAGE_CONFIG.webp.enabled) {
-            const webpBlob = await resizeImage(
-              img,
-              size.width,
-              size.width * (img.height / img.width),
-              size.quality,
-              'image/webp'
-            );
-            results.webp.push({
-              blob: webpBlob,
-              suffix: size.suffix,
-              width: size.width,
-            });
-          }
-
-          if (IMAGE_CONFIG.jpeg.enabled) {
-            const jpegBlob = await resizeImage(
-              img,
-              size.width,
-              size.width * (img.height / img.width),
-              IMAGE_CONFIG.jpeg.quality,
-              'image/jpeg'
-            );
-            results.jpeg.push({
-              blob: jpegBlob,
-              suffix: size.suffix,
-              width: size.width,
-            });
-          }
-        }
-
-        resolve(results);
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    img.onerror = () => reject(new Error('Failed to load image'));
-    reader.readAsDataURL(file);
-  });
-};
+import { useDebounce } from '@/hooks/useDebounce';
+import { IMAGE_CONFIG, resizeImage, generateImageSizes } from '@/utils/imageOptimization';
+import { searchCache, getUploadTitle, extractHouseNumber, getPhotoTypeOptions } from '@/utils/photoUploadHelpers';
 
 interface PhotoUploadProps {
   locationName: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
-
-// Custom debounce hook
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
-// Cache for search results
-const searchCache = new Map<string, string[]>();
-
-// Linija 279
-const getUploadTitle = (type: string | null, location: string, t: any) => {
-  const cityType = (type?.toLowerCase() === 'grad') ? 'city' : 'municipality';
-  return `${t(`upload.addPhotoTo${cityType.charAt(0).toUpperCase() + cityType.slice(1)}`)} ${location}`;
-};
 
 const PhotoUpload: React.FC<PhotoUploadProps> = ({ 
   locationName, 
@@ -237,14 +75,8 @@ useEffect(() => {
   checkUploadLimit();
 }, [user]); */
 
-  const PHOTO_TYPES = [
-  { value: "street", label: t('photoType.street') },
-  { value: "building", label: t('photoType.building') },
-  { value: "people", label: t('photoType.people') },
-  { value: "event", label: t('photoType.event') },
-  { value: "nature", label: t('photoType.nature') }
-];
-  
+  const PHOTO_TYPES = getPhotoTypeOptions(t);
+
   // Basic state
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -326,11 +158,6 @@ useEffect(() => {
   // Helper functions
   const extractStreetName = (fullAddress: string): string => {
     return fullAddress.replace(/\d+.*$/, '').trim();
-  };
-
-  const extractHouseNumber = (fullAddress: string): string | null => {
-    const match = fullAddress.match(/\d+/);
-    return match ? match[0] : null;
   };
 
   // Optimized address search function with caching and debouncing
