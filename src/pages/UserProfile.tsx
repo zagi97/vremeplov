@@ -77,6 +77,10 @@ const UserProfilePage = () => {
     hasMoreActivities,
     setProfile,
     setIsFollowing,
+    setUserPhotos,
+    setUserActivities,
+    setHasMorePhotos,
+    setHasMoreActivities,
   } = useUserProfileData({
     userId,
     currentUser,
