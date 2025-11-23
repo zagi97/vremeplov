@@ -21,6 +21,8 @@ import { parseLocationFromUrl } from '@/utils/locationUtils';
 import { useDebounce } from '@/hooks/useDebounce';
 import { IMAGE_CONFIG, resizeImage, generateImageSizes } from '@/utils/imageOptimization';
 import { searchCache, getUploadTitle, extractHouseNumber, getPhotoTypeOptions } from '@/utils/photoUploadHelpers';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { isPhotoUploadFormValid, validateCityBounds } from '@/utils/photoUploadValidation';
 
 interface PhotoUploadProps {
   locationName: string;
@@ -77,11 +79,18 @@ useEffect(() => {
 
   const PHOTO_TYPES = getPhotoTypeOptions(t);
 
+  // File upload hook
+  const { selectedFile, previewUrl, handleFileChange, removeFile: removeFileBase } = useFileUpload(t);
+
   // Basic state
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+
+  // Extended remove file handler that also clears tagged persons
+  const removeFile = useCallback(() => {
+    removeFileBase();
+    setTaggedPersons([]);
+  }, [removeFileBase]);
 
   // Address search state (optimized)
   const [addressSearch, setAddressSearch] = useState<string>('');
@@ -486,202 +495,6 @@ const handleInputFocus = () => {
     };
   }, [previewUrl]);
 
-  // Check if form is valid
-const isFormValid = (): boolean => {
-  // Basic required fields
-  const hasBasicFields = !!(
-    selectedFile && 
-    formData.year && 
-    formData.description && 
-    formData.author && 
-    formData.photoType !== ''
-  );
-  
-  // ✅ NOVO - Address validation
-  // Ako user nije upisao ništa u address search → OK (optional field)
-  // Ako JESTE upisao nešto, mora biti selected iz dropdowna
-  const isAddressValid = addressSearch.trim() === '' || 
-    (addressSearch.trim() !== '' && selectedAddress !== '' && coordinates !== null);
-  
-  return hasBasicFields && isAddressValid;
-};
-
-  // Helper function to compress image
-// 1. Poboljšaj kompresiju u PhotoUpload.tsx (linija 285)
-// Zamijenite postojeću compressImage funkciju u PhotoUpload.tsx (oko linije 285)
-
-const compressImage = (file: File, maxWidth: number = 1920, quality: number = 0.85): Promise<File> => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    if (!ctx) {
-      console.warn('Canvas not supported, returning original file');
-      resolve(file);
-      return;
-    }
-    
-    img.onload = () => {
-      // Izračunaj optimalne dimenzije
-      let { width, height } = img;
-      
-      // Ako je slika manja od maxWidth, ne mijenjaj je
-      if (width <= maxWidth && height <= maxWidth) {
-        console.log('Slika je već dovoljno mala, preskoćemo kompresiju');
-        resolve(file);
-        return;
-      }
-      
-      // Sačuvaj aspect ratio
-      const aspectRatio = width / height;
-      
-      if (width > height) {
-        // Landscape - ograniči širinu
-        width = Math.min(width, maxWidth);
-        height = width / aspectRatio;
-      } else {
-        // Portrait - ograniči visinu
-        height = Math.min(height, maxWidth);
-        width = height * aspectRatio;
-      }
-      
-      // Postavi canvas dimenzije
-      canvas.width = width;
-      canvas.height = height;
-      
-      // Optimiziraj kvalitetu renderiranja
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
-      // Crtaj sliku
-      ctx.drawImage(img, 0, 0, width, height);
-      
-      // Određi kvalitetu na osnovu veličine
-      let finalQuality = quality;
-      if (file.size > 10 * 1024 * 1024) {
-        finalQuality = 0.7; // Agresivnija kompresija za velike datoteke
-      } else if (file.size > 5 * 1024 * 1024) {
-        finalQuality = 0.8;
-      }
-      
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const compressedFile = new File([blob], file.name, {
-            type: 'image/jpeg',
-            lastModified: Date.now(),
-          });
-          
-          const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
-          const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
-          const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
-          
-          console.log(`📸 Kompresija uspješna:`);
-          console.log(`   Original: ${originalSizeMB}MB`);
-          console.log(`   Kompresovano: ${compressedSizeMB}MB`);
-          console.log(`   Smanjeno za: ${reduction}%`);
-          console.log(`   Dimenzije: ${img.width}x${img.height} → ${width}x${height}`);
-          
-          resolve(compressedFile);
-        } else {
-          console.error('Kompresija neuspješna, vraćam original');
-          resolve(file);
-        }
-      }, 'image/jpeg', finalQuality);
-    };
-    
-    img.onerror = () => {
-      console.error('Greška pri učitavanju slike za kompresiju');
-      resolve(file);
-    };
-    
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-  // Handle file selection with compression
-// Također ažurirajte handleFileChange funkciju (oko linije 320) da bolje rukuje kompresijom:
-
-const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  
-  // ❌ Block non-images
-  if (!file.type.startsWith('image/')) {
-    toast.error(t('errors.invalidImageType'));
-    return;
-  }
-  
-  // ✅ NOVI KOD - BLOCK GIF FILES
-  if (file.type === 'image/gif') {
-    toast.error('🚫 GIF animacije nisu podržane. Molimo koristite JPG, PNG ili WebP format.', {
-      duration: 5000
-    });
-    event.target.value = ''; // Reset input field
-    return;
-  }
-  
-  // ❌ Block large files (20MB limit)
-  if (file.size > 20 * 1024 * 1024) {
-    toast.error(t('errors.imageTooLarge'));
-    return;
-  }
-
-  try {
-    // Očistite prethodnu preview URL
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-
-    // Kreiraj preview
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    
-    // Pokaži loading toast za kompresiju
-    const loadingToast = toast.loading(t('upload.compressing'));
-    
-    // Kompresija
-    const compressedFile = await compressImage(file);
-    
-    // Ukloni loading toast
-    toast.dismiss(loadingToast);
-    
-    setSelectedFile(compressedFile);
-    
-    // Pokaži rezultat kompresije
-    const originalSizeMB = (file.size / 1024 / 1024).toFixed(1);
-    const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(1);
-    
-    if (compressedFile.size < file.size) {
-      const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
-      toast.success(
-        translateWithParams(t, 'upload.compressed', { 
-          original: originalSizeMB, 
-          compressed: compressedSizeMB, 
-          reduction: reduction 
-        })
-      );
-    } else {
-      toast.success(t('upload.optimalSize'));
-    }
-    
-  } catch (error) {
-    console.error('Greška pri kompresiji:', error);
-    toast.error(t('errors.compressionError'));
-    // U slučaju greške, koristi original
-    setSelectedFile(file);
-  }
-};
-  // Remove selected file
-  const removeFile = () => {
-    setSelectedFile(null);
-    setTaggedPersons([]);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl('');
-    }
-  };
-
   // Handle adding a new tag
   const handleAddTag = (newTag: { name: string; x: number; y: number }) => {
     const tagWithId = {
@@ -711,57 +524,26 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  // ✅ DODAJ OVO - Explicit address validation
-if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
-  toast.error(t('upload.mustSelectAddress'));
-  return;
-}
-// ✅ DODATNA PROVJERA - je li marker zaista unutar grada
-if (coordinates) {
-  // Provjeri je li fotka u Čačincima (ili bilo kojem odabranom gradu)
-  const cityCoords = streetOnlyCoordinates || { 
-    latitude: 45.6236, 
-    longitude: 17.8403 
-  }; // Fallback na Čačinci
-  
-  const isWithinBounds = (
-    lat: number,
-    lng: number,
-    centerLat: number,
-    centerLng: number,
-    radiusKm: number = 10
-  ): boolean => {
-    const R = 6371;
-    const dLat = (lat - centerLat) * Math.PI / 180;
-    const dLng = (lng - centerLng) * Math.PI / 180;
-
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(centerLat * Math.PI / 180) *
-        Math.cos(lat * Math.PI / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-
-    return distance <= radiusKm;
-  };
-  
-  if (!isWithinBounds(
-    coordinates.latitude,
-    coordinates.longitude,
-    cityCoords.latitude,
-    cityCoords.longitude,
-    15 // 15km radius
-  )) {
-    toast.error(
-      `❌ Odabrana lokacija nije unutar ${locationName}! Molimo odaberite lokaciju bliže centru grada.`,
-      { duration: 5000 }
-    );
+  // Validate address selection
+  if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
+    toast.error(t('upload.mustSelectAddress'));
     return;
   }
-}
+
+  // Validate coordinates are within city bounds
+  const boundsValidation = validateCityBounds(
+    coordinates,
+    streetOnlyCoordinates,
+    locationName,
+    15 // 15km radius
+  );
+
+  if (!boundsValidation.valid) {
+    toast.error(boundsValidation.errorMessage || t('errors.locationOutOfBounds'), {
+      duration: 5000,
+    });
+    return;
+  }
 
   if (!navigator.onLine) {
     toast.error(t('upload.offline'));
@@ -883,16 +665,11 @@ if (coordinates && selectedAddress) {
 } else {
   toast.success(t('upload.success'));
 }
-    
-    
+
+
     // Reset form
-    setSelectedFile(null);
-    setTaggedPersons([]);
+    removeFile(); // Also clears tagged persons
     handleClearAddress();
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl('');
-    }
     setFormData({
       year: '',
       description: '',
@@ -1318,12 +1095,12 @@ if (coordinates && selectedAddress) {
                 {t('common.cancel')}
               </Button>
             )}
-            <Button 
-              type="submit" 
-              disabled={uploading || !isOnline || !isFormValid()}
+            <Button
+              type="submit"
+              disabled={uploading || !isOnline || !isPhotoUploadFormValid(formData, selectedFile, addressSearch, selectedAddress, coordinates)}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {uploading ? t('upload.uploading') : !isOnline ? t('upload.noConnection') : !isFormValid() ? t('upload.fillRequired') : t('upload.shareMemory')}
+              {uploading ? t('upload.uploading') : !isOnline ? t('upload.noConnection') : !isPhotoUploadFormValid(formData, selectedFile, addressSearch, selectedAddress, coordinates) ? t('upload.fillRequired') : t('upload.shareMemory')}
             </Button>
           </div>
         </form>
