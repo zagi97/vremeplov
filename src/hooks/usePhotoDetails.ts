@@ -80,11 +80,12 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         setLikes(photoData.likes || 0);
         setViews(photoData.views || 0);
 
-        if (user) {
-          const hasLiked = await likeService.hasUserLiked(photoId, user.uid); 
+        if (user?.uid) {
+          const userId = user.uid; // Capture value to prevent race condition
+          const hasLiked = await likeService.hasUserLiked(photoId, userId);
           setUserHasLiked(hasLiked);
 
-          await viewService.incrementViews(photoId, user.uid);
+          await viewService.incrementViews(photoId, userId);
         }
 
         // Tagged Persons
