@@ -7,19 +7,19 @@ import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
-import { 
-  collection, 
-  query, 
+import {
+  collection,
+  query,
   where,
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
+  orderBy,
+  onSnapshot,
+  addDoc,
   serverTimestamp,
-  Timestamp,
-  getDocs
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { notificationService } from '../services/notificationService';
+import { useCommentRateLimit, COMMENT_RATE_LIMIT_CONFIG } from '@/hooks/useMultiWindowRateLimit';
 
 interface Comment {
   id: string;
@@ -37,11 +37,6 @@ interface PhotoCommentsProps {
   photoAuthorId?: string;
 }
 
-// ✅ RATE LIMITING CONSTANTS
-const MAX_COMMENTS_PER_MINUTE = 2;
-const MAX_COMMENTS_PER_HOUR = 15;
-const MAX_COMMENTS_PER_DAY = 30;
-
 const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -50,19 +45,13 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   const { user, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
 
-  // ✅ RATE LIMITING STATE
-  const [rateLimitInfo, setRateLimitInfo] = useState<{
-    commentsInLastMinute: number;
-    commentsInLastHour: number;
-    commentsInLastDay: number;
-    canComment: boolean;
-    nextAvailableTime?: Date;
-  }>({
-    commentsInLastMinute: 0,
-    commentsInLastHour: 0,
-    commentsInLastDay: 0,
-    canComment: true
-  });
+  // ✅ RATE LIMITING - using centralized hook
+  const [rateLimitState, refreshRateLimit] = useCommentRateLimit(user?.uid);
+
+  // Extract constants for cleaner code
+  const MAX_COMMENTS_PER_MINUTE = COMMENT_RATE_LIMIT_CONFIG.timeWindows[0].maxRequests;
+  const MAX_COMMENTS_PER_HOUR = COMMENT_RATE_LIMIT_CONFIG.timeWindows[1].maxRequests;
+  const MAX_COMMENTS_PER_DAY = COMMENT_RATE_LIMIT_CONFIG.timeWindows[2].maxRequests;
 
   // LIVE LISTENER za komentare
   useEffect(() => {
@@ -119,93 +108,11 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
     return () => unsubscribe();
   }, [photoId, t]);
 
-  // ✅ CHECK RATE LIMIT - kad se korisnik učita
-  useEffect(() => {
-    if (!user) return;
-    checkUserCommentRateLimit();
-  }, [user]);
-
-  // ✅ FUNKCIJA ZA PROVJERU RATE LIMITA
-  const checkUserCommentRateLimit = async () => {
-  if (!user) return;
-
-  try {
-    const now = new Date();
-    const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    const commentsRef = collection(db, 'comments');
-    
-    // ✅ PROMJENA: Samo where userId (bez createdAt)
-    const q = query(
-      commentsRef,
-      where('userId', '==', user.uid)
-    );
-
-    const snapshot = await getDocs(q);
-    
-    // ✅ PROMJENA: Filtriraj client-side umjesto server-side
-    const userComments = snapshot.docs
-      .map(doc => ({
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-      }))
-      .filter(c => c.createdAt && c.createdAt > oneDayAgo); // ✅ Samo zadnjih 24h
-
-    const commentsInLastMinute = userComments.filter(
-      c => c.createdAt && c.createdAt > oneMinuteAgo
-    ).length;
-
-    const commentsInLastHour = userComments.filter(
-      c => c.createdAt && c.createdAt > oneHourAgo
-    ).length;
-
-    const commentsInLastDay = userComments.length;
-
-    let canComment = true;
-    let nextAvailableTime: Date | undefined;
-
-    if (commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
-      canComment = false;
-      const oldestInMinute = userComments
-        .filter(c => c.createdAt && c.createdAt > oneMinuteAgo)
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
-      
-      if (oldestInMinute?.createdAt) {
-        nextAvailableTime = new Date(oldestInMinute.createdAt.getTime() + 60 * 1000);
-      }
-    } else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
-      canComment = false;
-      const oldestInHour = userComments
-        .filter(c => c.createdAt && c.createdAt > oneHourAgo)
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
-      
-      if (oldestInHour?.createdAt) {
-        nextAvailableTime = new Date(oldestInHour.createdAt.getTime() + 60 * 60 * 1000);
-      }
-    } else if (commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
-      canComment = false;
-      const oldestInDay = userComments
-        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())[0];
-      
-      if (oldestInDay?.createdAt) {
-        nextAvailableTime = new Date(oldestInDay.createdAt.getTime() + 24 * 60 * 60 * 1000);
-      }
-    }
-
-    setRateLimitInfo({
-      commentsInLastMinute,
-      commentsInLastHour,
-      commentsInLastDay,
-      canComment,
-      nextAvailableTime
-    });
-
-  } catch (error) {
-    console.error('Error checking rate limit:', error);
-  }
-};
+  // Helper getters for cleaner code
+  const commentsInLastMinute = rateLimitState.counts[0] || 0;
+  const commentsInLastHour = rateLimitState.counts[1] || 0;
+  const commentsInLastDay = rateLimitState.counts[2] || 0;
+  const canComment = !rateLimitState.isLimited;
 
   const handleSignInToComment = async () => {
     try {
@@ -231,14 +138,14 @@ const handleSubmitComment = async (e: React.FormEvent) => {
   }
 
   // ✅ RATE LIMIT PROVJERA
-  if (!rateLimitInfo.canComment) {
+  if (!canComment) {
     let errorMessage = '';
-    
-    if (rateLimitInfo.commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
+
+    if (commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
       errorMessage = `🚫 Možeš objaviti najviše ${MAX_COMMENTS_PER_MINUTE} komentara u minuti.\n\nPričekaj malo! ⏱️`;
-    } else if (rateLimitInfo.commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
+    } else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
       errorMessage = `🚫 Dostigao si limit od ${MAX_COMMENTS_PER_HOUR} komentara po satu.\n\nPokušaj ponovo kasnije! ⏰`;
-    } else if (rateLimitInfo.commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
+    } else if (commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
       errorMessage = `🚫 Dostigao si dnevni limit od ${MAX_COMMENTS_PER_DAY} komentara.\n\nVrati se sutra! 📅`;
     }
 
@@ -280,7 +187,7 @@ const handleSubmitComment = async (e: React.FormEvent) => {
     toast.success(t('comments.commentAdded'));
     
     // ✅ REFRESH rate limit info after successful comment
-    await checkUserCommentRateLimit();
+    await refreshRateLimit();
     
   } catch (error) {
     console.error('Greška pri dodavanju komentara:', error);
@@ -317,7 +224,7 @@ const handleSubmitComment = async (e: React.FormEvent) => {
       {user ? (
         <div className="mb-6">
           {/* ✅ RATE LIMIT WARNING */}
-          {!rateLimitInfo.canComment && (
+          {!canComment && (
             <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -326,13 +233,13 @@ const handleSubmitComment = async (e: React.FormEvent) => {
                     Dostigao si limit komentara
                   </p>
                   <p className="text-sm text-orange-700">
-                    {rateLimitInfo.commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
-                      <>Možeš komentirati ponovno {rateLimitInfo.nextAvailableTime && formatRemainingTime(rateLimitInfo.nextAvailableTime)}.</>
+                    {commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
+                      <>Možeš komentirati ponovno {rateLimitState.nextAvailableTime && formatRemainingTime(rateLimitState.nextAvailableTime)}.</>
                     )}
-                    {rateLimitInfo.commentsInLastHour >= MAX_COMMENTS_PER_HOUR && rateLimitInfo.commentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
+                    {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && commentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
                       <>Dostigao si satni limit ({MAX_COMMENTS_PER_HOUR} komentara/sat).</>
                     )}
-                    {rateLimitInfo.commentsInLastDay >= MAX_COMMENTS_PER_DAY && rateLimitInfo.commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
+                    {commentsInLastDay >= MAX_COMMENTS_PER_DAY && commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
                       <>Dostigao si dnevni limit ({MAX_COMMENTS_PER_DAY} komentara/dan).</>
                     )}
                   </p>
@@ -344,31 +251,31 @@ const handleSubmitComment = async (e: React.FormEvent) => {
           {/* ✅ RATE LIMIT INFO (uvijek prikaži) */}
           <div className="mb-3 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
             <span>
-              Minutno: {rateLimitInfo.commentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}
+              Minutno: {commentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}
             </span>
             <span>
-              Satno: {rateLimitInfo.commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}
+              Satno: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}
             </span>
             <span>
-              Dnevno: {rateLimitInfo.commentsInLastDay}/{MAX_COMMENTS_PER_DAY}
+              Dnevno: {commentsInLastDay}/{MAX_COMMENTS_PER_DAY}
             </span>
           </div>
 
           <form onSubmit={handleSubmitComment}>
-            <Textarea 
+            <Textarea
               placeholder={t('comments.placeholder')}
               className="min-h-[80px] mb-2 w-full"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               maxLength={250}
-              disabled={!rateLimitInfo.canComment || isSubmitting}
+              disabled={!canComment || isSubmitting}
             />
             <div className="flex items-center justify-between flex-wrap gap-2">
               <CharacterCounter currentLength={newComment.length} maxLength={250} />
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="bg-blue-600 hover:bg-blue-700"
-                disabled={!newComment.trim() || !rateLimitInfo.canComment || isSubmitting}
+                disabled={!newComment.trim() || !canComment || isSubmitting}
               >
                 <Send className="h-4 w-4 mr-2" />
                 {isSubmitting ? 'Šaljem...' : t('comments.postComment')}

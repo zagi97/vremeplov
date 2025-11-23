@@ -3,77 +3,10 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Tag, X, Search } from 'lucide-react';
-
-// Same tag categories as in PhotoUpload component
-const TAG_CATEGORIES = {
-  people: {
-    icon: '👥',
-    name: 'People & Society',
-    tags: [
-      'Family', 'Wedding', 'Children', 'Elderly', 'Portrait', 
-      'Group Photo', 'Celebration', 'Community', 'Fashion', 'Traditional Dress'
-    ]
-  },
-  places: {
-    icon: '🏛️',
-    name: 'Places & Buildings',
-    tags: [
-      'Church', 'School', 'Market', 'Town Square', 'Bridge', 
-      'Old Building', 'Monument', 'Cemetery', 'Factory', 'Farm'
-    ]
-  },
-  events: {
-    icon: '🎉',
-    name: 'Events & Occasions',
-    tags: [
-      'Festival', 'Religious Ceremony', 'Sports Event', 'Market Day', 
-      'Parade', 'Concert', 'Dance', 'Fair', 'Meeting', 'Ceremony'
-    ]
-  },
-  work: {
-    icon: '⚒️',
-    name: 'Work & Industry',
-    tags: [
-      'Agriculture', 'Crafts', 'Trade', 'Construction', 'Transport', 
-      'Fishing', 'Farming', 'Workshop', 'Market Vendor', 'Blacksmith'
-    ]
-  },
-  transport: {
-    icon: '🚂',
-    name: 'Transportation',
-    tags: [
-      'Train', 'Horse Cart', 'Bicycle', 'Old Car', 'Boat', 
-      'Railway', 'Station', 'Road', 'Bridge', 'Public Transport'
-    ]
-  },
-  nature: {
-    icon: '🌳',
-    name: 'Nature & Environment',
-    tags: [
-      'River', 'Forest', 'Field', 'Garden', 'Park', 
-      'Landscape', 'Trees', 'Flowers', 'Animals', 'Weather'
-    ]
-  },
-  culture: {
-    icon: '🎭',
-    name: 'Culture & Tradition',
-    tags: [
-      'Folk Dance', 'Traditional Music', 'Folklore', 'Costume', 'Art', 
-      'Literature', 'Theater', 'Cultural Event', 'Heritage', 'Customs'
-    ]
-  },
-  historical: {
-    icon: '📜',
-    name: 'Historical Events',
-    tags: [
-      'War', 'Peace', 'Political Event', 'Royal Visit', 'Memorial', 
-      'Independence', 'Revolution', 'Reconstruction', 'Historic Moment', 'Archive'
-    ]
-  }
-};
+import { TAG_CATEGORIES, getAllTags } from '@/constants/filters';
 
 // Get all tags as flat array for quick access
-const ALL_TAGS = Object.values(TAG_CATEGORIES).flatMap(category => category.tags);
+const ALL_TAGS = getAllTags();
 
 interface TagsFilterProps {
   selectedTags: string[];
