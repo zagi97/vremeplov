@@ -1,14 +1,14 @@
 // src/services/userService.ts - Prilagođeno tvojoj Firebase strukturi
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  addDoc, 
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
   deleteDoc,
   onSnapshot,
   orderBy,
@@ -16,8 +16,8 @@ import {
   increment,
   Timestamp
 } from 'firebase/firestore';
-import { db } from '../lib/firebase'; // Koristi tvoju Firebase konfiguraciju
-import { useLanguage } from "../contexts/LanguageContext";
+import { db } from '../lib/firebase';
+import type { Photo } from './firebaseService';
 
 // ✅ DODAJ OVO ODMAH NAKON IMPORTA
 // ========================================
@@ -71,10 +71,15 @@ export function getDailyLimitForTier(tier: UserTier): number {
 
 /**
  * Dohvati info o sljedećem tier-u
+ * @param currentTier - Current user tier
+ * @param approvedPhotos - Number of approved photos
+ * @param t - Translation function (pass from useLanguage hook in component)
  */
-
-export function getNextTierInfo(currentTier: UserTier, approvedPhotos: number): string | undefined {
-  const { t } = useLanguage(); // koristi t iz LanguageContext
+export function getNextTierInfo(
+  currentTier: UserTier,
+  approvedPhotos: number,
+  t: (key: string) => string
+): string {
   let needed: number;
 
   if (currentTier === UserTier.NEW_USER) {
@@ -391,23 +396,48 @@ class UserService {
     }
   }
 
-  // Get user followers
+  // Get user followers - Optimized with batch fetching
   async getUserFollowers(userId: string): Promise<UserProfile[]> {
     try {
       const followsQuery = query(
         collection(db, 'follows'),
         where('followingId', '==', userId)
       );
-      
+
       const followDocs = await getDocs(followsQuery);
       const followerIds = followDocs.docs.map(doc => doc.data().followerId);
-      
+
+      if (followerIds.length === 0) return [];
+
+      // Firestore 'in' operator limit is 10, so batch requests
       const followers: UserProfile[] = [];
-      for (const followerId of followerIds) {
-        const follower = await this.getUserProfile(followerId);
-        if (follower) followers.push(follower);
+      const BATCH_SIZE = 10;
+
+      for (let i = 0; i < followerIds.length; i += BATCH_SIZE) {
+        const batch = followerIds.slice(i, i + BATCH_SIZE);
+        const usersQuery = query(
+          collection(db, 'users'),
+          where('uid', 'in', batch)
+        );
+
+        const userDocs = await getDocs(usersQuery);
+        userDocs.docs.forEach(doc => {
+          const data = doc.data();
+          followers.push({
+            ...data,
+            stats: {
+              totalPhotos: data.stats?.totalPhotos ?? 0,
+              totalLikes: data.stats?.totalLikes ?? 0,
+              totalViews: data.stats?.totalViews ?? 0,
+              locationsContributed: data.stats?.locationsContributed ?? 0,
+              followers: data.stats?.followers ?? 0,
+              following: data.stats?.following ?? 0,
+            },
+            badges: data.badges || [],
+          } as UserProfile);
+        });
       }
-      
+
       return followers;
     } catch (error) {
       console.error('Error fetching followers:', error);
@@ -415,23 +445,48 @@ class UserService {
     }
   }
 
-  // Get users that user is following
+  // Get users that user is following - Optimized with batch fetching
   async getUserFollowing(userId: string): Promise<UserProfile[]> {
     try {
       const followsQuery = query(
         collection(db, 'follows'),
         where('followerId', '==', userId)
       );
-      
+
       const followDocs = await getDocs(followsQuery);
       const followingIds = followDocs.docs.map(doc => doc.data().followingId);
-      
+
+      if (followingIds.length === 0) return [];
+
+      // Firestore 'in' operator limit is 10, so batch requests
       const following: UserProfile[] = [];
-      for (const followingId of followingIds) {
-        const user = await this.getUserProfile(followingId);
-        if (user) following.push(user);
+      const BATCH_SIZE = 10;
+
+      for (let i = 0; i < followingIds.length; i += BATCH_SIZE) {
+        const batch = followingIds.slice(i, i + BATCH_SIZE);
+        const usersQuery = query(
+          collection(db, 'users'),
+          where('uid', 'in', batch)
+        );
+
+        const userDocs = await getDocs(usersQuery);
+        userDocs.docs.forEach(doc => {
+          const data = doc.data();
+          following.push({
+            ...data,
+            stats: {
+              totalPhotos: data.stats?.totalPhotos ?? 0,
+              totalLikes: data.stats?.totalLikes ?? 0,
+              totalViews: data.stats?.totalViews ?? 0,
+              locationsContributed: data.stats?.locationsContributed ?? 0,
+              followers: data.stats?.followers ?? 0,
+              following: data.stats?.following ?? 0,
+            },
+            badges: data.badges || [],
+          } as UserProfile);
+        });
       }
-      
+
       return following;
     } catch (error) {
       console.error('Error fetching following:', error);
@@ -485,114 +540,145 @@ async updateUserStats(userId: string, statUpdates: Partial<UserProfile['stats']>
   try {
     const userRef = doc(db, 'users', userId);
     const updates: Record<string, number> = {};
-    
-    // ✅ Set absolute values (not incremental)
+
+    // Set absolute values (not incremental)
     Object.entries(statUpdates).forEach(([key, value]) => {
       if (typeof value === 'number') {
-        updates[`stats.${key}`] = value; // Direct assignment
+        updates[`stats.${key}`] = value;
       }
     });
-    
-    console.log(`Updating user ${userId} stats:`, updates);
+
     await updateDoc(userRef, updates);
-    console.log('User stats updated successfully');
   } catch (error) {
     console.error('Error updating user stats:', error);
     throw error;
   }
 }
 
-// ✅ Better method: Update stats by recalculating from photos
-// Force recalculate stats from actual Firebase data
+// Force recalculate stats from actual Firebase data - Optimized
 async forceRecalculateUserStats(userId: string): Promise<void> {
   try {
-    console.log(`Force recalculating stats for user ${userId}`);
-    
-    // Get all user's photos
     const { photoService } = await import('./firebaseService');
     const userPhotos = await photoService.getPhotosByUploader(userId);
-    
-    console.log(`Found ${userPhotos.length} photos for user`);
-    
-    // Calculate actual likes from userLikes collection for each photo
+
+    if (userPhotos.length === 0) {
+      await this.updateUserStats(userId, {
+        totalPhotos: 0,
+        totalLikes: 0,
+        totalViews: 0,
+        locationsContributed: 0
+      });
+      return;
+    }
+
+    // Batch fetch all likes for all user photos at once
+    const photoIds = userPhotos.map(p => p.id).filter(Boolean) as string[];
     let totalLikes = 0;
-    for (const photo of userPhotos) {
-      if (photo.id) {
-        // Count actual likes from userLikes collection
+    const photoLikeCounts = new Map<string, number>();
+
+    if (photoIds.length > 0) {
+      // Firestore 'in' limit is 10, so batch
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < photoIds.length; i += BATCH_SIZE) {
+        const batch = photoIds.slice(i, i + BATCH_SIZE);
         const likesQuery = query(
           collection(db, 'userLikes'),
-          where('photoId', '==', photo.id)
+          where('photoId', 'in', batch)
         );
         const likesSnapshot = await getDocs(likesQuery);
-        const actualLikes = likesSnapshot.size;
-        
-        // Update the photo's like count if it's wrong
-        if (photo.likes !== actualLikes) {
-          console.log(`Fixing photo ${photo.id}: ${photo.likes} → ${actualLikes} likes`);
-          await updateDoc(doc(db, 'photos', photo.id), {
-            likes: actualLikes
-          });
-        }
-        
-        totalLikes += actualLikes;
+
+        likesSnapshot.docs.forEach(doc => {
+          const photoId = doc.data().photoId;
+          photoLikeCounts.set(photoId, (photoLikeCounts.get(photoId) || 0) + 1);
+        });
       }
+
+      // Update photos with incorrect like counts
+      const updatePromises: Promise<void>[] = [];
+      for (const photo of userPhotos) {
+        if (photo.id) {
+          const actualLikes = photoLikeCounts.get(photo.id) || 0;
+          totalLikes += actualLikes;
+
+          if (photo.likes !== actualLikes) {
+            updatePromises.push(
+              updateDoc(doc(db, 'photos', photo.id), {
+                likes: actualLikes
+              })
+            );
+          }
+        }
+      }
+
+      // Execute all photo updates in parallel
+      await Promise.all(updatePromises);
     }
-    
+
     // Calculate other stats
     const totalViews = userPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);
     const uniqueLocations = new Set(userPhotos.map(photo => photo.location)).size;
-    
+
     // Update user stats with correct values
     await this.updateUserStats(userId, {
-      totalPhotos: userPhotos.length,
-      totalLikes: totalLikes, // This is the corrected value
-      totalViews: totalViews,
-      locationsContributed: uniqueLocations
-    });
-    
-    console.log(`Updated user stats:`, {
       totalPhotos: userPhotos.length,
       totalLikes: totalLikes,
       totalViews: totalViews,
       locationsContributed: uniqueLocations
     });
-    
   } catch (error) {
     console.error('Error force recalculating user stats:', error);
     throw error;
   }
 }
 
-// Fix all photos' like counts based on userLikes collection
+// Fix all photos' like counts based on userLikes collection - Optimized
 async fixAllPhotoLikeCounts(): Promise<void> {
   try {
-    console.log('Fixing all photo like counts...');
-    
-    // Get all photos
     const { photoService } = await import('./firebaseService');
     const allPhotos = await photoService.getAllPhotos();
-    
-    for (const photo of allPhotos) {
-      if (photo.id) {
-        // Count actual likes from userLikes collection
+
+    if (allPhotos.length === 0) return;
+
+    // Batch fetch all likes for all photos at once
+    const photoIds = allPhotos.map(p => p.id).filter(Boolean) as string[];
+    const photoLikeCounts = new Map<string, number>();
+
+    if (photoIds.length > 0) {
+      // Firestore 'in' limit is 10, so batch
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < photoIds.length; i += BATCH_SIZE) {
+        const batch = photoIds.slice(i, i + BATCH_SIZE);
         const likesQuery = query(
           collection(db, 'userLikes'),
-          where('photoId', '==', photo.id)
+          where('photoId', 'in', batch)
         );
         const likesSnapshot = await getDocs(likesQuery);
-        const actualLikes = likesSnapshot.size;
-        
-        // Update if different
-        if (photo.likes !== actualLikes) {
-          console.log(`Fixing photo ${photo.id}: ${photo.likes} → ${actualLikes} likes`);
-          await updateDoc(doc(db, 'photos', photo.id), {
-            likes: actualLikes
-          });
+
+        likesSnapshot.docs.forEach(doc => {
+          const photoId = doc.data().photoId;
+          photoLikeCounts.set(photoId, (photoLikeCounts.get(photoId) || 0) + 1);
+        });
+      }
+
+      // Update photos with incorrect like counts
+      const updatePromises: Promise<void>[] = [];
+      for (const photo of allPhotos) {
+        if (photo.id) {
+          const actualLikes = photoLikeCounts.get(photo.id) || 0;
+
+          if (photo.likes !== actualLikes) {
+            updatePromises.push(
+              updateDoc(doc(db, 'photos', photo.id), {
+                likes: actualLikes
+              })
+            );
+          }
         }
       }
+
+      // Execute all photo updates in parallel
+      await Promise.all(updatePromises);
     }
-    
-    console.log('All photo like counts fixed!');
   } catch (error) {
     console.error('Error fixing photo like counts:', error);
     throw error;
@@ -1176,7 +1262,7 @@ async suspendUser(userId: string, days: number, reason: string, adminUid: string
   try {
     const suspendUntil = new Date();
     suspendUntil.setDate(suspendUntil.getDate() + days);
-    
+
     const userRef = doc(db, 'users', userId);
     await updateDoc(userRef, {
       status: 'suspended',
@@ -1185,8 +1271,6 @@ async suspendUser(userId: string, days: number, reason: string, adminUid: string
       suspendReason: reason,
       suspendedBy: adminUid
     });
-    
-    console.log(`✅ User ${userId} suspended for ${days} days`);
   } catch (error) {
     console.error('Error suspending user:', error);
     throw error;
@@ -1213,8 +1297,6 @@ async banUser(userId: string, reason: string, adminUid: string): Promise<void> {
       suspendReason: null,
       suspendedBy: null
     });
-    
-    console.log(`✅ User ${userId} banned permanently`);
   } catch (error) {
     console.error('Error banning user:', error);
     throw error;
@@ -1235,8 +1317,6 @@ async unsuspendUser(userId: string): Promise<void> {
       suspendReason: null,
       suspendedBy: null
     });
-    
-    console.log(`✅ User ${userId} unsuspended`);
   } catch (error) {
     console.error('Error unsuspending user:', error);
     throw error;
@@ -1256,8 +1336,6 @@ async unbanUser(userId: string): Promise<void> {
       banReason: null,
       bannedBy: null
     });
-    
-    console.log(`✅ User ${userId} unbanned`);
   } catch (error) {
     console.error('Error unbanning user:', error);
     throw error;
@@ -1325,19 +1403,16 @@ async checkUserStatus(userId: string): Promise<{
  */
 async deleteUserAccount(userId: string): Promise<void> {
   try {
-    console.log(`⚠️ Starting permanent deletion of user ${userId}`);
-    
     // 1. Delete user's photos
     const { photoService } = await import('./firebaseService');
     const userPhotos = await photoService.getPhotosByUploader(userId);
-    
+
     for (const photo of userPhotos) {
       if (photo.id) {
         await photoService.deletePhoto(photo.id);
       }
     }
-    console.log(`✅ Deleted ${userPhotos.length} photos`);
-    
+
     // 2. Delete user's comments
     const commentsQuery = query(
       collection(db, 'comments'),
@@ -1347,8 +1422,7 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const commentDoc of commentsSnapshot.docs) {
       await deleteDoc(commentDoc.ref);
     }
-    console.log(`✅ Deleted ${commentsSnapshot.size} comments`);
-    
+
     // 3. Delete user's tags
     const tagsQuery = query(
       collection(db, 'taggedPersons'),
@@ -1358,8 +1432,7 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const tagDoc of tagsSnapshot.docs) {
       await deleteDoc(tagDoc.ref);
     }
-    console.log(`✅ Deleted ${tagsSnapshot.size} tags`);
-    
+
     // 4. Delete user's activities
     const activitiesQuery = query(
       collection(db, 'activities'),
@@ -1369,8 +1442,7 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const activityDoc of activitiesSnapshot.docs) {
       await deleteDoc(activityDoc.ref);
     }
-    console.log(`✅ Deleted ${activitiesSnapshot.size} activities`);
-    
+
     // 5. Delete user's likes
     const likesQuery = query(
       collection(db, 'userLikes'),
@@ -1380,8 +1452,7 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const likeDoc of likesSnapshot.docs) {
       await deleteDoc(likeDoc.ref);
     }
-    console.log(`✅ Deleted ${likesSnapshot.size} likes`);
-    
+
     // 6. Delete user's views
     const viewsQuery = query(
       collection(db, 'userViews'),
@@ -1391,8 +1462,7 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const viewDoc of viewsSnapshot.docs) {
       await deleteDoc(viewDoc.ref);
     }
-    console.log(`✅ Deleted ${viewsSnapshot.size} views`);
-    
+
     // 7. Delete follows
     const followsQuery = query(
       collection(db, 'follows'),
@@ -1402,13 +1472,9 @@ async deleteUserAccount(userId: string): Promise<void> {
     for (const followDoc of followsSnapshot.docs) {
       await deleteDoc(followDoc.ref);
     }
-    console.log(`✅ Deleted ${followsSnapshot.size} follows`);
-    
+
     // 8. Finally, delete user document
     await deleteDoc(doc(db, 'users', userId));
-    console.log(`✅ Deleted user document`);
-    
-    console.log(`✅ User ${userId} and all associated data deleted permanently`);
   } catch (error) {
     console.error('Error deleting user account:', error);
     throw error;
