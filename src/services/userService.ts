@@ -264,9 +264,25 @@ class UserService {
     try {
       const userRef = doc(db, 'users', uid);
       const userDoc = await getDoc(userRef);
-      
+
       if (userDoc.exists()) {
-        return userDoc.data() as UserProfile;
+        const data = userDoc.data();
+
+        // Ensure stats object exists with default values for backward compatibility
+        const profile: UserProfile = {
+          ...data,
+          stats: {
+            totalPhotos: data.stats?.totalPhotos ?? 0,
+            totalLikes: data.stats?.totalLikes ?? 0,
+            totalViews: data.stats?.totalViews ?? 0,
+            locationsContributed: data.stats?.locationsContributed ?? 0,
+            followers: data.stats?.followers ?? 0,
+            following: data.stats?.following ?? 0,
+          },
+          badges: data.badges || [],
+        } as UserProfile;
+
+        return profile;
       }
       return null;
     } catch (error) {
@@ -1004,9 +1020,9 @@ async fixAllPhotoLikeCounts(): Promise<void> {
       );
 
       // Photo of the month (most liked this month)
-      const mostLikedPhoto = thisMonthPhotos.reduce(
+      const mostLikedPhoto = thisMonthPhotos.reduce<Photo | null>(
         (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
-        null as any
+        null
       );
 
       // New members this month
@@ -1078,9 +1094,9 @@ async getYearlyHighlights(): Promise<MonthlyHighlights> {
     );
 
     // Most popular photo of the year (most liked this year)
-    const mostLikedPhoto = thisYearPhotos.reduce(
+    const mostLikedPhoto = thisYearPhotos.reduce<Photo | null>(
       (max, photo) => (photo.likes || 0) > (max?.likes || 0) ? photo : max,
-      null as any
+      null
     );
 
     // New members this year

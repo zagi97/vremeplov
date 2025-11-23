@@ -13,6 +13,9 @@ import { auth, db } from '../lib/firebase';
 import { getErrorMessage } from '../types/firebase';
 import type { UserDocument } from './firebaseService';
 
+// Admin email - should be moved to environment variable in production
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'vremeplov.app@gmail.com';
+
 export class AuthService {
   /**
    * Sign in as admin
@@ -22,7 +25,7 @@ export class AuthService {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
       // Check if this is the admin email
-      if (userCredential.user.email === 'vremeplov.app@gmail.com') {
+      if (userCredential.user.email === ADMIN_EMAIL) {
         return {
           success: true,
           user: userCredential.user
@@ -69,7 +72,7 @@ export class AuthService {
    * Check if user is admin
    */
   isAdmin(user: { email?: string | null } | null) {
-    return user?.email === 'vremeplov.app@gmail.com';
+    return user?.email === ADMIN_EMAIL;
   }
 
   /**

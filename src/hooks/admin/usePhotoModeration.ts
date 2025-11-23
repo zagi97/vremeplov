@@ -29,7 +29,7 @@ export function usePhotoModeration() {
       );
 
       const approved = photos.filter(photo =>
-        photo.isApproved === true || photo.approved === true
+        photo.isApproved === true
       );
 
       setPendingPhotos(pending);

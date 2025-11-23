@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Eye, Users, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { User } from 'firebase/auth';
 
 interface PhotoStatsProps {
   views: number;
@@ -11,7 +12,7 @@ interface PhotoStatsProps {
   taggedPersonsCount: number;
   userHasLiked: boolean;
   likeLoading: boolean;
-  user: any;
+  user: User | null;
   hasPendingTags: boolean;
   onLike: () => void;
 }

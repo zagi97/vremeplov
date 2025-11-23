@@ -6,15 +6,16 @@ import { Pagination } from '@/components/ui/pagination';
 import { Image } from 'lucide-react';
 import PhotoModerationCard from '../cards/PhotoModerationCard';
 import { ITEMS_PER_PAGE } from '@/constants';
+import { Photo } from '@/services/firebaseService';
 
 interface PendingPhotosTabProps {
-  pendingPhotos: any[];
+  pendingPhotos: Photo[];
   loading: boolean;
   pendingPhotoPage: number;
   setPendingPhotoPage: (page: number) => void;
   handleApprovePhoto: (photoId: string) => void;
   handleRejectPhoto: (photoId: string, reason: string) => void;
-  handleEditPhoto: (photoId: string, updates: any) => void;
+  handleEditPhoto: (photoId: string, updates: Partial<Photo>) => void;
 }
 
 export default function PendingPhotosTab({

@@ -303,7 +303,6 @@ export class PhotoService {
 
       await updateDoc(doc(this.photosCollection, photoId), {
         isApproved: true,
-        approved: true,
         approvedAt: Timestamp.now(),
         approvedBy: adminUid
       });
@@ -475,9 +474,16 @@ export class PhotoService {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
+        const data = docSnap.data();
+
+        // Ensure required fields with defaults for backward compatibility
         return {
           id: docSnap.id,
-          ...docSnap.data()
+          ...data,
+          likes: data.likes ?? 0,
+          views: data.views ?? 0,
+          taggedPersons: data.taggedPersons || [],
+          isApproved: data.isApproved ?? true,
         } as Photo;
       }
       return null;

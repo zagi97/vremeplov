@@ -40,6 +40,9 @@ export class TagService {
         throw new Error("Photo not found");
       }
       const photoData = photoSnap.data();
+      if (!photoData) {
+        throw new Error("Photo data is empty");
+      }
 
       // Create tag with photoAuthorId
       const tag: Omit<TaggedPerson, 'id'> = {
@@ -187,32 +190,15 @@ export class TagService {
    */
   async getTaggedPersonsByPhotoIdForAdmin(photoId: string): Promise<TaggedPerson[]> {
     try {
-      console.log('=== FIRESTORE DEBUG ===');
-      console.log('Querying taggedPersons for photoId:', photoId);
-      console.log('Current user:', auth.currentUser?.uid);
-      console.log('Current user email:', auth.currentUser?.email);
-
       const q = query(
         this.taggedPersonsCollection,
         where('photoId', '==', photoId)
       );
 
-      console.log('Query created, attempting to fetch...');
       const querySnapshot = await getDocs(q);
-      console.log('Query successful, docs found:', querySnapshot.size);
-
-      const results = mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
-      results.forEach(tag => {
-        console.log('Tag document:', tag.id, tag);
-      });
-
-      console.log('Final results:', results);
-      console.log('=== END FIRESTORE DEBUG ===');
-      return results;
+      return mapDocumentsWithId<TaggedPerson>(querySnapshot.docs);
     } catch (error) {
-      console.error('=== FIRESTORE ERROR DEBUG ===');
-      console.error('Error details:', error);
-      console.error('=== END FIRESTORE ERROR DEBUG ===');
+      console.error('Error getting tagged persons for admin:', error);
       throw error;
     }
   }

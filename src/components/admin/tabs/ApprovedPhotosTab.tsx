@@ -6,13 +6,14 @@ import { Pagination } from '@/components/ui/pagination';
 import { Image } from 'lucide-react';
 import PhotoManagementCard from '../cards/PhotoManagementCard';
 import { ITEMS_PER_PAGE } from '@/constants';
+import { Photo } from '@/services/firebaseService';
 
 interface ApprovedPhotosTabProps {
-  approvedPhotos: any[];
+  approvedPhotos: Photo[];
   loading: boolean;
   approvedPhotoPage: number;
   setApprovedPhotoPage: (page: number) => void;
-  handleEditPhoto: (photoId: string, updates: any) => void;
+  handleEditPhoto: (photoId: string, updates: Partial<Photo>) => void;
   handleDeletePhoto: (photoId: string, reason: string) => void;
 }
 

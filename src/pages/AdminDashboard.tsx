@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   // Auto-exit admin mode when leaving dashboard
   useEffect(() => {
     const handleBeforeUnload = async () => {
-      if (user?.email === 'vremeplov.app@gmail.com') {
+      if (isAdmin) {
         await exitAdminMode();
       }
     };

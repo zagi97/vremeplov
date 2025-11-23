@@ -56,25 +56,6 @@ const PhotoDetail = () => {
     }
   };
 
-  useEffect(() => {
-    console.log('=== PHOTODETAIL DEBUG ===');
-    console.log('relatedPhotos raw:', relatedPhotos);
-    console.log('relatedPhotos with coordinates:', relatedPhotos.filter(p => p.coordinates));
-    relatedPhotos.forEach((photo, index) => {
-      console.log(`Related photo ${index}:`, {
-        id: photo.id,
-        description: photo.description,
-        coordinates: photo.coordinates
-      });
-    });
-
-    const photosWithCoords = relatedPhotos.filter(p => p.coordinates);
-    console.log(`Total related photos: ${relatedPhotos.length}`);
-    console.log(`Related photos with coordinates: ${photosWithCoords.length}`);
-
-    console.log('=== END COORDINATES DEBUG ===');
-  }, [photo, relatedPhotos]);
-
   if (loading) {
     return <PhotoDetailSkeleton />;
   }

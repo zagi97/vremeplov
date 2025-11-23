@@ -7,6 +7,9 @@ import { Tag, Users, Clock, AlertTriangle } from "lucide-react";
 import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import LazyImage from "@/components/LazyImage";
+import { User } from 'firebase/auth';
+import { Photo } from '@/services/firebaseService';
+import { authService } from '@/services/authService';
 
 interface TaggedPerson {
   id: string;
@@ -28,9 +31,9 @@ interface PhotoTaggingProps {
   photoId: string;
   photoImageUrl: string;
   photoDescription: string;
-  responsiveImages?: any;
+  responsiveImages?: Photo['responsiveImages'];
   photoAuthorId?: string;
-  user: any;
+  user: User | null;
   taggedPersons: TaggedPerson[];
   rateLimitInfo: RateLimitInfo;
   onAddTag: (tag: { name: string; x: number; y: number }) => Promise<void>;
@@ -115,7 +118,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
     setHasSelectedPosition(false);
   };
 
-  const canUserTag = user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com');
+  const canUserTag = user && (user.uid === photoAuthorId || authService.isAdmin(user));
 
   return (
     <>
