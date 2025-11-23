@@ -186,15 +186,6 @@ useEffect(() => {
   }
 };
 
-  const clearFilters = () => {
-    setFilters({
-      searchText: '',
-      yearRange: null,
-      photoType: 'all',
-      sortBy: 'newest'
-    });
-  };
-
   const loadMorePhotos = () => {
     if (loadingMore || !hasMore) return;
     
