@@ -19,74 +19,18 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Footer from './Footer';
 import PageHeader from './PageHeader';
+import { fixLeafletIcons, photoIcon, createClusterIcon, getRandomLocationCoordinates } from '@/utils/mapUtils';
+import {
+    clusterPhotos,
+    filterPhotosWithCoordinates,
+    PhotoWithCoordinates,
+    ClusterGroup,
+    ClusteredMarker
+} from '@/utils/mapClustering';
+import { MapFilters } from './map/MapFilters';
 
-// Fix za Leaflet ikone u React-u
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-// Custom ikona za fotografije
-const photoIcon = new L.Icon({
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
-
-// CUSTOM CLUSTER ICON
-const createClusterIcon = (count: number): L.DivIcon => {
-    let className = 'cluster-small';
-    let size = 35;
-
-    if (count < 10) {
-        className = 'cluster-small';
-        size = 35;
-    } else if (count < 100) {
-        className = 'cluster-medium';
-        size = 40;
-    } else {
-        className = 'cluster-large';
-        size = 45;
-    }
-
-    return new L.DivIcon({
-        html: `<div class="cluster-inner"><span>${count}</span></div>`,
-        className: `photo-cluster ${className}`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2]
-    });
-};
-
-interface PhotoWithCoordinates extends Photo {
-    latitude: number;
-    longitude: number;
-    address?: string;
-}
-
-interface ClusterGroup {
-    center: [number, number];
-    photos: PhotoWithCoordinates[];
-    count: number;
-}
-
-// 🆕 Funkcija za dohvat koordinata random općine
-const getRandomLocationCoordinates = () => {
-    if (municipalityData.records.length > 0) {
-        const randomIndex = Math.floor(Math.random() * municipalityData.records.length);
-        const record = municipalityData.records[randomIndex];
-        // Provjeri jesu li koordinate brojevi
-        if (typeof record[4] === 'number' && typeof record[5] === 'number') {
-            return { latitude: record[4], longitude: record[5] };
-        }
-    }
-    return { latitude: 45.8150, longitude: 15.9819 }; // Default Zagreb koordinate
-};
+// Fix Leaflet icons on component mount
+fixLeafletIcons();
 
 // Dodaj novu komponentu koja će pratiti resize
 const MapController = () => {
@@ -251,77 +195,9 @@ useEffect(() => {
         return null;
     };
 
-    // IMPROVED CLUSTERING LOGIC
+    // IMPROVED CLUSTERING LOGIC using extracted utility
     const clusteredData = useMemo(() => {
-        if (filteredPhotos.length === 0) {
-            return [];
-        }
-
-        if (currentZoom >= 19) {
-            return filteredPhotos.map(photo => ({
-                type: 'individual' as const,
-                photo,
-                position: [photo.latitude, photo.longitude] as [number, number]
-            }));
-        }
-
-        const clusters: ClusterGroup[] = [];
-        const processed = new Set<string>();
-
-        let clusterRadius: number;
-        if (currentZoom >= 15) {
-            clusterRadius = 0.0001;
-        } else if (currentZoom >= 13) {
-            clusterRadius = 0.0005;
-        } else if (currentZoom >= 11) {
-            clusterRadius = 0.002;
-        } else {
-            clusterRadius = 0.01;
-        }
-
-        filteredPhotos.forEach((photo) => {
-            if (processed.has(photo.id!)) return;
-
-            const cluster: ClusterGroup = {
-                center: [photo.latitude, photo.longitude],
-                photos: [photo],
-                count: 1
-            };
-
-            filteredPhotos.forEach((otherPhoto) => {
-                if (processed.has(otherPhoto.id!) || photo.id === otherPhoto.id) return;
-
-                const distance = Math.sqrt(
-                    Math.pow(photo.latitude - otherPhoto.latitude, 2) +
-                    Math.pow(photo.longitude - otherPhoto.longitude, 2)
-                );
-
-                if (distance < clusterRadius) {
-                    cluster.photos.push(otherPhoto);
-                    cluster.count++;
-                    processed.add(otherPhoto.id!);
-                }
-            });
-
-            processed.add(photo.id!);
-            clusters.push(cluster);
-        });
-
-        return clusters.map((cluster) => {
-            if (cluster.count === 1) {
-                return {
-                    type: 'individual' as const,
-                    photo: cluster.photos[0],
-                    position: cluster.center
-                };
-            } else {
-                return {
-                    type: 'cluster' as const,
-                    cluster,
-                    position: cluster.center
-                };
-            }
-        });
+        return clusterPhotos(filteredPhotos, currentZoom);
     }, [filteredPhotos, currentZoom]);
 
     // Load photos with coordinates from Firebase
@@ -330,14 +206,7 @@ useEffect(() => {
         try {
             setLoading(true);
             const allPhotos = await photoService.getAllPhotos();
-            const photosWithCoords: PhotoWithCoordinates[] = allPhotos
-                .filter(photo => photo.coordinates?.latitude && photo.coordinates?.longitude)
-                .map(photo => ({
-                    ...photo,
-                    latitude: photo.coordinates!.latitude,
-                    longitude: photo.coordinates!.longitude,
-                    address: photo.coordinates?.address
-                }));
+            const photosWithCoords = filterPhotosWithCoordinates(allPhotos);
 
             setPhotos(photosWithCoords);
             setFilteredPhotos(photosWithCoords);
@@ -445,53 +314,15 @@ if (loading) {
     </div>
 
           {/* Filters */}
-<div className="bg-white border-b border-gray-200 py-4">
-    <div className="container max-w-6xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            {/* Filter label i ikonica */}
-            <div className="flex items-center gap-2 min-w-fit">
-                <Filter className="h-5 w-5 text-gray-600" />
-                <span className="font-medium">{t('mapView.filters')}</span>
-            </div>
-
-            {/* Decade dropdown - custom styled */}
-            <div className="relative">
-                <select
-                    value={selectedDecade}
-                    onChange={(e) => setSelectedDecade(e.target.value)}
-                    className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px] cursor-pointer"
-                >
-                    <option value="all">{t('mapView.allDecades')}</option>
-                    {getAvailableDecades().map(decade => (
-                        <option key={decade} value={decade.toString()}>
-                            {decade}{t('filter.decade')} ({decade}-{decade + 9})
-                        </option>
-                    ))}
-                </select>
-                {/* Custom arrow icon */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-            </div>
-
-            {/* Search input */}
-            <Input
-                type="text"
-                placeholder={t('mapView.searchByLocation')}
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                className="flex-1 md:flex-initial md:max-w-xs"
-            />
-            
-            {/* Photo count */}
-            <div className="text-sm text-gray-600 md:ml-auto whitespace-nowrap">
-                {translateWithParams(t, 'mapView.showing', { filtered: filteredPhotos.length, total: photos.length })}
-            </div>
-        </div>
-    </div>
-</div>
+          <MapFilters
+            selectedDecade={selectedDecade}
+            onDecadeChange={setSelectedDecade}
+            searchLocation={searchLocation}
+            onSearchChange={setSearchLocation}
+            availableDecades={getAvailableDecades()}
+            filteredCount={filteredPhotos.length}
+            totalCount={photos.length}
+          />
 
             {/* CUSTOM CLUSTERING MAPA */}
             <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">

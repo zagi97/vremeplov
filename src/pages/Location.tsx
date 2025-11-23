@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Plus, LogIn, Search, Filter, X, Calendar, Tag, TrendingUp, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin } from "lucide-react";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
@@ -20,6 +20,9 @@ import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
 import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
 import { PageSkeleton } from '@/components/common/Skeletons';
+import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions, YearRange } from '@/constants/filters';
+import { usePhotoFilters, DEFAULT_FILTERS } from '@/hooks/usePhotoFilters';
+import { PhotoFilterState } from '@/utils/photoFilters';
 
 const translateCityType = (type: string, t: any) => {
   switch (type.toLowerCase()) {
@@ -32,19 +35,7 @@ const translateCityType = (type: string, t: any) => {
   }
 };
 
-// Interface definicije
-interface YearRange {
-  start: number;
-  end: number;
-  label: string;
-}
-
-interface FilterState {
-  searchText: string;
-  yearRange: YearRange | null;
-  photoType: string;
-  sortBy: string;
-}
+// Interface definicije - now using PhotoFilterState from utils
 
 // Location.tsx - Dodaj ovu komponentu prije Location komponente
 
@@ -72,37 +63,13 @@ const Location = () => {
   const allLocations: string[] = municipalityData.records.map(record => record[3] as string);
   const isValidLocation = allLocations.includes(actualCityName);
 
-  // Konstante
-  const YEAR_RANGES: YearRange[] = [
-    { start: 1900, end: 1920, label: "1900-1920" },
-    { start: 1920, end: 1940, label: "1920-1940" },
-    { start: 1940, end: 1960, label: "1940-1960" },
-    { start: 1960, end: 1980, label: "1960-1980" },
-    { start: 1980, end: 2000, label: "1980-2000" },
-    { start: 2000, end: 2025, label: "2000-2025" }
-  ];
-
-  const PHOTO_TYPES = [
-    { value: "all", label: t('photoType.allTypes') },
-    { value: "street", label: t('photoType.street') },
-    { value: "building", label: t('photoType.building') },
-    { value: "people", label: t('photoType.people') },
-    { value: "event", label: t('photoType.event') },
-    { value: "nature", label: t('photoType.nature') }
-  ];
-
-  const SORT_OPTIONS = [
-    { value: "newest", label: t('sort.newest'), icon: Clock },
-    { value: "oldest", label: t('sort.oldest'), icon: Calendar },
-    { value: "popular", label: t('sort.popular'), icon: TrendingUp },
-    { value: "year_desc", label: t('sort.yearNewest'), icon: Calendar },
-    { value: "year_asc", label: t('sort.yearOldest'), icon: Calendar }
-  ];
+  // Konstante - koristi centralizirane definicije iz filters.ts
+  const PHOTO_TYPES = getPhotoTypeOptions(t);
+  const SORT_OPTIONS = getSortOptions(t);
 
   // State
   const [showAddForm, setShowAddForm] = useState(false);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
-  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
   const [displayedPhotos, setDisplayedPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -111,12 +78,17 @@ const Location = () => {
   const [showFilters, setShowFilters] = useState(false);
   const PHOTOS_PER_PAGE = 12;
 
-  const [filters, setFilters] = useState<FilterState>({
-    searchText: '',
-    yearRange: null,
-    photoType: 'all',
-    sortBy: 'newest'
-  });
+  // Use photo filters hook
+  const {
+    filters,
+    filteredPhotos,
+    setFilters,
+    updateFilter,
+    clearFilters,
+    hasFilters,
+    filteredCount,
+    totalCount
+  } = usePhotoFilters(allPhotos);
 
   // ✅ DODAJ OVO - Upload Limit State
   const [uploadLimitInfo, setUploadLimitInfo] = useState<{
@@ -214,15 +186,6 @@ useEffect(() => {
   }
 };
 
-  const clearFilters = () => {
-    setFilters({
-      searchText: '',
-      yearRange: null,
-      photoType: 'all',
-      sortBy: 'newest'
-    });
-  };
-
   const loadMorePhotos = () => {
     if (loadingMore || !hasMore) return;
     
@@ -263,59 +226,15 @@ useEffect(() => {
     loadPhotos();
   }, [actualCityName]);
 
+  // Update displayed photos when filtered photos change
   useEffect(() => {
-    let filtered = [...allPhotos];
-
-    if (filters.searchText.trim()) {
-      const searchLower = filters.searchText.toLowerCase();
-      filtered = filtered.filter(photo => 
-        photo.description.toLowerCase().includes(searchLower) ||
-        photo.detailedDescription?.toLowerCase().includes(searchLower) ||
-        photo.author.toLowerCase().includes(searchLower)
-      );
-    }
-
-    if (filters.yearRange) {
-      filtered = filtered.filter(photo => {
-        const photoYear = parseInt(photo.year);
-        return photoYear >= filters.yearRange!.start && photoYear <= filters.yearRange!.end;
-      });
-    }
-
-    if (filters.photoType !== 'all') {
-      filtered = filtered.filter(photo => 
-        photo.photoType === filters.photoType || 
-        photo.description.toLowerCase().includes(filters.photoType)
-      );
-    }
-
-    switch (filters.sortBy) {
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.uploadedAt || '').getTime() - new Date(a.uploadedAt || '').getTime());
-        break;
-      case 'oldest':
-        filtered.sort((a, b) => new Date(a.uploadedAt || '').getTime() - new Date(b.uploadedAt || '').getTime());
-        break;
-      case 'popular':
-        filtered.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-        break;
-      case 'year_desc':
-        filtered.sort((a, b) => parseInt(b.year) - parseInt(a.year));
-        break;
-      case 'year_asc':
-        filtered.sort((a, b) => parseInt(a.year) - parseInt(b.year));
-        break;
-    }
-
-    setFilteredPhotos(filtered);
     setCurrentPage(1);
-    
-    const firstPage = filtered.slice(0, PHOTOS_PER_PAGE);
+    const firstPage = filteredPhotos.slice(0, PHOTOS_PER_PAGE);
     setDisplayedPhotos(firstPage);
-    setHasMore(filtered.length > PHOTOS_PER_PAGE);
-  }, [filters, allPhotos]);
+    setHasMore(filteredPhotos.length > PHOTOS_PER_PAGE);
+  }, [filteredPhotos]);
 
-  const hasActiveFilters = filters.searchText || filters.yearRange || filters.photoType !== 'all' || filters.sortBy !== 'newest';
+  // hasFilters is now hasFilters from usePhotoFilters hook
   
 if (loading) {
   return <LocationSkeleton />;
@@ -543,13 +462,13 @@ if (loading) {
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 ${hasActiveFilters ? 'border-blue-500 text-blue-600' : ''}`}
+              className={`flex items-center gap-2 ${hasFilters ? 'border-blue-500 text-blue-600' : ''}`}
             >
               <Filter className="h-4 w-4" />
-              {t('location.filters')} {hasActiveFilters && '●'}
+              {t('location.filters')} {hasFilters && '●'}
             </Button>
 
-            {hasActiveFilters && (
+            {hasFilters && (
               <Button
                 variant="ghost"
                 onClick={clearFilters}
@@ -653,7 +572,7 @@ if (loading) {
       </Dialog>
 
       {/* Results Summary */}
-      {hasActiveFilters && (
+      {hasFilters && (
         <section className="py-4 px-4 bg-blue-50">
           <div className="container max-w-6xl mx-auto">
             <p className="text-blue-700">
@@ -674,12 +593,12 @@ if (loading) {
               <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('location.noPhotosFound')}</h3>
               <p className="text-gray-600 mb-4">
-                {hasActiveFilters 
+                {hasFilters 
                   ? t('location.tryAdjusting')
                   : t('location.beFirst')
                 }
               </p>
-              {hasActiveFilters && (
+              {hasFilters && (
                 <Button onClick={clearFilters} variant="outline">
                   {t('location.clearAllFilters')}
                 </Button>

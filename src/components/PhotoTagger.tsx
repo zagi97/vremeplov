@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Tag, X, User, Clock, AlertTriangle } from "lucide-react";
@@ -8,8 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
 import LazyImage from './LazyImage';
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { useTagRateLimit, TAG_RATE_LIMIT_CONFIG } from '@/hooks/useMultiWindowRateLimit';
 
 interface TaggedPerson {
   id: string;
@@ -30,15 +29,12 @@ interface PhotoTaggerProps {
   photoId?: string;
 }
 
-// ✅ RATE LIMITING CONSTANTS
 const MAX_TAGS_PER_PHOTO = 10;
-const MAX_TAGS_PER_DAY = 20;
-const MAX_TAGS_PER_HOUR = 10;
 
-const PhotoTagger: React.FC<PhotoTaggerProps> = ({ 
-  taggedPersons, 
-  onAddTag, 
-  imageUrl, 
+const PhotoTagger: React.FC<PhotoTaggerProps> = ({
+  taggedPersons,
+  onAddTag,
+  imageUrl,
   onRemoveFile,
   showRemoveButton = true,
   photoAuthorId,
@@ -51,83 +47,24 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
   const { user } = useAuth();
   const { t } = useLanguage();
 
-  // ✅ RATE LIMITING STATE
-  const [rateLimitInfo, setRateLimitInfo] = useState<{
-    tagsInLastHour: number;
-    tagsInLastDay: number;
-    canTag: boolean;
-    reason?: string;
-  }>({
-    tagsInLastHour: 0,
-    tagsInLastDay: 0,
-    canTag: true
-  });
+  // ✅ RATE LIMITING - using centralized hook
+  const [rateLimitState, refreshRateLimit] = useTagRateLimit(user?.uid, photoId);
 
-  // ✅ CHECK RATE LIMIT
-  useEffect(() => {
-  console.log('🔍 PhotoTagger useEffect triggered:', { user: !!user, photoId });
-  if (!user || !photoId) {
-    console.log('⚠️ Skipping rate limit check:', { user: !!user, photoId });
-    return;
-  }
-  checkUserTagRateLimit();
-}, [user, photoId, taggedPersons.length]);
+  // Extract constants for cleaner code
+  const MAX_TAGS_PER_HOUR = TAG_RATE_LIMIT_CONFIG.timeWindows[0].maxRequests;
+  const MAX_TAGS_PER_DAY = TAG_RATE_LIMIT_CONFIG.timeWindows[1].maxRequests;
 
-  // ✅ FUNKCIJA ZA PROVJERU TAG RATE LIMITA
-  const checkUserTagRateLimit = async () => {
-    if (!user) return;
+  // Helper getters for cleaner code
+  const tagsInLastHour = rateLimitState.counts[0] || 0;
+  const tagsInLastDay = rateLimitState.counts[1] || 0;
+  const canTag = !rateLimitState.isLimited && taggedPersons.length < MAX_TAGS_PER_PHOTO;
 
-    try {
-      const now = new Date();
-      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      const tagsRef = collection(db, 'taggedPersons');
-      
-      // Query za sve tagove korisnika
-      const q = query(
-        tagsRef,
-        where('addedByUid', '==', user.uid)
-      );
-
-      const snapshot = await getDocs(q);
-      const userTags = snapshot.docs
-        .map(doc => ({
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate()
-        }))
-        .filter(t => t.createdAt && t.createdAt > oneDayAgo);
-
-      const tagsInLastHour = userTags.filter(
-        t => t.createdAt && t.createdAt > oneHourAgo
-      ).length;
-
-      const tagsInLastDay = userTags.length;
-
-      let canTag = true;
-      let reason: string | undefined;
-
-      if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
-        canTag = false;
-        reason = `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
-      } else if (tagsInLastHour >= MAX_TAGS_PER_HOUR) {
-        canTag = false;
-        reason = `Dostigao si satni limit (${MAX_TAGS_PER_HOUR} tagova/sat)`;
-      } else if (tagsInLastDay >= MAX_TAGS_PER_DAY) {
-        canTag = false;
-        reason = `Dostigao si dnevni limit (${MAX_TAGS_PER_DAY} tagova/dan)`;
-      }
-
-      setRateLimitInfo({
-        tagsInLastHour,
-        tagsInLastDay,
-        canTag,
-        reason
-      });
-
-    } catch (error) {
-      console.error('Error checking tag rate limit:', error);
+  // Get reason for rate limit
+  const getRateLimitReason = (): string => {
+    if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
+      return `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
     }
+    return rateLimitState.reason || '';
   };
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -152,38 +89,31 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
     }
 
     // ✅ PROVJERA RATE LIMITA
-    if (!rateLimitInfo.canTag) {
-      toast.error(`🚫 ${rateLimitInfo.reason}\n\nPokušaj kasnije! ⏰`, {
+    if (!canTag) {
+      const reason = getRateLimitReason();
+      toast.error(`🚫 ${reason}\n\nPokušaj kasnije! ⏰`, {
         duration: 5000
       });
       return;
     }
 
-    if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
-      toast.error(
-        `🚫 Maksimalno možeš označiti ${MAX_TAGS_PER_PHOTO} osoba na jednoj fotografiji! 🏷️`,
-        { duration: 5000 }
-      );
-      return;
-    }
-    
     onAddTag({
       name: newTagName,
       x: tagPosition.x,
       y: tagPosition.y,
       isApproved: false
     });
-    
+
     setNewTagName("");
     setIsTagging(false);
     setHasSelectedPosition(false);
-    
+
     toast.success(translateWithParams(t, 'photoDetail.taggedSuccess', { name: newTagName }), {
       duration: 4000
     });
 
     // ✅ REFRESH rate limit
-    await checkUserTagRateLimit();
+    await refreshRateLimit();
   };
   
   const cancelTagging = () => {
@@ -307,17 +237,19 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
-                  
-                  if (!rateLimitInfo.canTag) {
-                    toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 4000 });
+
+
+                  if (!canTag) {
+                    const reason = getRateLimitReason();
+                    toast.error(`🚫 ${reason}`, { duration: 4000 });
                     return;
                   }
-                  
+
                   setIsTagging(true);
                 }}
                 variant="secondary"
                 className="bg-white/80 hover:bg-white/90"
-                disabled={!rateLimitInfo.canTag}
+                disabled={!canTag}
               >
                 <Tag className="h-4 w-4 mr-2" />
                 Tag Person
@@ -342,24 +274,24 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
       </div>
 
       {/* ✅ RATE LIMIT WARNING */}
-      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && !rateLimitInfo.canTag && (
+      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && !canTag && (
         <div className="mt-3 p-3 bg-orange-50 border-l-4 border-orange-500 rounded">
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="font-medium text-orange-800 text-sm">Tagging ograničen</p>
-              <p className="text-xs text-orange-700 mt-1">{rateLimitInfo.reason}</p>
+              <p className="text-xs text-orange-700 mt-1">{getRateLimitReason()}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* ✅ TAG STATISTICS */}
-      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && rateLimitInfo.canTag && photoId && (
+      {user && (user.uid === photoAuthorId || user.email === 'vremeplov.app@gmail.com') && canTag && photoId && (
         <div className="mt-2 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
           <span>Na ovoj slici: {taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</span>
-          <span>Satno: {rateLimitInfo.tagsInLastHour}/{MAX_TAGS_PER_HOUR}</span>
-          <span>Dnevno: {rateLimitInfo.tagsInLastDay}/{MAX_TAGS_PER_DAY}</span>
+          <span>Satno: {tagsInLastHour}/{MAX_TAGS_PER_HOUR}</span>
+          <span>Dnevno: {tagsInLastDay}/{MAX_TAGS_PER_DAY}</span>
         </div>
       )}
 
