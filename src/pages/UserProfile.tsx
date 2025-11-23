@@ -17,7 +17,14 @@ import {
   UserCheck,
   ArrowRight,
   Tag,
-  MessageCircle
+  MessageCircle,
+  Award,
+  Camera,
+  Trophy,
+  Star,
+  Heart,
+  Eye,
+  Users
 } from "lucide-react";
 import LazyImage from "../components/LazyImage";
 import { photoService } from "../services/firebaseService";
@@ -32,7 +39,7 @@ import PageHeader from '@/components/PageHeader';
 import { formatActivityDate } from '../utils/dateUtils';
 import { UserProfileSkeleton } from '@/components/UserProfile/UserProfileSkeleton';
 import { useUserProfileData } from '@/hooks/useUserProfileData';
-import { getActivityDisplay, getActivityLink } from '@/utils/userProfileHelpers';
+import { getActivityDisplay, getActivityLink, getBadgeDetails } from '@/utils/userProfileHelpers';
 import { ProfileStats } from '@/components/UserProfile/ProfileStats';
 import { ProfileBadges } from '@/components/UserProfile/ProfileBadges';
 
@@ -335,7 +342,7 @@ if (loading) {
                   <CardContent>
                     <div className="grid grid-cols-2 gap-3">
                       {profile.badges.map(badgeId => {
-                        const badge = getBadgeDetails(badgeId);
+                        const badge = getBadgeDetails(badgeId, t);
                         const IconComponent = badge.icon;
                         return (
                           <div key={badgeId} className="text-center group relative">
