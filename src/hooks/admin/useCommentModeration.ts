@@ -22,7 +22,6 @@ export function useCommentModeration() {
       setLoading(true);
       const allComments = await commentService.getAllCommentsForAdmin();
       setComments(allComments);
-      console.log('✅ Loaded comments:', allComments.length);
     } catch (error) {
       console.error('Error loading comments:', error);
       toast.error('Failed to load comments');

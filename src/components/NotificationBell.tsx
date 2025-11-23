@@ -28,21 +28,13 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   const setupListener = () => {
     if (!user) return;
 
-    console.log('🔄 Setting up notification listener');
-
     const unsubscribe = notificationService.subscribeToNotifications(
       user.uid,
       (newNotifications) => {
         // ✅ Ignoriraj ažuriranja dok je batch u tijeku
         if (isMarkingRef.current) {
-          console.log('🚫 BLOCKED - Batch in progress, ignoring listener update');
           return;
         }
-
-        console.log('📨 Listener update:', {
-          total: newNotifications.length,
-          unread: newNotifications.filter((n) => !n.read).length,
-        });
 
         setNotifications(newNotifications);
         const unread = newNotifications.filter((n) => !n.read).length;
@@ -71,7 +63,6 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
     setupListener();
 
     return () => {
-      console.log('🧹 Cleaning up notification listener');
       if (unsubscribeRef.current) {
         unsubscribeRef.current();
         unsubscribeRef.current = null;
@@ -110,23 +101,17 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
   const handleMarkAllRead = async () => {
     if (!user) return;
 
-    console.log('🔘 Mark all clicked');
-
     try {
       // ✅ Block listener IMMEDIATELY
       isMarkingRef.current = true;
-      console.log('🔒 Listener BLOCKED');
 
       // ✅ Execute batch
-      console.log('🚀 Executing batch...');
       await notificationService.markAllNotificationsAsRead(user.uid);
-      console.log('✅ Batch completed');
 
       // ✅ Wait a bit for Firestore to propagate
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // ✅ Unblock listener and force refresh
-      console.log('🔓 Listener UNBLOCKED - forcing refresh');
       isMarkingRef.current = false;
 
       // ✅ Force re-fetch by unsubscribing and re-subscribing

@@ -29,8 +29,6 @@ export class CommentService {
    */
   async addComment(photoId: string, text: string, userId: string, userName: string): Promise<string> {
     try {
-      console.log('💬 Adding comment...', { photoId, text, userId, userName });
-
       const comment: Omit<Comment, 'id'> = {
         photoId,
         userId,
@@ -41,20 +39,14 @@ export class CommentService {
       };
 
       const docRef = await addDoc(this.commentsCollection, comment);
-      console.log('✅ Comment saved with ID:', docRef.id);
 
       // Create user activity
       if (userId) {
-        console.log('📸 Fetching photo details for:', photoId);
-
         const photoDoc = await getDoc(doc(this.photosCollection, photoId));
         const photoData = photoDoc.data();
-        console.log('📸 Photo data:', photoData?.description, photoData?.location);
 
-        console.log('🔄 Importing userService...');
         const { userService } = await import('../userService');
 
-        console.log('🎯 Creating activity...');
         await userService.addUserActivity(
           userId,
           'comment_added',
@@ -65,8 +57,6 @@ export class CommentService {
             targetId: photoId
           }
         );
-
-        console.log('✅ Activity created successfully!');
       } else {
         console.warn('⚠️ No userId provided - activity not created');
       }
@@ -163,7 +153,6 @@ export class CommentService {
         } as Comment);
       }
 
-      console.log(`📋 Loaded ${comments.length} comments for admin`);
       return comments;
 
     } catch (error) {
@@ -179,7 +168,6 @@ export class CommentService {
     try {
       const commentRef = doc(db, 'comments', commentId);
       await deleteDoc(commentRef);
-      console.log(`✅ Comment ${commentId} deleted successfully`);
     } catch (error) {
       console.error('❌ Error deleting comment:', error);
       throw error;
@@ -196,7 +184,6 @@ export class CommentService {
         isFlagged: true,
         flaggedAt: Timestamp.now()
       });
-      console.log(`🚩 Comment ${commentId} flagged successfully`);
     } catch (error) {
       console.error('❌ Error flagging comment:', error);
       throw error;
@@ -213,7 +200,6 @@ export class CommentService {
         isFlagged: false,
         flaggedAt: Timestamp.now()
       });
-      console.log(`🚩 Comment ${commentId} unflagged successfully`);
     } catch (error) {
       console.error('❌ Error unflagging comment:', error);
       throw error;

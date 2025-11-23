@@ -105,7 +105,6 @@ export class PhotoService {
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
-      console.log('✅ Photo uploaded successfully:', downloadURL);
       return downloadURL;
 
     } catch (error) {
@@ -169,7 +168,6 @@ export class PhotoService {
               const storagePath = decodeURIComponent(pathMatch[1]);
               const storageRef = ref(storage, storagePath);
               await deleteObject(storageRef);
-              console.log('Storage file deleted successfully:', storagePath);
             }
           } catch (storageError) {
             console.error('Error deleting from storage:', storageError);
@@ -178,7 +176,6 @@ export class PhotoService {
       }
 
       await deleteDoc(photoDocRef);
-      console.log('Photo document deleted successfully:', photoId);
 
     } catch (error) {
       console.error('Error deleting photo:', error);
@@ -217,8 +214,6 @@ export class PhotoService {
       const userTier = getUserTier(approvedPhotosCount);
       const dailyLimit = USER_TIER_LIMITS[userTier];
 
-      console.log(`User ${userId} tier: ${userTier}, approved photos: ${approvedPhotosCount}, daily limit: ${dailyLimit}`);
-
       // Check uploads today
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -231,12 +226,6 @@ export class PhotoService {
 
       const snapshot = await getDocs(userPhotosToday);
       const uploadsToday = snapshot.size;
-
-      console.log('📸 Photos uploaded today:', uploadsToday);
-      snapshot.docs.forEach(doc => {
-        const data = doc.data();
-        console.log('  - Photo ID:', doc.id, 'Created:', data.createdAt?.toDate?.());
-      });
 
       const remainingToday = dailyLimit - uploadsToday;
 
@@ -291,8 +280,6 @@ export class PhotoService {
    */
   async approvePhoto(photoId: string, adminUid: string): Promise<void> {
     try {
-      console.log(`Admin ${adminUid} approving photo ${photoId}`);
-
       const photoDoc = await getDoc(doc(this.photosCollection, photoId));
       if (!photoDoc.exists()) {
         throw new Error('Photo not found');
@@ -307,14 +294,11 @@ export class PhotoService {
         approvedBy: adminUid
       });
 
-      console.log(`✅ Photo ${photoId} approved`);
-
       // Update author's stats
       if (photoAuthorId) {
         const { userService } = await import('../userService');
         await userService.forceRecalculateUserStats(photoAuthorId);
         await userService.checkAndAwardBadges(photoAuthorId);
-        console.log(`✅ Stats updated for user ${photoAuthorId}`);
       }
 
     } catch (error) {
@@ -328,7 +312,6 @@ export class PhotoService {
    */
   async addPhoto(photoData: Omit<Photo, 'id' | 'createdAt' | 'updatedAt' | 'likes' | 'views' | 'isApproved'> & { authorId?: string }): Promise<string> {
     try {
-      console.log('Adding photo with data:', photoData);
       const now = Timestamp.now();
       const currentUser = auth.currentUser;
 
@@ -339,8 +322,6 @@ export class PhotoService {
       if (!limitCheck.allowed) {
         throw new Error(limitCheck.reason);
       }
-
-      console.log(`✅ User ${limitCheck.userTier} can upload (${limitCheck.remainingToday - 1} remaining after this upload)`);
 
       // Build photo object
       const photo = {
@@ -368,9 +349,7 @@ export class PhotoService {
         photo.coordinates = photoData.coordinates;
       }
 
-      console.log('Final photo object being saved:', photo);
       const docRef = await addDoc(this.photosCollection, photo);
-      console.log('Photo saved with ID:', docRef.id);
 
       // Invalidate relevant caches
       this.clearLocationCache(photoData.location);
@@ -424,7 +403,6 @@ export class PhotoService {
     try {
       const photoRef = doc(db, 'photos', photoId);
       await updateDoc(photoRef, { coordinates });
-      console.log('Coordinates updated for photo:', photoId);
     } catch (error) {
       console.error('Error updating coordinates:', error);
       throw error;
@@ -440,11 +418,9 @@ export class PhotoService {
       const cached = locationCache.get(cacheKey);
 
       if (cached && isCacheValid(cached.timestamp)) {
-        console.log('📋 Using cached photos for location:', location);
         return cached.data;
       }
 
-      console.log('🔍 Fetching photos from Firestore for:', location);
       const q = query(
         this.photosCollection,
         where('location', '==', location),
@@ -456,7 +432,6 @@ export class PhotoService {
       const photos = mapDocumentsWithId<Photo>(querySnapshot.docs);
 
       locationCache.set(cacheKey, { data: photos, timestamp: Date.now() });
-      console.log(`💾 Cached ${photos.length} photos for ${location}`);
 
       return photos;
     } catch (error) {
@@ -499,11 +474,9 @@ export class PhotoService {
   async getRecentPhotos(limitCount: number = 6): Promise<Photo[]> {
     try {
       if (recentPhotosCache.data && isCacheValid(recentPhotosCache.timestamp)) {
-        console.log('📋 Using cached recent photos');
         return recentPhotosCache.data.slice(0, limitCount);
       }
 
-      console.log('🔍 Fetching recent photos from Firestore');
       const photosQuery = query(
         this.photosCollection,
         where('isApproved', '==', true),
@@ -516,7 +489,6 @@ export class PhotoService {
 
       recentPhotosCache.data = photos;
       recentPhotosCache.timestamp = Date.now();
-      console.log(`💾 Cached ${photos.length} recent photos`);
 
       return photos.slice(0, limitCount);
     } catch (error) {
@@ -530,7 +502,6 @@ export class PhotoService {
    */
   async getAllPhotosForAdmin(): Promise<Photo[]> {
     try {
-      console.log('Fetching all photos for admin dashboard...');
       const photosQuery = query(
         this.photosCollection,
         orderBy('createdAt', 'desc')
@@ -539,7 +510,6 @@ export class PhotoService {
       const snapshot = await getDocs(photosQuery);
       const photos = mapDocumentsWithId<Photo>(snapshot.docs);
 
-      console.log(`Fetched ${photos.length} total photos for admin`);
       return photos;
     } catch (error) {
       console.error('Error getting all photos for admin:', error);
@@ -639,8 +609,6 @@ export class PhotoService {
    */
   async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Photo[]> {
     try {
-      console.log(`Getting photos for user: ${uploaderUid}, limit: ${limitCount}`);
-
       let allPhotos: Photo[] = [];
 
       // Main method - by authorId
@@ -663,9 +631,8 @@ export class PhotoService {
         const authorSnapshot = await getDocs(authorQuery);
         const authorPhotos = mapDocumentsWithId<Photo>(authorSnapshot.docs);
         allPhotos = [...allPhotos, ...authorPhotos];
-        console.log(`Found ${authorPhotos.length} photos by authorId for ${uploaderUid}`);
       } catch (error) {
-        console.log('AuthorId query failed:', error);
+        // AuthorId query failed, continue to fallback
       }
 
       // Fallback - legacy photos
@@ -679,9 +646,8 @@ export class PhotoService {
           const legacySnapshot = await getDocs(legacyQuery);
           const legacyPhotos = mapDocumentsWithId<Photo>(legacySnapshot.docs);
           allPhotos = [...allPhotos, ...legacyPhotos];
-          console.log(`Found ${legacyPhotos.length} legacy photos for Kruno`);
         } catch (error) {
-          console.log('Legacy query failed:', error);
+          // Legacy query failed, continue
         }
       }
 
@@ -689,8 +655,6 @@ export class PhotoService {
       const uniquePhotos = allPhotos.filter((photo, index, self) =>
         index === self.findIndex(p => p.id === photo.id)
       );
-
-      console.log(`✅ Total unique photos: ${uniquePhotos.length}`);
 
       return limitCount ? uniquePhotos.slice(0, limitCount) : uniquePhotos;
     } catch (error) {
@@ -799,17 +763,14 @@ export class PhotoService {
     if (location) {
       const cacheKey = `location_${location}`;
       locationCache.delete(cacheKey);
-      console.log('🗑️ Cleared cache for location:', location);
     } else {
       locationCache.clear();
-      console.log('🗑️ Cleared all location cache');
     }
   }
 
   clearRecentPhotosCache() {
     recentPhotosCache.data = null;
     recentPhotosCache.timestamp = 0;
-    console.log('🗑️ Cleared recent photos cache');
   }
 }
 

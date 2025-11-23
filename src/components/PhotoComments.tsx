@@ -177,7 +177,6 @@ const handleSubmitComment = async (e: React.FormEvent) => {
           photoAuthor || 'untitled photo',
           user.photoURL || undefined
         );
-        console.log('✅ Comment notification sent');
       } catch (notifError) {
         console.error('⚠️ Failed to send comment notification:', notifError);
       }

@@ -15,9 +15,6 @@ const AdminLogin = () => {
   const { user, isAdmin, signInAdmin } = useAuth();
   const navigate = useNavigate(); // ✅ DODAJ OVO
 
-    // Debug: Log when component loads
-  console.log('AdminLogin component loaded!');
-
   // ✅ ZAMIJENI Navigate logiku sa useEffect
   useEffect(() => {
     if (user && isAdmin) {

@@ -62,14 +62,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
           const isAdmin = authService.isAdmin(user);
           const isOwner = user?.uid === photoData.authorId;
 
-          console.log('🔒 Pending photo:', {
-            isApproved: photoData.isApproved,
-            isAdmin,
-            isOwner,
-            photoAuthor: photoData.authorId,
-            currentUser: user?.uid
-          });
-
           if (isOwner && !isAdmin) {
             toast.info('Ovo je tvoja fotografija koja čeka odobrenje.', {
               duration: 5000,
@@ -156,7 +148,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
         if (isFirebaseError(error) &&
             (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions'))) {
-          console.log('🔒 Firebase Rules blocked access');
           toast.error('Nemate pristup ovoj fotografiji.', {
             duration: 4000,
             icon: '🔒'
@@ -232,7 +223,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     if (!photoId || !user) return;
 
     try {
-      console.log('🔥 Adding tag:', newTag);
       const tagId = await tagService.addTaggedPerson({
         photoId,
         name: newTag.name,
@@ -241,8 +231,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         description: '',
         addedBy: user.displayName || user.email || 'User'
       });
-
-      console.log('🔥 Tag saved with ID:', tagId);
 
       // Add tag to local state with pending status
       const newTagWithId = {
@@ -256,8 +244,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         isApproved: false,
         createdAt: new Date()
       };
-
-      console.log('🔥 Adding to local state:', newTagWithId);
 
       setTaggedPersons([...taggedPersons, newTagWithId]);
 
@@ -273,38 +259,23 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
   // Handle like
   const handleLike = async () => {
-    console.log('🔵 [LIKE] Button clicked');
-
     if (!photoId || !user || likeLoading) {
-      console.log('❌ [LIKE] Early return:', { photoId, user: !!user, likeLoading });
       return;
     }
 
     if (!user) {
-      console.log('❌ [LIKE] No user');
       toast.error(t('photoDetail.signInMessage'));
       return;
     }
 
     try {
       setLikeLoading(true);
-      console.log('🔵 [LIKE] Toggling like...');
 
       // Koristi likeService za prebacivanje lajka
-      const result = await likeService.toggleLike(photoId, user.uid); 
-      console.log('✅ [LIKE] Toggle result:', result);
+      const result = await likeService.toggleLike(photoId, user.uid);
 
       // Send notification ONLY if user liked (not unliked)
-      console.log('🔵 [LIKE] Checking notification conditions:', {
-        'result.liked': result.liked,
-        'photo': !!photo,
-        'photo.uploadedBy': photo?.uploadedBy,
-        'user.uid': user.uid,
-        'isDifferentUser': photo?.uploadedBy !== user.uid
-      });
-
       if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
-        console.log('🔵 [LIKE] Sending notification...');
         try {
           await notificationService.notifyNewLike(
             photo.uploadedBy,
@@ -314,16 +285,9 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
             photo.description || 'untitled',
             user.photoURL || undefined
           );
-          console.log('✅ [LIKE] Notification sent successfully!');
         } catch (notifError) {
           console.error('❌ [LIKE] Failed to send notification:', notifError);
         }
-      } else {
-        console.log('⏭️ [LIKE] Skipping notification:', {
-          reason: !result.liked ? 'User unliked' :
-                  !photo?.uploadedBy ? 'No photo owner' :
-                  photo.uploadedBy === user.uid ? 'Own photo' : 'Unknown'
-        });
       }
 
       setLikes(result.newLikesCount);

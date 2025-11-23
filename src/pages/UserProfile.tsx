@@ -127,7 +127,6 @@ const UserProfilePage = () => {
             currentUser.displayName || 'Anonymous', // Follower name
             currentUser.photoURL || undefined     // Follower avatar
           );
-          console.log('✅ Follow notification sent');
         } catch (notifError) {
           console.error('⚠️ Failed to send follow notification:', notifError);
         }

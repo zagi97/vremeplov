@@ -49,11 +49,9 @@ export interface Notification extends NotificationData {
  */
 export const sendNotification = async (data: NotificationData): Promise<void> => {
   try {
-    console.log('📧 Creating notification:', data);
-    
     const emailTypes = ['user_banned', 'user_suspended', 'user_unbanned', 'user_unsuspended', 'photo_rejected'];
     const shouldSendEmail = emailTypes.includes(data.type);
-    
+
     await addDoc(collection(db, 'notifications'), {
       ...data,
       createdAt: serverTimestamp(),
@@ -61,8 +59,6 @@ export const sendNotification = async (data: NotificationData): Promise<void> =>
       read: false,
       requiresEmail: shouldSendEmail
     });
-    
-    console.log('✅ Notification created successfully');
   } catch (error) {
     console.error('❌ Error creating notification:', error);
     throw error;
@@ -148,8 +144,6 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
  */
 export const markAllNotificationsAsRead = async (userId: string): Promise<void> => {
   try {
-    console.log('🚀 markAllNotificationsAsRead called for user:', userId);
-    
     const notificationsRef = collection(db, 'notifications');
     const q = query(
       notificationsRef,
@@ -157,23 +151,17 @@ export const markAllNotificationsAsRead = async (userId: string): Promise<void> 
       where('read', '==', false)
     );
 
-    console.log('📊 Fetching unread notifications...');
-    
     // ✅ FORCE SERVER FETCH - bypass cache
     const snapshot = await getDocs(q);
-    
-    console.log('📊 Found', snapshot.size, 'unread notifications');
-    
+
     if (snapshot.empty) {
-      console.log('⚠️ No unread notifications to mark');
       return;
     }
 
     const batch = writeBatch(db);
     let updateCount = 0;
-    
+
     snapshot.docs.forEach(document => {
-      console.log('📝 Adding to batch:', document.id);
       batch.update(document.ref, {
         read: true,
         readAt: serverTimestamp()
@@ -181,25 +169,20 @@ export const markAllNotificationsAsRead = async (userId: string): Promise<void> 
       updateCount++;
     });
 
-    console.log('💾 Committing batch for', updateCount, 'notifications...');
-    
     // ✅ WAIT for batch
     await batch.commit();
-    
-    console.log('✅ Batch committed!');
-    
+
     // ✅ CRITICAL FIX: Force a small delay to let Firestore propagate
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     // ✅ VERIFY with fresh fetch
     const verifySnapshot = await getDocs(q);
-    console.log('🔍 Verification: Remaining unread:', verifySnapshot.size);
-    
+
     if (verifySnapshot.size > 0) {
       console.warn('⚠️ Warning:', verifySnapshot.size, 'notifications still unread!');
       // Don't throw - batch uspješan, ali možda Firestore nije propagirao
     }
-    
+
   } catch (error) {
     console.error('❌ Error in markAllNotificationsAsRead:', error);
     throw error;
@@ -231,29 +214,21 @@ export const subscribeToNotifications = (
       (snapshot) => {
         const isFromCache = snapshot.metadata.fromCache;
         const hasPendingWrites = snapshot.metadata.hasPendingWrites;
-        
+
         // ✅ SMART CACHE HANDLING:
         // - Accept first update (even if cached) for initial load
         // - After that, only accept server updates OR fresh cache without pending writes
         if (isFromCache && hasReceivedInitialData && hasPendingWrites) {
-          console.log('🚫 Ignoring stale cached update');
           return;
         }
-        
-        console.log('📨 Listener update:', {
-          size: snapshot.size,
-          fromCache: isFromCache,
-          hasPendingWrites: hasPendingWrites,
-          isInitial: !hasReceivedInitialData
-        });
-        
+
         hasReceivedInitialData = true;
-        
+
         const notifications = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         } as Notification));
-        
+
         onNotification(notifications);
       },
       (error) => {

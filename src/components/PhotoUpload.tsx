@@ -246,13 +246,8 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   try {
     const photoId = Date.now().toString();
-    
-    console.log('Starting upload process for photoId:', photoId);
-    console.log('Selected address:', selectedAddress);
-    console.log('Coordinates:', coordinates);
-    
+
     // ✅ STEP 1: Generate all image sizes
-console.log('🔄 Starting image optimization...');
 const imageSizes = await generateImageSizes(selectedFile);
 
 // ✅ STEP 2: Upload all images
@@ -293,10 +288,8 @@ for (const jpeg of imageSizes.jpeg) {
   uploadedUrls.jpeg.push({ url, width: jpeg.width, suffix: jpeg.suffix });
 }
 
-console.log('✅ All images uploaded:', uploadedUrls);
 const imageUrl = uploadedUrls.original; // For backward compatibility
-    console.log('File upload successful, creating database record...');
-    
+
     let uploaderName = 'Unknown';
     if (user?.displayName && user.displayName.trim() !== '') {
       uploaderName = user.displayName.trim();
@@ -343,9 +336,8 @@ if (coordinates && selectedAddress) {
     address: selectedAddress
   };
 }
-  
+
 const finalPhotoId = await photoService.addPhoto(photoData);
-console.log('Database record created successfully with ID:', finalPhotoId);
 
 // ✅ ISPRAVNO - koristi coordinates i selectedAddress
 if (coordinates && selectedAddress) {

@@ -100,8 +100,6 @@ export class TagService {
             targetId: tagData.photoId
           }
         );
-
-        console.log('✅ Tag approved and activity created for user:', tagData.addedByUid);
       }
     } catch (error) {
       console.error('Error approving tagged person:', error);
@@ -208,8 +206,6 @@ export class TagService {
    */
   async getTaggedPersonsForPhotoOwner(photoId: string, userId: string): Promise<TaggedPerson[]> {
     try {
-      console.log('🏠 Getting tags for photo owner:', { photoId, userId });
-
       // 1. Get approved tags
       const approvedQuery = query(
         this.taggedPersonsCollection,
@@ -218,8 +214,6 @@ export class TagService {
       );
       const approvedSnapshot = await getDocs(approvedQuery);
       const approvedTags = mapDocumentsWithId<TaggedPerson>(approvedSnapshot.docs);
-
-      console.log('🏠 Approved tags:', approvedTags.length);
 
       // 2. Get pending tags added by user
       const userPendingQuery = query(
@@ -231,8 +225,6 @@ export class TagService {
       const userPendingSnapshot = await getDocs(userPendingQuery);
       const userPendingTags = mapDocumentsWithId<TaggedPerson>(userPendingSnapshot.docs);
 
-      console.log('🏠 User pending tags:', userPendingTags.length);
-
       // 3. Get pending tags on user's photo
       const photoPendingQuery = query(
         this.taggedPersonsCollection,
@@ -243,15 +235,12 @@ export class TagService {
       const photoPendingSnapshot = await getDocs(photoPendingQuery);
       const photoPendingTags = mapDocumentsWithId<TaggedPerson>(photoPendingSnapshot.docs);
 
-      console.log('🏠 Photo pending tags:', photoPendingTags.length);
-
       // 4. Combine and remove duplicates
       const allTags = [...approvedTags, ...userPendingTags, ...photoPendingTags];
       const uniqueTags = allTags.filter((tag, index, self) =>
         index === self.findIndex(t => t.id === tag.id)
       );
 
-      console.log('🏠 Total unique tags:', uniqueTags.length);
       return uniqueTags;
 
     } catch (error) {

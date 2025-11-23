@@ -59,7 +59,6 @@ export class LikeService {
 
       if (hasLiked) {
         // ========== UNLIKE ==========
-        console.log(`🔄 Unlike process started for photo ${photoId} by user ${userId}`);
 
         // 1. Remove like record
         const likeQuery = query(
@@ -70,7 +69,6 @@ export class LikeService {
         const likeSnapshot = await getDocs(likeQuery);
         const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
-        console.log(`✅ Removed ${likeSnapshot.size} like records`);
 
         // 2. Decrement like count
         const newLikesCount = Math.max(0, currentLikes - 1);
@@ -78,7 +76,6 @@ export class LikeService {
           likes: newLikesCount,
           updatedAt: Timestamp.now()
         });
-        console.log(`✅ Decremented likes: ${currentLikes} → ${newLikesCount}`);
 
         // 3. Delete activity
         try {
@@ -89,7 +86,6 @@ export class LikeService {
           );
 
           const activitiesSnapshot = await getDocs(activitiesQuery);
-          console.log(`🔍 Found ${activitiesSnapshot.size} photo_like activities for user`);
 
           // Filter activities for this specific photo
           const relevantActivities = activitiesSnapshot.docs.filter(doc => {
@@ -97,12 +93,9 @@ export class LikeService {
             return data.metadata?.targetId === photoId;
           });
 
-          console.log(`🎯 Found ${relevantActivities.length} activities for this specific photo`);
-
           if (relevantActivities.length > 0) {
             const deleteActivityPromises = relevantActivities.map(doc => deleteDoc(doc.ref));
             await Promise.all(deleteActivityPromises);
-            console.log(`✅ Deleted ${relevantActivities.length} activities`);
           }
         } catch (activityError) {
           console.error('⚠️ Error deleting activity (non-critical):', activityError);
@@ -123,12 +116,10 @@ export class LikeService {
           }
         }
 
-        console.log(`✅ Unlike completed successfully`);
         return { liked: false, newLikesCount };
 
       } else {
         // ========== LIKE ==========
-        console.log(`💖 Like process started for photo ${photoId} by user ${userId}`);
 
         // 1. Record the like
         await addDoc(this.userLikesCollection, {
@@ -168,7 +159,6 @@ export class LikeService {
           }
         }
 
-        console.log(`✅ Like completed successfully`);
         return { liked: true, newLikesCount };
       }
     } catch (error) {

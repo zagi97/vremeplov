@@ -20,7 +20,6 @@ export function usePhotoModeration() {
       setLoading(true);
 
       const photos = await photoService.getAllPhotosForAdmin();
-      console.log('All photos from database:', photos);
 
       const pending = photos.filter(photo =>
         photo.isApproved === undefined ||
@@ -48,8 +47,6 @@ export function usePhotoModeration() {
 
   const handleApprovePhoto = useCallback(async (photoId: string, adminUid: string) => {
     try {
-      console.log('🟢 Starting approval process for photo:', photoId);
-
       const photo = await photoService.getPhotoById(photoId);
       if (!photo) {
         toast.error('Photo not found');
@@ -77,8 +74,6 @@ export function usePhotoModeration() {
 
   const handleRejectPhoto = useCallback(async (photoId: string, reason: string) => {
     try {
-      console.log('Rejecting (deleting) photo with ID:', photoId);
-
       const photo = await photoService.getPhotoById(photoId);
       if (!photo) {
         toast.error('Photo not found');
@@ -100,7 +95,6 @@ export function usePhotoModeration() {
       const currentCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
       localStorage.setItem('rejectedPhotosCount', (currentCount + 1).toString());
 
-      console.log('Photo deleted successfully, updating UI...');
       toast.success(t('admin.photoRejected'));
       await loadPhotos();
     } catch (error) {

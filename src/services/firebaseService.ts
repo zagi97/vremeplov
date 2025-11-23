@@ -116,8 +116,6 @@ export const geocodingService = {
       // Add delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      console.log('Geocoding address:', fullAddress);
-
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1&countrycodes=hr&accept-language=hr`,
         {
@@ -148,11 +146,9 @@ export const geocodingService = {
           latitude,
           longitude
         };
-        console.log('Geocoding successful with randomization:', result);
         return result;
       }
 
-      console.log('No geocoding results found for:', fullAddress);
       return null;
     } catch (error) {
       console.error('Geocoding error:', error);
@@ -171,8 +167,6 @@ export const geocodingService = {
 
       const fullSearchTerm = `${searchTerm}, ${city}, Croatia`;
       const encodedSearch = encodeURIComponent(fullSearchTerm);
-
-      console.log('Searching addresses for:', fullSearchTerm);
 
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
@@ -223,7 +217,6 @@ export const geocodingService = {
       });
 
       const results = Array.from(addresses).slice(0, 8);
-      console.log('Address search results:', results);
       return results;
 
     } catch (error) {
