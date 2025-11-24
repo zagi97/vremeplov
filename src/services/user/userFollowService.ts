@@ -61,6 +61,7 @@ class UserFollowService {
 
   /**
    * Unfollow user
+   * OPTIMIZED: Parallel deletes and updates instead of sequential
    */
   async unfollowUser(followerId: string, followingId: string): Promise<void> {
     try {
@@ -73,20 +74,18 @@ class UserFollowService {
 
       const followDocs = await getDocs(followsQuery);
 
-      for (const followDoc of followDocs.docs) {
-        await deleteDoc(followDoc.ref);
-      }
+      // ✅ OPTIMIZATION: Parallel deletes instead of sequential
+      const deletePromises = followDocs.docs.map(followDoc => deleteDoc(followDoc.ref));
 
-      // Update counts
+      // ✅ OPTIMIZATION: Execute deletes and updates in parallel
       const followingUserRef = doc(db, 'users', followingId);
-      await updateDoc(followingUserRef, {
-        'stats.followers': increment(-1)
-      });
-
       const followerUserRef = doc(db, 'users', followerId);
-      await updateDoc(followerUserRef, {
-        'stats.following': increment(-1)
-      });
+
+      await Promise.all([
+        ...deletePromises,
+        updateDoc(followingUserRef, { 'stats.followers': increment(-1) }),
+        updateDoc(followerUserRef, { 'stats.following': increment(-1) })
+      ]);
 
     } catch (error) {
       console.error('Error unfollowing user:', error);
