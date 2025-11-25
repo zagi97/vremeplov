@@ -1,0 +1,247 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // 🔧 HELPER FUNCTIONS
+    // ============================================
+
+    function isAdmin() {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // 👤 USERS COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /users/{userId} {
+      allow list: if isAuthenticated();
+      allow get: if isAuthenticated() && (isAdmin() || isOwner(userId));
+      allow create: if isAuthenticated() &&
+                    isOwner(userId) &&
+                    request.resource.data.uid == request.auth.uid &&
+                    !request.resource.data.keys().hasAny(['isAdmin', 'isBanned']);
+      allow update: if isAdmin() ||
+                    (isOwner(userId) &&
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 📷 PHOTOS COLLECTION
+    // ============================================
+    match /photos/{photoId} {
+      allow get: if resource.data.isApproved == true
+                 || isAdmin()
+                 || (isAuthenticated() && isOwner(resource.data.uploaderId));
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin() ||
+        (isAuthenticated() && isOwner(resource.data.uploaderId))
+      );
+      allow create: if isAuthenticated() &&
+                    request.resource.data.uploaderId == request.auth.uid &&
+                    request.resource.data.authorId == request.auth.uid &&
+                    request.resource.data.isApproved == false;
+      allow update: if isAdmin() ||
+                    (isAuthenticated() &&
+                     isOwner(resource.data.uploaderId) &&
+                     resource.data.isApproved == false) ||
+                    (isAuthenticated() &&
+                     resource.data.isApproved == true &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['likes', 'views', 'updatedAt']));
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 💬 COMMENTS COLLECTION
+    // ============================================
+    match /comments/{commentId} {
+      allow get: if resource.data.isApproved == true ||
+                 isAdmin() ||
+                 (isAuthenticated() && isOwner(resource.data.userId));
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin() ||
+        (isAuthenticated() && isOwner(resource.data.userId))
+      );
+      allow create: if isAuthenticated() &&
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.text.size() > 0 &&
+                    request.resource.data.text.size() <= 250 &&
+                    request.resource.data.isApproved == false;
+      allow update: if isAdmin();
+      allow delete: if isAdmin() ||
+                    (isAuthenticated() && isOwner(resource.data.userId));
+    }
+
+    // ============================================
+    // 🏷️ TAGGED PERSONS COLLECTION
+    // ============================================
+    match /taggedPersons/{tagId} {
+      allow get: if resource.data.isApproved == true ||
+                 isAdmin() ||
+                 (isAuthenticated() && (
+                   isOwner(resource.data.addedByUid) ||
+                   isOwner(resource.data.photoAuthorId)
+                 ));
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+                    request.resource.data.addedByUid == request.auth.uid &&
+                    request.resource.data.name.size() > 0 &&
+                    request.resource.data.name.size() <= 40 &&
+                    request.resource.data.isApproved == false;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 👥 FOLLOWS COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /follows/{followId} {
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.followerId) ||
+        isOwner(resource.data.followingId) ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated() && (
+        request.query.limit <= 100 &&
+        (resource == null ||
+         isOwner(resource.data.followerId) ||
+         isOwner(resource.data.followingId) ||
+         isAdmin())
+      );
+      allow create: if isAuthenticated() &&
+                    isOwner(request.resource.data.followerId) &&
+                    request.resource.data.followerId != request.resource.data.followingId;
+      allow delete: if isAuthenticated() && isOwner(resource.data.followerId);
+    }
+
+    // ============================================
+    // 📊 ACTIVITIES - PRIVACY PROTECTED
+    // ============================================
+    match /activities/{activityId} {
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+    }
+
+    // ============================================
+    // ❤️ USER LIKES - PRIVACY PROTECTED
+    // ============================================
+    match /userLikes/{likeId} {
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create, update: if isAuthenticated() &&
+                            isOwner(request.resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // 👁️ USER VIEWS - PRIVACY PROTECTED
+    // ============================================
+    match /userViews/{viewId} {
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create, update: if isAuthenticated() &&
+                            isOwner(request.resource.data.userId);
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // 🔔 NOTIFICATIONS
+    // ============================================
+    match /notifications/{notificationId} {
+      allow get: if isAuthenticated() &&
+                 isOwner(resource.data.userId);
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId)
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+                    isOwner(resource.data.userId);
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 🚫 DENY ALL OTHER COLLECTIONS
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ============================================
+// 📦 FIREBASE STORAGE RULES (CLEAN VERSION)
+// ============================================
+service firebase.storage {
+  match /b/{bucket}/o {
+    // ✅ ONLY NEW SECURE FORMAT: photos/{userId}/{photoId}/{fileName}
+    match /photos/{userId}/{photoId}/{fileName} {
+      // READ: Public
+      allow read: if true;
+
+      // WRITE: Only owner can upload to their folder
+      allow write: if request.auth != null &&
+                      request.auth.uid == userId &&
+                      request.resource.contentType.matches('image/jpeg|image/jpg|image/png|image/webp') &&
+                      !request.resource.contentType.matches('image/gif') &&
+                      request.resource.size < 10 * 1024 * 1024 && // 10MB
+                      fileName.matches('^[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|webp)$');
+    }
+
+    // ✅ ADMIN: Full access
+    match /{allPaths=**} {
+      allow read, write, delete: if request.auth != null &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+  }
+}
