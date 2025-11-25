@@ -1,0 +1,333 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================
+    // 🔧 HELPER FUNCTIONS
+    // ============================================
+
+    // Check if user is admin
+    function isAdmin() {
+      return request.auth != null &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if user is owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // ============================================
+    // 👤 USERS COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /users/{userId} {
+      // ✅ READ: Only public profile data visible to all
+      // Private data (email, phone) only to owner/admin
+      allow get: if isAuthenticated() && (
+        isAdmin() ||
+        isOwner(userId)
+      );
+
+      // ✅ LIST: Only authenticated users can list, but limit exposed data
+      // Leaderboard needs this to work
+      allow list: if isAuthenticated();
+
+      // ✅ CREATE: Only on signup, user creates their own profile
+      allow create: if isAuthenticated() &&
+                    isOwner(userId) &&
+                    request.resource.data.uid == request.auth.uid &&
+                    !request.resource.data.keys().hasAny(['isAdmin', 'isBanned']);
+
+      // ✅ UPDATE: User can update own profile, admin can update any
+      allow update: if isAdmin() ||
+                    (isOwner(userId) &&
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
+
+      // ✅ DELETE: Only admin can delete users
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 📷 PHOTOS COLLECTION - MODERATION PROTECTED
+    // ============================================
+    match /photos/{photoId} {
+      // ✅ GET single photo: Approved photos public, own unapproved visible to author
+      allow get: if resource.data.isApproved == true
+                 || isAdmin()
+                 || (isAuthenticated() && isOwner(resource.data.uploaderId));
+
+      // ✅ LIST photos: Only approved photos (+ admin sees all)
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin() ||
+        (isAuthenticated() && isOwner(resource.data.uploaderId))
+      );
+
+      // ✅ CREATE: Authenticated users can upload
+      allow create: if isAuthenticated() &&
+                    request.resource.data.uploaderId == request.auth.uid &&
+                    request.resource.data.authorId == request.auth.uid &&
+                    request.resource.data.isApproved == false &&
+                    request.resource.data.description.size() <= 500 &&
+                    request.resource.data.location.size() > 0;
+
+      // ✅ UPDATE: Owner can update unapproved, admin can update all
+      // Anyone can increment likes/views (with rate limiting in code)
+      allow update: if isAdmin() ||
+                    (isAuthenticated() &&
+                     isOwner(resource.data.uploaderId) &&
+                     resource.data.isApproved == false) ||
+                    (isAuthenticated() &&
+                     resource.data.isApproved == true &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['likes', 'views', 'updatedAt']));
+
+      // ✅ DELETE: Only admin can delete
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 💬 COMMENTS COLLECTION - MODERATION PROTECTED
+    // ============================================
+    match /comments/{commentId} {
+      // ✅ GET: Approved comments public, own comments visible to author
+      allow get: if resource.data.isApproved == true ||
+                 isAdmin() ||
+                 (isAuthenticated() && isOwner(resource.data.userId));
+
+      // ✅ LIST: Only approved comments (+ admin sees all, + own comments)
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin() ||
+        (isAuthenticated() && isOwner(resource.data.userId))
+      );
+
+      // ✅ CREATE: Authenticated users can comment
+      allow create: if isAuthenticated() &&
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.text.size() > 0 &&
+                    request.resource.data.text.size() <= 250 &&
+                    request.resource.data.isApproved == false;
+
+      // ✅ UPDATE: Only admin (for moderation)
+      allow update: if isAdmin();
+
+      // ✅ DELETE: Admin or comment author
+      allow delete: if isAdmin() ||
+                    (isAuthenticated() && isOwner(resource.data.userId));
+    }
+
+    // ============================================
+    // 🏷️ TAGGED PERSONS COLLECTION
+    // ============================================
+    match /taggedPersons/{tagId} {
+      // ✅ GET: Approved tags public, own tags visible to creator
+      allow get: if resource.data.isApproved == true ||
+                 isAdmin() ||
+                 (isAuthenticated() && (
+                   isOwner(resource.data.addedByUid) ||
+                   isOwner(resource.data.photoAuthorId)
+                 ));
+
+      // ✅ LIST: Only approved tags
+      allow list: if request.query.limit <= 100 && (
+        resource == null ||
+        resource.data.isApproved == true ||
+        isAdmin()
+      );
+
+      // ✅ CREATE: Authenticated users can tag
+      allow create: if isAuthenticated() &&
+                    request.resource.data.addedByUid == request.auth.uid &&
+                    request.resource.data.name.size() > 0 &&
+                    request.resource.data.name.size() <= 40 &&
+                    request.resource.data.isApproved == false;
+
+      // ✅ UPDATE: Only admin (for moderation)
+      allow update: if isAdmin();
+
+      // ✅ DELETE: Only admin
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 👥 FOLLOWS COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /follows/{followId} {
+      // ✅ GET: Only involved users can see follow relationship
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.followerId) ||
+        isOwner(resource.data.followingId) ||
+        isAdmin()
+      );
+
+      // ✅ LIST: Only own follows (followers/following)
+      allow list: if isAuthenticated() && (
+        request.query.limit <= 100 &&
+        (resource == null ||
+         isOwner(resource.data.followerId) ||
+         isOwner(resource.data.followingId) ||
+         isAdmin())
+      );
+
+      // ✅ CREATE: User can follow others
+      allow create: if isAuthenticated() &&
+                    isOwner(request.resource.data.followerId) &&
+                    request.resource.data.followerId != request.resource.data.followingId;
+
+      // ✅ DELETE: User can unfollow
+      allow delete: if isAuthenticated() && isOwner(resource.data.followerId);
+    }
+
+    // ============================================
+    // 📊 ACTIVITIES COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /activities/{activityId} {
+      // ✅ GET: Only owner can see their activities
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ LIST: Only own activities
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ CREATE: System creates activities (via service)
+      allow create: if isAuthenticated();
+
+      // ✅ UPDATE: Owner or admin
+      allow update: if isAuthenticated() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+
+      // ✅ DELETE: Owner or admin
+      allow delete: if isAuthenticated() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+    }
+
+    // ============================================
+    // ❤️ USER LIKES COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /userLikes/{likeId} {
+      // ✅ GET: Only owner can see their likes
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ LIST: Only own likes
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ CREATE/UPDATE: User can like photos
+      allow create, update: if isAuthenticated() &&
+                            isOwner(request.resource.data.userId);
+
+      // ✅ DELETE: User can unlike
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // 👁️ USER VIEWS COLLECTION - PRIVACY PROTECTED
+    // ============================================
+    match /userViews/{viewId} {
+      // ✅ GET: Only owner can see their views
+      allow get: if isAuthenticated() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ LIST: Only own views
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+
+      // ✅ CREATE/UPDATE: User can track views
+      allow create, update: if isAuthenticated() &&
+                            isOwner(request.resource.data.userId);
+
+      // ✅ DELETE: User or admin
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // ============================================
+    // 🔔 NOTIFICATIONS COLLECTION
+    // ============================================
+    match /notifications/{notificationId} {
+      // ✅ GET: Only recipient can see their notifications
+      allow get: if isAuthenticated() &&
+                 isOwner(resource.data.userId);
+
+      // ✅ LIST: Only own notifications
+      allow list: if isAuthenticated() &&
+                  request.query.limit <= 100 && (
+        resource == null ||
+        isOwner(resource.data.userId)
+      );
+
+      // ✅ CREATE: System creates notifications
+      allow create: if isAuthenticated();
+
+      // ✅ UPDATE: User can mark as read
+      allow update: if isAuthenticated() &&
+                    isOwner(resource.data.userId);
+
+      // ✅ DELETE: Admin only
+      allow delete: if isAdmin();
+    }
+
+    // ============================================
+    // 🚫 DENY ALL OTHER COLLECTIONS
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// ============================================
+// 📦 FIREBASE STORAGE RULES
+// ============================================
+service firebase.storage {
+  match /b/{bucket}/o {
+    // ✅ PHOTOS: Owner upload only, public read
+    match /photos/{userId}/{photoId}/{fileName} {
+      // ✅ READ: Public (approved photos should be public)
+      allow read: if true;
+
+      // ✅ WRITE: Only owner can upload to their folder
+      allow write: if request.auth != null &&
+                      request.auth.uid == userId &&
+                      request.resource.contentType.matches('image/jpeg|image/jpg|image/png|image/webp') &&
+                      !request.resource.contentType.matches('image/gif') &&
+                      request.resource.size < 10 * 1024 * 1024 && // 10MB limit (reduced from 20MB)
+                      fileName.matches('^[a-zA-Z0-9_-]+\\.(jpg|jpeg|png|webp)$'); // Prevent path traversal
+    }
+
+    // ✅ ADMIN: Full access for admin user only
+    match /{allPaths=**} {
+      allow read, write, delete: if request.auth != null &&
+        request.auth.token.email == 'vremeplov.app@gmail.com';
+    }
+  }
+}

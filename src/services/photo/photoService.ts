@@ -92,15 +92,18 @@ export class PhotoService {
       }
 
       // Validate file size (20MB)
-      const MAX_SIZE = 20 * 1024 * 1024;
+      const MAX_SIZE = 10 * 1024 * 1024; // Reduced from 20MB to 10MB for security
       if (file.size > MAX_SIZE) {
         const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-        throw new Error(`Slika je prevelika (${sizeMB}MB). Maksimalna veličina je 20MB.`);
+        throw new Error(`Slika je prevelika (${sizeMB}MB). Maksimalna veličina je 10MB.`);
       }
 
       const timestamp = Date.now();
       const fileName = `${timestamp}_${file.name}`;
-      const storageRef = ref(storage, `photos/${photoId}/${fileName}`);
+      // ✅ NEW SECURE FORMAT: photos/{userId}/{photoId}/{fileName}
+      const userId = auth.currentUser?.uid;
+      if (!userId) throw new Error('User must be authenticated to upload photos');
+      const storageRef = ref(storage, `photos/${userId}/${photoId}/${fileName}`);
 
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
