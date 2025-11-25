@@ -42,6 +42,8 @@ import { useUserProfileData } from '@/hooks/useUserProfileData';
 import { getActivityDisplay, getActivityLink, getBadgeDetails } from '@/utils/userProfileHelpers';
 import { ProfileStats } from '@/components/UserProfile/ProfileStats';
 import { ProfileBadges } from '@/components/UserProfile/ProfileBadges';
+import { getAvatarColor, getUserInitials } from '@/utils/avatarUtils';
+import { cn } from '@/lib/utils';
 
 
 
@@ -242,8 +244,8 @@ if (loading) {
           <CardContent className="p-6 text-center">
             <Avatar className="w-24 h-24 mx-auto mb-4">
                     <AvatarImage src={profile.photoURL} alt={profile.displayName} />
-                    <AvatarFallback className="text-2xl">
-                      {profile.displayName.charAt(0).toUpperCase()}
+                    <AvatarFallback className={cn(getAvatarColor(userId || ''), "text-white text-2xl")}>
+                      {getUserInitials(profile.displayName, null)}
                     </AvatarFallback>
                   </Avatar>
                   

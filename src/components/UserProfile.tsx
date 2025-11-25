@@ -8,6 +8,7 @@ import { User, LogOut, Trophy } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { cn } from "@/lib/utils";
+import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
 
 interface UserProfileProps {
   className?: string;
@@ -36,8 +37,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ className }) => {
         <Button variant="ghost" size="sm" className={cn("h-auto p-1 sm:p-2 hover:bg-white/20 transition-colors", className)}>
           <Avatar className="w-7 h-7 sm:w-8 sm:h-8">
             <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
-            <AvatarFallback className="bg-blue-600 text-white text-xs">
-              {(user.displayName || user.email || 'U').charAt(0).toUpperCase()}
+            <AvatarFallback className={cn(getAvatarColor(user.uid), "text-white text-xs")}>
+              {getUserInitials(user.displayName, user.email)}
             </AvatarFallback>
           </Avatar>
         </Button>

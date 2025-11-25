@@ -26,6 +26,8 @@ import LanguageSelector from "../components/LanguageSelector";
 import LazyImage from '../components/LazyImage';
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
+import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
+import { cn } from "@/lib/utils";
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -162,8 +164,8 @@ const CommunityLeaderboard = () => {
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
                   <AvatarImage src={user.photoURL} alt={user.displayName} />
-                  <AvatarFallback>
-                    {user.displayName.charAt(0).toUpperCase()}
+                  <AvatarFallback className={cn(getAvatarColor(user.uid), "text-white")}>
+                    {getUserInitials(user.displayName, null)}
                   </AvatarFallback>
                 </Avatar>
 

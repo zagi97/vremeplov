@@ -217,7 +217,9 @@ useEffect(() => {
         setAllPhotos(locationPhotos);
       } catch (error) {
         console.error('Error loading photos:', error);
-        toast.error(t('errors.photoLoadFailed'));
+        // ✅ FIX: Don't show error toast for empty location
+        // Empty state is OK, only show error for real failures
+        // toast.error(t('errors.photoLoadFailed'));
       } finally {
         setLoading(false);
       }

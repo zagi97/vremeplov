@@ -221,7 +221,9 @@ useEffect(() => {
 
         } catch (error) {
             console.error('Error loading photos for map:', error);
-            toast.error(t('errors.photoLoadFailed'));
+            // ✅ FIX: Don't show error toast for empty database
+            // Only show if it's a real error (not just empty state)
+            // toast.error(t('errors.photoLoadFailed'));
         } finally {
             setLoading(false);
         }
