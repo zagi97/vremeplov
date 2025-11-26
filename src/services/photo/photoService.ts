@@ -103,9 +103,19 @@ export class PhotoService {
       // ✅ NEW SECURE FORMAT: photos/{userId}/{photoId}/{fileName}
       const userId = auth.currentUser?.uid;
       if (!userId) throw new Error('User must be authenticated to upload photos');
-      const storageRef = ref(storage, `photos/${userId}/${photoId}/${fileName}`);
 
-      const snapshot = await uploadBytes(storageRef, file);
+      // ✅ Explicitly set metadata with content type
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: userId,
+          photoId: photoId,
+          originalFileName: file.name
+        }
+      };
+
+      const storageRef = ref(storage, `photos/${userId}/${photoId}/${fileName}`);
+      const snapshot = await uploadBytes(storageRef, file, metadata);
       const downloadURL = await getDownloadURL(snapshot.ref);
 
       return downloadURL;
@@ -130,12 +140,29 @@ export class PhotoService {
         throw new Error('User must be authenticated to upload photos');
       }
 
+      // ✅ Explicitly set metadata with content type
+      const metadata = {
+        contentType: blob.type,
+        customMetadata: {
+          uploadedBy: currentUserId,
+          photoId: currentPhotoId,
+          originalFileName: fileName
+        }
+      };
+
       const storageRef = ref(storage, `photos/${currentUserId}/${currentPhotoId}/${fileName}`);
-      const snapshot = await uploadBytes(storageRef, blob);
+      const snapshot = await uploadBytes(storageRef, blob, metadata);
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error) {
       console.error('Error uploading image blob:', error);
+      console.error('Upload details:', {
+        fileName,
+        blobType: blob.type,
+        blobSize: blob.size,
+        userId: currentUserId,
+        photoId: currentPhotoId
+      });
       throw error;
     }
   }

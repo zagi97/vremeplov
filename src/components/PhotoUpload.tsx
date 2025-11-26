@@ -261,9 +261,24 @@ const sanitizeFileName = (name: string): string => {
 };
 
 const timestamp = Date.now();
-// Sanitize location name to remove spaces and special characters for filename
-const sanitizedLocation = locationName.replace(/[^a-zA-Z0-9_-]/g, '-');
+// Sanitize location name for filename - handle Croatian characters (č,ć,š,ž,đ → c,c,s,z,d)
+const sanitizedLocation = locationName
+  .normalize('NFD') // Decompose special characters (č → c + combining diacritic)
+  .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (combining marks)
+  .replace(/[^a-zA-Z0-9_-]/g, '-') // Replace remaining non-allowed chars
+  .replace(/-+/g, '-') // Replace multiple hyphens with single
+  .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 const baseName = `${sanitizedLocation}-${timestamp}`;
+
+console.log('📤 Upload debug info:', {
+  locationName,
+  sanitizedLocation,
+  baseName,
+  userId: user.uid,
+  photoId,
+  originalBlobType: imageSizes.original.blob.type,
+  originalBlobSize: imageSizes.original.blob.size,
+});
 
 const uploadedUrls: {
   original: string;
@@ -276,18 +291,22 @@ const uploadedUrls: {
 };
 
 // Upload original
+const originalFileName = `${baseName}-original.jpg`;
+console.log('📤 Uploading original:', { fileName: originalFileName, type: imageSizes.original.blob.type });
 uploadedUrls.original = await photoService.uploadImage(
   imageSizes.original.blob,
-  `${baseName}-original.jpg`,
+  originalFileName,
   user.uid,
   photoId
 );
 
 // Upload WebP versions
 for (const webp of imageSizes.webp) {
+  const webpFileName = `${baseName}-${webp.suffix}.webp`;
+  console.log('📤 Uploading WebP:', { fileName: webpFileName, type: webp.blob.type, size: webp.blob.size });
   const url = await photoService.uploadImage(
     webp.blob,
-    `${baseName}-${webp.suffix}.webp`,
+    webpFileName,
     user.uid,
     photoId
   );
@@ -296,9 +315,11 @@ for (const webp of imageSizes.webp) {
 
 // Upload JPEG fallback
 for (const jpeg of imageSizes.jpeg) {
+  const jpegFileName = `${baseName}-${jpeg.suffix}.jpg`;
+  console.log('📤 Uploading JPEG:', { fileName: jpegFileName, type: jpeg.blob.type, size: jpeg.blob.size });
   const url = await photoService.uploadImage(
     jpeg.blob,
-    `${baseName}-${jpeg.suffix}.jpg`,
+    jpegFileName,
     user.uid,
     photoId
   );
@@ -383,6 +404,12 @@ if (coordinates && selectedAddress) {
     
   } catch (error: unknown) {
     console.error('Upload error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      code: (error as any)?.code,
+      serverResponse: (error as any)?.serverResponse,
+      customData: (error as any)?.customData,
+    });
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const isStorageError = (err: unknown): err is { code: string } => {
@@ -397,7 +424,8 @@ if (coordinates && selectedAddress) {
     } else if (errorMessage?.includes('network')) {
       toast.error(t('errors.uploadError'));
     } else {
-      toast.error(t('upload.error'));
+      // Show detailed error message to help debug
+      toast.error(errorMessage || t('upload.error'));
     }
   } finally {
     setUploading(false);
