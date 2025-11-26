@@ -252,8 +252,13 @@ const imageSizes = await generateImageSizes(selectedFile);
 
 // ✅ STEP 2: Upload all images
 const timestamp = Date.now();
-// Sanitize location name to remove spaces and special characters for filename
-const sanitizedLocation = locationName.replace(/[^a-zA-Z0-9_-]/g, '-');
+// Sanitize location name for filename - handle Croatian characters (č,ć,š,ž,đ → c,c,s,z,d)
+const sanitizedLocation = locationName
+  .normalize('NFD') // Decompose special characters (č → c + combining diacritic)
+  .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (combining marks)
+  .replace(/[^a-zA-Z0-9_-]/g, '-') // Replace remaining non-allowed chars
+  .replace(/-+/g, '-') // Replace multiple hyphens with single
+  .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 const baseName = `${sanitizedLocation}-${timestamp}`;
 
 console.log('📤 Upload debug info:', {
