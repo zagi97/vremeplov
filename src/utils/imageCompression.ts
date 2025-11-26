@@ -1,17 +1,21 @@
 /**
  * Image Compression and File Handling Utilities
  *
- * Handles image compression, validation, and optimization
+ * Handles image compression, validation, and optimization with WebP support
+ *
+ * ✅ WebP Optimization: Saves 25-35% bandwidth vs JPEG = Lower Firebase Storage costs!
  */
 
 export const IMAGE_COMPRESSION_CONFIG = {
   MAX_WIDTH: 1920,
+  // WebP quality settings (WebP gives better compression than JPEG at same quality)
   DEFAULT_QUALITY: 0.85,
-  QUALITY_LARGE_FILE: 0.7, // For files > 10MB
-  QUALITY_MEDIUM_FILE: 0.8, // For files 5-10MB
-  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB
-  LARGE_FILE_THRESHOLD: 10 * 1024 * 1024, // 10MB
-  MEDIUM_FILE_THRESHOLD: 5 * 1024 * 1024, // 5MB
+  QUALITY_LARGE_FILE: 0.75, // For files > 5MB
+  QUALITY_MEDIUM_FILE: 0.80, // For files 2-5MB
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB (updated for Firebase Rules)
+  LARGE_FILE_THRESHOLD: 5 * 1024 * 1024, // 5MB
+  MEDIUM_FILE_THRESHOLD: 2 * 1024 * 1024, // 2MB
+  OUTPUT_FORMAT: 'image/webp' as const, // Always output WebP for best compression
 };
 
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -126,11 +130,16 @@ export const compressImage = (
       // Determine final quality based on file size
       const finalQuality = getCompressionQuality(file.size);
 
+      // ✅ Output as WebP for optimal compression (25-35% smaller than JPEG)
       canvas.toBlob(
         (blob) => {
           if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: 'image/jpeg',
+            // Change file extension to .webp
+            const originalName = file.name.replace(/\.[^/.]+$/, '');
+            const newFileName = `${originalName}.webp`;
+
+            const compressedFile = new File([blob], newFileName, {
+              type: IMAGE_COMPRESSION_CONFIG.OUTPUT_FORMAT,
               lastModified: Date.now(),
             });
 
@@ -138,11 +147,12 @@ export const compressImage = (
             const compressedSizeMB = (compressedFile.size / 1024 / 1024).toFixed(2);
             const reduction = ((1 - compressedFile.size / file.size) * 100).toFixed(1);
 
-            console.log(`📸 Compression successful:`);
-            console.log(`   Original: ${originalSizeMB}MB`);
-            console.log(`   Compressed: ${compressedSizeMB}MB`);
+            console.log(`📸 WebP Compression successful:`);
+            console.log(`   Original: ${originalSizeMB}MB (${file.type})`);
+            console.log(`   Compressed: ${compressedSizeMB}MB (WebP)`);
             console.log(`   Reduced by: ${reduction}%`);
             console.log(`   Dimensions: ${img.width}x${img.height} → ${width}x${height}`);
+            console.log(`   💰 Storage savings: ~${reduction}% less Firebase costs!`);
 
             resolve(compressedFile);
           } else {
@@ -150,7 +160,7 @@ export const compressImage = (
             resolve(file);
           }
         },
-        'image/jpeg',
+        IMAGE_COMPRESSION_CONFIG.OUTPUT_FORMAT,
         finalQuality
       );
     };
