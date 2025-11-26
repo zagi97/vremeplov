@@ -544,7 +544,8 @@ export class PhotoService {
     try {
       const photosQuery = query(
         this.photosCollection,
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(5000) // High limit for admin dashboard
       );
 
       const snapshot = await getDocs(photosQuery);

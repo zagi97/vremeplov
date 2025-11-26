@@ -59,13 +59,13 @@ service cloud.firestore {
                  || isAdmin()
                  || (isAuthenticated() && isOwner(resource.data.uploaderId));
 
-      // ✅ LIST: Approved photos public
-      allow list: if request.query.limit <= 100 && (
-        resource == null ||
-        resource.data.isApproved == true ||
-        isAdmin() ||
-        (isAuthenticated() && isOwner(resource.data.uploaderId))
-      );
+      // ✅ LIST: Approved photos public, admin has no limit restriction
+      allow list: if isAdmin() ||
+                  (request.query.limit <= 100 && (
+                    resource == null ||
+                    resource.data.isApproved == true ||
+                    (isAuthenticated() && isOwner(resource.data.uploaderId))
+                  ));
 
       // ✅ CREATE: Authenticated users can upload
       allow create: if isAuthenticated() &&
@@ -96,13 +96,13 @@ service cloud.firestore {
                  isAdmin() ||
                  (isAuthenticated() && isOwner(resource.data.userId));
 
-      // ✅ LIST: Only approved comments
-      allow list: if request.query.limit <= 100 && (
-        resource == null ||
-        resource.data.isApproved == true ||
-        isAdmin() ||
-        (isAuthenticated() && isOwner(resource.data.userId))
-      );
+      // ✅ LIST: Approved comments public, admin has no limit restriction
+      allow list: if isAdmin() ||
+                  (request.query.limit <= 100 && (
+                    resource == null ||
+                    resource.data.isApproved == true ||
+                    (isAuthenticated() && isOwner(resource.data.userId))
+                  ));
 
       // ✅ CREATE: Authenticated users can comment
       allow create: if isAuthenticated() &&
