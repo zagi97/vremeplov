@@ -119,9 +119,17 @@ export class PhotoService {
   /**
    * Upload generic blob/file to storage
    */
-  async uploadImage(blob: Blob, fileName: string): Promise<string> {
+  async uploadImage(blob: Blob, fileName: string, userId?: string, photoId?: string): Promise<string> {
     try {
-      const storageRef = ref(storage, `photos/${fileName}`);
+      // ✅ Use new secure format: photos/{userId}/{photoId}/{fileName}
+      const currentUserId = userId || auth.currentUser?.uid;
+      const currentPhotoId = photoId || Date.now().toString();
+
+      if (!currentUserId) {
+        throw new Error('User must be authenticated to upload photos');
+      }
+
+      const storageRef = ref(storage, `photos/${currentUserId}/${currentPhotoId}/${fileName}`);
       const snapshot = await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
