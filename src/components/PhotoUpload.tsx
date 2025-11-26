@@ -261,8 +261,9 @@ const sanitizeFileName = (name: string): string => {
 };
 
 const timestamp = Date.now();
-const safeLocationName = sanitizeFileName(locationName);
-const baseName = `${safeLocationName}-${timestamp}`;
+// Sanitize location name to remove spaces and special characters for filename
+const sanitizedLocation = locationName.replace(/[^a-zA-Z0-9_-]/g, '-');
+const baseName = `${sanitizedLocation}-${timestamp}`;
 
 const uploadedUrls: {
   original: string;
