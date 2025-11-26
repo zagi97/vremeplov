@@ -104,11 +104,14 @@ export class AuthService {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
 
+      const isAdminUser = this.isAdmin(user);
+
       const userData = {
         displayName: user.displayName || user.email || 'Unknown User',
         email: user.email || '',
         photoURL: user.photoURL || '',
-        lastActiveAt: Timestamp.now()
+        lastActiveAt: Timestamp.now(),
+        ...(isAdminUser && { isAdmin: true })
       };
 
       if (!userDoc.exists()) {

@@ -111,6 +111,7 @@ export interface UserDocument {
   location?: string;
   joinedAt: Timestamp;
   lastActiveAt: Timestamp;
+  isAdmin?: boolean;
 }
 
 // ========================================
