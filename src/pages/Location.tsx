@@ -210,13 +210,25 @@ useEffect(() => {
   useEffect(() => {
     const loadPhotos = async () => {
       if (!actualCityName) return;
-      
+
       try {
         setLoading(true);
+        console.log('🔵 Loading photos for location:', actualCityName);
         const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
+        console.log('✅ Loaded photos:', {
+          location: actualCityName,
+          count: locationPhotos.length,
+          photos: locationPhotos.map(p => ({
+            id: p.id,
+            description: p.description,
+            year: p.year,
+            isApproved: p.isApproved,
+            location: p.location
+          }))
+        });
         setAllPhotos(locationPhotos);
       } catch (error) {
-        console.error('Error loading photos:', error);
+        console.error('❌ Error loading photos:', error);
         // ✅ FIX: Don't show error toast for empty location
         // Empty state is OK, only show error for real failures
         // toast.error(t('errors.photoLoadFailed'));

@@ -328,7 +328,15 @@ export class PhotoService {
 
       const photoData = photoDoc.data();
       const photoAuthorId = photoData.authorId;
-      console.log('🔵 Photo data loaded. Author ID:', photoAuthorId);
+      const photoLocation = photoData.location;
+      console.log('🔵 Photo data loaded:', {
+        photoId,
+        authorId: photoAuthorId,
+        location: photoLocation,
+        description: photoData.description,
+        year: photoData.year,
+        currentlyApproved: photoData.isApproved
+      });
 
       console.log('🔵 Updating photo document...');
       await updateDoc(doc(this.photosCollection, photoId), {
@@ -337,6 +345,12 @@ export class PhotoService {
         approvedBy: adminUid
       });
       console.log('✅ Photo document updated successfully');
+
+      // Clear location cache so the photo appears on location page
+      console.log('🔵 Clearing location cache for:', photoLocation);
+      this.clearLocationCache(photoLocation);
+      this.clearRecentPhotosCache();
+      console.log('✅ Cache cleared');
 
       // Update author's stats
       if (photoAuthorId) {
@@ -350,7 +364,7 @@ export class PhotoService {
         console.log('✅ Badges checked');
       }
 
-      console.log('✅ Photo approval complete!');
+      console.log('✅ Photo approval complete! Photo should now appear at location:', photoLocation);
     } catch (error) {
       console.error('❌ Error approving photo:', error);
       console.error('❌ Error details:', JSON.stringify(error, null, 2));
