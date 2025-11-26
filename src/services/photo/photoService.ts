@@ -118,6 +118,7 @@ export class PhotoService {
 
   /**
    * Upload generic blob/file to storage
+   * ✅ FIXED: Now uses secure path format matching Firebase Storage Rules
    */
   async uploadImage(blob: Blob, fileName: string, userId?: string, photoId?: string): Promise<string> {
     try {
