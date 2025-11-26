@@ -250,7 +250,16 @@ const handleSubmit = async (e: React.FormEvent) => {
     // ✅ STEP 1: Generate all image sizes
 const imageSizes = await generateImageSizes(selectedFile);
 
-// ✅ STEP 2: Upload all images
+// ✅ STEP 2: Sanitize location name for filename (Firebase Storage rules only allow [a-zA-Z0-9_-])
+const sanitizeFileName = (name: string): string => {
+  return name
+    .normalize('NFD') // Decompose special characters
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^a-zA-Z0-9_-]/g, '_') // Replace non-allowed chars with underscore
+    .replace(/_+/g, '_') // Replace multiple underscores with single
+    .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+};
+
 const timestamp = Date.now();
 // Sanitize location name to remove spaces and special characters for filename
 const sanitizedLocation = locationName.replace(/[^a-zA-Z0-9_-]/g, '-');
