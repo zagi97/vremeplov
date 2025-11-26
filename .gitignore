@@ -27,3 +27,11 @@ importUser.cjs
 # Backup / temporary
 *.bak
 *.tmp
+
+# Internal deployment docs
+CLEAN_START_DEPLOYMENT.md
+FINAL_DEPLOYMENT_GUIDE.md
+SECURITY_MIGRATION_GUIDE.md
+SECURITY_COMPARISON.md
+firestore.rules.CLEAN
+firestore.rules.SECURE
