@@ -48,6 +48,33 @@ export default function AdminDashboard() {
     loadAdminData();
   }, [isAdmin]);
 
+  // ✅ Update stats when photo lists change (after approve/reject)
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const rejectedCount = parseInt(
+      localStorage.getItem('rejectedPhotosCount') || '0',
+      10
+    );
+
+    setStats({
+      totalPhotos: photoMod.allPhotos.length,
+      pendingPhotos: photoMod.pendingPhotos.length,
+      approvedPhotos: photoMod.approvedPhotos.length,
+      rejectedPhotos: rejectedCount,
+      totalViews: photoMod.allPhotos.reduce((sum, photo) => sum + photo.views, 0),
+      totalLikes: photoMod.allPhotos.reduce((sum, photo) => sum + photo.likes, 0),
+      pendingTags: tagMod.tags.filter((t) => !t.isApproved).length,
+      totalTags: tagMod.tags.length,
+    });
+  }, [
+    isAdmin,
+    photoMod.pendingPhotos.length,
+    photoMod.approvedPhotos.length,
+    photoMod.allPhotos.length,
+    tagMod.tags.length
+  ]);
+
   // Auto-exit admin mode when leaving dashboard
   useEffect(() => {
     const handleBeforeUnload = async () => {
