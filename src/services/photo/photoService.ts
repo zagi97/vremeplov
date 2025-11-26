@@ -118,10 +118,21 @@ export class PhotoService {
 
   /**
    * Upload generic blob/file to storage
+   * ✅ FIXED: Now uses secure path format matching Firebase Storage Rules
    */
   async uploadImage(blob: Blob, fileName: string): Promise<string> {
     try {
-      const storageRef = ref(storage, `photos/${fileName}`);
+      // ✅ Get current user ID for secure path
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        throw new Error('User must be authenticated to upload photos');
+      }
+
+      // Generate photoId from timestamp
+      const photoId = `photo_${Date.now()}`;
+
+      // ✅ NEW SECURE FORMAT: photos/{userId}/{photoId}/{fileName}
+      const storageRef = ref(storage, `photos/${userId}/${photoId}/${fileName}`);
       const snapshot = await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
