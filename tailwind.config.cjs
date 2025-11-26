@@ -4,33 +4,34 @@ module.exports = {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  
-  // ✅ PURGE CONFIG - Critical for production!
-  purge: {
-    enabled: process.env.NODE_ENV === 'production',
-    content: [
-      "./index.html",
-      "./src/**/*.{js,ts,jsx,tsx}",
-    ],
-    options: {
-      // Keep important classes that might be added dynamically
-      safelist: [
-        'bg-blue-600',
-        'bg-red-600',
-        'bg-green-600',
-        'bg-orange-500',
-        'bg-purple-500',
-        'hover:bg-blue-700',
-        'hover:bg-red-700',
-        'text-blue-600',
-        'text-red-600',
-        'text-green-600',
-        'border-blue-200',
-        'border-red-200',
-        'border-green-200',
-      ],
-    },
-  },
+
+  // ✅ SAFELIST - Keep classes that might be added dynamically
+  safelist: [
+    // Avatar colors (generated dynamically)
+    'bg-blue-600',
+    'bg-purple-600',
+    'bg-pink-600',
+    'bg-red-600',
+    'bg-orange-600',
+    'bg-amber-600',
+    'bg-green-600',
+    'bg-teal-600',
+    'bg-cyan-600',
+    'bg-indigo-600',
+    'bg-violet-600',
+    'bg-fuchsia-600',
+    // Other dynamic classes
+    'bg-orange-500',
+    'bg-purple-500',
+    'hover:bg-blue-700',
+    'hover:bg-red-700',
+    'text-blue-600',
+    'text-red-600',
+    'text-green-600',
+    'border-blue-200',
+    'border-red-200',
+    'border-green-200',
+  ],
   
   theme: {
     container: {

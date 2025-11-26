@@ -1,6 +1,6 @@
 import { userService, LeaderboardUser, CommunityStats, MonthlyHighlights } from "../services/user";
 // src/pages/CommunityLeaderboard.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -134,7 +134,8 @@ const CommunityLeaderboard = () => {
     }
   };
 
-  const LeaderboardCard = ({ user, category }: { user: LeaderboardUser; category: string }) => {
+  // ✅ React.memo prevents re-rendering cards that haven't changed
+  const LeaderboardCard = memo(({ user, category }: { user: LeaderboardUser; category: string }) => {
     const getDisplayValue = () => {
       switch (category) {
         case 'photos':
@@ -230,7 +231,7 @@ const CommunityLeaderboard = () => {
         </CardContent>
       </Card>
     );
-  };
+  });
 
   // ✅ LEADERBOARD SKELETON
   const LeaderboardSkeleton = () => (

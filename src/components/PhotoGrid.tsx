@@ -1,13 +1,13 @@
-// Ažurirani PhotoGrid.tsx s LazyImage
+// Ažurirani PhotoGrid.tsx s LazyImage + React.memo optimizacija
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "./ui/card";
 import { Calendar, User, Eye, Heart } from "lucide-react";
 import { Photo, photoService } from '../services/firebaseService';
 import { toast } from "sonner";
 import { useAuth } from '../contexts/AuthContext';
-import LazyImage from './LazyImage'; // DODANO
+import LazyImage from './LazyImage';
 import { useLanguage } from "../contexts/LanguageContext";
 
 interface PhotoGridProps {
@@ -155,4 +155,5 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   );
 };
 
-export default PhotoGrid;
+// ✅ React.memo prevents unnecessary re-renders when photos array hasn't changed
+export default memo(PhotoGrid);

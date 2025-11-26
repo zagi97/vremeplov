@@ -34,10 +34,10 @@ const ipRateLimit = new IPRateLimit();
 
 // File validation
 export const validateFile = (file: File): { valid: boolean; error?: string } => {
-  // Size check (20MB limit)
-  const maxSize = 20 * 1024 * 1024;
+  // Size check (10MB limit - matches Firebase Rules)
+  const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
-    return { valid: false, error: 'File previše velik. Maksimalno 5MB.' };
+    return { valid: false, error: 'File previše velik. Maksimalno 10MB.' };
   }
   
   // Type check
