@@ -99,7 +99,7 @@ export class CommentService {
   async getAllCommentsForAdmin(): Promise<Comment[]> {
     try {
       const commentsRef = collection(db, 'comments');
-      const q = query(commentsRef, orderBy('createdAt', 'desc'));
+      const q = query(commentsRef, orderBy('createdAt', 'desc'), limit(5000)); // High limit for admin dashboard
       const snapshot = await getDocs(q);
 
       // ✅ OPTIMIZATION 1: Collect all unique user and photo IDs first
