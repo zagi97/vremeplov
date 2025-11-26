@@ -252,7 +252,9 @@ const imageSizes = await generateImageSizes(selectedFile);
 
 // ✅ STEP 2: Upload all images
 const timestamp = Date.now();
-const baseName = `${locationName}-${timestamp}`;
+// Sanitize location name to remove spaces and special characters for filename
+const sanitizedLocation = locationName.replace(/[^a-zA-Z0-9_-]/g, '-');
+const baseName = `${sanitizedLocation}-${timestamp}`;
 
 const uploadedUrls: {
   original: string;
