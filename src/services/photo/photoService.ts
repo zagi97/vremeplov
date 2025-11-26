@@ -371,6 +371,7 @@ export class PhotoService {
         detailedDescription: photoData.detailedDescription || '',
         author: photoData.author,
         authorId: photoData.authorId || currentUser?.uid,
+        uploaderId: currentUser.uid, // ✅ Required by Firestore rules
         location: photoData.location,
         photoType: photoData.photoType,
         taggedPersons: photoData.taggedPersons || [],
