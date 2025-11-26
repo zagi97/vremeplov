@@ -319,6 +319,8 @@ export class PhotoService {
    */
   async approvePhoto(photoId: string, adminUid: string): Promise<void> {
     try {
+      console.log('🔵 Starting photo approval for:', photoId, 'by admin:', adminUid);
+
       const photoDoc = await getDoc(doc(this.photosCollection, photoId));
       if (!photoDoc.exists()) {
         throw new Error('Photo not found');
@@ -326,22 +328,32 @@ export class PhotoService {
 
       const photoData = photoDoc.data();
       const photoAuthorId = photoData.authorId;
+      console.log('🔵 Photo data loaded. Author ID:', photoAuthorId);
 
+      console.log('🔵 Updating photo document...');
       await updateDoc(doc(this.photosCollection, photoId), {
         isApproved: true,
         approvedAt: Timestamp.now(),
         approvedBy: adminUid
       });
+      console.log('✅ Photo document updated successfully');
 
       // Update author's stats
       if (photoAuthorId) {
+        console.log('🔵 Updating user stats for:', photoAuthorId);
         const { userService } = await import('../user');
         await userService.forceRecalculateUserStats(photoAuthorId);
+        console.log('✅ User stats updated');
+
+        console.log('🔵 Checking badges...');
         await userService.checkAndAwardBadges(photoAuthorId);
+        console.log('✅ Badges checked');
       }
 
+      console.log('✅ Photo approval complete!');
     } catch (error) {
-      console.error('Error approving photo:', error);
+      console.error('❌ Error approving photo:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
       throw error;
     }
   }
