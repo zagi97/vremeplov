@@ -267,14 +267,18 @@ const uploadedUrls: {
 // Upload original
 uploadedUrls.original = await photoService.uploadImage(
   imageSizes.original.blob,
-  `${baseName}-original.jpg`
+  `${baseName}-original.jpg`,
+  user.uid,
+  photoId
 );
 
 // Upload WebP versions
 for (const webp of imageSizes.webp) {
   const url = await photoService.uploadImage(
     webp.blob,
-    `${baseName}-${webp.suffix}.webp`
+    `${baseName}-${webp.suffix}.webp`,
+    user.uid,
+    photoId
   );
   uploadedUrls.webp.push({ url, width: webp.width, suffix: webp.suffix });
 }
@@ -283,7 +287,9 @@ for (const webp of imageSizes.webp) {
 for (const jpeg of imageSizes.jpeg) {
   const url = await photoService.uploadImage(
     jpeg.blob,
-    `${baseName}-${jpeg.suffix}.jpg`
+    `${baseName}-${jpeg.suffix}.jpg`,
+    user.uid,
+    photoId
   );
   uploadedUrls.jpeg.push({ url, width: jpeg.width, suffix: jpeg.suffix });
 }
@@ -309,7 +315,7 @@ const photoData: any = {
     width: imageSizes.original.width,
     height: imageSizes.original.height,
   },
-  imageStoragePath: `photos/${photoId}/${Date.now()}_${selectedFile.name}`,
+  imageStoragePath: `photos/${user.uid}/${photoId}/${baseName}-original.jpg`,
   year: formData.year,
   description: formData.description,
   detailedDescription: formData.detailedDescription,
