@@ -130,6 +130,8 @@ export default function AdminDashboard() {
     }
   };
 
+  // ✅ CRITICAL: Check admin mode FIRST before loading checks
+  // This prevents infinite loading spinner when user is not admin
   if (!isAdminMode) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -140,6 +142,9 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-center text-sm text-muted-foreground mb-4">
+              You need to be logged in as an administrator to access this page.
+            </p>
             <div className="flex flex-col gap-2">
               <Button
                 onClick={() => navigate('/admin-login', { replace: true })}
@@ -161,6 +166,7 @@ export default function AdminDashboard() {
     );
   }
 
+  // Show loading spinner only if we're in admin mode and data is loading
   if (photoMod.loading && tagMod.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
