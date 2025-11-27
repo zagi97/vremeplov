@@ -54,14 +54,20 @@ service cloud.firestore {
     // 📷 PHOTOS COLLECTION
     // ============================================
     match /photos/{photoId} {
-      // ✅ GET: All photos publicly accessible
-      // Allows anyone to view photos via direct links and profile pages
-      allow get: if true;
+      // ✅ GET: Approved photos public, owner can see own pending photos when authenticated
+      allow get: if resource.data.isApproved == true
+                 || isAdmin()
+                 || (isAuthenticated() && isOwner(resource.data.uploaderId));
 
-      // ✅ LIST: All photos publicly listable
-      // Profile pages show all user photos immediately after upload
-      // Homepage and location pages show all photos
-      allow list: if request.query.limit <= 100;
+      // ✅ LIST: Approved photos public, authenticated users see own pending photos
+      // When viewing your profile: you see all your photos (approved + pending)
+      // When viewing other profiles: you only see their approved photos
+      allow list: if isAdmin() ||
+                  (request.query.limit <= 100 && (
+                    resource == null ||
+                    resource.data.isApproved == true ||
+                    (isAuthenticated() && isOwner(resource.data.uploaderId))
+                  ));
 
       // ✅ CREATE: Authenticated users can upload
       allow create: if isAuthenticated() &&
