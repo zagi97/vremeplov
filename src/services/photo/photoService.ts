@@ -680,7 +680,29 @@ export class PhotoService {
     try {
       let allPhotos: Photo[] = [];
 
-      // Main method - by authorId (get ALL photos, not just approved)
+      // Method 1: Query by uploaderId (matches Firestore rules check)
+      try {
+        const uploaderQuery = limitCount
+          ? query(
+              this.photosCollection,
+              where('uploaderId', '==', uploaderUid),
+              orderBy('createdAt', 'desc'),
+              limit(limitCount)
+            )
+          : query(
+              this.photosCollection,
+              where('uploaderId', '==', uploaderUid),
+              orderBy('createdAt', 'desc')
+            );
+
+        const uploaderSnapshot = await getDocs(uploaderQuery);
+        const uploaderPhotos = mapDocumentsWithId<Photo>(uploaderSnapshot.docs);
+        allPhotos = [...allPhotos, ...uploaderPhotos];
+      } catch (error) {
+        console.log('Query by uploaderId failed, trying authorId fallback');
+      }
+
+      // Method 2: Query by authorId (fallback for photos where authorId != uploaderId)
       try {
         const authorQuery = limitCount
           ? query(
@@ -699,7 +721,7 @@ export class PhotoService {
         const authorPhotos = mapDocumentsWithId<Photo>(authorSnapshot.docs);
         allPhotos = [...allPhotos, ...authorPhotos];
       } catch (error) {
-        // AuthorId query failed, continue to fallback
+        console.log('Query by authorId also failed');
       }
 
       // Fallback - legacy photos (correct userId)
