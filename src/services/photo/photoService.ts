@@ -673,25 +673,25 @@ export class PhotoService {
 
   /**
    * Get photos by uploader UID
+   * Shows ALL user's photos on their profile (approved and pending)
+   * This allows users to see their own photos and share them with others
    */
   async getPhotosByUploader(uploaderUid: string, limitCount?: number): Promise<Photo[]> {
     try {
       let allPhotos: Photo[] = [];
 
-      // Main method - by authorId
+      // Main method - by authorId (get ALL photos, not just approved)
       try {
         const authorQuery = limitCount
           ? query(
               this.photosCollection,
               where('authorId', '==', uploaderUid),
-              where('isApproved', '==', true),
               orderBy('createdAt', 'desc'),
               limit(limitCount)
             )
           : query(
               this.photosCollection,
               where('authorId', '==', uploaderUid),
-              where('isApproved', '==', true),
               orderBy('createdAt', 'desc')
             );
 
@@ -707,8 +707,7 @@ export class PhotoService {
         try {
           const legacyQuery = query(
             this.photosCollection,
-            where('uploadedBy', '==', 'Kruno Žagar'),
-            where('isApproved', '==', true)
+            where('uploadedBy', '==', 'Kruno Žagar')
           );
           const legacySnapshot = await getDocs(legacyQuery);
           const legacyPhotos = mapDocumentsWithId<Photo>(legacySnapshot.docs);
