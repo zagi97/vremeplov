@@ -34,17 +34,26 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
- const { t } = useLanguage();
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
 
+      // Load user's admin status from Firestore
+      if (user) {
+        const userIsAdmin = await authService.checkIsAdminFromFirestore(user.uid);
+        setIsAdmin(userIsAdmin);
 
-      // Check if we're in admin mode from session storage
-      const adminModeFromStorage = sessionStorage.getItem('adminMode') === 'true';
-      setIsAdminMode(adminModeFromStorage && authService.isAdmin(user));
+        // Check if we're in admin mode from session storage
+        const adminModeFromStorage = sessionStorage.getItem('adminMode') === 'true';
+        setIsAdminMode(adminModeFromStorage && userIsAdmin);
+      } else {
+        setIsAdmin(false);
+        setIsAdminMode(false);
+      }
 
       setLoading(false);
     });
@@ -80,12 +89,23 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
   const signInAdmin = async (email: string, password: string) => {
     try {
       const result = await authService.signInAdmin(email, password);
-      if (result.success) {
+      if (result.success && result.user) {
+        // Check admin status from Firestore
+        const userIsAdmin = await authService.checkIsAdminFromFirestore(result.user.uid);
+
+        if (userIsAdmin) {
+          setIsAdmin(true);
           setIsAdminMode(true);
           sessionStorage.setItem('adminMode', 'true');
-        toast.success(t('auth.adminSignInSuccess'));
+          toast.success(t('auth.adminSignInSuccess'));
+        } else {
+          // Not an admin, sign them out
+          await authService.signOut();
+          toast.error('Unauthorized: Admin access only');
+          return { success: false, error: 'Not an admin user' };
+        }
       } else {
-       toast.error(t('errors.signInFailed'));
+        toast.error(t('errors.signInFailed'));
       }
       return result;
     } catch (error) {
@@ -98,30 +118,28 @@ const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
    const exitAdminMode = async () => {
     try {
       setIsAdminMode(false);
+      setIsAdmin(false);
       sessionStorage.removeItem('adminMode');
       await signOut(auth);
       toast.success(t('admin.adminModeExited'));
     } catch (error) {
       console.error('Error exiting admin mode:', error);
-       toast.error(t('errors.adminModeExit'));
+      toast.error(t('errors.adminModeExit'));
     }
   };
 
   const logout = async () => {
     try {
-       setIsAdminMode(false);
+      setIsAdminMode(false);
+      setIsAdmin(false);
       sessionStorage.removeItem('adminMode');
       await signOut(auth);
       toast.success(t('auth.signOutSuccess'));
     } catch (error) {
       console.error('Error signing out:', error);
-      
-       toast.error(t('errors.signOutFailed'));
-
+      toast.error(t('errors.signOutFailed'));
     }
   };
-
-  const isAdmin = user ? authService.isAdmin(user) : false;
 
   const value = {
     user,

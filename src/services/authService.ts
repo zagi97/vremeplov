@@ -19,25 +19,17 @@ const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'vremeplov.app@gmail.com
 export class AuthService {
   /**
    * Sign in as admin
+   * Admin status will be verified by checking Firestore isAdmin field
    */
   async signInAdmin(email: string, password: string) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-      // Check if this is the admin email
-      if (userCredential.user.email === ADMIN_EMAIL) {
-        return {
-          success: true,
-          user: userCredential.user
-        };
-      } else {
-        // Sign out non-admin users
-        await this.signOut();
-        return {
-          success: false,
-          error: 'Unauthorized: Admin access only'
-        };
-      }
+      // Return user credentials - admin check happens in AuthContext
+      return {
+        success: true,
+        user: userCredential.user
+      };
     } catch (error: unknown) {
       return {
         success: false,
@@ -69,10 +61,31 @@ export class AuthService {
   }
 
   /**
-   * Check if user is admin
+   * Check if user is admin (legacy email-based check)
+   * @deprecated Use checkIsAdminFromFirestore instead
    */
   isAdmin(user: { email?: string | null } | null) {
     return user?.email === ADMIN_EMAIL;
+  }
+
+  /**
+   * Check if user is admin by reading from Firestore
+   * This is the preferred method as it allows multiple admins
+   */
+  async checkIsAdminFromFirestore(userId: string): Promise<boolean> {
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        return userData.isAdmin === true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
   }
 
   /**

@@ -12,15 +12,15 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { user, isAdmin, signInAdmin } = useAuth();
-  const navigate = useNavigate(); // ✅ DODAJ OVO
+  const { user, isAdminMode, signInAdmin } = useAuth();
+  const navigate = useNavigate();
 
-  // ✅ ZAMIJENI Navigate logiku sa useEffect
+  // Redirect to admin dashboard if already in admin mode
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdminMode) {
       navigate('/admin', { replace: true });
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdminMode, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
