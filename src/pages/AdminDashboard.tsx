@@ -22,7 +22,7 @@ import CommentModerationTab from '@/components/admin/tabs/CommentModerationTab';
 import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
 
 export default function AdminDashboard() {
-  const { user, isAdmin, exitAdminMode } = useAuth();
+  const { user, isAdminMode, exitAdminMode } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('pending');
@@ -44,13 +44,13 @@ export default function AdminDashboard() {
   const userMod = useUserManagement();
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdminMode) return;
     loadAdminData();
-  }, [isAdmin]);
+  }, [isAdminMode]);
 
   // ✅ Update stats when photo lists change (after approve/reject)
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdminMode) return;
 
     const rejectedCount = parseInt(
       localStorage.getItem('rejectedPhotosCount') || '0',
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       totalTags: tagMod.tags.length,
     });
   }, [
-    isAdmin,
+    isAdminMode,
     photoMod.pendingPhotos.length,
     photoMod.approvedPhotos.length,
     photoMod.allPhotos.length,
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // Auto-exit admin mode when leaving dashboard
   useEffect(() => {
     const handleBeforeUnload = async () => {
-      if (isAdmin) {
+      if (isAdminMode) {
         await exitAdminMode();
       }
     };
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [user, exitAdminMode]);
+  }, [isAdminMode, exitAdminMode]);
 
   const loadAdminData = async () => {
     try {
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
     }
   };
 
-  if (!isAdmin) {
+  if (!isAdminMode) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-96">
@@ -142,14 +142,14 @@ export default function AdminDashboard() {
           <CardContent className="space-y-4">
             <div className="flex flex-col gap-2">
               <Button
-                onClick={() => (window.location.href = '/admin-login')}
+                onClick={() => navigate('/admin-login', { replace: true })}
                 className="w-full"
               >
                 Go to Admin Login
               </Button>
               <Button
                 variant="outline"
-                onClick={() => (window.location.href = '/')}
+                onClick={() => navigate('/', { replace: true })}
                 className="w-full"
               >
                 Back to Home
