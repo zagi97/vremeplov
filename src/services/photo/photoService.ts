@@ -702,8 +702,8 @@ export class PhotoService {
         // AuthorId query failed, continue to fallback
       }
 
-      // Fallback - legacy photos
-      if (uploaderUid === 'JqLBVMJvyFYZKVTQN310XYLI1') {
+      // Fallback - legacy photos (correct userId)
+      if (uploaderUid === 'JqLBVMJvyFYEZkVTON310XKYLlk1') {
         try {
           const legacyQuery = query(
             this.photosCollection,
