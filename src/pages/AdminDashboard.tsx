@@ -22,9 +22,40 @@ import CommentModerationTab from '@/components/admin/tabs/CommentModerationTab';
 import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
 
 export default function AdminDashboard() {
-  const { user, isAdmin, loading, exitAdminMode } = useAuth();
-  const navigate = useNavigate();
-  const { t } = useLanguage();
+  console.log('🔵 [1] AdminDashboard RENDER START');
+
+  let authData, languageData, photoMod, tagMod, commentMod, userMod, navigateHook;
+
+  try {
+    authData = useAuth();
+    console.log('🔵 [2] useAuth OK:', { userId: authData.user?.uid, isAdmin: authData.isAdmin, loading: authData.loading });
+  } catch (e) {
+    console.error('🔴 useAuth FAILED:', e);
+    throw e;
+  }
+
+  const { user, isAdmin, loading, exitAdminMode } = authData;
+
+  try {
+    navigateHook = useNavigate();
+    console.log('🔵 [3] useNavigate OK');
+  } catch (e) {
+    console.error('🔴 useNavigate FAILED:', e);
+    throw e;
+  }
+
+  const navigate = navigateHook;
+
+  try {
+    languageData = useLanguage();
+    console.log('🔵 [4] useLanguage OK');
+  } catch (e) {
+    console.error('🔴 useLanguage FAILED:', e);
+    throw e;
+  }
+
+  const { t } = languageData;
+
   const [activeTab, setActiveTab] = useState('pending');
   const [stats, setStats] = useState({
     totalPhotos: 0,
@@ -37,11 +68,39 @@ export default function AdminDashboard() {
     totalTags: 0,
   });
 
-  // Use hooks
-  const photoMod = usePhotoModeration();
-  const tagMod = useTagModeration();
-  const commentMod = useCommentModeration();
-  const userMod = useUserManagement();
+  try {
+    photoMod = usePhotoModeration();
+    console.log('🔵 [5] usePhotoModeration OK');
+  } catch (e) {
+    console.error('🔴 usePhotoModeration FAILED:', e);
+    throw e;
+  }
+
+  try {
+    tagMod = useTagModeration();
+    console.log('🔵 [6] useTagModeration OK');
+  } catch (e) {
+    console.error('🔴 useTagModeration FAILED:', e);
+    throw e;
+  }
+
+  try {
+    commentMod = useCommentModeration();
+    console.log('🔵 [7] useCommentModeration OK');
+  } catch (e) {
+    console.error('🔴 useCommentModeration FAILED:', e);
+    throw e;
+  }
+
+  try {
+    userMod = useUserManagement();
+    console.log('🔵 [8] useUserManagement OK');
+  } catch (e) {
+    console.error('🔴 useUserManagement FAILED:', e);
+    throw e;
+  }
+
+  console.log('🔵 [9] All hooks initialized successfully');
 
   useEffect(() => {
     if (!isAdmin) return;
