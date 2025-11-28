@@ -27,7 +27,11 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      await signInAdmin(email, password);
+      const result = await signInAdmin(email, password);
+      if (result.success) {
+        // signInAdmin already waits for auth state to propagate
+        // The useEffect will handle the navigation once states are set
+      }
     } catch (error) {
       console.error('Login error:', error);
     } finally {

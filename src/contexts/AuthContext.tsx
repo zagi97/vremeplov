@@ -94,13 +94,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userIsAdmin = await authService.checkIsAdminFromFirestore(result.user.uid);
 
         if (userIsAdmin) {
-          setIsAdmin(true);
-          setIsAdminMode(true);
+          // Set session storage so onAuthStateChanged can pick it up
           sessionStorage.setItem('adminMode', 'true');
+
+          // onAuthStateChanged will be triggered by Firebase auth
+          // and will set isAdmin and isAdminMode based on sessionStorage
+          // We wait a bit for the auth state to propagate
+          await new Promise(resolve => setTimeout(resolve, 300));
+
           toast.success(t('auth.adminSignInSuccess'));
         } else {
           // Not an admin, sign them out
           await authService.signOut();
+          sessionStorage.removeItem('adminMode');
           toast.error('Unauthorized: Admin access only');
           return { success: false, error: 'Not an admin user' };
         }
