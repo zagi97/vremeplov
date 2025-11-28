@@ -104,6 +104,7 @@ export function useTagModeration() {
     // State
     pendingTags,
     allTags,
+    tags: allTags, // Alias for backwards compatibility
     loading,
     tagPage,
 
