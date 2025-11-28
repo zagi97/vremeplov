@@ -49,10 +49,10 @@ class ErrorBoundary extends Component<Props, State> {
             </p>
           </div>
 
-          {this.state.error && process.env.NODE_ENV === 'development' && (
+          {this.state.error && (
             <details className="mb-6 text-left">
               <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 mb-2">
-                Detalji greške (dev only)
+                Detalji greške
               </summary>
               <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
                 <p className="text-sm font-mono text-red-800 dark:text-red-300 break-all mb-2">
