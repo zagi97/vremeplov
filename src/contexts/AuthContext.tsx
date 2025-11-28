@@ -99,8 +99,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // onAuthStateChanged will be triggered by Firebase auth
           // and will set isAdmin and isAdminMode based on sessionStorage
-          // We wait a bit for the auth state to propagate
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // We wait for the auth state to propagate before showing success message
+          await new Promise(resolve => setTimeout(resolve, 500));
 
           toast.success(t('auth.adminSignInSuccess'));
         } else {
