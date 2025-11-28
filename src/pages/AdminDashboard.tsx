@@ -22,7 +22,7 @@ import CommentModerationTab from '@/components/admin/tabs/CommentModerationTab';
 import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
 
 export default function AdminDashboard() {
-  const { user, isAdminMode, exitAdminMode } = useAuth();
+  const { user, isAdmin, exitAdminMode } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('pending');
@@ -44,13 +44,13 @@ export default function AdminDashboard() {
   const userMod = useUserManagement();
 
   useEffect(() => {
-    if (!isAdminMode) return;
+    if (!isAdmin) return;
     loadAdminData();
-  }, [isAdminMode]);
+  }, [isAdmin]);
 
   // ✅ Update stats when photo lists change (after approve/reject)
   useEffect(() => {
-    if (!isAdminMode) return;
+    if (!isAdmin) return;
 
     const rejectedCount = parseInt(
       localStorage.getItem('rejectedPhotosCount') || '0',
@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       totalTags: tagMod.tags.length,
     });
   }, [
-    isAdminMode,
+    isAdmin,
     photoMod.pendingPhotos.length,
     photoMod.approvedPhotos.length,
     photoMod.allPhotos.length,
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   // Auto-exit admin mode when leaving dashboard
   useEffect(() => {
     const handleBeforeUnload = async () => {
-      if (isAdminMode) {
+      if (isAdmin) {
         await exitAdminMode();
       }
     };
@@ -88,7 +88,7 @@ export default function AdminDashboard() {
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [isAdminMode, exitAdminMode]);
+  }, [user, exitAdminMode]);
 
   const loadAdminData = async () => {
     try {
@@ -130,9 +130,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ CRITICAL: Check admin mode FIRST before loading checks
-  // This prevents infinite loading spinner when user is not admin
-  if (!isAdminMode) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-96">
@@ -142,19 +140,16 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-center text-sm text-muted-foreground mb-4">
-              You need to be logged in as an administrator to access this page.
-            </p>
             <div className="flex flex-col gap-2">
               <Button
-                onClick={() => navigate('/admin-login', { replace: true })}
+                onClick={() => (window.location.href = '/admin-login')}
                 className="w-full"
               >
                 Go to Admin Login
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate('/', { replace: true })}
+                onClick={() => (window.location.href = '/')}
                 className="w-full"
               >
                 Back to Home
