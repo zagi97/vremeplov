@@ -117,21 +117,21 @@ export default function AdminDashboard() {
     );
 
     setStats({
-      totalPhotos: photoMod.allPhotos.length,
-      pendingPhotos: photoMod.pendingPhotos.length,
-      approvedPhotos: photoMod.approvedPhotos.length,
+      totalPhotos: photoMod.allPhotos?.length || 0,
+      pendingPhotos: photoMod.pendingPhotos?.length || 0,
+      approvedPhotos: photoMod.approvedPhotos?.length || 0,
       rejectedPhotos: rejectedCount,
-      totalViews: photoMod.allPhotos.reduce((sum, photo) => sum + photo.views, 0),
-      totalLikes: photoMod.allPhotos.reduce((sum, photo) => sum + photo.likes, 0),
-      pendingTags: tagMod.tags.filter((t) => !t.isApproved).length,
-      totalTags: tagMod.tags.length,
+      totalViews: (photoMod.allPhotos || []).reduce((sum, photo) => sum + photo.views, 0),
+      totalLikes: (photoMod.allPhotos || []).reduce((sum, photo) => sum + photo.likes, 0),
+      pendingTags: (tagMod.tags || []).filter((t) => !t.isApproved).length,
+      totalTags: tagMod.tags?.length || 0,
     });
   }, [
     isAdmin,
-    photoMod.pendingPhotos.length,
-    photoMod.approvedPhotos.length,
-    photoMod.allPhotos.length,
-    tagMod.tags.length
+    photoMod.pendingPhotos?.length,
+    photoMod.approvedPhotos?.length,
+    photoMod.allPhotos?.length,
+    tagMod.tags?.length
   ]);
 
   // Auto-exit admin mode when leaving dashboard
@@ -166,14 +166,14 @@ export default function AdminDashboard() {
       );
 
       setStats({
-        totalPhotos: photos.length,
-        pendingPhotos: photoMod.pendingPhotos.length,
-        approvedPhotos: photoMod.approvedPhotos.length,
+        totalPhotos: photos?.length || 0,
+        pendingPhotos: photoMod.pendingPhotos?.length || 0,
+        approvedPhotos: photoMod.approvedPhotos?.length || 0,
         rejectedPhotos: rejectedCount,
-        totalViews: photos.reduce((sum, photo) => sum + photo.views, 0),
-        totalLikes: photos.reduce((sum, photo) => sum + photo.likes, 0),
-        pendingTags: tags.filter((t) => !t.isApproved).length,
-        totalTags: tags.length,
+        totalViews: (photos || []).reduce((sum, photo) => sum + photo.views, 0),
+        totalLikes: (photos || []).reduce((sum, photo) => sum + photo.likes, 0),
+        pendingTags: (tags || []).filter((t) => !t.isApproved).length,
+        totalTags: tags?.length || 0,
       });
     } catch (error) {
       console.error('Error loading admin data:', error);
