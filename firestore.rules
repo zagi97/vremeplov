@@ -136,11 +136,13 @@ service cloud.firestore {
                    isOwner(resource.data.photoAuthorId)
                  ));
 
-      allow list: if request.query.limit <= 100 && (
-        resource == null ||
-        resource.data.isApproved == true ||
-        isAdmin()
-      );
+      allow list: if resource == null ||
+                  resource.data.isApproved == true ||
+                  isAdmin() ||
+                  (isAuthenticated() && request.query.limit <= 100 && (
+                    isOwner(resource.data.addedByUid) ||
+                    isOwner(resource.data.photoAuthorId)
+                  ));
 
       allow create: if isAuthenticated() &&
                     request.resource.data.addedByUid == request.auth.uid &&
