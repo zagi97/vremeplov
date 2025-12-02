@@ -101,12 +101,10 @@ service cloud.firestore {
                  (isAuthenticated() && isOwner(resource.data.userId));
 
       // ✅ LIST: Approved comments public, admin has no limit restriction
-      allow list: if isAdmin() ||
-                  (request.query.limit <= 100 && (
-                    resource == null ||
-                    resource.data.isApproved == true ||
-                    (isAuthenticated() && isOwner(resource.data.userId))
-                  ));
+      allow list: if resource == null ||
+                  resource.data.isApproved == true ||
+                  isAdmin() ||
+                  (isAuthenticated() && request.query.limit <= 100 && isOwner(resource.data.userId));
 
       // ✅ CREATE: Authenticated users can comment
       allow create: if isAuthenticated() &&
