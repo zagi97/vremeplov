@@ -65,13 +65,11 @@ service cloud.firestore {
       // When viewing your profile: you see all your photos (approved + pending)
       // When viewing other profiles: you only see their approved photos
       // Legacy photos without isApproved field are treated as approved for backward compatibility
-      allow list: if isAdmin() ||
-                  (request.query.limit <= 100 && (
-                    resource == null ||
-                    resource.data.isApproved == true ||
-                    !resource.data.keys().hasAny(['isApproved']) ||
-                    (isAuthenticated() && isOwner(resource.data.uploaderId))
-                  ));
+      allow list: if resource == null ||
+                  resource.data.isApproved == true ||
+                  !resource.data.keys().hasAny(['isApproved']) ||
+                  isAdmin() ||
+                  (isAuthenticated() && request.query.limit <= 100 && isOwner(resource.data.uploaderId));
 
       // ✅ CREATE: Authenticated users can upload
       allow create: if isAuthenticated() &&
