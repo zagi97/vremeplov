@@ -56,10 +56,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     return fullAddress.replace(/\d+.*$/, '').trim();
   };
 
-  const closeDropdown = () => {
+  const closeDropdown = useCallback(() => {
     setShowDropdown(false);
     setLoadingAddresses(false);
-  };
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -107,12 +107,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const abortController = new AbortController();
       currentRequestRef.current = abortController;
 
-      // 1. TRY TO FIND EXACT ADDRESS
-      const fullSearchTerm = `${searchTerm}, ${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      // 1. TRY TO FIND EXACT ADDRESS - USING STRUCTURED SEARCH
+      const params = new URLSearchParams({
+        format: 'json',
+        street: searchTerm,
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '10',
+        'accept-language': 'hr'
+      });
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
         {
           headers: {
             'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -163,11 +170,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const extractedHouseNumber = extractHouseNumber(searchTerm);
 
       if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
-        const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
-        const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
+        // STRUCTURED SEARCH for street only
+        const streetParams = new URLSearchParams({
+          format: 'json',
+          street: streetOnly,
+          city: locationName,
+          country: 'Croatia',
+          addressdetails: '1',
+          limit: '5',
+          'accept-language': 'hr'
+        });
 
         const streetResponse = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${streetEncodedSearch}&addressdetails=1&limit=5&countrycodes=hr&accept-language=hr`,
+          `https://nominatim.openstreetmap.org/search?${streetParams.toString()}`,
           {
             headers: {
               'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -225,7 +240,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         currentRequestRef.current = null;
       }
     }
-  }, [locationName, onManualPositioning, t]);
+  }, [locationName, onManualPositioning, closeDropdown, t]);
 
   // Trigger search when debounced term changes
   useEffect(() => {
@@ -298,12 +313,17 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     closeDropdown();
 
     try {
-      // Try to get coordinates for the city/location
-      const citySearchTerm = `${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(citySearchTerm);
+      // Try to get coordinates for the city/location - STRUCTURED SEARCH
+      const cityParams = new URLSearchParams({
+        format: 'json',
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '1'
+      });
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=1&countrycodes=hr`,
+        `https://nominatim.openstreetmap.org/search?${cityParams.toString()}`,
         {
           headers: {
             'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -355,11 +375,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     onChange(address);
 
     try {
-      const fullSearchTerm = `${address}, ${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      // STRUCTURED SEARCH for selected address coordinates
+      const selectParams = new URLSearchParams({
+        format: 'json',
+        street: address,
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '1',
+        'accept-language': 'hr'
+      });
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=1&countrycodes=hr&accept-language=hr`,
+        `https://nominatim.openstreetmap.org/search?${selectParams.toString()}`,
         {
           headers: {
             'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
