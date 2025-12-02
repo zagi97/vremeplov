@@ -55,17 +55,21 @@ service cloud.firestore {
     // ============================================
     match /photos/{photoId} {
       // ✅ GET: Approved photos public, owner can see own pending photos when authenticated
+      // Legacy photos without isApproved field are treated as approved for backward compatibility
       allow get: if resource.data.isApproved == true
+                 || !resource.data.keys().hasAny(['isApproved'])
                  || isAdmin()
                  || (isAuthenticated() && isOwner(resource.data.uploaderId));
 
       // ✅ LIST: Approved photos public, authenticated users see own pending photos
       // When viewing your profile: you see all your photos (approved + pending)
       // When viewing other profiles: you only see their approved photos
+      // Legacy photos without isApproved field are treated as approved for backward compatibility
       allow list: if isAdmin() ||
                   (request.query.limit <= 100 && (
                     resource == null ||
                     resource.data.isApproved == true ||
+                    !resource.data.keys().hasAny(['isApproved']) ||
                     (isAuthenticated() && isOwner(resource.data.uploaderId))
                   ));
 
