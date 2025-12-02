@@ -351,6 +351,40 @@ export const notifyBadgeEarned = async (
   });
 };
 
+/**
+ * Helper: Create notification for photo approved
+ */
+export const notifyPhotoApproved = async (
+  userId: string,
+  photoId: string,
+  photoTitle: string
+): Promise<void> => {
+  await sendNotification({
+    userId,
+    type: 'photo_approved',
+    photoId,
+    photoTitle
+  });
+};
+
+/**
+ * Helper: Create notification for photo rejected
+ */
+export const notifyPhotoRejected = async (
+  userId: string,
+  photoId: string,
+  photoTitle: string,
+  reason?: string
+): Promise<void> => {
+  await sendNotification({
+    userId,
+    type: 'photo_rejected',
+    photoId,
+    photoTitle,
+    reason
+  });
+};
+
 export const notificationService = {
   sendNotification,
   getUserNotifications,
@@ -362,5 +396,7 @@ export const notificationService = {
   notifyNewLike,
   notifyNewFollower,
   notifyNewTag,
-  notifyBadgeEarned
+  notifyBadgeEarned,
+  notifyPhotoApproved,
+  notifyPhotoRejected
 };

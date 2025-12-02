@@ -362,6 +362,16 @@ export class PhotoService {
         console.log('🔵 Checking badges...');
         await userService.checkAndAwardBadges(photoAuthorId);
         console.log('✅ Badges checked');
+
+        // Send notification to author
+        console.log('🔵 Sending approval notification to:', photoAuthorId);
+        const { notificationService } = await import('../notificationService');
+        await notificationService.notifyPhotoApproved(
+          photoAuthorId,
+          photoId,
+          photoData.description || 'Untitled'
+        );
+        console.log('✅ Notification sent');
       }
 
       console.log('✅ Photo approval complete! Photo should now appear at location:', photoLocation);

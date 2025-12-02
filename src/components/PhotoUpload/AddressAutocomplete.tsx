@@ -56,10 +56,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     return fullAddress.replace(/\d+.*$/, '').trim();
   };
 
-  const closeDropdown = () => {
+  const closeDropdown = useCallback(() => {
     setShowDropdown(false);
     setLoadingAddresses(false);
-  };
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -107,12 +107,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const abortController = new AbortController();
       currentRequestRef.current = abortController;
 
-      // 1. TRY TO FIND EXACT ADDRESS
-      const fullSearchTerm = `${searchTerm}, ${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      // 1. TRY TO FIND EXACT ADDRESS - USING STRUCTURED SEARCH
+      const params = new URLSearchParams({
+        format: 'json',
+        street: searchTerm,
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '10',
+        'accept-language': 'hr'
+      });
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=10&countrycodes=hr&accept-language=hr`,
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
         {
           headers: {
             'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -163,11 +170,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       const extractedHouseNumber = extractHouseNumber(searchTerm);
 
       if (!exactAddressFound && extractedHouseNumber && streetOnly !== searchTerm) {
-        const streetSearchTerm = `${streetOnly}, ${locationName}, Croatia`;
-        const streetEncodedSearch = encodeURIComponent(streetSearchTerm);
+        // STRUCTURED SEARCH for street only
+        const streetParams = new URLSearchParams({
+          format: 'json',
+          street: streetOnly,
+          city: locationName,
+          country: 'Croatia',
+          addressdetails: '1',
+          limit: '5',
+          'accept-language': 'hr'
+        });
 
         const streetResponse = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${streetEncodedSearch}&addressdetails=1&limit=5&countrycodes=hr&accept-language=hr`,
+          `https://nominatim.openstreetmap.org/search?${streetParams.toString()}`,
           {
             headers: {
               'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -225,7 +240,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         currentRequestRef.current = null;
       }
     }
-  }, [locationName, onManualPositioning, t]);
+  }, [locationName, onManualPositioning, closeDropdown, t]);
 
   // Trigger search when debounced term changes
   useEffect(() => {
@@ -280,6 +295,75 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && value.trim().length >= 2) {
+      e.preventDefault();
+
+      // If no results found, allow manual entry
+      if (!loadingAddresses && availableAddresses.length === 0) {
+        handleManualEntry();
+      } else if (availableAddresses.length === 1) {
+        // Auto-select if only one result
+        handleSelect(availableAddresses[0]);
+      }
+    }
+  };
+
+  const handleManualEntry = async () => {
+    closeDropdown();
+
+    try {
+      // Try to get coordinates for the city/location - STRUCTURED SEARCH
+      const cityParams = new URLSearchParams({
+        format: 'json',
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '1'
+      });
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${cityParams.toString()}`,
+        {
+          headers: {
+            'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+
+        if (data && data.length > 0) {
+          const result = data[0];
+          const coords = {
+            latitude: parseFloat(result.lat),
+            longitude: parseFloat(result.lon)
+          };
+
+          onAddressSelect(value, coords);
+          toast.success(
+            `📍 Adresa spremljena: ${value}\n(Koordinate postavljene na centar: ${locationName})`,
+            { duration: 5000 }
+          );
+        } else {
+          onAddressSelect(value, null);
+          toast.info(
+            `📍 Adresa spremljena: ${value}\n(Koordinate nisu pronađene - ručno odaberite na mapi)`,
+            { duration: 5000 }
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error getting city coordinates:', error);
+      onAddressSelect(value, null);
+      toast.info(
+        `📍 Adresa spremljena: ${value}\n(Koordinate nisu pronađene - ručno odaberite na mapi)`,
+        { duration: 5000 }
+      );
+    }
+  };
+
   const handleSelect = async (address: string) => {
     isSelectingAddressRef.current = true;
     closeDropdown();
@@ -291,11 +375,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     onChange(address);
 
     try {
-      const fullSearchTerm = `${address}, ${locationName}, Croatia`;
-      const encodedSearch = encodeURIComponent(fullSearchTerm);
+      // STRUCTURED SEARCH for selected address coordinates
+      const selectParams = new URLSearchParams({
+        format: 'json',
+        street: address,
+        city: locationName,
+        country: 'Croatia',
+        addressdetails: '1',
+        limit: '1',
+        'accept-language': 'hr'
+      });
 
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodedSearch}&addressdetails=1&limit=1&countrycodes=hr&accept-language=hr`,
+        `https://nominatim.openstreetmap.org/search?${selectParams.toString()}`,
         {
           headers: {
             'User-Agent': 'Vremeplov.hr (vremeplov.app@gmail.com)'
@@ -336,6 +428,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           value={value}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
           className="pl-10"
         />
       </div>
@@ -353,8 +446,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           )}
 
           {!loadingAddresses && availableAddresses.length === 0 && value.length >= 2 && (
-            <div className="p-3 text-sm text-gray-500 text-center">
-              {t('upload.noAddressesFound')}
+            <div className="p-3 text-sm text-gray-600 text-center space-y-2">
+              <div>{t('upload.noAddressesFound')}</div>
+              <div className="text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded border border-blue-200">
+                💡 Pritisnite <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-blue-900 font-mono text-xs">Enter</kbd> za ručni unos
+              </div>
             </div>
           )}
 
