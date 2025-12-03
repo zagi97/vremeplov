@@ -272,8 +272,12 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     try {
       setLikeLoading(true);
 
+      console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
+
       // Koristi likeService za prebacivanje lajka
       const result = await likeService.toggleLike(photoId, user.uid);
+
+      console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
 
       // Send notification ONLY if user liked (not unliked)
       if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
@@ -293,6 +297,8 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
       setLikes(result.newLikesCount);
       setUserHasLiked(result.liked);
+
+      console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
 
       if (result.liked) {
         toast.success(t('photoDetail.photoLiked'));
