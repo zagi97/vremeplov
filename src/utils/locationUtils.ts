@@ -114,7 +114,7 @@ export interface ParsedLocation {
  */
 export function parseLocationFromUrl(
   urlParam: string,
-  municipalityData: { records: Array<[string, string, string, string]> }
+  municipalityData: { records: Array<[string | number, string, string, string]> }
 ): ParsedLocation {
   if (urlParam.includes('-')) {
     const parts = urlParam.split('-');

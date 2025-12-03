@@ -135,57 +135,57 @@ export class LikeService {
         return { liked: false, newLikesCount };
 
       } else {
-        // ========== LIKE ==========
+  // ========== LIKE ==========
 
-        // 1. Record the like
-        await addDoc(this.userLikesCollection, {
-          photoId,
-          userId,
-          createdAt: Timestamp.now()
-        });
+  // 1. Record the like
+  await addDoc(this.userLikesCollection, {
+    photoId,
+    userId,
+    createdAt: Timestamp.now()
+  });
 
-        // 2. Increment like count
-        const newLikesCount = currentLikes + 1;
-        await updateDoc(docRef, {
-          likes: newLikesCount,
-          updatedAt: Timestamp.now()
-        });
+  // 2. Increment like count
+  const newLikesCount = currentLikes + 1;
+  await updateDoc(docRef, {
+    likes: newLikesCount,
+    updatedAt: Timestamp.now()
+  });
 
-        // 3. Add activity (non-critical)
-        try {
-          const { userService } = await import('../user');
-          await userService.addUserActivity(
-            userId,
-            'photo_like',
-            photoId,
-            {
-              photoTitle: photoData.description,
-              location: photoData.location,
-              targetId: photoId
-            }
-          );
-        } catch (activityError) {
-          console.error('⚠️ Error adding activity (non-critical):', activityError);
-        }
-
-        // 4. Update owner stats (non-critical)
-        if (photoData.authorId && photoData.authorId !== userId) {
-          try {
-            const { userService } = await import('../user');
-            const ownerProfile = await userService.getUserProfile(photoData.authorId);
-            if (ownerProfile) {
-              await userService.updateUserStats(photoData.authorId, {
-                totalLikes: ownerProfile.stats.totalLikes + 1
-              });
-              await userService.checkAndAwardBadges(photoData.authorId);
-            }
-          } catch (statsError) {
-            console.error('⚠️ Error updating owner stats (non-critical):', statsError);
-          }
-        }
-
-        return { liked: true, newLikesCount };
+  // 3. Add activity (non-critical)
+  try {
+    const { userService } = await import('../user');
+    await userService.addUserActivity(
+      userId,
+      'photo_like',
+      photoId,
+      {
+        photoTitle: photoData.description,
+        location: photoData.location,
+        targetId: photoId
       }
+    );
+  } catch (activityError) {
+    console.error('⚠️ Error adding activity (non-critical):', activityError);
+  }
+
+  // 4. Update owner stats (non-critical)
+  if (photoData.authorId && photoData.authorId !== userId) {
+    try {
+      const { userService } = await import('../user');
+      const ownerProfile = await userService.getUserProfile(photoData.authorId);
+      if (ownerProfile) {
+        await userService.updateUserStats(photoData.authorId, {
+          totalLikes: ownerProfile.stats.totalLikes + 1
+        });
+        await userService.checkAndAwardBadges(photoData.authorId);
+      }
+    } catch (statsError) {
+      console.error('⚠️ Error updating owner stats (non-critical):', statsError);
+    }
+  }
+
+  return { liked: true, newLikesCount };
+}
     } catch (error) {
       console.error('❌ Error toggling like:', error);
       throw error;

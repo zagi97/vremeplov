@@ -4,7 +4,7 @@ import React, { useState, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from "./ui/card";
 import { Calendar, User, Eye, Heart } from "lucide-react";
-import { Photo, photoService } from '../services/firebaseService';
+import { Photo, likeService } from '../services/firebaseService';
 import { toast } from "sonner";
 import { useAuth } from '../contexts/AuthContext';
 import LazyImage from './LazyImage';
@@ -41,7 +41,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     }
     
     try {
-      const result = await photoService.toggleLike(photoId, user.uid);
+      const result = await likeService.toggleLike(photoId, user.uid);
       
       setPhotosState(prev => 
         prev.map(photo => 

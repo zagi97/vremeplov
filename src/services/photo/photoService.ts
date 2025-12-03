@@ -131,11 +131,11 @@ export class PhotoService {
    * ✅ FIXED: Now uses secure path format matching Firebase Storage Rules
    */
   async uploadImage(blob: Blob, fileName: string, userId?: string, photoId?: string): Promise<string> {
+    const currentUserId = userId || auth.currentUser?.uid;
+    const currentPhotoId = photoId || Date.now().toString();
+
     try {
       // ✅ Use new secure format: photos/{userId}/{photoId}/{fileName}
-      const currentUserId = userId || auth.currentUser?.uid;
-      const currentPhotoId = photoId || Date.now().toString();
-
       if (!currentUserId) {
         throw new Error('User must be authenticated to upload photos');
       }
@@ -417,13 +417,9 @@ export class PhotoService {
         updatedAt: now,
         likes: 0,
         views: 0,
-        isApproved: false
+        isApproved: false,
+        ...(photoData.coordinates ? { coordinates: photoData.coordinates } : {})
       };
-
-      // Add coordinates only if they exist
-      if (photoData.coordinates) {
-        photo.coordinates = photoData.coordinates;
-      }
 
       const docRef = await addDoc(this.photosCollection, photo);
 
@@ -671,7 +667,7 @@ export class PhotoService {
         const fallbackSnapshot = await getDocs(fallbackQuery);
         const allPhotos = mapDocumentsWithId<Photo>(fallbackSnapshot.docs);
 
-        return allPhotos.filter((photo: { authorId: string; uploadedBy: string; }) =>
+        return allPhotos.filter((photo) =>
           photo.authorId === userId || photo.uploadedBy === userId
         );
       } catch (fallbackError) {
