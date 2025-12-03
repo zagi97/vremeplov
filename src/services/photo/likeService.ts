@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   getDocs,
+  getDocsFromServer,
   getDoc,
   query,
   where,
@@ -35,8 +36,8 @@ export class LikeService {
         limit(1)
       );
 
-      // ✅ FORCE SERVER READ - no cache to avoid stale data
-      const querySnapshot = await getDocs(q);
+      // ✅ FORCE SERVER READ - bypass cache to avoid stale data
+      const querySnapshot = await getDocsFromServer(q);
 
       const result = !querySnapshot.empty;
       console.log('🔎 hasUserLiked check:', { photoId, userId, result, docsCount: querySnapshot.size });
