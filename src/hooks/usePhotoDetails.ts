@@ -274,10 +274,25 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
       console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
 
+      // ✅ OPTIMISTIC UPDATE: Update UI immediately
+      const optimisticLiked = !userHasLiked;
+      const optimisticLikes = optimisticLiked ? likes + 1 : Math.max(0, likes - 1);
+
+      setUserHasLiked(optimisticLiked);
+      setLikes(optimisticLikes);
+
+      console.log('🟡 OPTIMISTIC UPDATE:', { optimisticLiked, optimisticLikes });
+
       // Koristi likeService za prebacivanje lajka
       const result = await likeService.toggleLike(photoId, user.uid);
 
       console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
+
+      // ✅ SYNC with server response (in case of mismatch)
+      setLikes(result.newLikesCount);
+      setUserHasLiked(result.liked);
+
+      console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
 
       // Send notification ONLY if user liked (not unliked)
       if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
@@ -295,11 +310,6 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         }
       }
 
-      setLikes(result.newLikesCount);
-      setUserHasLiked(result.liked);
-
-      console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
-
       if (result.liked) {
         toast.success(t('photoDetail.photoLiked'));
       } else {
@@ -308,6 +318,13 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
     } catch (error) {
       console.error('❌ [LIKE] Error:', error);
+
+      // ✅ ROLLBACK on error
+      const rollbackLiked = !userHasLiked;
+      const rollbackLikes = rollbackLiked ? likes - 1 : likes + 1;
+      setUserHasLiked(rollbackLiked);
+      setLikes(rollbackLikes);
+
       toast.error(t('photoDetail.likeFailed'));
     } finally {
       setLikeLoading(false);
