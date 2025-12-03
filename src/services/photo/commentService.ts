@@ -10,6 +10,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -35,7 +36,7 @@ export class CommentService {
         userName,
         text,
         createdAt: Timestamp.now(),
-        isApproved: true
+        isApproved: false
       };
 
       const docRef = await addDoc(this.commentsCollection, comment);
