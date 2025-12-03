@@ -319,11 +319,10 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     } catch (error) {
       console.error('❌ [LIKE] Error:', error);
 
-      // ✅ ROLLBACK on error
-      const rollbackLiked = !userHasLiked;
-      const rollbackLikes = rollbackLiked ? likes - 1 : likes + 1;
-      setUserHasLiked(rollbackLiked);
-      setLikes(rollbackLikes);
+      // ✅ ROLLBACK: Restore original values from closure
+      // Don't compute inverse - closure already has the original state!
+      setUserHasLiked(userHasLiked);
+      setLikes(likes);
 
       toast.error(t('photoDetail.likeFailed'));
     } finally {
