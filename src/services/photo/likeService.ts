@@ -34,8 +34,14 @@ export class LikeService {
         where('userId', '==', userId),
         limit(1)
       );
+
+      // ✅ FORCE SERVER READ - no cache to avoid stale data
       const querySnapshot = await getDocs(q);
-      return !querySnapshot.empty;
+
+      const result = !querySnapshot.empty;
+      console.log('🔎 hasUserLiked check:', { photoId, userId, result, docsCount: querySnapshot.size });
+
+      return result;
     } catch (error) {
       console.error('Error checking user like:', error);
       return false;
@@ -47,7 +53,11 @@ export class LikeService {
    */
   async toggleLike(photoId: string, userId: string): Promise<{ liked: boolean; newLikesCount: number }> {
     try {
+      console.log('🔵 toggleLike START:', { photoId, userId });
+
       const hasLiked = await this.hasUserLiked(photoId, userId);
+
+      console.log('🔍 hasLiked result:', hasLiked, '→', hasLiked ? 'UNLIKE path' : 'LIKE path');
 
       const docRef = doc(this.photosCollection, photoId);
       const docSnap = await getDoc(docRef);
