@@ -184,10 +184,14 @@ const handleSubmitComment = async (e: React.FormEvent) => {
       
     setNewComment("");
     toast.success(t('comments.commentAdded'));
-    
+
     // ✅ REFRESH rate limit info after successful comment
-    await refreshRateLimit();
-    
+    // Immediate refresh to update UI, then again after Firestore indexes
+    await refreshRateLimit(); // Immediate
+    setTimeout(() => {
+      refreshRateLimit(); // After Firestore indexes (1s delay)
+    }, 1000);
+
   } catch (error) {
     console.error('Greška pri dodavanju komentara:', error);
     toast.error(t('comments.postError'));
