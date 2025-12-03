@@ -36,7 +36,7 @@ export class CommentService {
         userName,
         text,
         createdAt: Timestamp.now(),
-        isApproved: false
+        isApproved: true
       };
 
       const docRef = await addDoc(this.commentsCollection, comment);
