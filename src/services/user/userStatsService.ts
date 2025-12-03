@@ -168,6 +168,60 @@ class UserStatsService {
   }
 
   /**
+   * ADMIN ONLY: Recalculate stats for all users
+   * Use this after changing stats calculation logic or fixing data
+   */
+  async recalculateAllUserStats(): Promise<{ success: number; failed: number; errors: string[] }> {
+    try {
+      console.log('🔵 Starting recalculation for ALL users...');
+
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const userIds = usersSnapshot.docs.map(doc => doc.id);
+
+      console.log(`📊 Found ${userIds.length} users to process`);
+
+      let success = 0;
+      let failed = 0;
+      const errors: string[] = [];
+
+      // Process users in batches of 5 to avoid rate limits
+      const BATCH_SIZE = 5;
+      for (let i = 0; i < userIds.length; i += BATCH_SIZE) {
+        const batch = userIds.slice(i, i + BATCH_SIZE);
+
+        const results = await Promise.allSettled(
+          batch.map(userId => this.forceRecalculateUserStats(userId))
+        );
+
+        results.forEach((result, index) => {
+          const userId = batch[index];
+          if (result.status === 'fulfilled') {
+            success++;
+            console.log(`✅ [${success}/${userIds.length}] Recalculated stats for user: ${userId}`);
+          } else {
+            failed++;
+            const error = `User ${userId}: ${result.reason}`;
+            errors.push(error);
+            console.error(`❌ [${i + index + 1}/${userIds.length}] ${error}`);
+          }
+        });
+
+        // Small delay between batches
+        if (i + BATCH_SIZE < userIds.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      console.log(`✅ Recalculation complete! Success: ${success}, Failed: ${failed}`);
+
+      return { success, failed, errors };
+    } catch (error) {
+      console.error('❌ Error in recalculateAllUserStats:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user stats for a specific time period
    */
   async getUserStatsForPeriod(userId: string, fromDate: Date): Promise<UserProfile['stats']> {
