@@ -80,7 +80,7 @@ export class LikeService {
           where('userId', '==', userId),
           limit(1)
         );
-        const likeSnapshot = await getDocs(likeQuery);
+        const likeSnapshot = await getDocsFromServer(likeQuery);
         const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
 
@@ -100,7 +100,7 @@ export class LikeService {
             limit(10)
           );
 
-          const activitiesSnapshot = await getDocs(activitiesQuery);
+          const activitiesSnapshot = await getDocsFromServer(activitiesQuery);
 
           // Filter activities for this specific photo
           const relevantActivities = activitiesSnapshot.docs.filter(doc => {
