@@ -48,6 +48,9 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   // ✅ RATE LIMITING - using centralized hook
   const [rateLimitState, refreshRateLimit] = useCommentRateLimit(user?.uid);
 
+  // ✅ CLIENT-SIDE FALLBACK: Track recent submissions in memory
+  const [recentSubmissions, setRecentSubmissions] = useState<number[]>([]);
+
   // Extract constants for cleaner code
   const MAX_COMMENTS_PER_MINUTE = COMMENT_RATE_LIMIT_CONFIG.timeWindows[0].maxRequests;
   const MAX_COMMENTS_PER_HOUR = COMMENT_RATE_LIMIT_CONFIG.timeWindows[1].maxRequests;
@@ -112,7 +115,16 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   const commentsInLastMinute = rateLimitState.counts[0] || 0;
   const commentsInLastHour = rateLimitState.counts[1] || 0;
   const commentsInLastDay = rateLimitState.counts[2] || 0;
-  const canComment = !rateLimitState.isLimited;
+
+  // ✅ CLIENT-SIDE FALLBACK: Count recent submissions from memory
+  const now = Date.now();
+  const oneMinuteAgo = now - 60 * 1000;
+  const recentSubmissionsInLastMinute = recentSubmissions.filter(ts => ts > oneMinuteAgo).length;
+
+  // Combine Firestore data with client-side tracking
+  const totalCommentsInLastMinute = Math.max(commentsInLastMinute, recentSubmissionsInLastMinute);
+
+  const canComment = !rateLimitState.isLimited && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE;
 
   const handleSignInToComment = async () => {
     try {
@@ -141,7 +153,7 @@ const handleSubmitComment = async (e: React.FormEvent) => {
   if (!canComment) {
     let errorMessage = '';
 
-    if (commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
+    if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
       errorMessage = `🚫 Možeš objaviti najviše ${MAX_COMMENTS_PER_MINUTE} komentara u minuti.\n\nPričekaj malo! ⏱️`;
     } else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
       errorMessage = `🚫 Dostigao si limit od ${MAX_COMMENTS_PER_HOUR} komentara po satu.\n\nPokušaj ponovo kasnije! ⏰`;
@@ -165,7 +177,15 @@ const handleSubmitComment = async (e: React.FormEvent) => {
       user.uid,
       user.displayName || user.email || 'Nepoznato'
     );
-    
+
+    // ✅ CLIENT-SIDE: Track this submission
+    const submissionTime = Date.now();
+    setRecentSubmissions(prev => {
+      // Add new submission and clean up old ones (older than 1 minute)
+      const oneMinuteAgo = submissionTime - 60 * 1000;
+      return [...prev.filter(ts => ts > oneMinuteAgo), submissionTime];
+    });
+
     // ✅✅✅ Send notification to photo owner
     if (photoAuthorId && photoAuthorId !== user.uid) {
       try {
@@ -181,7 +201,7 @@ const handleSubmitComment = async (e: React.FormEvent) => {
         console.error('⚠️ Failed to send comment notification:', notifError);
       }
     }
-      
+
     setNewComment("");
     toast.success(t('comments.commentAdded'));
 
@@ -236,10 +256,10 @@ const handleSubmitComment = async (e: React.FormEvent) => {
                     Dostigao si limit komentara
                   </p>
                   <p className="text-sm text-orange-700">
-                    {commentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
+                    {totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
                       <>Možeš komentirati ponovno {rateLimitState.nextAvailableTime && formatRemainingTime(rateLimitState.nextAvailableTime)}.</>
                     )}
-                    {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && commentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
+                    {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
                       <>Dostigao si satni limit ({MAX_COMMENTS_PER_HOUR} komentara/sat).</>
                     )}
                     {commentsInLastDay >= MAX_COMMENTS_PER_DAY && commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
@@ -254,7 +274,7 @@ const handleSubmitComment = async (e: React.FormEvent) => {
           {/* ✅ RATE LIMIT INFO (uvijek prikaži) */}
           <div className="mb-3 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
             <span>
-              Minutno: {commentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}
+              Minutno: {totalCommentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}
             </span>
             <span>
               Satno: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}
