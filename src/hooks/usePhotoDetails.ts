@@ -5,7 +5,7 @@ import { photoService, Photo, tagService, viewService, TaggedPerson } from "@/se
 import { likeService } from '@/services/photo/likeService';
 import { notificationService } from '@/services/notificationService';
 import { authService } from '@/services/authService';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from "sonner";
 import { translateWithParams } from '@/contexts/LanguageContext';
@@ -115,7 +115,9 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
             y: person.y,
             photoId: photoId,
             addedBy: 'System',
-            isApproved: true
+            addedByUid: photoData.authorId,
+            isApproved: true,
+            createdAt: Timestamp.now()
           }))
         ];
 
@@ -243,7 +245,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         addedBy: user.displayName || user.email || 'User',
         addedByUid: user.uid,
         isApproved: false,
-        createdAt: new Date()
+        createdAt: Timestamp.now()
       };
 
       setTaggedPersons([...taggedPersons, newTagWithId]);
@@ -259,79 +261,79 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
   };
 
   // Handle like
-  const handleLike = async () => {
-    if (!photoId || likeLoading) {
-      return;
-    }
+const handleLike = async () => {
+  if (!photoId || likeLoading) {
+    return;
+  }
 
-    if (!user) {
-      toast.error(t('photoDetail.signInMessage'));
-      return;
-    }
+  if (!user) {
+    toast.error(t('photoDetail.signInMessage'));
+    return;
+  }
 
-    // ✅ Sačuvaj originalne vrijednosti PRIJE bilo kakvih promjena
-    const originalLiked = userHasLiked;
-    const originalLikes = likes;
+  // ✅ Sačuvaj originalne vrijednosti PRIJE bilo kakvih promjena
+  const originalLiked = userHasLiked;
+  const originalLikes = likes;
 
-    try {
-      setLikeLoading(true);
+  try {
+    setLikeLoading(true);
 
-      console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
+    console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
 
-      // ✅ OPTIMISTIC UPDATE: Update UI immediately
-      const optimisticLiked = !userHasLiked;
-      const optimisticLikes = optimisticLiked ? likes + 1 : Math.max(0, likes - 1);
+    // ✅ OPTIMISTIC UPDATE: Update UI immediately
+    const optimisticLiked = !userHasLiked;
+    const optimisticLikes = optimisticLiked ? likes + 1 : Math.max(0, likes - 1);
 
-      setUserHasLiked(optimisticLiked);
-      setLikes(optimisticLikes);
+    setUserHasLiked(optimisticLiked);
+    setLikes(optimisticLikes);
 
-      console.log('🟡 OPTIMISTIC UPDATE:', { optimisticLiked, optimisticLikes });
+    console.log('🟡 OPTIMISTIC UPDATE:', { optimisticLiked, optimisticLikes });
 
-      // Koristi likeService za prebacivanje lajka
-      const result = await likeService.toggleLike(photoId, user.uid);
+    // Koristi likeService za prebacivanje lajka
+    const result = await likeService.toggleLike(photoId, user.uid);
 
-      console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
+    console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
 
-      // ✅ SYNC with server response (in case of mismatch)
-      setLikes(result.newLikesCount);
-      setUserHasLiked(result.liked);
+    // ✅ SYNC with server response (in case of mismatch)
+    setLikes(result.newLikesCount);
+    setUserHasLiked(result.liked);
 
-      console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
+    console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
 
-      // Send notification ONLY if user liked (not unliked)
-      if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
-        try {
-          await notificationService.notifyNewLike(
-            photo.uploadedBy,
-            user.uid,
-            user.displayName || 'Anonymous',
-            photoId,
-            photo.description || 'untitled',
-            user.photoURL || undefined
-          );
-        } catch (notifError) {
-          console.error('❌ [LIKE] Failed to send notification:', notifError);
-        }
+    // Send notification ONLY if user liked (not unliked)
+    if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
+      try {
+        await notificationService.notifyNewLike(
+          photo.uploadedBy,
+          user.uid,
+          user.displayName || 'Anonymous',
+          photoId,
+          photo.description || 'untitled',
+          user.photoURL || undefined
+        );
+      } catch (notifError) {
+        console.error('❌ [LIKE] Failed to send notification:', notifError);
       }
-
-      if (result.liked) {
-        toast.success(t('photoDetail.photoLiked'));
-      } else {
-        toast.success(t('photoDetail.photoUnliked'));
-      }
-
-    } catch (error) {
-      console.error('❌ [LIKE] Error:', error);
-
-      // ✅ ROLLBACK na ORIGINALNE vrijednosti (ne invertiraj ponovno!)
-      setUserHasLiked(originalLiked);
-      setLikes(originalLikes);
-
-      toast.error(t('photoDetail.likeFailed'));
-    } finally {
-      setLikeLoading(false);
     }
-  };
+
+    if (result.liked) {
+      toast.success(t('photoDetail.photoLiked'));
+    } else {
+      toast.success(t('photoDetail.photoUnliked'));
+    }
+
+  } catch (error) {
+    console.error('❌ [LIKE] Error:', error);
+
+    // ✅ ROLLBACK na ORIGINALNE vrijednosti (ne invertiraj ponovno!)
+    setUserHasLiked(originalLiked);
+    setLikes(originalLikes);
+
+    toast.error(t('photoDetail.likeFailed'));
+  } finally {
+    setLikeLoading(false);
+  }
+};
 
   return {
     photo,
