@@ -156,14 +156,14 @@ const handleSubmitComment = async (e: React.FormEvent) => {
   setIsSubmitting(true);
 
   try {
-    const { photoService } = await import('../services/firebaseService');
+    const { commentService } = await import('../services/photo/commentService');
 
-    // ✅ PROMIJENI - dodaj userName kao 4. parametar
-    await photoService.addComment(
+    // ✅ Use commentService instead of photoService
+    await commentService.addComment(
       photoId,
       newComment.trim(),
       user.uid,
-      user.displayName || user.email || 'Nepoznato'  // ⬅️ DODAJ OVO
+      user.displayName || user.email || 'Nepoznato'
     );
     
     // ✅✅✅ Send notification to photo owner
