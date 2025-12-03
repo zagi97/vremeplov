@@ -78,12 +78,13 @@ service cloud.firestore {
                     request.resource.data.isApproved == false;
 
       // ✅ UPDATE: Owner can update unapproved, admin can update all
+      // Legacy photos without isApproved field are treated as approved for likes/views updates
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
                      resource.data.isApproved == false) ||
                     (isAuthenticated() &&
-                     resource.data.isApproved == true &&
+                     (resource.data.isApproved == true || !resource.data.keys().hasAny(['isApproved'])) &&
                      request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(['likes', 'views', 'updatedAt']));
 
