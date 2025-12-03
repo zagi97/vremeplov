@@ -128,6 +128,7 @@ export class LikeService {
             }
           } catch (statsError) {
             console.error('⚠️ Error updating owner stats (non-critical):', statsError);
+            // Unlike still succeeded - stats will be recalculated later
           }
         }
 
@@ -165,12 +166,17 @@ export class LikeService {
 
         // 4. Update owner stats
         if (photoData.authorId) {
-          const ownerProfile = await userService.getUserProfile(photoData.authorId);
-          if (ownerProfile) {
-            await userService.updateUserStats(photoData.authorId, {
-              totalLikes: ownerProfile.stats.totalLikes + 1
-            });
-            await userService.checkAndAwardBadges(photoData.authorId);
+          try {
+            const ownerProfile = await userService.getUserProfile(photoData.authorId);
+            if (ownerProfile) {
+              await userService.updateUserStats(photoData.authorId, {
+                totalLikes: ownerProfile.stats.totalLikes + 1
+              });
+              await userService.checkAndAwardBadges(photoData.authorId);
+            }
+          } catch (statsError) {
+            console.error('⚠️ Error updating owner stats (non-critical):', statsError);
+            // Like still succeeded - stats will be recalculated later
           }
         }
 
