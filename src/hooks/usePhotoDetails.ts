@@ -261,77 +261,79 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
   };
 
   // Handle like
-  const handleLike = async () => {
-    if (!photoId || !user || likeLoading) {
-      return;
-    }
+const handleLike = async () => {
+  if (!photoId || likeLoading) {
+    return;
+  }
 
-    if (!user) {
-      toast.error(t('photoDetail.signInMessage'));
-      return;
-    }
+  if (!user) {
+    toast.error(t('photoDetail.signInMessage'));
+    return;
+  }
 
-    try {
-      setLikeLoading(true);
+  // ✅ Sačuvaj originalne vrijednosti PRIJE bilo kakvih promjena
+  const originalLiked = userHasLiked;
+  const originalLikes = likes;
 
-      console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
+  try {
+    setLikeLoading(true);
 
-      // ✅ OPTIMISTIC UPDATE: Update UI immediately
-      const optimisticLiked = !userHasLiked;
-      const optimisticLikes = optimisticLiked ? likes + 1 : Math.max(0, likes - 1);
+    console.log('🔵 BEFORE toggleLike:', { userHasLiked, likes });
 
-      setUserHasLiked(optimisticLiked);
-      setLikes(optimisticLikes);
+    // ✅ OPTIMISTIC UPDATE: Update UI immediately
+    const optimisticLiked = !userHasLiked;
+    const optimisticLikes = optimisticLiked ? likes + 1 : Math.max(0, likes - 1);
 
-      console.log('🟡 OPTIMISTIC UPDATE:', { optimisticLiked, optimisticLikes });
+    setUserHasLiked(optimisticLiked);
+    setLikes(optimisticLikes);
 
-      // Koristi likeService za prebacivanje lajka
-      const result = await likeService.toggleLike(photoId, user.uid);
+    console.log('🟡 OPTIMISTIC UPDATE:', { optimisticLiked, optimisticLikes });
 
-      console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
+    // Koristi likeService za prebacivanje lajka
+    const result = await likeService.toggleLike(photoId, user.uid);
 
-      // ✅ SYNC with server response (in case of mismatch)
-      setLikes(result.newLikesCount);
-      setUserHasLiked(result.liked);
+    console.log('🟢 AFTER toggleLike:', { result, liked: result.liked, newLikesCount: result.newLikesCount });
 
-      console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
+    // ✅ SYNC with server response (in case of mismatch)
+    setLikes(result.newLikesCount);
+    setUserHasLiked(result.liked);
 
-      // Send notification ONLY if user liked (not unliked)
-      if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
-        try {
-          await notificationService.notifyNewLike(
-            photo.uploadedBy,
-            user.uid,
-            user.displayName || 'Anonymous',
-            photoId,
-            photo.description || 'untitled',
-            user.photoURL || undefined
-          );
-        } catch (notifError) {
-          console.error('❌ [LIKE] Failed to send notification:', notifError);
-        }
+    console.log('🟣 AFTER setState:', { newUserHasLiked: result.liked, newLikes: result.newLikesCount });
+
+    // Send notification ONLY if user liked (not unliked)
+    if (result.liked && photo?.uploadedBy && photo.uploadedBy !== user.uid) {
+      try {
+        await notificationService.notifyNewLike(
+          photo.uploadedBy,
+          user.uid,
+          user.displayName || 'Anonymous',
+          photoId,
+          photo.description || 'untitled',
+          user.photoURL || undefined
+        );
+      } catch (notifError) {
+        console.error('❌ [LIKE] Failed to send notification:', notifError);
       }
-
-      if (result.liked) {
-        toast.success(t('photoDetail.photoLiked'));
-      } else {
-        toast.success(t('photoDetail.photoUnliked'));
-      }
-
-    } catch (error) {
-      console.error('❌ [LIKE] Error:', error);
-
-      // ✅ ROLLBACK on error
-      const rollbackLiked = !userHasLiked;
-      const rollbackLikes = rollbackLiked ? likes - 1 : likes + 1;
-      setUserHasLiked(rollbackLiked);
-      setLikes(rollbackLikes);
-
-      toast.error(t('photoDetail.likeFailed'));
-    } finally {
-      setLikeLoading(false);
     }
-  };
+
+    if (result.liked) {
+      toast.success(t('photoDetail.photoLiked'));
+    } else {
+      toast.success(t('photoDetail.photoUnliked'));
+    }
+
+  } catch (error) {
+    console.error('❌ [LIKE] Error:', error);
+
+    // ✅ ROLLBACK na ORIGINALNE vrijednosti (ne invertiraj ponovno!)
+    setUserHasLiked(originalLiked);
+    setLikes(originalLikes);
+
+    toast.error(t('photoDetail.likeFailed'));
+  } finally {
+    setLikeLoading(false);
+  }
+};
 
   return {
     photo,
