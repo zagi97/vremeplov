@@ -9,6 +9,7 @@ import {
   getDoc,
   query,
   where,
+  limit,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -30,7 +31,8 @@ export class LikeService {
       const q = query(
         this.userLikesCollection,
         where('photoId', '==', photoId),
-        where('userId', '==', userId)
+        where('userId', '==', userId),
+        limit(1)
       );
       const querySnapshot = await getDocs(q);
       return !querySnapshot.empty;
@@ -64,7 +66,8 @@ export class LikeService {
         const likeQuery = query(
           this.userLikesCollection,
           where('photoId', '==', photoId),
-          where('userId', '==', userId)
+          where('userId', '==', userId),
+          limit(1)
         );
         const likeSnapshot = await getDocs(likeQuery);
         const deletePromises = likeSnapshot.docs.map(doc => deleteDoc(doc.ref));
@@ -82,7 +85,8 @@ export class LikeService {
           const activitiesQuery = query(
             collection(db, 'activities'),
             where('userId', '==', userId),
-            where('type', '==', 'photo_like')
+            where('type', '==', 'photo_like'),
+            limit(10)
           );
 
           const activitiesSnapshot = await getDocs(activitiesQuery);
