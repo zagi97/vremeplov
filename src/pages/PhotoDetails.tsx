@@ -7,7 +7,6 @@ import PhotoGrid from "../components/PhotoGrid";
 import PhotoComments from "../components/PhotoComments";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
-import PhotoLocationMap from "../components/PhotoLocationMap";
 import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
@@ -134,57 +133,6 @@ const PhotoDetail = () => {
               photoAuthor={photo.uploadedBy || photo.author}
               photoAuthorId={photo.authorId}
             />
-          </div>
-
-          {/* Right Column - Sidebar for larger screens */}
-          <div className="hidden md:block p-6 border-t border-gray-200">
-            <div className="mb-8">
-              {/* Location Map */}
-              <PhotoLocationMap
-                photo={{
-                  id: photo.id || '',
-                  description: photo.description,
-                  location: photo.location,
-                  coordinates: photo.coordinates
-                }}
-                nearbyPhotos={relatedPhotos
-                  .filter(p => p.coordinates?.latitude && p.coordinates?.longitude)
-                  .slice(0, 3)
-                  .map(p => ({
-                    id: p.id || '',
-                    description: p.description,
-                    imageUrl: p.imageUrl,
-                    year: p.year,
-                    coordinates: p.coordinates
-                  }))}
-              />
-            </div>
-
-            {/* Related Photos */}
-            {relatedPhotos.length > 0 && (
-              <div className="mt-6">
-                <h3 className="font-medium text-lg mb-3">{t('photoDetail.relatedPhotos')}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {relatedPhotos.slice(0, 2).map((relatedPhoto) => (
-                    <Link
-                      key={relatedPhoto.id}
-                      to={`/photo/${relatedPhoto.id}`}
-                      className="block hover:opacity-90 transition-opacity"
-                    >
-                      <LazyImage
-                        src={relatedPhoto.imageUrl}
-                        alt={relatedPhoto.description}
-                        className="w-full"
-                        responsiveImages={relatedPhoto.responsiveImages}
-                        threshold={0.2}
-                      />
-                      <p className="text-sm font-medium mt-2">{relatedPhoto.description}</p>
-                      <p className="text-xs text-gray-500">{relatedPhoto.year}, {relatedPhoto.location}</p>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
