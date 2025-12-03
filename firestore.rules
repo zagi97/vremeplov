@@ -106,12 +106,12 @@ service cloud.firestore {
                   isAdmin() ||
                   (isAuthenticated() && request.query.limit <= 100 && isOwner(resource.data.userId));
 
-      // ✅ CREATE: Authenticated users can comment
+      // ✅ CREATE: Authenticated users can comment (instant approval, no moderation)
       allow create: if isAuthenticated() &&
                     request.resource.data.userId == request.auth.uid &&
                     request.resource.data.text.size() > 0 &&
                     request.resource.data.text.size() <= 250 &&
-                    request.resource.data.isApproved == false;
+                    request.resource.data.isApproved == true;
 
       // ✅ UPDATE: Only admin
       allow update: if isAdmin();
