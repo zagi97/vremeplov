@@ -151,22 +151,27 @@ export class LikeService {
           updatedAt: Timestamp.now()
         });
 
-        // 3. Add activity
-        const { userService } = await import('../user');
-        await userService.addUserActivity(
-          userId,
-          'photo_like',
-          photoId,
-          {
-            photoTitle: photoData.description,
-            location: photoData.location,
-            targetId: photoId
-          }
-        );
+        // 3. Add activity (non-critical)
+        try {
+          const { userService } = await import('../user');
+          await userService.addUserActivity(
+            userId,
+            'photo_like',
+            photoId,
+            {
+              photoTitle: photoData.description,
+              location: photoData.location,
+              targetId: photoId
+            }
+          );
+        } catch (activityError) {
+          console.error('⚠️ Error adding activity (non-critical):', activityError);
+        }
 
-        // 4. Update owner stats
-        if (photoData.authorId) {
+        // 4. Update owner stats (non-critical)
+        if (photoData.authorId && photoData.authorId !== userId) {
           try {
+            const { userService } = await import('../user');
             const ownerProfile = await userService.getUserProfile(photoData.authorId);
             if (ownerProfile) {
               await userService.updateUserStats(photoData.authorId, {
@@ -176,7 +181,6 @@ export class LikeService {
             }
           } catch (statsError) {
             console.error('⚠️ Error updating owner stats (non-critical):', statsError);
-            // Like still succeeded - stats will be recalculated later
           }
         }
 
