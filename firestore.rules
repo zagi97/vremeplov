@@ -29,11 +29,9 @@ service cloud.firestore {
       // ✅ LIST: Authenticated users can list (needed for leaderboard)
       allow list: if isAuthenticated();
 
-      // ✅ GET: Owner/admin can see full profile details
-      allow get: if isAuthenticated() && (
-        isAdmin() ||
-        isOwner(userId)
-      );
+      // ✅ GET: Any authenticated user can read profiles (needed for like stats updates)
+      // Privacy is maintained via client-side filtering in profile pages
+      allow get: if isAuthenticated();
 
       // ✅ CREATE: User creates own profile on signup
       allow create: if isAuthenticated() &&

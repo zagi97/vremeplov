@@ -128,6 +128,7 @@ export class LikeService {
             }
           } catch (statsError) {
             console.error('⚠️ Error updating owner stats (non-critical):', statsError);
+            // Unlike still succeeded - stats will be recalculated later
           }
         }
 
