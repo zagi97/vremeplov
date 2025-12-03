@@ -93,7 +93,7 @@ const PhotoDetail = () => {
             responsiveImages={photo.responsiveImages}
             photoAuthorId={photo.authorId}
             user={user}
-            taggedPersons={taggedPersons}
+            taggedPersons={taggedPersons.filter((tag): tag is typeof tag & { id: string } => tag.id !== undefined)}
             rateLimitInfo={rateLimitInfo}
             onAddTag={handleAddTag}
             onCheckRateLimit={checkUserTagRateLimit}
@@ -116,14 +116,14 @@ const PhotoDetail = () => {
 
           {/* Photo Metadata Component */}
           <PhotoMetadata
-            year={photo.year}
+            year={parseInt(photo.year, 10)}
             author={photo.author}
             location={photo.location}
             uploadedBy={photo.uploadedBy}
             uploadedAt={photo.uploadedAt}
             description={photo.description}
             detailedDescription={photo.detailedDescription}
-            taggedPersons={taggedPersons}
+            taggedPersons={taggedPersons.filter((tag): tag is typeof tag & { id: string } => tag.id !== undefined)}
           />
 
           {/* Comments Section */}

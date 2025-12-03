@@ -5,7 +5,7 @@ import { photoService, Photo, tagService, viewService, TaggedPerson } from "@/se
 import { likeService } from '@/services/photo/likeService';
 import { notificationService } from '@/services/notificationService';
 import { authService } from '@/services/authService';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from "sonner";
 import { translateWithParams } from '@/contexts/LanguageContext';
@@ -115,7 +115,9 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
             y: person.y,
             photoId: photoId,
             addedBy: 'System',
-            isApproved: true
+            addedByUid: photoData.authorId,
+            isApproved: true,
+            createdAt: Timestamp.now()
           }))
         ];
 
@@ -243,7 +245,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         addedBy: user.displayName || user.email || 'User',
         addedByUid: user.uid,
         isApproved: false,
-        createdAt: new Date()
+        createdAt: Timestamp.now()
       };
 
       setTaggedPersons([...taggedPersons, newTagWithId]);
