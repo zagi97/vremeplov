@@ -260,7 +260,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
   // Handle like
   const handleLike = async () => {
-    if (!photoId || !user || likeLoading) {
+    if (!photoId || likeLoading) {
       return;
     }
 
@@ -268,6 +268,10 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
       toast.error(t('photoDetail.signInMessage'));
       return;
     }
+
+    // ✅ Sačuvaj originalne vrijednosti PRIJE bilo kakvih promjena
+    const originalLiked = userHasLiked;
+    const originalLikes = likes;
 
     try {
       setLikeLoading(true);
@@ -319,10 +323,9 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     } catch (error) {
       console.error('❌ [LIKE] Error:', error);
 
-      // ✅ ROLLBACK: Restore original values from closure
-      // Don't compute inverse - closure already has the original state!
-      setUserHasLiked(userHasLiked);
-      setLikes(likes);
+      // ✅ ROLLBACK na ORIGINALNE vrijednosti (ne invertiraj ponovno!)
+      setUserHasLiked(originalLiked);
+      setLikes(originalLikes);
 
       toast.error(t('photoDetail.likeFailed'));
     } finally {
