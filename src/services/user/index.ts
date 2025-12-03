@@ -56,6 +56,7 @@ class UserService {
   updateUserStats = userStatsService.updateUserStats.bind(userStatsService);
   forceRecalculateUserStats = userStatsService.forceRecalculateUserStats.bind(userStatsService);
   fixAllPhotoLikeCounts = userStatsService.fixAllPhotoLikeCounts.bind(userStatsService);
+  recalculateAllUserStats = userStatsService.recalculateAllUserStats.bind(userStatsService);
 
   // Badge methods
   checkAndAwardBadges = userBadgeService.checkAndAwardBadges.bind(userBadgeService);

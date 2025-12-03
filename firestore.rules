@@ -40,9 +40,12 @@ service cloud.firestore {
                     !request.resource.data.keys().hasAny(['isAdmin', 'isBanned']);
 
       // ✅ UPDATE: User updates own profile, admin can update any
+      // Special case: Any authenticated user can update ONLY stats/badges/lastActive (for like/photo approval)
       allow update: if isAdmin() ||
                     (isOwner(userId) &&
-                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid'])) ||
+                    (isAuthenticated() &&
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats', 'badges', 'lastActive']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
