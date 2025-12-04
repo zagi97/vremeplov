@@ -1,7 +1,7 @@
 // src/components/NotificationCenter.tsx - ULTIMATE FIX
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Bell } from 'lucide-react';
+import { ArrowRight, Bell, CheckCheck } from 'lucide-react';
 import { Notification, notificationService } from '../services/notificationService';
 import { Button } from './ui/button';
 import { toast } from 'sonner';

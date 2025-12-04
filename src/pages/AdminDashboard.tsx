@@ -1,5 +1,5 @@
 // src/pages/AdminDashboard.tsx - REFACTORED
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -24,37 +24,14 @@ import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
 export default function AdminDashboard() {
   console.log('🔵 [1] AdminDashboard RENDER START');
 
-  let authData, languageData, photoMod, tagMod, commentMod, userMod, navigateHook;
+  const { user, isAdmin, loading, exitAdminMode } = useAuth();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
 
-  try {
-    authData = useAuth();
-    console.log('🔵 [2] useAuth OK:', { userId: authData.user?.uid, isAdmin: authData.isAdmin, loading: authData.loading });
-  } catch (e) {
-    console.error('🔴 useAuth FAILED:', e);
-    throw e;
-  }
-
-  const { user, isAdmin, loading, exitAdminMode } = authData;
-
-  try {
-    navigateHook = useNavigate();
-    console.log('🔵 [3] useNavigate OK');
-  } catch (e) {
-    console.error('🔴 useNavigate FAILED:', e);
-    throw e;
-  }
-
-  const navigate = navigateHook;
-
-  try {
-    languageData = useLanguage();
-    console.log('🔵 [4] useLanguage OK');
-  } catch (e) {
-    console.error('🔴 useLanguage FAILED:', e);
-    throw e;
-  }
-
-  const { t } = languageData;
+  const photoMod = usePhotoModeration();
+  const tagMod = useTagModeration();
+  const commentMod = useCommentModeration();
+  const userMod = useUserManagement();
 
   const [activeTab, setActiveTab] = useState('pending');
   const [stats, setStats] = useState({
@@ -72,39 +49,6 @@ export default function AdminDashboard() {
   const [recalculating, setRecalculating] = useState(false);
   const [recalculateResult, setRecalculateResult] = useState<{ success: number; failed: number } | null>(null);
 
-  try {
-    photoMod = usePhotoModeration();
-    console.log('🔵 [5] usePhotoModeration OK');
-  } catch (e) {
-    console.error('🔴 usePhotoModeration FAILED:', e);
-    throw e;
-  }
-
-  try {
-    tagMod = useTagModeration();
-    console.log('🔵 [6] useTagModeration OK');
-  } catch (e) {
-    console.error('🔴 useTagModeration FAILED:', e);
-    throw e;
-  }
-
-  try {
-    commentMod = useCommentModeration();
-    console.log('🔵 [7] useCommentModeration OK');
-  } catch (e) {
-    console.error('🔴 useCommentModeration FAILED:', e);
-    throw e;
-  }
-
-  try {
-    userMod = useUserManagement();
-    console.log('🔵 [8] useUserManagement OK');
-  } catch (e) {
-    console.error('🔴 useUserManagement FAILED:', e);
-    throw e;
-  }
-
-  console.log('🔵 [9] All hooks initialized successfully');
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -193,31 +137,7 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✅ Temporary: Recalculate all user stats (DELETE AFTER USE)
-  const handleRecalculateStats = async () => {
-    if (!window.confirm('Ovo će ponovno izračunati statistiku za SVE korisnike. Sigurno želiš nastaviti?')) {
-      return;
-    }
 
-    setRecalculating(true);
-    setRecalculateResult(null);
-
-    try {
-      // Import userStatsService
-      const { userStatsService } = await import('../services/user');
-
-      // Recalculate stats for all users
-      const result = await userStatsService.recalculateAllUserStats();
-
-      setRecalculateResult(result);
-      alert(`✅ Gotovo!\n\nUspješno: ${result.success} korisnika\nNeuspješno: ${result.failed} korisnika`);
-    } catch (error) {
-      console.error('Error recalculating stats:', error);
-      alert('❌ Greška pri računanju statistike!');
-    } finally {
-      setRecalculating(false);
-    }
-  };
 
   // Show loading spinner while auth is initializing
   if (loading) {
@@ -294,19 +214,7 @@ export default function AdminDashboard() {
                 <span className="text-xs md:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">
                   Welcome, {user?.email}
                 </span>
-
-                {/* ✅ TEMPORARY: Recalculate Stats Button - DELETE AFTER USE */}
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleRecalculateStats}
-                  disabled={recalculating}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  {recalculating ? 'Recalculating...' : 'Fix User Stats'}
-                </Button>
-
+              
                 <Button
                   variant="outline"
                   size="sm"

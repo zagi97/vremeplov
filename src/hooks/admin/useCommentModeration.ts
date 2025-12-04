@@ -1,5 +1,5 @@
 // src/hooks/admin/useCommentModeration.ts
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Comment, commentService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
@@ -112,6 +112,11 @@ export function useCommentModeration() {
     (commentPage - 1) * COMMENTS_PER_PAGE,
     commentPage * COMMENTS_PER_PAGE
   );
+
+  // ✅ DODAJTE OVO: Pozovite loadComments samo jednom nakon montiranja hooka
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
 
   return {
     // State

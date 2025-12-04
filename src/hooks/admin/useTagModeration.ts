@@ -1,5 +1,5 @@
 // src/hooks/admin/useTagModeration.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { TaggedPerson, photoService, tagService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
@@ -99,6 +99,11 @@ export function useTagModeration() {
       toast.error(t('errors.photoTagUpdateFailed'));
     }
   }, [t, loadTags]);
+
+  // ✅ DODAJTE OVO: Pozovite loadTags samo jednom nakon montiranja hooka
+  useEffect(() => {
+    loadTags();
+  }, [loadTags]); // Ovisnost o loadTags je potrebna jer je loadTags useCallback
 
   return {
     // State

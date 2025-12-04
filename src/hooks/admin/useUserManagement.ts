@@ -1,5 +1,5 @@
 // src/hooks/admin/useUserManagement.ts
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { userService, UserProfileExtended } from '@/services/user';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
@@ -156,6 +156,11 @@ export function useUserManagement() {
     (userPage - 1) * USERS_PER_PAGE,
     userPage * USERS_PER_PAGE
   );
+
+    // ✅ DODAJTE OVO: Pozovite loadUsers samo jednom nakon montiranja hooka
+    useEffect(() => {
+      loadUsers();
+    }, [loadUsers]);
 
   return {
     // State

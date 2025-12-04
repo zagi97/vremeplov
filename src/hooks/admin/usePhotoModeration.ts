@@ -1,5 +1,5 @@
 // src/hooks/admin/usePhotoModeration.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Photo, photoService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
@@ -15,21 +15,14 @@ export function usePhotoModeration() {
   const [pendingPhotoPage, setPendingPhotoPage] = useState(1);
   const [approvedPhotoPage, setApprovedPhotoPage] = useState(1);
 
+  // 🔄 Universal loader
   const loadPhotos = useCallback(async () => {
     try {
       setLoading(true);
-
       const photos = await photoService.getAllPhotosForAdmin();
 
-      const pending = photos.filter(photo =>
-        photo.isApproved === undefined ||
-        photo.isApproved === null ||
-        photo.isApproved === false
-      );
-
-      const approved = photos.filter(photo =>
-        photo.isApproved === true
-      );
+      const pending = photos.filter(p => !p.isApproved);
+      const approved = photos.filter(p => p.isApproved === true);
 
       setPendingPhotos(pending);
       setApprovedPhotos(approved);
@@ -45,6 +38,7 @@ export function usePhotoModeration() {
     }
   }, [t]);
 
+  // ✅ APPROVE (Optimistic)
   const handleApprovePhoto = useCallback(async (photoId: string, adminUid: string) => {
     try {
       const photo = await photoService.getPhotoById(photoId);
@@ -53,25 +47,36 @@ export function usePhotoModeration() {
         return;
       }
 
+      // 🔥 OPTIMISTIC UI UPDATE
+      setPendingPhotos(prev => prev.filter(p => p.id !== photoId));
+      setApprovedPhotos(prev => [...prev, { ...photo, isApproved: true }]);
+      setAllPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isApproved: true } : p));
+
+      // Firestore update
       await photoService.approvePhoto(photoId, adminUid);
 
+      // Notification
       if (photo.authorId) {
         await sendNotification({
           userId: photo.authorId,
           type: 'photo_approved',
-          photoId: photoId,
+          photoId,
           photoTitle: photo.description || 'Nepoznata fotografija'
         });
       }
 
-      toast.success('Fotografija odobrena i user statistike ažurirane! 🎉');
-      await loadPhotos();
+      toast.success('Fotografija odobrena i statistike ažurirane! 🎉');
+
+      // Background sync
+      loadPhotos();
+
     } catch (error) {
       console.error('❌ Error approving photo:', error);
       toast.error(t('errors.photoApprovalFailed'));
     }
   }, [t, loadPhotos]);
 
+  // ❌ REJECT (Optimistic)
   const handleRejectPhoto = useCallback(async (photoId: string, reason: string) => {
     try {
       const photo = await photoService.getPhotoById(photoId);
@@ -80,29 +85,32 @@ export function usePhotoModeration() {
         return;
       }
 
+      // 🔥 OPTIMISTIC
+      setPendingPhotos(prev => prev.filter(p => p.id !== photoId));
+      setAllPhotos(prev => prev.filter(p => p.id !== photoId));
+
       if (photo.authorId && reason) {
         await sendNotification({
           userId: photo.authorId,
           type: 'photo_rejected',
-          photoId: photoId,
+          photoId,
           photoTitle: photo.description || 'Nepoznata fotografija',
-          reason: reason
+          reason
         });
       }
 
       await photoService.deletePhoto(photoId);
 
-      const currentCount = parseInt(localStorage.getItem('rejectedPhotosCount') || '0', 10);
-      localStorage.setItem('rejectedPhotosCount', (currentCount + 1).toString());
-
       toast.success(t('admin.photoRejected'));
-      await loadPhotos();
+      loadPhotos(); // background
+
     } catch (error) {
-      console.error('Error deleting photo:', error);
+      console.error('Error rejecting photo:', error);
       toast.error(t('errors.photoDeleteFailed'));
     }
   }, [t, loadPhotos]);
 
+  // ✏ EDIT (Optimistic)
   const handleEditPhoto = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     try {
       const originalPhoto = await photoService.getPhotoById(photoId);
@@ -110,6 +118,11 @@ export function usePhotoModeration() {
         toast.error('Photo not found');
         return;
       }
+
+      // 🔥 OPTIMISTIC
+      setAllPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
+      setPendingPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
+      setApprovedPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
 
       await photoService.updatePhoto(photoId, updates);
 
@@ -128,20 +141,22 @@ export function usePhotoModeration() {
         await sendNotification({
           userId: originalPhoto.authorId,
           type: 'photo_edited',
-          photoId: photoId,
+          photoId,
           photoTitle: originalPhoto.description,
           changes: changes.join('; ')
         });
       }
 
       toast.success(t('admin.photoUpdated'));
-      await loadPhotos();
+      loadPhotos();
+
     } catch (error) {
       console.error('Error updating photo:', error);
       toast.error(t('errors.photoUpdateFailed'));
     }
   }, [t, loadPhotos]);
 
+  // 🗑 DELETE (Optimistic)
   const handleDeletePhoto = useCallback(async (photoId: string, reason: string) => {
     try {
       const photo = await photoService.getPhotoById(photoId);
@@ -150,40 +165,47 @@ export function usePhotoModeration() {
         return;
       }
 
+      // 🔥 OPTIMISTIC
+      setPendingPhotos(prev => prev.filter(p => p.id !== photoId));
+      setApprovedPhotos(prev => prev.filter(p => p.id !== photoId));
+      setAllPhotos(prev => prev.filter(p => p.id !== photoId));
+
       if (photo.authorId && reason) {
         await sendNotification({
           userId: photo.authorId,
           type: 'photo_deleted',
-          photoId: photoId,
+          photoId,
           photoTitle: photo.description,
-          reason: reason
+          reason
         });
       }
 
       await photoService.deletePhoto(photoId);
 
       toast.success(t('admin.photoDeleted'));
-      await loadPhotos();
+      loadPhotos();
+
     } catch (error) {
       console.error('Error deleting photo:', error);
       toast.error(t('errors.photoDeleteFailed'));
     }
   }, [t, loadPhotos]);
+  
+// ✅ DODAJTE OVO PRIJE return BLOKA:
+  useEffect(() => {
+    loadPhotos();
+  }, [loadPhotos]);
 
+  
   return {
-    // State
     pendingPhotos,
     approvedPhotos,
     allPhotos,
     loading,
     pendingPhotoPage,
     approvedPhotoPage,
-
-    // Setters
     setPendingPhotoPage,
     setApprovedPhotoPage,
-
-    // Actions
     loadPhotos,
     handleApprovePhoto,
     handleRejectPhoto,

@@ -1,7 +1,7 @@
 // src/pages/Notifications.tsx - FIXED VERSION
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, CheckCheck } from 'lucide-react';
 import { Notification, notificationService } from '../services/notificationService';
 import { formatTimeAgo } from '../utils/dateUtils';
 import { getNotificationIcon } from '../constants/activityIcons';
