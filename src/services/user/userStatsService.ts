@@ -39,7 +39,19 @@ class UserStatsService {
   async forceRecalculateUserStats(userId: string): Promise<void> {
     try {
       const { photoService } = await import('../firebaseService');
-      const allUserPhotos = await photoService.getPhotosByUploader(userId);
+
+      // ✅ Try getPhotosByUploader first, fallback to getAllPhotos if index is missing
+      let allUserPhotos;
+      try {
+        allUserPhotos = await photoService.getPhotosByUploader(userId);
+      } catch (error: any) {
+        console.warn(`⚠️  getPhotosByUploader failed for ${userId}, using fallback. Error: ${error.message}`);
+        // Fallback: Get all photos and filter manually (slower but works without index)
+        const allPhotos = await photoService.getAllPhotos();
+        allUserPhotos = allPhotos.filter(p =>
+          p.uploaderId === userId || p.authorId === userId
+        );
+      }
 
       // ✅ Filter to only count APPROVED photos for stats (pending photos don't count toward leaderboard)
       const userPhotos = allUserPhotos.filter(photo => photo.isApproved === true);
@@ -231,7 +243,19 @@ class UserStatsService {
     try {
       // Get photos uploaded since the date
       const { photoService } = await import('../firebaseService');
-      const allPhotos = await photoService.getPhotosByUploader(userId);
+
+      // ✅ Try getPhotosByUploader first, fallback to getAllPhotos if index is missing
+      let allPhotos;
+      try {
+        allPhotos = await photoService.getPhotosByUploader(userId);
+      } catch (error: any) {
+        console.warn(`⚠️  getPhotosByUploader failed for ${userId}, using fallback. Error: ${error.message}`);
+        // Fallback: Get all photos and filter manually
+        const allPhotosList = await photoService.getAllPhotos();
+        allPhotos = allPhotosList.filter(p =>
+          p.uploaderId === userId || p.authorId === userId
+        );
+      }
 
       // ✅ Filter to only count APPROVED photos within the time period
       const periodPhotos = allPhotos.filter(photo => {
