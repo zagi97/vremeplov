@@ -77,15 +77,25 @@ class UserLeaderboardService {
         const periodStats = dateFilter ? periodStatsArray[index] : userData.stats;
         const recentPhoto = recentPhotosArray[index];
 
+        // ✅ Defensive: Handle missing or undefined stats
+        const safeStats = periodStats || {
+          totalPhotos: 0,
+          totalLikes: 0,
+          totalViews: 0,
+          locationsContributed: 0,
+          followers: 0,
+          following: 0
+        };
+
         return {
           uid: doc.id,
-          displayName: userData.displayName,
+          displayName: userData.displayName || 'Unknown User',
           photoURL: userData.photoURL,
           rank: 0, // Will be set after sorting
-          totalPhotos: periodStats.totalPhotos,
-          totalLikes: periodStats.totalLikes,
-          totalViews: periodStats.totalViews,
-          locationsCount: periodStats.locationsContributed,
+          totalPhotos: safeStats.totalPhotos || 0,
+          totalLikes: safeStats.totalLikes || 0,
+          totalViews: safeStats.totalViews || 0,
+          locationsCount: safeStats.locationsContributed || 0,
           joinDate: userData.joinedAt?.toDate()?.toISOString() || new Date().toISOString(),
           badges: userData.badges || [],
           recentPhotoUrl: recentPhoto?.imageUrl
