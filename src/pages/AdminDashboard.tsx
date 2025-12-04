@@ -68,6 +68,10 @@ export default function AdminDashboard() {
     totalTags: 0,
   });
 
+  // ✅ Temporary: Recalculate user stats state (DELETE AFTER USE)
+  const [recalculating, setRecalculating] = useState(false);
+  const [recalculateResult, setRecalculateResult] = useState<{ success: number; failed: number } | null>(null);
+
   try {
     photoMod = usePhotoModeration();
     console.log('🔵 [5] usePhotoModeration OK');
@@ -189,6 +193,32 @@ export default function AdminDashboard() {
     }
   };
 
+  // ✅ Temporary: Recalculate all user stats (DELETE AFTER USE)
+  const handleRecalculateStats = async () => {
+    if (!window.confirm('Ovo će ponovno izračunati statistiku za SVE korisnike. Sigurno želiš nastaviti?')) {
+      return;
+    }
+
+    setRecalculating(true);
+    setRecalculateResult(null);
+
+    try {
+      // Import userStatsService
+      const { userStatsService } = await import('../services/user');
+
+      // Recalculate stats for all users
+      const result = await userStatsService.recalculateAllUserStats();
+
+      setRecalculateResult(result);
+      alert(`✅ Gotovo!\n\nUspješno: ${result.success} korisnika\nNeuspješno: ${result.failed} korisnika`);
+    } catch (error) {
+      console.error('Error recalculating stats:', error);
+      alert('❌ Greška pri računanju statistike!');
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   // Show loading spinner while auth is initializing
   if (loading) {
     return (
@@ -264,6 +294,19 @@ export default function AdminDashboard() {
                 <span className="text-xs md:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">
                   Welcome, {user?.email}
                 </span>
+
+                {/* ✅ TEMPORARY: Recalculate Stats Button - DELETE AFTER USE */}
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleRecalculateStats}
+                  disabled={recalculating}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  {recalculating ? 'Recalculating...' : 'Fix User Stats'}
+                </Button>
+
                 <Button
                   variant="outline"
                   size="sm"
