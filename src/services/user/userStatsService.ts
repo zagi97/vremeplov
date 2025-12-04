@@ -39,7 +39,10 @@ class UserStatsService {
   async forceRecalculateUserStats(userId: string): Promise<void> {
     try {
       const { photoService } = await import('../firebaseService');
-      const userPhotos = await photoService.getPhotosByUploader(userId);
+      const allUserPhotos = await photoService.getPhotosByUploader(userId);
+
+      // ✅ Filter to only count APPROVED photos for stats (pending photos don't count toward leaderboard)
+      const userPhotos = allUserPhotos.filter(photo => photo.isApproved === true);
 
       if (userPhotos.length === 0) {
         await this.updateUserStats(userId, {
@@ -230,9 +233,10 @@ class UserStatsService {
       const { photoService } = await import('../firebaseService');
       const allPhotos = await photoService.getPhotosByUploader(userId);
 
+      // ✅ Filter to only count APPROVED photos within the time period
       const periodPhotos = allPhotos.filter(photo => {
         const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
-        return photoDate >= fromDate;
+        return photoDate >= fromDate && photo.isApproved === true;
       });
 
       const totalLikes = periodPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);

@@ -23,14 +23,13 @@ service cloud.firestore {
     }
 
     // ============================================
-    // 👤 USERS COLLECTION - PRIVACY PROTECTED
+    // 👤 USERS COLLECTION
     // ============================================
     match /users/{userId} {
       // ✅ LIST: Authenticated users can list (needed for leaderboard)
       allow list: if isAuthenticated();
 
-      // ✅ GET: Any authenticated user can read profiles (needed for like stats updates)
-      // Privacy is maintained via client-side filtering in profile pages
+      // ✅ GET: Any authenticated user can read profiles
       allow get: if isAuthenticated();
 
       // ✅ CREATE: User creates own profile on signup
@@ -39,13 +38,16 @@ service cloud.firestore {
                     request.resource.data.uid == request.auth.uid &&
                     !request.resource.data.keys().hasAny(['isAdmin', 'isBanned']);
 
-      // ✅ UPDATE: User updates own profile, admin can update any
-      // Special case: Any authenticated user can update ONLY stats/badges/lastActive (for like/photo approval)
+      // ✅ UPDATE:
+      // - Admin can update anything
+      // - Owner can update own profile (except protected fields)
+      // - Any authenticated user can update ONLY stats/badges/lastActive (for photo approval, likes, etc.)
       allow update: if isAdmin() ||
                     (isOwner(userId) &&
                      !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid'])) ||
                     (isAuthenticated() &&
-                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stats', 'badges', 'lastActive']));
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['stats', 'badges', 'lastActive', 'updatedAt']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
@@ -55,17 +57,13 @@ service cloud.firestore {
     // 📷 PHOTOS COLLECTION
     // ============================================
     match /photos/{photoId} {
-      // ✅ GET: Approved photos public, owner can see own pending photos when authenticated
-      // Legacy photos without isApproved field are treated as approved for backward compatibility
+      // ✅ GET: Approved photos public, owner can see own pending photos
       allow get: if resource.data.isApproved == true
                  || !resource.data.keys().hasAny(['isApproved'])
                  || isAdmin()
                  || (isAuthenticated() && isOwner(resource.data.uploaderId));
 
       // ✅ LIST: Approved photos public, authenticated users see own pending photos
-      // When viewing your profile: you see all your photos (approved + pending)
-      // When viewing other profiles: you only see their approved photos
-      // Legacy photos without isApproved field are treated as approved for backward compatibility
       allow list: if resource == null ||
                   resource.data.isApproved == true ||
                   !resource.data.keys().hasAny(['isApproved']) ||
@@ -78,14 +76,15 @@ service cloud.firestore {
                     request.resource.data.authorId == request.auth.uid &&
                     request.resource.data.isApproved == false;
 
-      // ✅ UPDATE: Owner can update unapproved, admin can update all
-      // Legacy photos without isApproved field are treated as approved for likes/views updates
+      // ✅ UPDATE:
+      // - Admin can update anything
+      // - Owner can update their unapproved photos
+      // - ANY authenticated user can update ONLY likes/views/updatedAt (for like/view functionality)
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
                      resource.data.isApproved == false) ||
                     (isAuthenticated() &&
-                     (resource.data.isApproved == true || !resource.data.keys().hasAny(['isApproved'])) &&
                      request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(['likes', 'views', 'updatedAt']));
 
@@ -205,24 +204,32 @@ service cloud.firestore {
     }
 
     // ============================================
-    // ❤️ USER LIKES - PRIVACY PROTECTED
+    // ❤️ USER LIKES - AŽURIRANA PRAVILA ZA 'TOGGLE'
     // ============================================
     match /userLikes/{likeId} {
-      allow get: if isAuthenticated() && (
-        isOwner(resource.data.userId) ||
-        isAdmin()
-      );
 
-      allow list: if isAuthenticated() &&
-                  request.query.limit <= 100 && (
-        resource == null ||
-        isOwner(resource.data.userId) ||
-        isAdmin()
-      );
+      // ✅ GET, LIST: Bilo koji ulogirani korisnik može DOHVATITI BILO KOJI DOKUMENT
+      // ako je dokument vezan za njega, ILI ako ga samo želi dohvatiti po ID-u (za provjeru).
+      // Ako dokument sadrži photoId, trebate ga provjeriti ovdje.
+      allow get, list: if isAuthenticated() && (
+        isOwner(resource.data.userId) || // Opcionalno, ali korisno
+        isAdmin() ||
+        true // GLAVNA PROMJENA: Dopustite čitanje ulogiranim korisnicima
+      ) && request.query.limit <= 100; // Ograničenje za list upite
 
-      allow create, update: if isAuthenticated() &&
-                            isOwner(request.resource.data.userId);
+      // BITNA NAPOMENA ZA SIGURNOST: Ako dokument lajka sadrži osjetljive podatke
+      // ONDA NE KORISTITE 'true'. U tom slučaju, aplikacija mora znati ID dokumenta lajka
+      // i pokušati ga obrisati/kreirati bez čitanja.
+      // **Za potrebe lajkanja, dokument lajka obično nije osjetljiv.**
 
+      // KREIRANJE (LAJKANJE)
+      allow create: if isAuthenticated() &&
+                    isOwner(request.resource.data.userId); // Koristi se isOwner za provjeru da kreira lajk za sebe
+
+      // AŽURIRANJE (UPDATE) - Nije potrebno, lajk se briše, ne ažurira.
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+
+      // BRISANJE (ODLAJKANJE)
       allow delete: if isAuthenticated() && isOwner(resource.data.userId);
     }
 
