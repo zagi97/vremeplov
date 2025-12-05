@@ -82,20 +82,9 @@ export default function AdminDashboard() {
     tagMod.tags?.length
   ]);
 
-  // Auto-exit admin mode when leaving dashboard
-  useEffect(() => {
-    const handleBeforeUnload = async () => {
-      if (isAdmin) {
-        await exitAdminMode();
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [user, exitAdminMode]);
+  // ❌ REMOVED: beforeunload listener that was logging out admin on F5 refresh
+  // Admin session now persists across page refreshes.
+  // User can manually logout using the "Logout" button.
 
   const loadAdminData = async () => {
     try {
