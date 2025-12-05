@@ -338,6 +338,7 @@ export class PhotoService {
         currentlyApproved: photoData.isApproved
       });
 
+      // ✅ CRITICAL: Update photo document (this must succeed)
       console.log('🔵 Updating photo document...');
       await updateDoc(doc(this.photosCollection, photoId), {
         isApproved: true,
@@ -346,32 +347,48 @@ export class PhotoService {
       });
       console.log('✅ Photo document updated successfully');
 
-      // Clear location cache so the photo appears on location page
-      console.log('🔵 Clearing location cache for:', photoLocation);
-      this.clearLocationCache(photoLocation);
-      this.clearRecentPhotosCache();
-      console.log('✅ Cache cleared');
+      // 🔄 NON-CRITICAL: Clear cache (don't fail approval if this fails)
+      try {
+        console.log('🔵 Clearing location cache for:', photoLocation);
+        this.clearLocationCache(photoLocation);
+        this.clearRecentPhotosCache();
+        console.log('✅ Cache cleared');
+      } catch (cacheError) {
+        console.warn('⚠️ Cache clearing failed (non-critical):', cacheError);
+      }
 
-      // Update author's stats
+      // 🔄 NON-CRITICAL: Update stats, badges, and send notification (don't fail approval if these fail)
       if (photoAuthorId) {
-        console.log('🔵 Updating user stats for:', photoAuthorId);
-        const { userService } = await import('../user');
-        await userService.forceRecalculateUserStats(photoAuthorId);
-        console.log('✅ User stats updated');
+        try {
+          console.log('🔵 Updating user stats for:', photoAuthorId);
+          const { userService } = await import('../user');
+          await userService.forceRecalculateUserStats(photoAuthorId);
+          console.log('✅ User stats updated');
+        } catch (statsError) {
+          console.warn('⚠️ User stats update failed (non-critical):', statsError);
+        }
 
-        console.log('🔵 Checking badges...');
-        await userService.checkAndAwardBadges(photoAuthorId);
-        console.log('✅ Badges checked');
+        try {
+          console.log('🔵 Checking badges...');
+          const { userService } = await import('../user');
+          await userService.checkAndAwardBadges(photoAuthorId);
+          console.log('✅ Badges checked');
+        } catch (badgeError) {
+          console.warn('⚠️ Badge checking failed (non-critical):', badgeError);
+        }
 
-        // Send notification to author
-        console.log('🔵 Sending approval notification to:', photoAuthorId);
-        const { notificationService } = await import('../notificationService');
-        await notificationService.notifyPhotoApproved(
-          photoAuthorId,
-          photoId,
-          photoData.description || 'Untitled'
-        );
-        console.log('✅ Notification sent');
+        try {
+          console.log('🔵 Sending approval notification to:', photoAuthorId);
+          const { notificationService } = await import('../notificationService');
+          await notificationService.notifyPhotoApproved(
+            photoAuthorId,
+            photoId,
+            photoData.description || 'Untitled'
+          );
+          console.log('✅ Notification sent');
+        } catch (notificationError) {
+          console.warn('⚠️ Notification sending failed (non-critical):', notificationError);
+        }
       }
 
       console.log('✅ Photo approval complete! Photo should now appear at location:', photoLocation);
