@@ -170,9 +170,9 @@ const hasRejectReason = (
           </Dialog>
         </div>
         
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 min-w-0 space-y-4">
           <div className="flex items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0 flex-1">
               <Badge variant="outline" className="text-orange-600 border-orange-600">
                 Pending Review
               </Badge>
@@ -184,7 +184,7 @@ const hasRejectReason = (
                 })}
               </p>
             </div>
-            
+
             <div className="flex gap-2 flex-shrink-0">
               <Button
                 size="sm"
@@ -401,15 +401,13 @@ const hasRejectReason = (
               </div>
             </div>
           ) : (
-            <div>
-              <h3 className="font-medium break-words whitespace-normal">
-                {photo.description}
-              </h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0 overflow-hidden">
+              <h3 className="font-medium break-all">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground break-all">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
-                <p className="text-sm mt-2 break-words">{photo.detailedDescription}</p>
+                <p className="text-sm mt-2 break-all">{photo.detailedDescription}</p>
               )}
             </div>
           )}

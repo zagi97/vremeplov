@@ -1,7 +1,9 @@
 // src/services/authService.ts
 import {
   signInWithEmailAndPassword,
-  signOut as firebaseSignOut
+  signOut as firebaseSignOut,
+  setPersistence,
+  browserSessionPersistence
 } from 'firebase/auth';
 import {
   doc,
@@ -23,6 +25,10 @@ export class AuthService {
    */
   async signInAdmin(email: string, password: string) {
     try {
+      // ✅ Set persistence to SESSION - auth state will persist across page reloads
+      // but will be cleared when the tab/window is closed
+      await setPersistence(auth, browserSessionPersistence);
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
       // Return user credentials - admin check happens in AuthContext
