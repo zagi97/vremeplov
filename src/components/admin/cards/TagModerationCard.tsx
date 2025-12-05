@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Check, X, Edit, Expand, User } from 'lucide-react';
 import LazyImage from '@/components/LazyImage';
+import { CharacterCounter } from '@/components/ui/character-counter';
 
 interface TagModerationCardProps {
   tag: TaggedPerson;
@@ -201,25 +202,32 @@ export default function TagModerationCard({
           {isEditing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium">Person Name</label>
+                <label className="text-sm font-medium">Person Name *</label>
                 <Input
                   value={editData.name}
-                  onChange={(e) =>
-                    setEditData((prev) => ({ ...prev, name: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 40);
+                    setEditData((prev) => ({ ...prev, name: value }));
+                  }}
+                  maxLength={40}
                   placeholder="Enter person's name"
+                  className={editData.name.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
                 />
+                <CharacterCounter currentLength={editData.name.length} maxLength={40} />
               </div>
               <div>
                 <label className="text-sm font-medium">Description (Optional)</label>
                 <Textarea
                   value={editData.description}
-                  onChange={(e) =>
-                    setEditData((prev) => ({ ...prev, description: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 100);
+                    setEditData((prev) => ({ ...prev, description: value }));
+                  }}
+                  maxLength={100}
                   placeholder="Additional information about this person"
                   rows={2}
                 />
+                <CharacterCounter currentLength={editData.description.length} maxLength={100} />
               </div>
               <div className="flex gap-2">
                 <Button size="sm" onClick={handleSaveEdit} disabled={!canSave}>

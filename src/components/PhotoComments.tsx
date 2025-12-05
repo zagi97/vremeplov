@@ -86,14 +86,16 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
             text: data.text || '',
             photoId: data.photoId || '',
             timestamp: data.createdAt || null,
-            date: data.createdAt 
-              ? new Date(data.createdAt.toMillis()).toLocaleDateString('hr-HR', {
-                  day: 'numeric',
-                  month: 'numeric',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })
+            date: data.createdAt
+              ? (() => {
+                  const date = new Date(data.createdAt.toMillis());
+                  const day = String(date.getDate()).padStart(2, '0');
+                  const month = String(date.getMonth() + 1).padStart(2, '0');
+                  const year = date.getFullYear();
+                  const hours = String(date.getHours()).padStart(2, '0');
+                  const minutes = String(date.getMinutes()).padStart(2, '0');
+                  return `${day}.${month}.${year}. ${hours}:${minutes}`;
+                })()
               : 'Upravo sad'
           });
         });

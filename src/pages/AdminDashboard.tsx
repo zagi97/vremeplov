@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     loadAdminData();
   }, [isAdmin]);
 
-  // ✅ Update stats when photo lists change (after approve/reject)
+  // ✅ Update stats when photo/tag lists change (after approve/reject/edit)
   useEffect(() => {
     if (!isAdmin) return;
 
@@ -76,10 +76,10 @@ export default function AdminDashboard() {
     });
   }, [
     isAdmin,
-    photoMod.pendingPhotos?.length,
-    photoMod.approvedPhotos?.length,
-    photoMod.allPhotos?.length,
-    tagMod.tags?.length
+    photoMod.pendingPhotos,
+    photoMod.approvedPhotos,
+    photoMod.allPhotos,
+    tagMod.tags
   ]);
 
   // ❌ REMOVED: beforeunload listener that was logging out admin on F5 refresh
