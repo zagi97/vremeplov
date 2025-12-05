@@ -8,7 +8,8 @@ import {
   getDoc,
   query,
   where,
-  Timestamp
+  Timestamp,
+  limit
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
@@ -28,7 +29,8 @@ export class ViewService {
       const q = query(
         this.userViewsCollection,
         where('photoId', '==', photoId),
-        where('userId', '==', userId)
+        where('userId', '==', userId),
+        limit(1)
       );
       const querySnapshot = await getDocs(q);
       return !querySnapshot.empty;

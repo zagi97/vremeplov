@@ -5,7 +5,7 @@ import { photoService, Photo, tagService, viewService, TaggedPerson } from "@/se
 import { likeService } from '@/services/photo/likeService';
 import { notificationService } from '@/services/notificationService';
 import { authService } from '@/services/authService';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from "sonner";
 import { translateWithParams } from '@/contexts/LanguageContext';
@@ -265,7 +265,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
       const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
       const tagsRef = collection(db, 'taggedPersons');
-      const q = query(tagsRef, where('addedByUid', '==', user.uid));
+      const q = query(tagsRef, where('addedByUid', '==', user.uid), limit(100));
 
       const snapshot = await getDocs(q);
       const userTags = snapshot.docs
