@@ -10,14 +10,14 @@ import { ITEMS_PER_PAGE } from '@/constants';
 
 interface TagModerationTabProps {
   adminUid: string;
-  // ✅ Dodaj ove props
   pendingTags: TaggedPerson[];
   loading: boolean;
   tagPage: number;
   setTagPage: (page: number) => void;
-  handleApproveTag: (tagId: string, adminUid: string) => void;
-  handleRejectTag: (tagId: string) => void;
-  handleEditTag: (tagId: string, updates: Partial<TaggedPerson>) => void;
+  // ✅ Dodaj currentPendingTags parametar
+  handleApproveTag: (tagId: string, adminUid: string, currentPendingTags: TaggedPerson[]) => Promise<void>;
+  handleRejectTag: (tagId: string, currentPendingTags: TaggedPerson[]) => Promise<void>;
+  handleEditTag: (tagId: string, updates: Partial<TaggedPerson>) => Promise<void>;
 }
 
 export default function TagModerationTab({ 
@@ -72,12 +72,12 @@ export default function TagModerationTab({
           <div className="grid gap-6">
             {paginatedTags.map((tag) => (
               <TagModerationCard
-                key={tag.id}
-                tag={tag}
-                onApprove={() => handleApproveTag(tag.id!, adminUid)}
-                onReject={() => handleRejectTag(tag.id!)}
-                onEdit={(updates) => handleEditTag(tag.id!, updates)}
-              />
+  key={tag.id}
+  tag={tag}
+  onApprove={() => handleApproveTag(tag.id!, adminUid, pendingTags)}
+  onReject={() => handleRejectTag(tag.id!, pendingTags)}
+  onEdit={(updates) => handleEditTag(tag.id!, updates)}
+/>
             ))}
           </div>
 

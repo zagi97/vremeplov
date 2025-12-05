@@ -386,7 +386,7 @@ export default function AdminDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="tags" className="space-y-6">
+<TabsContent value="tags" className="space-y-6">
   <TagModerationTab 
     adminUid={user?.uid || 'admin'}
     pendingTags={tagMod.pendingTags}
