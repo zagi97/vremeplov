@@ -39,19 +39,26 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     reason: ''
   });
 
-  // ✅ Function to reload tags only
-  const reloadTags = async () => {
-    if (!photoId || !photo) return;
+  // ✅ Function to reload tags only - wrapped in useCallback
+  const reloadTags = useCallback(async () => {
+    if (!photoId || !photo) {
+      console.log('🔍 [RELOAD] Skipped - no photoId or photo', { photoId, hasPhoto: !!photo });
+      return;
+    }
 
     try {
+      console.log('🔍 [RELOAD] Starting reload for photoId:', photoId);
       let taggedPersonsData: TaggedPerson[] = [];
 
       if (authService.isAdmin(user)) {
         taggedPersonsData = await tagService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+        console.log('🔍 [RELOAD] Admin loaded tags:', taggedPersonsData);
       } else if (photo.authorId === user?.uid && user) {
         taggedPersonsData = await tagService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+        console.log('🔍 [RELOAD] Owner loaded tags:', taggedPersonsData);
       } else {
         taggedPersonsData = await tagService.getTaggedPersonsByPhotoId(photoId);
+        console.log('🔍 [RELOAD] Public loaded tags:', taggedPersonsData);
       }
 
       const photoTaggedPersons = photo.taggedPersons || [];
@@ -71,23 +78,35 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
         }))
       ];
 
+      console.log('🔍 [RELOAD] All tagged persons (before filter):', allTaggedPersons);
+
       let visibleTags = allTaggedPersons;
 
       if (!authService.isAdmin(user)) {
         visibleTags = allTaggedPersons.filter(tag => {
-          if (tag.isApproved === true) return true;
-          if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
-          if (tag.isApproved === false && photo.authorId === user?.uid) return true;
+          const approved = tag.isApproved === true;
+          const userOwned = tag.isApproved === false && tag.addedByUid === user?.uid;
+          const photoOwned = tag.isApproved === false && photo.authorId === user?.uid;
+          console.log(`🔍 [RELOAD] Tag "${tag.name}":`, {
+            isApproved: tag.isApproved,
+            approved,
+            userOwned,
+            photoOwned,
+            visible: approved || userOwned || photoOwned
+          });
+          if (approved) return true;
+          if (userOwned) return true;
+          if (photoOwned) return true;
           return false;
         });
       }
 
+      console.log('🔍 [RELOAD] Final visible tags:', visibleTags);
       setTaggedPersons(visibleTags);
-      console.log('🔄 Tags reloaded:', visibleTags.length);
     } catch (error) {
-      console.error('Error reloading tags:', error);
+      console.error('❌ [RELOAD] Error reloading tags:', error);
     }
-  };
+  }, [photoId, photo, user]);
 
   // Load photo data
   useEffect(() => {
@@ -222,6 +241,8 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
   // ✅ Refresh tags when page regains focus (e.g., returning from admin dashboard)
   useEffect(() => {
+    if (!photo) return; // Only set up listener after photo is loaded
+
     const handleFocus = () => {
       console.log('🔄 Page focused - reloading tags...');
       reloadTags();
@@ -232,7 +253,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [photoId, photo, user]);
+  }, [photo, reloadTags]);
 
   // Check rate limits
   const checkUserTagRateLimit = async () => {
