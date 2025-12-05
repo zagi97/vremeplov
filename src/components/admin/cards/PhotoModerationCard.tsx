@@ -179,7 +179,7 @@ const hasRejectReason = (
               <p className="text-sm text-muted-foreground mt-1">
                 Uploaded: {photo.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
                   day: '2-digit',
-                  month: '2-digit', 
+                  month: '2-digit',
                   year: 'numeric'
                 })}
               </p>
@@ -409,7 +409,7 @@ const hasRejectReason = (
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
-                <p className="text-sm mt-2">{photo.detailedDescription}</p>
+                <p className="text-sm mt-2 break-words">{photo.detailedDescription}</p>
               )}
             </div>
           )}

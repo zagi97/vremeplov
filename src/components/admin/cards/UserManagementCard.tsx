@@ -73,18 +73,18 @@ function UserManagementCard({
     <Card className="overflow-hidden">
       <CardContent className="p-6">
         {/* User Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
+        <div className="flex items-start justify-between mb-4 gap-4">
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             {/* User Avatar */}
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+            <div className="w-16 h-16 flex-shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
               {user.displayName?.charAt(0).toUpperCase() || 'U'}
             </div>
-            
+
             {/* User Info */}
-            <div>
-              <h3 className="font-semibold text-lg">{user.displayName || 'Unknown User'}</h3>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-              <div className="flex items-center gap-2 mt-1">
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-lg break-words">{user.displayName || 'Unknown User'}</h3>
+              <p className="text-sm text-muted-foreground break-words">{user.email}</p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {getStatusBadge()}
                 <span className="text-xs text-muted-foreground">Joined: {joinDate}</span>
               </div>
@@ -117,7 +117,7 @@ function UserManagementCard({
           <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 rounded">
             <p className="text-sm font-medium text-orange-800">Suspended until: {user.suspendedUntil.toDate().toLocaleDateString('hr-HR')}</p>
             {user.suspendReason && (
-              <p className="text-xs text-orange-600 mt-1">Reason: {user.suspendReason}</p>
+              <p className="text-xs text-orange-600 mt-1 break-words">Reason: {user.suspendReason}</p>
             )}
           </div>
         )}
@@ -126,7 +126,7 @@ function UserManagementCard({
           <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
             <p className="text-sm font-medium text-red-800">Permanently Banned</p>
             {user.banReason && (
-              <p className="text-xs text-red-600 mt-1">Reason: {user.banReason}</p>
+              <p className="text-xs text-red-600 mt-1 break-words">Reason: {user.banReason}</p>
             )}
           </div>
         )}
