@@ -40,6 +40,10 @@ export function useTagModeration() {
         return;
       }
 
+      // 🔥 OPTIMISTIC UI UPDATE - immediately remove from pending
+      setPendingTags(prev => prev.filter(t => t.id !== tagId));
+      setAllTags(prev => prev.map(t => t.id === tagId ? { ...t, isApproved: true } : t));
+
       const photo = await photoService.getPhotoById(tag.photoId);
 
       await tagService.approveTaggedPerson(tagId, adminUid);
@@ -54,10 +58,14 @@ export function useTagModeration() {
       }
 
       toast.success(t('admin.tagApproved'));
-      await loadTags();
+
+      // Background refresh to sync with Firestore
+      loadTags();
     } catch (error) {
       console.error('Error approving tag:', error);
       toast.error(t('errors.photoTagApprovalFailed'));
+      // Rollback on error
+      await loadTags();
     }
   }, [t, loadTags]);
 
@@ -69,6 +77,10 @@ export function useTagModeration() {
         toast.error('Tag not found');
         return;
       }
+
+      // 🔥 OPTIMISTIC UI UPDATE - immediately remove from pending
+      setPendingTags(prev => prev.filter(t => t.id !== tagId));
+      setAllTags(prev => prev.filter(t => t.id !== tagId));
 
       if (tag.addedByUid) {
         await sendNotification({
@@ -82,10 +94,14 @@ export function useTagModeration() {
 
       await tagService.rejectTaggedPerson(tagId);
       toast.success(t('admin.tagRejected'));
-      await loadTags();
+
+      // Background refresh to sync with Firestore
+      loadTags();
     } catch (error) {
       console.error('Error rejecting tag:', error);
       toast.error(t('errors.photoTagRejectionFailed'));
+      // Rollback on error
+      await loadTags();
     }
   }, [t, loadTags]);
 
