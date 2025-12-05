@@ -23,6 +23,8 @@ import LazyImage from '@/components/LazyImage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TEXT_LIMITS } from '@/constants';
+import { CharacterCounter } from '@/components/ui/character-counter';
+import YearPicker from '@/components/YearPicker';
 
 interface PhotoManagementCardProps {
   photo: Photo;
@@ -41,7 +43,6 @@ function PhotoManagementCard({
   onDelete: (reason: string) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [editData, setEditData] = useState({
     author: photo.author,
     description: photo.description,
@@ -109,27 +110,6 @@ const buildDeleteReasonText = () => {
     custom: ''
   });
 };
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      // Upload new image to Firebase Storage
-      const newImageUrl = await photoService.uploadPhotoFile(file, photo.id!);
-      
-      // Update editData with new image URL
-      setEditData(prev => ({ ...prev, imageUrl: newImageUrl }));
-      
-      toast.success(t('admin.imageUploaded'));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(t('upload.error'));
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <Card className="overflow-hidden">
@@ -306,19 +286,27 @@ const buildDeleteReasonText = () => {
           {isEditing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium block mb-1">Author</label>
+                <label className="text-sm font-medium block mb-1">Author *</label>
                 <Input
                   value={editData.author}
-                  onChange={(e) => setEditData(prev => ({ ...prev, author: e.target.value }))}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 40);
+                    setEditData(prev => ({ ...prev, author: value }));
+                  }}
+                  maxLength={40}
                   placeholder="Author"
+                  className={editData.author.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
                 />
+                <CharacterCounter currentLength={editData.author.length} maxLength={40} />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">Year</label>
-                <Input
-                  value={editData.year}
-                  onChange={(e) => setEditData(prev => ({ ...prev, year: e.target.value }))}
-                  placeholder="Year"
+                <label className="text-sm font-medium block mb-1">Year *</label>
+                <YearPicker
+                  selectedYear={editData.year}
+                  onYearSelect={(year) => setEditData(prev => ({ ...prev, year }))}
+                  placeholder="Select year"
+                  required={true}
+                  t={t}
                 />
               </div>
               <div>
@@ -334,28 +322,10 @@ const buildDeleteReasonText = () => {
                   rows={2}
                   maxLength={250}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Replace Image</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-                {uploading && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    Uploading image...
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload replacement image file (JPG, PNG, etc.) when user sends better version via email
-                </p>
+                <CharacterCounter currentLength={editData.description.length} maxLength={250} />
               </div>
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave && !uploading}>
+                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave}>
                   Save
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
