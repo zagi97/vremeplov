@@ -1,28 +1,8 @@
-// src/components/admin/cards/PhotoModerationCard.tsx
-import React, { useState } from 'react';
-import { Photo, photoService } from '@/services/firebaseService';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Check, X, Edit, Expand } from 'lucide-react';
-import LazyImage from '@/components/LazyImage';
-import { toast } from 'sonner';
-import { useLanguage } from '@/contexts/LanguageContext';
-import { TEXT_LIMITS } from '@/constants';
+import React, { useState } from "react";
+import { Card, CardContent } from "../ui/card";
+import { Calendar, User, Eye, Heart, Loader2 } from "lucide-react";
+import { Photo, photoService } from "../../services/firebaseService";
+import { toast } from "sonner";
 
 interface PhotoModerationCardProps {
   photo: Photo;
@@ -31,390 +11,230 @@ interface PhotoModerationCardProps {
   onEdit: (updates: Partial<Photo>) => void;
 }
 
-export default 
-function PhotoModerationCard({ 
-  photo, 
-  onApprove, 
-  onReject, 
-  onEdit 
-}: { 
-  photo: Photo; 
-  onApprove: () => void; 
-  onReject: (reason: string) => void; // ✅ PROMJENA - prima reason
-  onEdit: (updates: Partial<Photo>) => void;
-}) {
+const REJECT_OPTIONS = [
+  "Niska kvaliteta",
+  "Neadekvatan sadržaj",
+  "Nije povijesno relevantno",
+];
+
+export default function PhotoModerationCard({
+  photo,
+  onApprove,
+  onReject,
+  onEdit,
+}: PhotoModerationCardProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [showRejectDialog, setShowRejectDialog] = useState(false); // ✅ NOVO
-  const [rejectReason, setRejectReason] = useState({ // ✅ NOVO
-    lowQuality: false,
-    notRelevant: false,
-    wrongLocation: false,
-    duplicate: false,
-    inappropriate: false,
-    custom: ''
-  });
   const [editData, setEditData] = useState({
-    author: photo.author,
-    description: photo.description,
-    year: photo.year
+    title: photo.title || "",
+    description: photo.description || "",
+    imageUrl: photo.imageUrl || "",
   });
-  const { t } = useLanguage();
 
-  // Check if any changes have been made and all fields are valid
-  const hasChanges = editData.author !== photo.author || 
-                    editData.description !== photo.description || 
-                    editData.year !== photo.year;
-  
-  const isFormValid = editData.author.trim() !== '' && 
-                     editData.description.trim() !== '' && 
-                     editData.year.trim() !== '';
+  const [uploading, setUploading] = useState(false);
 
-  const canSave = hasChanges && isFormValid;
+  const [rejectReasons, setRejectReasons] = useState<string[]>([]);
+  const [customReason, setCustomReason] = useState("");
 
-  // ✅ NOVO - Check if at least one reason is selected
-const hasRejectReason = (
-  rejectReason.lowQuality || 
-  rejectReason.notRelevant || 
-  rejectReason.wrongLocation || 
-  rejectReason.duplicate || 
-  rejectReason.inappropriate || 
-  (rejectReason.custom.trim() !== '' && rejectReason.custom.length <= 250)
-);
-
-  // ✅ NOVO - Build reason text from selected options
-  const buildReasonText = () => {
-    const reasons: string[] = [];
-    if (rejectReason.lowQuality) reasons.push('Niska kvaliteta slike');
-    if (rejectReason.notRelevant) reasons.push('Sadržaj nije relevantan');
-    if (rejectReason.wrongLocation) reasons.push('Netočna lokacija ili godina');
-    if (rejectReason.duplicate) reasons.push('Duplikat postojeće fotografije');
-    if (rejectReason.inappropriate) reasons.push('Neprimjeren sadržaj');
-    if (rejectReason.custom.trim()) reasons.push(rejectReason.custom.trim());
-    
-    return reasons.join('; ');
+  const toggleReason = (reason: string) => {
+    setRejectReasons(prev =>
+      prev.includes(reason)
+        ? prev.filter(r => r !== reason)
+        : [...prev, reason]
+    );
   };
 
-  // ✅ NOVO - Handle reject with reason
-  const handleRejectWithReason = () => {
-    const reasonText = buildReasonText();
-    onReject(reasonText);
-    setShowRejectDialog(false);
-    // Reset form
-    setRejectReason({
-      lowQuality: false,
-      notRelevant: false,
-      wrongLocation: false,
-      duplicate: false,
-      inappropriate: false,
-      custom: ''
+  const cleanupText = (str: string) => str.trim().replace(/\s+/g, " ");
+
+  const hasChanges =
+    cleanupText(editData.title) !== cleanupText(photo.title || "") ||
+    cleanupText(editData.description) !== cleanupText(photo.description || "") ||
+    editData.imageUrl !== (photo.imageUrl || "");
+
+  const canSave =
+    editData.title.trim().length > 0 &&
+    editData.title.length <= 100 &&
+    editData.description.length <= 500 &&
+    hasChanges &&
+    !uploading;
+
+  const handleSave = () => {
+    if (!canSave) return;
+
+    onEdit({
+      title: cleanupText(editData.title),
+      description: cleanupText(editData.description),
+      imageUrl: editData.imageUrl,
     });
-  };
 
-  const handleSaveEdit = () => {
-    onEdit(editData);
+    toast.success("Promjene spremljene.");
     setIsEditing(false);
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const hasRejectReason = rejectReasons.length > 0 || customReason.trim().length > 0;
+  const finalRejectReason = [...rejectReasons, customReason.trim()]
+    .filter(r => r.length > 0)
+    .join(", ");
 
+  const handleReject = () => {
+    if (!hasRejectReason) {
+      toast.error("Molim odaberi ili upiši barem jedan razlog odbijanja.");
+      return;
+    }
+    onReject(finalRejectReason);
+  };
+
+  const handleImageUpload = async (file: File) => {
     setUploading(true);
     try {
-      const newImageUrl = await photoService.uploadPhotoFile(file, photo.id!);
-      setEditData(prev => ({ ...prev, imageUrl: newImageUrl }));
-      toast.success(t('admin.imageUploaded'));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(t('upload.error'));
+      const url = await photoService.uploadPhotoFile(file);
+      setEditData(prev => ({ ...prev, imageUrl: url }));
+      toast.success("Slika uspješno uploadana!");
+    } catch {
+      toast.error("Greška tijekom uploadanja slike.");
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <Card className="overflow-hidden">
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
-        <div className="flex-shrink-0 relative group w-full sm:w-48">
-          <Dialog>
-            <DialogTrigger asChild>
-              <div className="relative cursor-pointer w-full h-32">
-                <LazyImage
-                  src={photo.imageUrl}
-                  alt={photo.description}
-                  className="w-full h-full object-cover rounded-lg transition-all group-hover:brightness-75"
-                  threshold={0.2}
-                  rootMargin="150px"
-                  placeholder={
-                    <div className="w-full h-full bg-orange-100 animate-pulse flex items-center justify-center rounded-lg">
-                      <div className="text-center text-orange-600">
-                        <div className="text-xs font-medium">Pending Review</div>
-                        <div className="text-xs">{photo.location}</div>
-                      </div>
-                    </div>
-                  }
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Expand className="h-8 w-8 text-white" />
-                </div>
-              </div>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-              <img
-                src={photo.imageUrl}
-                alt={photo.description}
-                className="w-full h-auto object-contain rounded-lg"
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+    <Card className="w-full rounded-2xl shadow-md border border-gray-200 bg-white">
+      <CardContent className="p-4 space-y-4">
         
-        <div className="flex-1 space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
-                Pending Review
-              </Badge>
-              <p className="text-sm text-muted-foreground mt-1">
-                Uploaded: {photo.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
-                  day: '2-digit',
-                  month: '2-digit', 
-                  year: 'numeric'
-                })}
-              </p>
-            </div>
-            
-            <div className="flex gap-2 flex-shrink-0">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
-                  >
-                    <Check className="h-4 w-4" />
-                    Approve
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Approve Memory</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to approve this memory? It will be published and visible to all users.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onApprove} className="bg-green-600 hover:bg-green-700">
-                      Approve Memory
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              
-              {/* ✅ NOVO - Reject Dialog with Reasons */}
-              <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50"
-                  >
-                    <X className="h-4 w-4" />
-                    Reject
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="max-w-xl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Reject Memory</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Please select the reason(s) for rejecting this memory. The user will receive an email with this information.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-3">
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={rejectReason.lowQuality}
-                          onChange={(e) => setRejectReason(prev => ({ ...prev, lowQuality: e.target.checked }))}
-                          className="w-4 h-4 text-red-600 rounded"
-                        />
-                        <span className="text-sm">Niska kvaliteta slike</span>
-                      </label>
-                      
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={rejectReason.notRelevant}
-                          onChange={(e) => setRejectReason(prev => ({ ...prev, notRelevant: e.target.checked }))}
-                          className="w-4 h-4 text-red-600 rounded"
-                        />
-                        <span className="text-sm">Sadržaj nije relevantan</span>
-                      </label>
-                      
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={rejectReason.wrongLocation}
-                          onChange={(e) => setRejectReason(prev => ({ ...prev, wrongLocation: e.target.checked }))}
-                          className="w-4 h-4 text-red-600 rounded"
-                        />
-                        <span className="text-sm">Netočna lokacija ili godina</span>
-                      </label>
-                      
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={rejectReason.duplicate}
-                          onChange={(e) => setRejectReason(prev => ({ ...prev, duplicate: e.target.checked }))}
-                          className="w-4 h-4 text-red-600 rounded"
-                        />
-                        <span className="text-sm">Duplikat postojeće fotografije</span>
-                      </label>
-                      
-                      <label className="flex items-center space-x-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={rejectReason.inappropriate}
-                          onChange={(e) => setRejectReason(prev => ({ ...prev, inappropriate: e.target.checked }))}
-                          className="w-4 h-4 text-red-600 rounded"
-                        />
-                        <span className="text-sm">Neprimjeren sadržaj</span>
-                      </label>
-                    </div>
-                    
-                    <div>
-  <label className="text-sm font-medium block mb-2">Ostalo (ručni unos):</label>
-  <Textarea
-    value={rejectReason.custom}
-    onChange={(e) => {
-      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
-      setRejectReason(prev => ({ ...prev, custom: value }));
-    }}
-    placeholder="Dodatni razlog odbijanja..."
-    rows={3}
-    maxLength={250}
-    className={`w-full ${rejectReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500' : ''}`}
-  />
-  <p className={`text-sm mt-1 ${
-    rejectReason.custom.length > 240 
-      ? 'text-red-600 font-bold' 
-      : 'text-muted-foreground'
-  }`}>
-    {rejectReason.custom.length}/250 znakova
-  </p>
-</div>
-                    
-                    {!hasRejectReason && (
-                      <p className="text-sm text-red-600">
-                        Morate odabrati barem jedan razlog ili napisati prilagođeni razlog.
-                      </p>
-                    )}
-                  </div>
-                  
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <Button
-                      onClick={handleRejectWithReason}
-                      disabled={!hasRejectReason}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      Reject Memory
-                    </Button>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
+        {/* IMAGE */}
+        <img
+          src={editData.imageUrl}
+          alt={photo.title}
+          className="w-full h-64 object-cover rounded-md"
+        />
 
-          {isEditing ? (
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Author</label>
-                <Input
-                  value={editData.author}
-                  onChange={(e) => setEditData(prev => ({ ...prev, author: e.target.value }))}
+        {/* EDIT MODE IMAGE UPLOAD */}
+        {isEditing && (
+          <div className="flex flex-col gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+              className="text-sm"
+            />
+
+            {uploading && (
+              <div className="flex items-center gap-2 text-blue-600 text-sm">
+                <Loader2 className="animate-spin" size={16} />
+                Uploadanje slike...
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* INFO */}
+        {!isEditing ? (
+          <>
+            <h2 className="text-xl font-bold">{photo.title}</h2>
+            <p className="text-gray-700 whitespace-pre-wrap">{photo.description}</p>
+          </>
+        ) : (
+          <>
+            <input
+              className="w-full border p-2 rounded-md"
+              value={editData.title}
+              maxLength={100}
+              onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+              placeholder="Naslov"
+            />
+
+            <textarea
+              className="w-full border p-2 rounded-md"
+              value={editData.description}
+              maxLength={500}
+              rows={4}
+              onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+              placeholder="Opis"
+            />
+          </>
+        )}
+
+        {/* META */}
+        <div className="flex items-center justify-between text-gray-600 text-sm">
+          <span className="flex items-center gap-1">
+            <User size={16} /> {photo.createdBy}
+          </span>
+          <span className="flex items-center gap-1">
+            <Calendar size={16} /> {new Date(photo.createdAt).toLocaleDateString()}
+          </span>
+        </div>
+
+        {/* Reject block */}
+        {!isEditing && (
+          <div className="space-y-2 border-t pt-3">
+            <p className="font-medium">Razlog odbijanja:</p>
+
+            {REJECT_OPTIONS.map((reason) => (
+              <label key={reason} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={rejectReasons.includes(reason)}
+                  onChange={() => toggleReason(reason)}
                 />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Year</label>
-                <Input
-                  value={editData.year}
-                  onChange={(e) => setEditData(prev => ({ ...prev, year: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Description</label>
-                <Textarea
-                  value={editData.description}
-                  onChange={(e) => {
-      // ✅ Ograniči na TEXT_LIMITS.DESCRIPTION karaktera
-      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
-      setEditData(prev => ({ ...prev, description: value }));
-    }}
-                  rows={2}
-                  maxLength={250}
-                />
-                {/* ✅ Character counter */}
-  <p className={`text-sm mt-1 ${
-  editData.description.length > 240 
-    ? 'text-red-600 font-bold' 
-    : 'text-muted-foreground'
-}`}>
-  {editData.description.length}/250 znakova
-</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Replace Image</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-                {uploading && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    Uploading image...
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload replacement image file (JPG, PNG, etc.) when user sends better version via email
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave && !uploading}>
-                  Save
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-              </div>
-            </div>
+                {reason}
+              </label>
+            ))}
+
+            <textarea
+              className="w-full border rounded-md p-2 text-sm"
+              placeholder="Dodatni razlog (opcionalno)"
+              maxLength={250}
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* BUTTONS */}
+        <div className="flex justify-between pt-4">
+          {!isEditing ? (
+            <>
+              <button
+                className="px-4 py-2 rounded bg-green-600 text-white font-medium"
+                onClick={onApprove}
+              >
+                Odobri
+              </button>
+
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white font-medium disabled:bg-red-300"
+                disabled={!hasRejectReason}
+                onClick={handleReject}
+              >
+                Odbij
+              </button>
+
+              <button
+                className="px-4 py-2 rounded bg-blue-600 text-white font-medium"
+                onClick={() => setIsEditing(true)}
+              >
+                Uredi
+              </button>
+            </>
           ) : (
-            <div>
-              <h3 className="font-medium break-words whitespace-normal">
-  {photo.description}
-</h3>
-              <p className="text-sm text-muted-foreground">
-                By {photo.author} • {photo.year} • {photo.location}
-              </p>
-              {photo.detailedDescription && (
-                <p className="text-sm mt-2">{photo.detailedDescription}</p>
-              )}
-            </div>
+            <>
+              <button
+                className="px-4 py-2 rounded bg-gray-400 text-white"
+                onClick={() => setIsEditing(false)}
+              >
+                Odustani
+              </button>
+
+              <button
+                className="px-4 py-2 rounded bg-blue-600 text-white disabled:bg-blue-300"
+                onClick={handleSave}
+                disabled={!canSave}
+              >
+                Spremi
+              </button>
+            </>
           )}
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
