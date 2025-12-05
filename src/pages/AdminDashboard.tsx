@@ -76,11 +76,11 @@ export default function AdminDashboard() {
     });
   }, [
     isAdmin,
-    photoMod.pendingPhotos,
-    photoMod.approvedPhotos,
-    photoMod.allPhotos,
-    tagMod.pendingTags,
-    tagMod.allTags
+    photoMod.pendingPhotos?.length,
+    photoMod.approvedPhotos?.length,
+    photoMod.allPhotos?.length,
+    tagMod.pendingTags?.length,
+    tagMod.allTags?.length
   ]);
 
   // ❌ REMOVED: beforeunload listener that was logging out admin on F5 refresh
