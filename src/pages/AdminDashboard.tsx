@@ -59,10 +59,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
 
-    const rejectedCount = parseInt(
-      localStorage.getItem('rejectedPhotosCount') || '0',
-      10
-    );
+  const rejectedCount = parseInt(
+    localStorage.getItem('rejectedPhotosCount') || '0',
+    10
+  );
 
     setStats({
       totalPhotos: photoMod.allPhotos?.length || 0,
@@ -88,35 +88,35 @@ export default function AdminDashboard() {
   // User can manually logout using the "Logout" button.
 
   const loadAdminData = async () => {
-    try {
-      const [photos, tags] = await Promise.all([
-        photoMod.loadPhotos(),
-        tagMod.loadTags(),
-      ]);
+  try {
+    const [photos, tags] = await Promise.all([
+      photoMod.loadPhotos(),
+      tagMod.loadTags(),
+    ]);
 
-      // Load comments and users in parallel (don't wait for them to calculate stats)
-      commentMod.loadComments();
-      userMod.loadUsers();
+    // Load comments and users in parallel (don't wait for them to calculate stats)
+    commentMod.loadComments();
+    userMod.loadUsers();
 
-      const rejectedCount = parseInt(
-        localStorage.getItem('rejectedPhotosCount') || '0',
-        10
-      );
+    const rejectedCount = parseInt(
+      localStorage.getItem('rejectedPhotosCount') || '0',
+      10
+    );
 
-      setStats({
-        totalPhotos: photos?.length || 0,
-        pendingPhotos: photoMod.pendingPhotos?.length || 0,
-        approvedPhotos: photoMod.approvedPhotos?.length || 0,
-        rejectedPhotos: rejectedCount,
-        totalViews: (photos || []).reduce((sum, photo) => sum + photo.views, 0),
-        totalLikes: (photos || []).reduce((sum, photo) => sum + photo.likes, 0),
-        pendingTags: (tags || []).filter((t) => !t.isApproved).length,
-        totalTags: tags?.length || 0,
-      });
-    } catch (error) {
-      console.error('Error loading admin data:', error);
-    }
-  };
+    setStats({
+      totalPhotos: photos?.length || 0,
+      pendingPhotos: photoMod.pendingPhotos?.length || 0,
+      approvedPhotos: photoMod.approvedPhotos?.length || 0,
+      rejectedPhotos: rejectedCount,
+      totalViews: (photos || []).reduce((sum, photo) => sum + photo.views, 0),
+      totalLikes: (photos || []).reduce((sum, photo) => sum + photo.likes, 0),
+      pendingTags: tagMod.pendingTags?.length || 0,  // ✅ Direktno iz hooka
+      totalTags: tagMod.allTags?.length || 0,         // ✅ Direktno iz hooka
+    });
+  } catch (error) {
+    console.error('Error loading admin data:', error);
+  }
+};
 
   const handleLogout = async () => {
     try {
