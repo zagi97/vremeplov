@@ -5,23 +5,31 @@ import { Badge } from '@/components/ui/badge';
 import { Pagination } from '@/components/ui/pagination';
 import { Users } from 'lucide-react';
 import TagModerationCard from '../cards/TagModerationCard';
-import { useTagModeration } from '@/hooks/admin/useTagModeration';
+import { TaggedPerson } from '@/services/firebaseService';
 import { ITEMS_PER_PAGE } from '@/constants';
 
 interface TagModerationTabProps {
   adminUid: string;
+  // ✅ Dodaj ove props
+  pendingTags: TaggedPerson[];
+  loading: boolean;
+  tagPage: number;
+  setTagPage: (page: number) => void;
+  handleApproveTag: (tagId: string, adminUid: string) => void;
+  handleRejectTag: (tagId: string) => void;
+  handleEditTag: (tagId: string, updates: Partial<TaggedPerson>) => void;
 }
 
-export default function TagModerationTab({ adminUid }: TagModerationTabProps) {
-  const {
-    pendingTags,
-    loading,
-    tagPage,
-    setTagPage,
-    handleApproveTag,
-    handleRejectTag,
-    handleEditTag,
-  } = useTagModeration();
+export default function TagModerationTab({ 
+  adminUid,
+  pendingTags,
+  loading,
+  tagPage,
+  setTagPage,
+  handleApproveTag,
+  handleRejectTag,
+  handleEditTag,
+}: TagModerationTabProps) {
 
   const TAGS_PER_PAGE = ITEMS_PER_PAGE.ADMIN_PHOTOS;
   const totalTagPages = Math.ceil(pendingTags.length / TAGS_PER_PAGE);
@@ -66,8 +74,8 @@ export default function TagModerationTab({ adminUid }: TagModerationTabProps) {
               <TagModerationCard
                 key={tag.id}
                 tag={tag}
-                onApprove={() => handleApproveTag(tag.id!, adminUid, pendingTags)}
-                onReject={() => handleRejectTag(tag.id!, pendingTags)}
+                onApprove={() => handleApproveTag(tag.id!, adminUid)}
+                onReject={() => handleRejectTag(tag.id!)}
                 onEdit={(updates) => handleEditTag(tag.id!, updates)}
               />
             ))}

@@ -387,8 +387,17 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="tags" className="space-y-6">
-            <TagModerationTab adminUid={user?.uid || 'admin'} />
-          </TabsContent>
+  <TagModerationTab 
+    adminUid={user?.uid || 'admin'}
+    pendingTags={tagMod.pendingTags}
+    loading={tagMod.loading}
+    tagPage={tagMod.tagPage}
+    setTagPage={tagMod.setTagPage}
+    handleApproveTag={tagMod.handleApproveTag}
+    handleRejectTag={tagMod.handleRejectTag}
+    handleEditTag={tagMod.handleEditTag}
+  />
+</TabsContent>
 
           <TabsContent value="comments" className="space-y-6">
             <CommentModerationTab />
