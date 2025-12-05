@@ -58,13 +58,13 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
           <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <Camera className="h-6 w-6 mx-auto text-purple-600 mb-2" />
             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.author')}</p>
-            <p className="text-sm font-bold text-gray-900">{author}</p>
+            <p className="text-sm font-bold text-gray-900 break-all">{author}</p>
           </div>
 
           <div className="text-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <MapPin className="h-6 w-6 mx-auto text-green-600 mb-2" />
             <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{t('photoDetail.location')}</p>
-            <p className="text-sm font-bold text-gray-900">{location}</p>
+            <p className="text-sm font-bold text-gray-900 break-all">{location}</p>
           </div>
 
           {uploadedBy && (
@@ -87,7 +87,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 
         {/* Description */}
         <div className="mb-6">
-          <p className="text-gray-700 leading-relaxed">
+          <p className="text-gray-700 leading-relaxed break-all">
             {detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
               year,
               description,
@@ -113,10 +113,10 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
               {approvedTags.map((person) => (
                 <span
                   key={person.id || `temp-${person.x}-${person.y}`}
-                  className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors"
+                  className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 hover:bg-blue-100 transition-colors break-all"
                 >
-                  <User className="h-3 w-3" />
-                  {person.name}
+                  <User className="h-3 w-3 flex-shrink-0" />
+                  <span className="break-all">{person.name}</span>
                 </span>
               ))}
             </div>
