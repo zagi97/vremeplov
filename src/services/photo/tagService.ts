@@ -10,7 +10,8 @@ import {
   query,
   where,
   orderBy,
-  Timestamp
+  Timestamp,
+  limit
 } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { mapDocumentsWithId } from '../../utils/firestoreMappers';
@@ -148,7 +149,8 @@ export class TagService {
       const q = query(
         this.taggedPersonsCollection,
         where('photoId', '==', photoId),
-        where('isApproved', '==', true)
+        where('isApproved', '==', true),
+        limit(100)
       );
 
       const querySnapshot = await getDocs(q);
@@ -167,7 +169,8 @@ export class TagService {
       const q = query(
         this.taggedPersonsCollection,
         where('photoId', '==', photoId),
-        where('isApproved', '==', true)
+        where('isApproved', '==', true),
+        limit(100)
       );
 
       const snapshot = await getDocs(q);
@@ -190,7 +193,8 @@ export class TagService {
     try {
       const q = query(
         this.taggedPersonsCollection,
-        where('photoId', '==', photoId)
+        where('photoId', '==', photoId),
+        limit(100)
       );
 
       const querySnapshot = await getDocs(q);
@@ -210,7 +214,8 @@ export class TagService {
       const approvedQuery = query(
         this.taggedPersonsCollection,
         where('photoId', '==', photoId),
-        where('isApproved', '==', true)
+        where('isApproved', '==', true),
+        limit(100)
       );
       const approvedSnapshot = await getDocs(approvedQuery);
       const approvedTags = mapDocumentsWithId<TaggedPerson>(approvedSnapshot.docs);
@@ -220,7 +225,8 @@ export class TagService {
         this.taggedPersonsCollection,
         where('photoId', '==', photoId),
         where('addedByUid', '==', userId),
-        where('isApproved', '==', false)
+        where('isApproved', '==', false),
+        limit(100)
       );
       const userPendingSnapshot = await getDocs(userPendingQuery);
       const userPendingTags = mapDocumentsWithId<TaggedPerson>(userPendingSnapshot.docs);
@@ -230,7 +236,8 @@ export class TagService {
         this.taggedPersonsCollection,
         where('photoId', '==', photoId),
         where('photoAuthorId', '==', userId),
-        where('isApproved', '==', false)
+        where('isApproved', '==', false),
+        limit(100)
       );
       const photoPendingSnapshot = await getDocs(photoPendingQuery);
       const photoPendingTags = mapDocumentsWithId<TaggedPerson>(photoPendingSnapshot.docs);
@@ -256,7 +263,8 @@ export class TagService {
     try {
       const q = query(
         this.taggedPersonsCollection,
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(100)
       );
 
       const querySnapshot = await getDocs(q);
@@ -275,7 +283,8 @@ export class TagService {
       const q = query(
         this.taggedPersonsCollection,
         where('isApproved', '==', false),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(100)
       );
 
       const querySnapshot = await getDocs(q);
