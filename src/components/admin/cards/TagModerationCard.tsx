@@ -235,15 +235,15 @@ export default function TagModerationCard({
               </div>
             </div>
           ) : (
-            <div className="min-w-0">
-              <h3 className="font-medium flex items-center gap-2 break-words">
+            <div className="min-w-0 overflow-hidden">
+              <h3 className="font-medium flex items-center gap-2">
                 <User className="h-4 w-4 flex-shrink-0" />
-                <span className="break-words">{tag.name}</span>
+                <span className="break-all min-w-0 flex-1">{tag.name}</span>
               </h3>
-              <p className="text-sm text-muted-foreground break-words">
+              <p className="text-sm text-muted-foreground break-all">
                 Tagged in: {photo?.description} • {photo?.location} • {photo?.year}
               </p>
-              {tag.description && <p className="text-sm mt-2 break-words">{tag.description}</p>}
+              {tag.description && <p className="text-sm mt-2 break-all">{tag.description}</p>}
               <p className="text-xs text-muted-foreground mt-2">
                 Position: {tag.x.toFixed(1)}%, {tag.y.toFixed(1)}%
               </p>

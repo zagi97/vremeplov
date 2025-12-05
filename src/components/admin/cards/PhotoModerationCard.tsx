@@ -401,13 +401,13 @@ const hasRejectReason = (
               </div>
             </div>
           ) : (
-            <div className="min-w-0">
-              <h3 className="font-medium break-words">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground break-words">
+            <div className="min-w-0 overflow-hidden">
+              <h3 className="font-medium break-all">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground break-all">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
-                <p className="text-sm mt-2 break-words">{photo.detailedDescription}</p>
+                <p className="text-sm mt-2 break-all">{photo.detailedDescription}</p>
               )}
             </div>
           )}
