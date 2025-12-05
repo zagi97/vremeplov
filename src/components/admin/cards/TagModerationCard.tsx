@@ -111,9 +111,9 @@ export default function TagModerationCard({
           </div>
         )}
 
-        <div className="flex-1 space-y-4">
-          <div className="flex items-start justify-between">
-            <div>
+        <div className="flex-1 min-w-0 space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <Badge variant="outline" className="text-orange-600 border-orange-600">
                 Pending Tag Review
               </Badge>
@@ -127,7 +127,7 @@ export default function TagModerationCard({
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 size="sm"
                 variant="outline"
@@ -235,15 +235,15 @@ export default function TagModerationCard({
               </div>
             </div>
           ) : (
-            <div>
-              <h3 className="font-medium flex items-center gap-2">
-                <User className="h-4 w-4" />
-                {tag.name}
+            <div className="min-w-0">
+              <h3 className="font-medium flex items-center gap-2 break-words">
+                <User className="h-4 w-4 flex-shrink-0" />
+                <span className="break-words">{tag.name}</span>
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground break-words">
                 Tagged in: {photo?.description} • {photo?.location} • {photo?.year}
               </p>
-              {tag.description && <p className="text-sm mt-2">{tag.description}</p>}
+              {tag.description && <p className="text-sm mt-2 break-words">{tag.description}</p>}
               <p className="text-xs text-muted-foreground mt-2">
                 Position: {tag.x.toFixed(1)}%, {tag.y.toFixed(1)}%
               </p>

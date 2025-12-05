@@ -169,9 +169,9 @@ const buildDeleteReasonText = () => {
 </Dialog>
         </div>
         
-        <div className="flex-1 space-y-2">
-          <div className="flex items-start justify-between">
-            <div>
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <Badge variant={photo.isApproved ? "default" : "secondary"}>
                 {photo.isApproved ? "Approved" : "Pending"}
               </Badge>
@@ -179,8 +179,8 @@ const buildDeleteReasonText = () => {
                 {photo.views} views • {photo.likes} likes
               </p>
             </div>
-            
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 size="sm"
                 variant="outline"
@@ -362,9 +362,9 @@ const buildDeleteReasonText = () => {
               </div>
             </div>
           ) : (
-            <div>
-              <h3 className="font-medium">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="min-w-0">
+              <h3 className="font-medium break-words">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground break-words">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
             </div>
