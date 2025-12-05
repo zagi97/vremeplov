@@ -23,6 +23,8 @@ import LazyImage from '@/components/LazyImage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { TEXT_LIMITS } from '@/constants';
+import { CharacterCounter } from '@/components/ui/character-counter';
+import YearPicker from '@/components/YearPicker';
 
 interface PhotoModerationCardProps {
   photo: Photo;
@@ -44,7 +46,6 @@ function PhotoModerationCard({
   onEdit: (updates: Partial<Photo>) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false); // ✅ NOVO
   const [rejectReason, setRejectReason] = useState({ // ✅ NOVO
     lowQuality: false,
@@ -114,23 +115,6 @@ const hasRejectReason = (
   const handleSaveEdit = () => {
     onEdit(editData);
     setIsEditing(false);
-  };
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const newImageUrl = await photoService.uploadPhotoFile(file, photo.id!);
-      setEditData(prev => ({ ...prev, imageUrl: newImageUrl }));
-      toast.success(t('admin.imageUploaded'));
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error(t('upload.error'));
-    } finally {
-      setUploading(false);
-    }
   };
 
   return (
@@ -340,17 +324,26 @@ const hasRejectReason = (
           {isEditing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium">Author</label>
+                <label className="text-sm font-medium">Author *</label>
                 <Input
                   value={editData.author}
-                  onChange={(e) => setEditData(prev => ({ ...prev, author: e.target.value }))}
+                  onChange={(e) => {
+                    const value = e.target.value.slice(0, 40);
+                    setEditData(prev => ({ ...prev, author: value }));
+                  }}
+                  maxLength={40}
+                  className={editData.author.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
                 />
+                <CharacterCounter currentLength={editData.author.length} maxLength={40} />
               </div>
               <div>
-                <label className="text-sm font-medium">Year</label>
-                <Input
-                  value={editData.year}
-                  onChange={(e) => setEditData(prev => ({ ...prev, year: e.target.value }))}
+                <label className="text-sm font-medium">Year *</label>
+                <YearPicker
+                  selectedYear={editData.year}
+                  onYearSelect={(year) => setEditData(prev => ({ ...prev, year }))}
+                  placeholder="Select year"
+                  required={true}
+                  t={t}
                 />
               </div>
               <div>
@@ -367,34 +360,15 @@ const hasRejectReason = (
                 />
                 {/* ✅ Character counter */}
   <p className={`text-sm mt-1 ${
-  editData.description.length > 240 
-    ? 'text-red-600 font-bold' 
+  editData.description.length > 240
+    ? 'text-red-600 font-bold'
     : 'text-muted-foreground'
 }`}>
   {editData.description.length}/250 znakova
 </p>
               </div>
-              <div>
-                <label className="text-sm font-medium block mb-1">Replace Image</label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-                {uploading && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                    Uploading image...
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Upload replacement image file (JPG, PNG, etc.) when user sends better version via email
-                </p>
-              </div>
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave && !uploading}>
+                <Button size="sm" onClick={handleSaveEdit} disabled={!canSave}>
                   Save
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
