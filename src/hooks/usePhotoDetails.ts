@@ -39,6 +39,56 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
     reason: ''
   });
 
+  // ✅ Function to reload tags only
+  const reloadTags = async () => {
+    if (!photoId || !photo) return;
+
+    try {
+      let taggedPersonsData: TaggedPerson[] = [];
+
+      if (authService.isAdmin(user)) {
+        taggedPersonsData = await tagService.getTaggedPersonsByPhotoIdForAdmin(photoId);
+      } else if (photo.authorId === user?.uid && user) {
+        taggedPersonsData = await tagService.getTaggedPersonsForPhotoOwner(photoId, user.uid);
+      } else {
+        taggedPersonsData = await tagService.getTaggedPersonsByPhotoId(photoId);
+      }
+
+      const photoTaggedPersons = photo.taggedPersons || [];
+
+      const allTaggedPersons = [
+        ...taggedPersonsData,
+        ...photoTaggedPersons.map((person, index) => ({
+          id: `photo_${index}`,
+          name: person.name,
+          x: person.x,
+          y: person.y,
+          photoId: photoId,
+          addedBy: 'System',
+          addedByUid: photo.authorId,
+          isApproved: true,
+          createdAt: Timestamp.now()
+        }))
+      ];
+
+      let visibleTags = allTaggedPersons;
+
+      if (!authService.isAdmin(user)) {
+        visibleTags = allTaggedPersons.filter(tag => {
+          if (tag.isApproved === true) return true;
+          if (tag.isApproved === false && tag.addedByUid === user?.uid) return true;
+          if (tag.isApproved === false && photo.authorId === user?.uid) return true;
+          return false;
+        });
+      }
+
+      setTaggedPersons(visibleTags);
+      console.log('🔄 Tags reloaded:', visibleTags.length);
+    } catch (error) {
+      console.error('Error reloading tags:', error);
+    }
+  };
+
   // Load photo data
   useEffect(() => {
     const loadPhotoData = async () => {
@@ -169,6 +219,20 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
     loadPhotoData();
   }, [photoId, user, t, navigate]);
+
+  // ✅ Refresh tags when page regains focus (e.g., returning from admin dashboard)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('🔄 Page focused - reloading tags...');
+      reloadTags();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [photoId, photo, user]);
 
   // Check rate limits
   const checkUserTagRateLimit = async () => {
@@ -348,6 +412,7 @@ const handleLike = async () => {
     handleAddTag,
     handleLike,
     checkUserTagRateLimit,
+    reloadTags,
     MAX_TAGS_PER_PHOTO,
     MAX_TAGS_PER_HOUR,
     MAX_TAGS_PER_DAY
