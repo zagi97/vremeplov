@@ -136,11 +136,15 @@ export default function CommentModerationTab() {
                     </div>
 
                     <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
-                      {comment.createdAt?.toDate?.()?.toLocaleDateString('hr-HR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                      }) || 'Unknown'}
+                      {comment.createdAt?.toDate?.() ? (() => {
+                        const date = comment.createdAt.toDate();
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const year = date.getFullYear();
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        return `${day}.${month}.${year}. ${hours}:${minutes}`;
+                      })() : 'Unknown'}
                     </span>
                   </div>
 

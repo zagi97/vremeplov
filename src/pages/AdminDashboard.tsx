@@ -71,15 +71,16 @@ export default function AdminDashboard() {
       rejectedPhotos: rejectedCount,
       totalViews: (photoMod.allPhotos || []).reduce((sum, photo) => sum + photo.views, 0),
       totalLikes: (photoMod.allPhotos || []).reduce((sum, photo) => sum + photo.likes, 0),
-      pendingTags: (tagMod.tags || []).filter((t) => !t.isApproved).length,
-      totalTags: tagMod.tags?.length || 0,
+      pendingTags: tagMod.pendingTags?.length || 0,
+      totalTags: tagMod.allTags?.length || 0,
     });
   }, [
     isAdmin,
     photoMod.pendingPhotos,
     photoMod.approvedPhotos,
     photoMod.allPhotos,
-    tagMod.tags
+    tagMod.pendingTags,
+    tagMod.allTags
   ]);
 
   // ❌ REMOVED: beforeunload listener that was logging out admin on F5 refresh
