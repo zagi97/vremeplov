@@ -249,6 +249,19 @@ export class PhotoService {
         };
       }
 
+      // ✅ TEST ACCOUNTS - Unlimited uploads for testing
+      const TEST_ACCOUNTS = ['kzaga99@gmail.com', 'vremeplov.app@gmail.com'];
+      if (userProfile.email && TEST_ACCOUNTS.includes(userProfile.email.toLowerCase())) {
+        return {
+          allowed: true,
+          uploadsToday: 0,
+          remainingToday: 999,
+          userTier: 'TEST_ACCOUNT',
+          dailyLimit: 999,
+          nextTierInfo: '🧪 Testni account - neograničeno upload-a'
+        };
+      }
+
       const approvedPhotosCount = userProfile.stats?.totalPhotos || 0;
       const userTier = getUserTier(approvedPhotosCount);
       const dailyLimit = USER_TIER_LIMITS[userTier];
