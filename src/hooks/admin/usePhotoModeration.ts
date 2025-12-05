@@ -52,18 +52,8 @@ export function usePhotoModeration() {
       setApprovedPhotos(prev => [...prev, { ...photo, isApproved: true }]);
       setAllPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isApproved: true } : p));
 
-      // Firestore update
+      // Firestore update (photoService.approvePhoto already handles notification)
       await photoService.approvePhoto(photoId, adminUid);
-
-      // Notification
-      if (photo.authorId) {
-        await sendNotification({
-          userId: photo.authorId,
-          type: 'photo_approved',
-          photoId,
-          photoTitle: photo.description || 'Nepoznata fotografija'
-        });
-      }
 
       toast.success('Fotografija odobrena i statistike ažurirane! 🎉');
 
