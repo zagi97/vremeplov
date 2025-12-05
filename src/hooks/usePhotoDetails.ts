@@ -1,5 +1,5 @@
 // src/hooks/usePhotoDetails.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { photoService, Photo, tagService, viewService, TaggedPerson } from "@/services/firebaseService";
 import { likeService } from '@/services/photo/likeService';
