@@ -88,7 +88,7 @@ export function useTagModeration() {
           type: 'tag_rejected',
           photoId: tag.photoId,
           taggedPersonName: tag.name,
-          reason: 'Tag je odbijen jer ne zadovoljava kriterije kvalitete.'
+          reason: t('notifications.tagRejectedReason')
         });
       }
 

@@ -149,11 +149,11 @@ export const YEAR_RANGE = {
  * Photo type categories
  */
 export const PHOTO_TYPES = {
-  STREET: 'street',
-  BUILDING: 'building',
-  PEOPLE: 'people',
-  EVENT: 'event',
-  NATURE: 'nature',
+  STREET: 'Street',
+  BUILDING: 'Building',
+  PEOPLE: 'People',
+  EVENT: 'Event',
+  NATURE: 'Nature',
 } as const;
 
 // ============================================================================

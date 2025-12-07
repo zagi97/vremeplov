@@ -155,13 +155,14 @@ const handleSubmitComment = async (e: React.FormEvent) => {
   if (!canComment) {
     let errorMessage = '';
 
-    if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
-      errorMessage = `🚫 Možeš objaviti najviše ${MAX_COMMENTS_PER_MINUTE} komentara u minuti.\n\nPričekaj malo! ⏱️`;
-    } else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
-      errorMessage = `🚫 Dostigao si limit od ${MAX_COMMENTS_PER_HOUR} komentara po satu.\n\nPokušaj ponovo kasnije! ⏰`;
-    } else if (commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
-      errorMessage = `🚫 Dostigao si dnevni limit od ${MAX_COMMENTS_PER_DAY} komentara.\n\nVrati se sutra! 📅`;
-    }
+    {/* Error poruke pri submitu komentara */}
+if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
+  errorMessage = translateWithParams(t, 'rateLimit.errorMinute', { limit: MAX_COMMENTS_PER_MINUTE });
+} else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
+  errorMessage = translateWithParams(t, 'rateLimit.errorHour', { limit: MAX_COMMENTS_PER_HOUR });
+} else if (commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
+  errorMessage = translateWithParams(t, 'rateLimit.errorDay', { limit: MAX_COMMENTS_PER_DAY });
+}
 
     toast.error(errorMessage, { duration: 5000 });
     return;
@@ -223,19 +224,22 @@ const handleSubmitComment = async (e: React.FormEvent) => {
 };
 
   // ✅ FORMAT REMAINING TIME
-  const formatRemainingTime = (date: Date) => {
-    const now = new Date();
-    const diff = date.getTime() - now.getTime();
-    
-    if (diff <= 0) return 'sada';
-    
-    const minutes = Math.floor(diff / (60 * 1000));
-    const hours = Math.floor(diff / (60 * 60 * 1000));
-    
-    if (hours > 0) return `za ${hours}h`;
-    if (minutes > 0) return `za ${minutes} min`;
-    return 'uskoro';
-  };
+    const formatRemainingTime = (date?: Date) => {
+      // If no date is provided, treat as "now"
+      if (!date) return 'sada';
+  
+      const now = new Date();
+      const diff = date.getTime() - now.getTime();
+      
+      if (diff <= 0) return 'sada';
+      
+      const minutes = Math.floor(diff / (60 * 1000));
+      const hours = Math.floor(diff / (60 * 60 * 1000));
+      
+      if (hours > 0) return `za ${hours}h`;
+      if (minutes > 0) return `za ${minutes} min`;
+      return 'uskoro';
+    };
 
   return (
     <div className="mt-8 px-4 sm:px-0">
@@ -248,43 +252,37 @@ const handleSubmitComment = async (e: React.FormEvent) => {
       
       {user ? (
         <div className="mb-6">
-          {/* ✅ RATE LIMIT WARNING */}
-          {!canComment && (
-            <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-orange-800 mb-1">
-                    Dostigao si limit komentara
-                  </p>
-                  <p className="text-sm text-orange-700">
-                    {totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
-                      <>Možeš komentirati ponovno {rateLimitState.nextAvailableTime && formatRemainingTime(rateLimitState.nextAvailableTime)}.</>
-                    )}
-                    {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
-                      <>Dostigao si satni limit ({MAX_COMMENTS_PER_HOUR} komentara/sat).</>
-                    )}
-                    {commentsInLastDay >= MAX_COMMENTS_PER_DAY && commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
-                      <>Dostigao si dnevni limit ({MAX_COMMENTS_PER_DAY} komentara/dan).</>
-                    )}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* RATE LIMIT WARNING (naranđasti okvir) */}
+{!canComment && (
+  <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+    <div className="flex items-start gap-3">
+      <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+      <div>
+        <p className="font-medium text-orange-800 mb-1">
+          {t('rateLimit.commentWarningTitle')}
+        </p>
+        <p className="text-sm text-orange-700">
+          {totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
+            <>{translateWithParams(t, 'rateLimit.canCommentAgainIn', { time: formatRemainingTime(rateLimitState.nextAvailableTime) })}</>
           )}
+          {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
+            <>{translateWithParams(t, 'rateLimit.hourlyLimitReached', { limit: MAX_COMMENTS_PER_HOUR })}</>
+          )}
+          {commentsInLastDay >= MAX_COMMENTS_PER_DAY && commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
+            <>{translateWithParams(t, 'rateLimit.dailyLimitReached', { limit: MAX_COMMENTS_PER_DAY })}</>
+          )}
+        </p>
+      </div>
+    </div>
+  </div>
+)}
 
           {/* ✅ RATE LIMIT INFO (uvijek prikaži) */}
           <div className="mb-3 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
-            <span>
-              Minutno: {totalCommentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}
-            </span>
-            <span>
-              Satno: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}
-            </span>
-            <span>
-              Dnevno: {commentsInLastDay}/{MAX_COMMENTS_PER_DAY}
-            </span>
-          </div>
+  <span>{t('comments.perMinute')}: {totalCommentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}</span>
+  <span>{t('comments.perHour')}: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}</span>
+  <span>{t('comments.perDay')}: {commentsInLastDay}/{MAX_COMMENTS_PER_DAY}</span>
+</div>
 
           <form onSubmit={handleSubmitComment}>
             <Textarea

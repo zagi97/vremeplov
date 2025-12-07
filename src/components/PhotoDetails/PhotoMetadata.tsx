@@ -42,7 +42,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-700 text-white p-6">
         <h3 className="text-xl font-bold mb-2">{t('photoDetail.aboutPhoto')}</h3>
-        <p className="text-gray-300 text-sm">Povijesni detalji i informacije</p>
+        <p className="text-gray-300 text-sm">{t('photo.historicalDetails')}</p>
       </div>
 
       {/* Content */}

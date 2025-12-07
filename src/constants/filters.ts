@@ -48,12 +48,12 @@ export interface PhotoTypeOption {
  * @returns Array of photo type options
  */
 export const getPhotoTypeOptions = (t: any): PhotoTypeOption[] => [
-  { value: "all", label: t('photoType.allTypes') },
-  { value: "street", label: t('photoType.street') },
-  { value: "building", label: t('photoType.building') },
-  { value: "people", label: t('photoType.people') },
-  { value: "event", label: t('photoType.event') },
-  { value: "nature", label: t('photoType.nature') }
+  { value: "All", label: t('photoType.allTypes') },
+  { value: "Street", label: t('photoType.street') },
+  { value: "Building", label: t('photoType.building') },
+  { value: "People", label: t('photoType.people') },
+  { value: "Event", label: t('photoType.event') },
+  { value: "Nature", label: t('photoType.nature') }
 ];
 
 // ============================================================================

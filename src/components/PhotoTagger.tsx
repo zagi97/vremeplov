@@ -63,7 +63,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
   // Get reason for rate limit
   const getRateLimitReason = (): string => {
     if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
-      return `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
+      return translateWithParams(t, 'tag.maxPerPhoto', { limit: MAX_TAGS_PER_PHOTO });  // PREVEDENO
     }
     return rateLimitState.reason || '';
   };
@@ -92,7 +92,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
     // ✅ PROVJERA RATE LIMITA
     if (!canTag) {
       const reason = getRateLimitReason();
-      toast.error(`🚫 ${reason}\n\nPokušaj kasnije! ⏰`, {
+      toast.error(t('tag.rateLimitError'), {
         duration: 5000
       });
       return;
@@ -151,7 +151,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
                 <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
                   <Tag className="h-8 w-8 text-gray-400" />
                 </div>
-                <span className="text-sm font-medium">Loading photo for tagging...</span>
+                <span className="text-sm font-medium">{t('photo.loadingForTagging')}</span>  {/* PREVEDENO */}
               </div>
             </div>
           }
@@ -182,42 +182,38 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
-                className="absolute w-6 h-6 bg-orange-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
+                className="absolute w-6 h-6 bg-orange-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
                 style={{ left: `${person.x}%`, top: `${person.y}%` }}
-              >
-                <Clock className="h-3 w-3 text-white" />
-              </div>
+              />
             </TooltipTrigger>
             <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
               <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-orange-600" />
+                <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-gray-600" />
                 </div>
                 <span className="font-medium text-gray-500">{person.name}</span>
-                <span className="text-xs text-orange-600">Your tag - pending approval</span>
+                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">{t('tag.pendingApprovalBadge')}</span>  {/* Ako treba prijevod, dodaj ključ */}
               </div>
             </TooltipContent>
           </Tooltip>
         ))}
 
-        {/* Photo owner sees pending tags - purple */}
+        {/* Photo owner pending tags - purple */}
         {photoOwnerPendingTags.map((person) => (
           <Tooltip key={person.id || `temp-${person.x}-${person.y}`}>
             <TooltipTrigger asChild>
               <div 
-                className="absolute w-6 h-6 bg-purple-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform flex items-center justify-center"
+                className="absolute w-6 h-6 bg-purple-500 border-2 border-white rounded-full -ml-3 -mt-3 cursor-pointer hover:scale-110 transition-transform"
                 style={{ left: `${person.x}%`, top: `${person.y}%` }}
-              >
-                <Clock className="h-3 w-3 text-white" />
-              </div>
+              />
             </TooltipTrigger>
             <TooltipContent className="bg-white p-3 shadow-lg rounded-lg border border-gray-200">
               <div className="flex flex-col items-center gap-2">
-                <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Clock className="h-4 w-4 text-purple-600" />
+                <div className="h-8 w-8 bg-gray-100 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-gray-600" />
                 </div>
                 <span className="font-medium text-gray-500">{person.name}</span>
-                <span className="text-xs text-purple-600">Tagged by someone - pending approval</span>
+                <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full">{t('tag.pendingApprovalBadge')}</span>  {/* Ako treba prijevod, dodaj ključ */}
               </div>
             </TooltipContent>
           </Tooltip>
@@ -239,7 +235,6 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
 
-
                   if (!canTag) {
                     const reason = getRateLimitReason();
                     toast.error(`🚫 ${reason}`, { duration: 4000 });
@@ -253,7 +248,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
                 disabled={!canTag}
               >
                 <Tag className="h-4 w-4 mr-2" />
-                Tag Person
+                {t('tag.buttonLabel')}  {/* PREVEDENO */}
               </Button>
             )}
           </div>
@@ -280,7 +275,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-orange-800 text-sm">Tagging ograničen</p>
+              <p className="font-medium text-orange-800 text-sm">{t('tag.limitedTitle')}</p>  {/* PREVEDENO */}
               <p className="text-xs text-orange-700 mt-1">{getRateLimitReason()}</p>
             </div>
           </div>
@@ -289,10 +284,10 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
 
       {/* ✅ TAG STATISTICS */}
       {user && (user.uid === photoAuthorId || authService.isAdmin(user)) && canTag && photoId && (
-        <div className="mt-2 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
-          <span>Na ovoj slici: {taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</span>
-          <span>Satno: {tagsInLastHour}/{MAX_TAGS_PER_HOUR}</span>
-          <span>Dnevno: {tagsInLastDay}/{MAX_TAGS_PER_DAY}</span>
+        <div className="text-xs text-gray-500 flex items-center gap-4 flex-wrap">
+          <span>📸 {t('tags.onPhoto')}: <strong>{taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</strong></span>
+          <span>⏰ {t('tags.hourly')}: <strong>{tagsInLastHour}/{MAX_TAGS_PER_HOUR}</strong></span>
+          <span>📅 {t('tags.daily')}: <strong>{tagsInLastDay}/{MAX_TAGS_PER_DAY}</strong></span>
         </div>
       )}
 
@@ -303,7 +298,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
             <div className="flex items-center gap-2 text-orange-700 mb-1">
               <Clock className="h-4 w-4" />
               <span className="text-sm font-medium">
-                {userOwnPendingTags.length} of your tag{userOwnPendingTags.length !== 1 ? 's' : ''} awaiting admin approval
+                {translateWithParams(t, 'tag.yourPendingTags', { count: userOwnPendingTags.length, plural: userOwnPendingTags.length !== 1 ? 's' : '' })}  {/* PREVEDENO */}
               </span>
             </div>
           )}
@@ -311,16 +306,16 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
             <div className="flex items-center gap-2 text-purple-700 mb-1">
               <Clock className="h-4 w-4" />
               <span className="text-sm font-medium">
-                {photoOwnerPendingTags.length} tag{photoOwnerPendingTags.length !== 1 ? 's' : ''} on your photo awaiting approval
+                {translateWithParams(t, 'tag.photoPendingTags', { count: photoOwnerPendingTags.length, plural: photoOwnerPendingTags.length !== 1 ? 's' : '' })}  {/* PREVEDENO */}
               </span>
             </div>
           )}
           <p className="text-xs text-gray-600 mt-1">
             {userOwnPendingTags.length > 0 && photoOwnerPendingTags.length > 0 ? 
-              "Orange dots are your tags, purple dots are tags others made on your photo." :
+              t('tag.pendingDotsDescriptionBoth') :  // PREVEDENO
               userOwnPendingTags.length > 0 ?
-              "Your tags will be visible to everyone once approved by an administrator." :
-              "Someone tagged people in your photo. Tags will be visible to everyone once you or an admin approves them."
+              t('tag.pendingDotsDescriptionOwn') :  // PREVEDENO
+              t('tag.pendingDotsDescriptionOthers')  // PREVEDENO
             }
           </p>
         </div>
@@ -331,14 +326,14 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
         <div className="mt-4 p-4 border rounded-lg bg-gray-50">
           {!hasSelectedPosition ? (
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">Click on the photo to position the tag</p>
-              <p className="text-xs text-gray-500">Note: Tags require admin approval before becoming visible to other users</p>
+              <p className="text-sm text-gray-600 mb-2">{t('tag.clickToPosition')}</p>  {/* PREVEDENO */}
+              <p className="text-xs text-gray-500">{t('tag.noteApprovalRequired')}</p>  {/* PREVEDENO */}
             </div>
           ) : (
             <div className="space-y-3">
               <Input
                 type="text"
-                placeholder="Person's name"
+                placeholder={t('tag.personNamePlaceholder')}
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
                 maxLength={40}
@@ -348,7 +343,7 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
               <CharacterCounter currentLength={newTagName.length} maxLength={40} />
               <div className="bg-blue-50 p-3 rounded border border-blue-200">
                 <p className="text-xs text-blue-700">
-                  <strong>Note:</strong> Your tag will be submitted for admin approval and will become visible to other users once approved.
+                  <strong>{t('tag.noteLabel')}</strong> {t('tag.noteSubmitForApproval')}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -357,14 +352,14 @@ const PhotoTagger: React.FC<PhotoTaggerProps> = ({
                   onClick={handleSubmitTag}
                   disabled={!newTagName.trim() || !hasSelectedPosition}
                 >
-                  Submit Tag for Approval
+                  {t('tag.submitButton')}  {/* PREVEDENO */}
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={cancelTagging}
                 >
-                  Cancel
+                  {t('tag.cancelButton')}  {/* PREVEDENO */}
                 </Button>
               </div>
             </div>

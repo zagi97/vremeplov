@@ -25,9 +25,9 @@ export const extractHouseNumber = (fullAddress: string): string | null => {
  * Photo type options
  */
 export const getPhotoTypeOptions = (t: (key: string) => string) => [
-  { value: "street", label: t('photoType.street') },
-  { value: "building", label: t('photoType.building') },
-  { value: "people", label: t('photoType.people') },
-  { value: "event", label: t('photoType.event') },
-  { value: "nature", label: t('photoType.nature') }
+  { value: "Street", label: t('photoType.street') },
+  { value: "Building", label: t('photoType.building') },
+  { value: "People", label: t('photoType.people') },
+  { value: "Event", label: t('photoType.event') },
+  { value: "Nature", label: t('photoType.nature') }
 ];
