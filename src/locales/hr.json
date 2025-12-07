@@ -693,5 +693,12 @@
   "tag.maxPerPhoto": "Maksimalno {limit} osoba po fotografiji",
   "tag.pendingApprovalBadge": "Čeka odobrenje",
   "tag.rateLimitError": "Trenutno ne možeš označavati osobe.\n\nPokušaj kasnije!",
-  "tag.noteLabel": "Napomena:"
+  "tag.noteLabel": "Napomena:",
+  "tag.rateLimitErrorPrefix": "🚫 ",
+  "tag.yourPendingTag": "Tvoja oznaka - čeka odobrenje",
+  "tag.pendingApproval": "Čeka odobrenje",
+  "photo.pendingOwnerMessage": "Ovo je tvoja fotografija koja čeka odobrenje.",
+  "tag.maxPerPhotoReason": "Maksimalno {limit} osoba po fotografiji",
+  "tag.hourlyLimitReason": "Dostigao si satni limit ({limit} tagova/sat)",
+  "tag.dailyLimitReason": "Dostigao si dnevni limit ({limit} tagova/dan)"
 }

@@ -84,12 +84,12 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
     // Rate limit check
     if (!rateLimitInfo.canTag) {
-      toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 5000 });
+      toast.error(`${t('tag.rateLimitErrorPrefix')}${rateLimitInfo.reason}`, { duration: 5000 });
       return;
     }
 
     if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
-      toast.error(`🚫 Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji!`, { duration: 5000 });
+      toast.error(`${t('tag.rateLimitErrorPrefix')}${translateWithParams(t, 'tag.maxPerPhoto', { limit: MAX_TAGS_PER_PHOTO })}`, { duration: 5000 });
       return;
     }
 
@@ -167,18 +167,14 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
               return (
                 <div
-                  key={person.id || `temp-${person.x}-${person.y}`}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
-                  style={{
-                    left: `${person.x}%`,
-                    top: `${person.y}%`,
-                    zIndex: 10
-                  }}
-                  onMouseEnter={() => setHoveredTag(person.id)}
-                  onMouseLeave={() => setHoveredTag(null)}
+                  key={person.id}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
                 >
-                  {/* Tag circle with conditional styling */}
-                  <div className={`w-8 h-8 border-2 ${tagStyle.borderColor} ${tagStyle.bgColor} backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg`}>
+                  <div
+                    onMouseEnter={() => setHoveredTag(person.id)}
+                    onMouseLeave={() => setHoveredTag(null)}
+                    className={`pointer-events-auto absolute w-6 h-6 ${tagStyle.bgColor} backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg`}
+                  >
                     {tagStyle.icon}
                   </div>
 
@@ -188,7 +184,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                       <div className="font-medium">{person.name}</div>
                       {isPending && (
                         <div className="text-xs text-orange-600 mt-1">
-                          {isUsersPendingTag ? "Your tag - pending approval" : "Pending approval"}
+                          {isUsersPendingTag ? t('tag.yourPendingTag') : t('tag.pendingApproval')}
                         </div>
                       )}
                       {/* Tooltip arrow */}
@@ -218,7 +214,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!rateLimitInfo.canTag) {
-                        toast.error(`🚫 ${rateLimitInfo.reason}`, { duration: 4000 });
+                        toast.error(`${t('tag.rateLimitErrorPrefix')}${rateLimitInfo.reason}`, { duration: 4000 });
                         return;
                       }
                       setIsTagging(true);
@@ -243,7 +239,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
           <div className="flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-orange-800 text-sm">Tagging ograničen</p>
+              <p className="font-medium text-orange-800 text-sm">{t('tag.limitedTitle')}</p>
               <p className="text-xs text-orange-700 mt-1">{rateLimitInfo.reason}</p>
             </div>
           </div>
@@ -253,9 +249,9 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
       {/* Tag Statistics */}
       {canUserTag && rateLimitInfo.canTag && (
         <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-gray-600 flex items-center justify-center gap-3">
-          <span>📸 Na slici: <strong>{taggedPersons.length}/{MAX_TAGS_PER_PHOTO}</strong></span>
-          <span>⏰ Satno: <strong>{rateLimitInfo.tagsInLastHour}/{MAX_TAGS_PER_HOUR}</strong></span>
-          <span>📅 Dnevno: <strong>{rateLimitInfo.tagsInLastDay}/{MAX_TAGS_PER_DAY}</strong></span>
+          <span>📸 {translateWithParams(t, 'tags.onPhoto', { count: taggedPersons.length, max: MAX_TAGS_PER_PHOTO })}</span>
+          <span>⏰ {translateWithParams(t, 'tags.hourly', { count: rateLimitInfo.tagsInLastHour, max: MAX_TAGS_PER_HOUR })}</span>
+          <span>📅 {translateWithParams(t, 'tags.daily', { count: rateLimitInfo.tagsInLastDay, max: MAX_TAGS_PER_DAY })}</span>
         </div>
       )}
 

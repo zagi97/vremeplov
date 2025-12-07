@@ -702,7 +702,14 @@ export const enTranslations = {
   "tag.maxPerPhoto": "Maximum {limit} people per photo",
   "tag.pendingApprovalBadge": "Pending Approval",
   "tag.rateLimitError": "You can't tag right now.\n\nTry again later!",
-  "tag.noteLabel": "Note:"
+  "tag.noteLabel": "Note:",
+  "tag.rateLimitErrorPrefix": "🚫 ",
+  "tag.yourPendingTag": "Your tag - pending approval",
+  "tag.pendingApproval": "Pending approval",
+  "photo.pendingOwnerMessage": "This is your photo awaiting approval.",
+  "tag.maxPerPhotoReason": "Maximum {limit} people per photo",
+  "tag.hourlyLimitReason": "You have reached the hourly limit ({limit} tags/hour)",
+  "tag.dailyLimitReason": "You have reached the daily limit ({limit} tags/day)"
 } as const;
 
 export const hrTranslations = {
@@ -1401,5 +1408,12 @@ export const hrTranslations = {
   "tag.maxPerPhoto": "Maksimalno {limit} osoba po fotografiji",
   "tag.pendingApprovalBadge": "Čeka odobrenje",
   "tag.rateLimitError": "Trenutno ne možeš označavati osobe.\n\nPokušaj kasnije!",
-  "tag.noteLabel": "Napomena:"
+  "tag.noteLabel": "Napomena:",
+  "tag.rateLimitErrorPrefix": "🚫 ",
+  "tag.yourPendingTag": "Tvoja oznaka - čeka odobrenje",
+  "tag.pendingApproval": "Čeka odobrenje",
+  "photo.pendingOwnerMessage": "Ovo je tvoja fotografija koja čeka odobrenje.",
+  "tag.maxPerPhotoReason": "Maksimalno {limit} osoba po fotografiji",
+  "tag.hourlyLimitReason": "Dostigao si satni limit ({limit} tagova/sat)",
+  "tag.dailyLimitReason": "Dostigao si dnevni limit ({limit} tagova/dan)"
 } as const;
