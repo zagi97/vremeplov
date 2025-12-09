@@ -4,8 +4,10 @@ import { Comment, commentService } from '@/services/firebaseService';
 import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
 import { ITEMS_PER_PAGE } from '@/constants';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function useCommentModeration() {
+  const { t } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,31 +26,31 @@ export function useCommentModeration() {
       setComments(allComments);
     } catch (error) {
       console.error('Error loading comments:', error);
-      toast.error('Failed to load comments');
+      toast.error(t('admin.commentLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleFlagComment = useCallback(async (commentId: string) => {
     try {
       await commentService.flagComment(commentId);
-      toast.success('Comment flagged for review');
+      toast.success(t('admin.commentFlagged'));
       await loadComments();
     } catch (error) {
-      toast.error('Failed to flag comment');
+      toast.error(t('admin.commentFlagFailed'));
     }
-  }, [loadComments]);
+  }, [loadComments, t]);
 
   const handleUnflagComment = useCallback(async (commentId: string) => {
     try {
       await commentService.unflagComment(commentId);
-      toast.success('Comment unflagged');
+      toast.success(t('admin.commentUnflagged'));
       await loadComments();
     } catch (error) {
-      toast.error('Failed to unflag comment');
+      toast.error(t('admin.commentUnflagFailed'));
     }
-  }, [loadComments]);
+  }, [loadComments, t]);
 
   const handleDeleteComment = useCallback(async (comment: Comment) => {
     try {
@@ -62,13 +64,13 @@ export function useCommentModeration() {
       }
 
       await commentService.deleteComment(comment.id!);
-      toast.success('Comment deleted and user notified');
+      toast.success(t('admin.commentDeleted'));
       await loadComments();
     } catch (error) {
       console.error('Error deleting comment:', error);
-      toast.error('Failed to delete comment');
+      toast.error(t('admin.commentDeleteFailed'));
     }
-  }, [loadComments]);
+  }, [loadComments, t]);
 
   // Filter and sort comments
   const filteredComments = useMemo(() => {

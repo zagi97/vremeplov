@@ -674,7 +674,7 @@ if (coordinates && selectedAddress) {
             <Button
               type="submit"
               disabled={uploading || !isOnline || !isPhotoUploadFormValid(formData, selectedFile, addressSearch, selectedAddress, coordinates)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {uploading ? t('upload.uploading') : !isOnline ? t('upload.noConnection') : !isPhotoUploadFormValid(formData, selectedFile, addressSearch, selectedAddress, coordinates) ? t('upload.fillRequired') : t('upload.shareMemory')}
             </Button>

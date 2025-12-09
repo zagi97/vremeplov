@@ -184,7 +184,7 @@ const SearchBar = () => {
       {/* ✅ FIX 2: Add aria-label to button */}
       <Button
         type="submit"
-        className="rounded-l-none h-12 px-4 bg-blue-600 hover:bg-blue-700"
+        className="rounded-l-none h-12 px-4 bg-blue-600 hover:bg-blue-700 text-white"
         disabled={!isValid || !searchQuery.trim()}
         aria-label={t('search.button') || 'Search photos'}
       >

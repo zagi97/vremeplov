@@ -297,7 +297,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
               <CharacterCounter currentLength={newComment.length} maxLength={250} />
               <Button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
                 disabled={!newComment.trim() || !canComment || isSubmitting}
               >
                 <Send className="h-4 w-4 mr-2" />
@@ -310,9 +310,9 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
         <div className="mb-6 p-6 bg-gray-50 rounded-lg text-center">
           <LogIn className="h-8 w-8 mx-auto mb-3 text-gray-400" />
           <p className="text-gray-600 mb-4 px-4">{t('comments.signInMessage')}</p>
-          <Button 
+          <Button
             onClick={handleSignInToComment}
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <LogIn className="h-4 w-4 mr-2" />
             {t('comments.signInToComment')}

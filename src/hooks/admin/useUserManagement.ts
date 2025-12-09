@@ -5,8 +5,11 @@ import { sendNotification } from '@/services/notificationService';
 import { toast } from 'sonner';
 import { auth } from '@/lib/firebase';
 import { ITEMS_PER_PAGE } from '@/constants';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { translateWithParams } from '@/contexts/LanguageContext';
 
 export function useUserManagement() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<UserProfileExtended[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +28,11 @@ export function useUserManagement() {
       setUsers(allUsers);
     } catch (error) {
       console.error('Error loading users:', error);
-      toast.error('Failed to load users');
+      toast.error(t('admin.usersLoadFailed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleSuspendUser = useCallback(async (userId: string, days: number, reason: string) => {
     try {
@@ -42,12 +45,12 @@ export function useUserManagement() {
         suspendedUntil: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString()
       });
 
-      toast.success(`User suspended for ${days} days`);
+      toast.success(translateWithParams(t, 'admin.userSuspended', { days }));
       await loadUsers();
     } catch (error) {
-      toast.error('Failed to suspend user');
+      toast.error(t('admin.userSuspendFailed'));
     }
-  }, [loadUsers]);
+  }, [loadUsers, t]);
 
   const handleBanUser = useCallback(async (userId: string, reason: string) => {
     try {
@@ -59,12 +62,12 @@ export function useUserManagement() {
         reason: reason
       });
 
-      toast.success('User banned permanently');
+      toast.success(t('admin.userBanned'));
       await loadUsers();
     } catch (error) {
-      toast.error('Failed to ban user');
+      toast.error(t('admin.userBanFailed'));
     }
-  }, [loadUsers]);
+  }, [loadUsers, t]);
 
   const handleUnsuspendUser = useCallback(async (userId: string) => {
     try {
@@ -75,12 +78,12 @@ export function useUserManagement() {
         type: 'user_unsuspended'
       });
 
-      toast.success('User unsuspended');
+      toast.success(t('admin.userUnsuspended'));
       await loadUsers();
     } catch (error) {
-      toast.error('Failed to unsuspend user');
+      toast.error(t('admin.userUnsuspendFailed'));
     }
-  }, [loadUsers]);
+  }, [loadUsers, t]);
 
   const handleUnbanUser = useCallback(async (userId: string) => {
     try {
@@ -91,22 +94,22 @@ export function useUserManagement() {
         type: 'user_unbanned'
       });
 
-      toast.success('User unbanned');
+      toast.success(t('admin.userUnbanned'));
       await loadUsers();
     } catch (error) {
-      toast.error('Failed to unban user');
+      toast.error(t('admin.userUnbanFailed'));
     }
-  }, [loadUsers]);
+  }, [loadUsers, t]);
 
   const handleDeleteUser = useCallback(async (userId: string) => {
     try {
       await userService.deleteUserAccount(userId);
-      toast.success('User account deleted permanently');
+      toast.success(t('admin.userDeleted'));
       await loadUsers();
     } catch (error) {
-      toast.error('Failed to delete user account');
+      toast.error(t('admin.userDeleteFailed'));
     }
-  }, [loadUsers]);
+  }, [loadUsers, t]);
 
   // Filter and sort users
   const filteredUsers = useMemo(() => {

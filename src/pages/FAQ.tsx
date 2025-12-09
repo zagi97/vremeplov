@@ -173,7 +173,7 @@ const FAQ = () => {
               {t('faq.andWeWillHelp')}
             </p>
             <Link to="/contact">
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 {t('contact.title')}
               </Button>
             </Link>

@@ -388,7 +388,7 @@ if (loading) {
                                                         </div>
                                                     </div>
                                                     <Link to={`/photo/${item.photo.id}`}>
-                                                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                                                        <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                                                             <ExternalLink className="h-3 w-3 mr-1" />
                                                             {t('mapView.viewDetails')}
                                                         </Button>
@@ -495,7 +495,7 @@ if (loading) {
         </div>
         
         <Link to={`/photo/${photo.id}`} className="block mt-3">
-          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
             {t('mapView.viewDetails')}
           </Button>
         </Link>
@@ -507,10 +507,10 @@ if (loading) {
 {/* ✅ LOAD MORE BUTTON */}
 {displayedPhotosCount < filteredPhotos.length && (
   <div className="text-center mt-8">
-    <Button 
+    <Button
       onClick={handleLoadMore}
       disabled={loadingMore}
-      className="bg-blue-600 hover:bg-blue-700 px-8"
+      className="bg-blue-600 hover:bg-blue-700 text-white px-8"
     >
       {loadingMore ? (
         <>
