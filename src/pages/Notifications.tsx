@@ -62,8 +62,7 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
 
   // Get notification message
   const getNotificationMessage = (notification: Notification): string => {
-    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason } = notification;
-    const withReason = (msg: string) => reason ? `${msg}: ${reason}` : msg;
+    const { type, actorName, photoTitle, badgeName, taggedPersonName } = notification;
 
     switch (type) {
     case 'new_comment':
@@ -79,21 +78,21 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
     case 'photo_approved':
       return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.approved')}`;
     case 'photo_rejected':
-      return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}`);
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}: ${t('notifications.tagRejectedReason')}`;
     case 'photo_edited':
       return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}`;
     case 'photo_deleted':
-      return withReason(`${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}`);
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}`;
     case 'tag_approved':
       return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.approved')}`;
     case 'tag_rejected':
-      return withReason(`${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}`);
+      return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}: ${t('notifications.tagRejectedReason')}`;
     case 'comment_deleted':
-      return withReason(t('notifications.yourCommentDeleted'));
+      return t('notifications.yourCommentDeleted');
     case 'user_banned':
-      return withReason(t('notifications.accountBanned'));
+      return t('notifications.accountBanned');
     case 'user_suspended':
-      return withReason(t('notifications.accountSuspended'));
+      return t('notifications.accountSuspended');
     case 'user_unbanned':
       return t('notifications.accountActive');
     case 'user_unsuspended':

@@ -532,7 +532,7 @@ if (loading) {
                       onValueChange={(value) => setFilters(prev => ({ ...prev, photoType: value }))}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder={t('location.allTypes')} />
                       </SelectTrigger>
                       <SelectContent>
                         {PHOTO_TYPES.map(type => (
