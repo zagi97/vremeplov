@@ -66,7 +66,7 @@ const PhotoDetail = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('photoDetail.notFound')}</h2>
           <p className="text-gray-600 mb-4">{t('photoDetail.notFoundDesc')}</p>
           <Link to="/">
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               {t('photoDetail.returnHome')}
             </Button>
           </Link>

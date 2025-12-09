@@ -25,7 +25,7 @@ const NotFound = () => {
               Go Back
             </Button>
             <Link to="/">
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto flex items-center justify-center">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto flex items-center justify-center">
                 <Home className="mr-2 h-4 w-4" />
                 Return Home
               </Button>

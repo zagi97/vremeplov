@@ -446,7 +446,7 @@ if (loading) {
   ) : (
     <Button
       onClick={handleSignInToAddMemory}
-      className="w-full sm:w-auto border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
+      className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
     >
       <LogIn className="h-4 w-4 flex-shrink-0" />
       <span className="truncate">{t("location.signInToAdd")}</span>
@@ -650,10 +650,10 @@ if (loading) {
               
               {hasMore && (
                 <div className="mt-12 text-center">
-                  <Button 
+                  <Button
                     onClick={loadMorePhotos}
                     disabled={loadingMore}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     {loadingMore ? t('common.loading') : t('location.loadMoreMemories')}
                   </Button>
