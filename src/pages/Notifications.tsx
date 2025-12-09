@@ -161,10 +161,12 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
     
     try {
       await notificationService.markAllNotificationsAsRead(user.uid);
-      toast.success(t('notifications.allRead'))
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-      toast.error(t('notifications.markError'));
+      toast.success(t('notifications.allRead'));
+    } catch (error: any) {
+      console.error('❌ Error marking all as read:', error);
+      console.error('❌ Error message:', error?.message);
+      console.error('❌ Error code:', error?.code);
+      toast.error(`${t('notifications.markError')}: ${error?.message || 'Unknown error'}`);
     } finally {
       setMarkingAllRead(false);
       
