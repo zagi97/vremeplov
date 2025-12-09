@@ -43,7 +43,7 @@ export function usePhotoModeration() {
     try {
       const photo = await photoService.getPhotoById(photoId);
       if (!photo) {
-        toast.error('Photo not found');
+        toast.error(t('admin.photoNotFound'));
         return;
       }
 
@@ -55,7 +55,7 @@ export function usePhotoModeration() {
       // Firestore update (photoService.approvePhoto already handles notification)
       await photoService.approvePhoto(photoId, adminUid);
 
-      toast.success('Fotografija odobrena i statistike ažurirane! 🎉');
+      toast.success(t('admin.photoApprovedStats'));
 
       // Background sync
       loadPhotos();
@@ -71,7 +71,7 @@ export function usePhotoModeration() {
     try {
       const photo = await photoService.getPhotoById(photoId);
       if (!photo) {
-        toast.error('Photo not found');
+        toast.error(t('admin.photoNotFound'));
         return;
       }
 
@@ -105,7 +105,7 @@ export function usePhotoModeration() {
     try {
       const originalPhoto = await photoService.getPhotoById(photoId);
       if (!originalPhoto) {
-        toast.error('Photo not found');
+        toast.error(t('admin.photoNotFound'));
         return;
       }
 
@@ -151,7 +151,7 @@ export function usePhotoModeration() {
     try {
       const photo = await photoService.getPhotoById(photoId);
       if (!photo) {
-        toast.error('Photo not found');
+        toast.error(t('admin.photoNotFound'));
         return;
       }
 

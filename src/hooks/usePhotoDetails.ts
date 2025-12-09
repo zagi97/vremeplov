@@ -132,12 +132,12 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
           const isOwner = user?.uid === photoData.authorId;
 
           if (isOwner && !isAdmin) {
-            toast.info('Ovo je tvoja fotografija koja čeka odobrenje.', {
+            toast.info(t('photo.pendingApproval'), {
               duration: 5000,
               icon: '⏳'
             });
           } else if (isAdmin) {
-            toast.info('Admin pregled: Pending fotografija', {
+            toast.info(t('photo.adminPreview'), {
               duration: 3000,
               icon: '👑'
             });
@@ -220,7 +220,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
         if (isFirebaseError(error) &&
             (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions'))) {
-          toast.error('Nemate pristup ovoj fotografiji.', {
+          toast.error(t('photo.noAccess'), {
             duration: 4000,
             icon: '🔒'
           });

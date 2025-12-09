@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Not an admin, sign them out
           await authService.signOut();
           sessionStorage.removeItem('adminMode');
-          toast.error('Unauthorized: Admin access only');
+          toast.error(t('admin.unauthorizedAccess'));
           return { success: false, error: 'Not an admin user' };
         }
       } else {

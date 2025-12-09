@@ -36,7 +36,7 @@ export function useTagModeration() {
       const tag = currentPendingTags.find(t => t.id === tagId);
 
       if (!tag) {
-        toast.error('Tag not found');
+        toast.error(t('admin.tagNotFound'));
         return;
       }
 
@@ -74,7 +74,7 @@ export function useTagModeration() {
       const tag = currentPendingTags.find(t => t.id === tagId);
 
       if (!tag) {
-        toast.error('Tag not found');
+        toast.error(t('admin.tagNotFound'));
         return;
       }
 
