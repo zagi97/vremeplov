@@ -87,8 +87,7 @@ export function useTagModeration() {
           userId: tag.addedByUid,
           type: 'tag_rejected',
           photoId: tag.photoId,
-          taggedPersonName: tag.name,
-          reason: t('notifications.tagRejectedReason')
+          taggedPersonName: tag.name
         });
       }
 
