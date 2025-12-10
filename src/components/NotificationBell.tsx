@@ -149,15 +149,15 @@ const NotificationBell = ({ className = '' }: NotificationBellProps) => {
 
     {isOpen && (
   <>
-    {/* Backdrop */}
-    <div 
-      className="fixed inset-0 z-[9998]" 
+    {/* Backdrop - higher z-index to appear above Leaflet map */}
+    <div
+      className="fixed inset-0 z-[10000]"
       onClick={() => setIsOpen(false)}
     />
-    
-    {/* Notification panel */}
-    <div 
-      className="z-[9999]
+
+    {/* Notification panel - higher z-index to appear above Leaflet map */}
+    <div
+      className="z-[10001]
                  fixed sm:absolute
                  top-[60px] sm:top-full
                  right-4 sm:right-0

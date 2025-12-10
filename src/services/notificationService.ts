@@ -140,48 +140,50 @@ export const markNotificationAsRead = async (notificationId: string): Promise<vo
 };
 
 /**
- * Mark all notifications as read for a user - ULTIMATE FIX
+ * Mark all notifications as read for a user - FIXED VERSION
  */
 export const markAllNotificationsAsRead = async (userId: string): Promise<void> => {
   try {
     const notificationsRef = collection(db, 'notifications');
-    const q = query(
-      notificationsRef,
-      where('userId', '==', userId),
-      where('read', '==', false)
-    );
 
-    // ✅ FORCE SERVER FETCH - bypass cache
-    const snapshot = await getDocs(q);
+    let hasMore = true;
+    let totalUpdated = 0;
 
-    if (snapshot.empty) {
-      return;
-    }
+    // Loop to handle more than 100 notifications
+    while (hasMore) {
+      const q = query(
+        notificationsRef,
+        where('userId', '==', userId),
+        where('read', '==', false),
+        limit(100) // ✅ DODAJ LIMIT - security rules to zahtijevaju!
+      );
 
-    const batch = writeBatch(db);
-    let updateCount = 0;
+      const snapshot = await getDocs(q);
 
-    snapshot.docs.forEach(document => {
-      batch.update(document.ref, {
-        read: true,
-        readAt: serverTimestamp()
+      if (snapshot.empty) {
+        hasMore = false;
+        break;
+      }
+
+      const batch = writeBatch(db);
+
+      snapshot.docs.forEach(document => {
+        batch.update(document.ref, {
+          read: true,
+          readAt: serverTimestamp()
+        });
       });
-      updateCount++;
-    });
 
-    // ✅ WAIT for batch
-    await batch.commit();
+      await batch.commit();
+      totalUpdated += snapshot.size;
 
-    // ✅ CRITICAL FIX: Force a small delay to let Firestore propagate
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    // ✅ VERIFY with fresh fetch
-    const verifySnapshot = await getDocs(q);
-
-    if (verifySnapshot.size > 0) {
-      console.warn('⚠️ Warning:', verifySnapshot.size, 'notifications still unread!');
-      // Don't throw - batch uspješan, ali možda Firestore nije propagirao
+      // If we got less than 100, we're done
+      if (snapshot.size < 100) {
+        hasMore = false;
+      }
     }
+
+    console.log(`✅ Marked ${totalUpdated} notifications as read`);
 
   } catch (error) {
     console.error('❌ Error in markAllNotificationsAsRead:', error);
