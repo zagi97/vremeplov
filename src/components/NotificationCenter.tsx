@@ -89,17 +89,13 @@ const NotificationCenter = ({
   // ✅ Call parent's mark all handler
   const handleMarkAllAsRead = async () => {
     if (unreadCount === 0 || !onMarkAllRead || markingAllRead) return;
-    
+
     setMarkingAllRead(true);
-    
+
     try {
       await onMarkAllRead();
       toast.success(t('notifications.allRead'));
-      
-      setTimeout(() => {
-        onClose();
-      }, 1500);
-      
+      // ✅ Keep panel open - let user decide when to close
     } catch (error) {
       console.error('❌ Error:', error);
       toast.error(t('notifications.markError'));
