@@ -83,6 +83,18 @@ form input[type="text"]:focus {
   font-family: system-ui, -apple-system, sans-serif !important;
 }
 
+/* ✅ FIX: Leaflet z-index - prevent map from overlaying dropdowns */
+.leaflet-pane,
+.leaflet-control,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 400 !important;
+}
+
+.leaflet-container {
+  z-index: 1 !important;
+}
+
 /* Line clamp utility */
 .line-clamp-2 {
   display: -webkit-box;
