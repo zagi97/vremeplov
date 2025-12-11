@@ -716,10 +716,14 @@ export const enTranslations = {
   "community.localHistorianShort": "+10 photos",
   "community.heritageExplorerShort": "5+ locations",
   "community.communityFavoriteShort": "100+ likes",
+  "community.allTimeHighlights": "All-Time Highlights",
+  "community.thisYearsHighlights": "This Year's Highlights",
 } as const;
 
 export const hrTranslations = {
   "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
+  "community.allTimeHighlights": "Istaknuto svih vremena",
+  "community.thisYearsHighlights": "Istaknuto ova godina",
   "community.communityFavoriteShort": "100+ sviđanja",
   "community.heritageExplorerShort": "5+ lokacija",
   "community.localHistorianShort": "+10 fotografija",
