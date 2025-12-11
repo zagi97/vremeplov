@@ -160,3 +160,18 @@ export function parseLocationFromUrl(
     isSpecific: false,
   };
 }
+
+/**
+ * Gets the city type (Grad/Općina) for a given location name
+ *
+ * @param locationName - The location name to look up
+ * @param municipalityData - Municipality data containing records
+ * @returns The type ("Grad" or "Općina") or null if not found
+ */
+export function getCityType(
+  locationName: string,
+  municipalityData: { records: Array<[string | number, string, string, string]> }
+): string | null {
+  const record = municipalityData.records.find(record => record[3] === locationName);
+  return record ? (record[2] as string) : null;
+}

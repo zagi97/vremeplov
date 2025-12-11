@@ -18,6 +18,8 @@ import {
 } from "@/components/PhotoDetails";
 import LoadingScreen from "@/components/LoadingScreen";
 import { usePhotoDetails } from "@/hooks/usePhotoDetails";
+import { municipalityData } from "../../data/municipalities";
+import { getCityType } from "@/utils/locationUtils";
 
 const PhotoDetail = () => {
   const { t } = useLanguage();
@@ -139,7 +141,17 @@ const PhotoDetail = () => {
         {/* Related Photos Grid */}
         {relatedPhotos.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 text-center md:text-left">{t('photoDetail.morePhotosFrom')} {photo.location}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center md:text-left">
+              {(() => {
+                const cityType = getCityType(photo.location, municipalityData);
+                if (cityType === 'Grad') {
+                  return `${t('photoDetail.morePhotosFromCity')} ${photo.location}`;
+                } else if (cityType === 'Općina') {
+                  return `${t('photoDetail.morePhotosFromMunicipality')} ${photo.location}`;
+                }
+                return `${t('photoDetail.morePhotosFrom')} ${photo.location}`;
+              })()}
+            </h2>
             <PhotoGrid
               photos={relatedPhotos}
               currentPhotoId={photoId}

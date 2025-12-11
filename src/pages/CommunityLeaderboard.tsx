@@ -401,23 +401,35 @@ const CommunityLeaderboard = () => {
       <section className="py-6 sm:py-8 px-4">
         <div className="container max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1 sm:gap-1">
-              <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1 sm:gap-1 p-1 bg-gray-100">
+              <TabsTrigger
+                value="photos"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+              >
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostPhotos')}</span>
                 <span className="md:hidden truncate">{t('profile.photos')}</span>
               </TabsTrigger>
-              <TabsTrigger value="likes" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
+              <TabsTrigger
+                value="likes"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+              >
                 <Heart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostLiked')}</span>
                 <span className="md:hidden truncate">{t('community.likes')}</span>
               </TabsTrigger>
-              <TabsTrigger value="locations" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
+              <TabsTrigger
+                value="locations"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+              >
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostLocations')}</span>
                 <span className="md:hidden truncate">{t('community.places')}</span>
               </TabsTrigger>
-              <TabsTrigger value="recent" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
+              <TabsTrigger
+                value="recent"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+              >
                 <Star className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.newMembers')}</span>
                 <span className="md:hidden truncate">{t('community.new')}</span>

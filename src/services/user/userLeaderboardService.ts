@@ -118,7 +118,12 @@ class UserLeaderboardService {
         .slice(0, limitCount)
         .map((user, index) => ({ ...user, rank: index + 1 }));
 
-      const recentMembers = [...users]
+      // Filter recent members based on date filter for time period
+      const filteredRecentUsers = dateFilter
+        ? users.filter(user => new Date(user.joinDate).getTime() >= dateFilter.getTime())
+        : users;
+
+      const recentMembers = [...filteredRecentUsers]
         .sort((a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime())
         .slice(0, limitCount)
         .map((user, index) => ({ ...user, rank: index + 1 }));
