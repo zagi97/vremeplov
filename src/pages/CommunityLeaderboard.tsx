@@ -401,26 +401,26 @@ const CommunityLeaderboard = () => {
       <section className="py-6 sm:py-8 px-4">
         <div className="container max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1">
-              <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1 sm:gap-1">
+              <TabsTrigger value="photos" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('community.mostPhotos')}</span>
-                <span className="sm:hidden truncate">{t('profile.photos')}</span>
+                <span className="hidden md:inline">{t('community.mostPhotos')}</span>
+                <span className="md:hidden truncate">{t('profile.photos')}</span>
               </TabsTrigger>
-              <TabsTrigger value="likes" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+              <TabsTrigger value="likes" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
                 <Heart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('community.mostLiked')}</span>
-                <span className="sm:hidden truncate">{t('community.likes')}</span>
+                <span className="hidden md:inline">{t('community.mostLiked')}</span>
+                <span className="md:hidden truncate">{t('community.likes')}</span>
               </TabsTrigger>
-              <TabsTrigger value="locations" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+              <TabsTrigger value="locations" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('community.mostLocations')}</span>
-                <span className="sm:hidden truncate">{t('community.places')}</span>
+                <span className="hidden md:inline">{t('community.mostLocations')}</span>
+                <span className="md:hidden truncate">{t('community.places')}</span>
               </TabsTrigger>
-              <TabsTrigger value="recent" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4">
+              <TabsTrigger value="recent" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-1.5 sm:px-2 md:px-4 py-2">
                 <Star className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                <span className="hidden sm:inline">{t('community.newMembers')}</span>
-                <span className="sm:hidden truncate">{t('community.new')}</span>
+                <span className="hidden md:inline">{t('community.newMembers')}</span>
+                <span className="md:hidden truncate">{t('community.new')}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -562,12 +562,14 @@ const CommunityLeaderboard = () => {
                       </CardContent>
                     </Card>
 
-                    {/* This Month's Highlights */}
+                    {/* Highlights */}
                     <Card>
                       <CardHeader className="pb-3 sm:pb-6">
                         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                           <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
-                          {t('community.thisMonthsHighlights')}
+                          {timePeriod === 'all-time' && t('community.allTimeHighlights')}
+                          {timePeriod === 'this-year' && t('community.thisYearsHighlights')}
+                          {timePeriod === 'this-month' && t('community.thisMonthsHighlights')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4 sm:space-y-6">
@@ -627,25 +629,29 @@ const CommunityLeaderboard = () => {
                             <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <Camera className="h-2 w-2 text-white" />
                             </div>
-                            <span className="truncate">{t('community.photographer')}</span>
+                            <span className="hidden sm:inline truncate">{t('community.photographer')}</span>
+                            <span className="sm:hidden truncate">{t('community.photographerShort')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <Medal className="h-2 w-2 text-white" />
                             </div>
-                            <span className="truncate">{t('community.localHistorian')}</span>
+                            <span className="hidden sm:inline truncate">{t('community.localHistorian')}</span>
+                            <span className="sm:hidden truncate">{t('community.localHistorianShort')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <MapPin className="h-2 w-2 text-white" />
                             </div>
-                            <span className="truncate">{t('community.heritageExplorer')}</span>
+                            <span className="hidden sm:inline truncate">{t('community.heritageExplorer')}</span>
+                            <span className="sm:hidden truncate">{t('community.heritageExplorerShort')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
                               <Heart className="h-2 w-2 text-white" />
                             </div>
-                            <span className="truncate">{t('community.communityFavorite')}</span>
+                            <span className="hidden sm:inline truncate">{t('community.communityFavorite')}</span>
+                            <span className="sm:hidden truncate">{t('community.communityFavoriteShort')}</span>
                           </div>
                         </div>
                       </CardContent>
