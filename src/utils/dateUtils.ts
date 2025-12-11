@@ -80,7 +80,7 @@ export function formatTimeAgo(
  * Used for activity feeds and user profiles
  *
  * @param timestamp - Firebase Timestamp, Date, or string
- * @returns Formatted date string (e.g., "Jan 15, 14:30")
+ * @returns Formatted date string (e.g., "6. pro 2025, 22:52")
  */
 export function formatActivityDate(timestamp: TimestampValue): string {
   const date = toDate(timestamp);
@@ -89,6 +89,7 @@ export function formatActivityDate(timestamp: TimestampValue): string {
   return date.toLocaleDateString('hr-HR', {
     month: 'short',
     day: 'numeric',
+    year: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
   });

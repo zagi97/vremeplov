@@ -286,13 +286,13 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
 
       if (taggedPersons.length >= MAX_TAGS_PER_PHOTO) {
         canTag = false;
-        reason = `Maksimalno ${MAX_TAGS_PER_PHOTO} osoba po fotografiji`;
+        reason = translateWithParams(t, 'tag.maxPerPhotoReason', { limit: MAX_TAGS_PER_PHOTO });
       } else if (tagsInLastHour >= MAX_TAGS_PER_HOUR) {
         canTag = false;
-        reason = `Dostigao si satni limit (${MAX_TAGS_PER_HOUR} tagova/sat)`;
+        reason = translateWithParams(t, 'tag.hourlyLimitReason', { limit: MAX_TAGS_PER_HOUR });
       } else if (tagsInLastDay >= MAX_TAGS_PER_DAY) {
         canTag = false;
-        reason = `Dostigao si dnevni limit (${MAX_TAGS_PER_DAY} tagova/dan)`;
+        reason = translateWithParams(t, 'tag.dailyLimitReason', { limit: MAX_TAGS_PER_DAY });
       }
 
       setRateLimitInfo({ tagsInLastHour, tagsInLastDay, canTag, reason });

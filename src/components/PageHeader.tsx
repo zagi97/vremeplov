@@ -27,23 +27,23 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
           : "bg-gray-900 border-b border-gray-800"
       } text-white`}
     >
-      <div className="w-full max-w-6xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
+      <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
         {/* Left side */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0">
           {!isHomePage && (
             <Button
               variant="ghost"
               onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/10 p-2 transition-colors"
+              className="text-white hover:bg-white/10 p-1.5 sm:p-2 transition-colors flex-shrink-0"
               aria-label="Natrag"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           )}
           {showTitle && (
             <Link
               to="/"
-              className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate hover:text-gray-200 transition-colors"
+              className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate hover:text-gray-200 transition-colors"
             >
               {title || "Vremeplov.hr"}
             </Link>
@@ -51,15 +51,15 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
           {/* Map View link */}
           <Link
             to="/map"
-            className="flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium px-2 py-1 gap-1 rounded-md hover:bg-white/10"
+            className="flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium px-1.5 sm:px-2 py-1 gap-1 rounded-md hover:bg-white/10"
             aria-label={t("nav.memoryMapShort") || "Karta"}
           >
-            <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline text-xs md:text-sm">
+            <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden md:inline text-xs md:text-sm">
               {t("nav.memoryMapShort")}
             </span>
           </Link>
