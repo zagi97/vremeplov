@@ -401,7 +401,7 @@ const CommunityLeaderboard = () => {
       <section className="py-6 sm:py-8 px-4">
         <div className="container max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-6 sm:mb-8 gap-1 sm:gap-1 p-1 bg-gray-100">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-8 sm:mb-10 gap-1 sm:gap-1 p-1 bg-gray-100">
               <TabsTrigger
                 value="photos"
                 className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
