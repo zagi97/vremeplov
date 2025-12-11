@@ -139,7 +139,7 @@ const PhotoDetail = () => {
         {/* Related Photos Grid */}
         {relatedPhotos.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">{t('photoDetail.morePhotosFrom')} {photo.location}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center md:text-left">{t('photoDetail.morePhotosFrom')} {photo.location}</h2>
             <PhotoGrid
               photos={relatedPhotos}
               currentPhotoId={photoId}
