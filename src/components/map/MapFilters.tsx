@@ -32,7 +32,7 @@ export const MapFilters: React.FC<MapFiltersProps> = ({
   return (
     <div className="bg-white border-b border-gray-200 py-4">
       <div className="container max-w-6xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-center md:items-center">
           {/* Filter label and icon */}
           <div className="flex items-center gap-2 min-w-fit">
             <Filter className="h-5 w-5 text-gray-600" />
@@ -40,11 +40,11 @@ export const MapFilters: React.FC<MapFiltersProps> = ({
           </div>
 
           {/* Decade dropdown - custom styled */}
-          <div className="relative">
+          <div className="relative w-full md:w-auto">
             <select
               value={selectedDecade}
               onChange={(e) => onDecadeChange(e.target.value)}
-              className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px] cursor-pointer"
+              className="appearance-none px-4 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white w-full md:min-w-[200px] cursor-pointer"
             >
               <option value="all">{t('mapView.allDecades')}</option>
               {availableDecades.map(decade => (
@@ -67,11 +67,11 @@ export const MapFilters: React.FC<MapFiltersProps> = ({
             placeholder={t('mapView.searchByLocation')}
             value={searchLocation}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="flex-1 md:flex-initial md:max-w-xs"
+            className="w-full md:flex-initial md:max-w-xs"
           />
 
           {/* Photo count */}
-          <div className="text-sm text-gray-600 md:ml-auto whitespace-nowrap">
+          <div className="text-sm text-gray-600 md:ml-auto whitespace-nowrap text-center md:text-left w-full md:w-auto">
             {translateWithParams(t, 'mapView.showing', { filtered: filteredCount, total: totalCount })}
           </div>
         </div>

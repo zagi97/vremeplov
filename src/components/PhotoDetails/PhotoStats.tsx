@@ -142,16 +142,11 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
       {/* Hover instruction for tagged persons */}
       {taggedPersonsCount > 0 && (
         <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="text-sm text-blue-800 flex flex-col gap-1">
-            <p className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {t('photo.tag.tip.desktop')}
-            </p>
-            <p className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              {t('photo.tag.tip.mobile')}
-            </p>
-          </div>
+          <p className="text-sm text-blue-800 flex items-center gap-2">
+            <Users className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden md:inline">{t('photo.tag.tip.desktop')}</span>
+            <span className="md:hidden">{t('photo.tag.tip.mobile')}</span>
+          </p>
         </div>
       )}
 

@@ -37,7 +37,7 @@ import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
 import PageHeader from '@/components/PageHeader';
 import { formatActivityDate } from '../utils/dateUtils';
-import { UserProfileSkeleton } from '@/components/UserProfile/UserProfileSkeleton';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useUserProfileData } from '@/hooks/useUserProfileData';
 import { getActivityDisplay, getActivityLink, getBadgeDetails } from '@/utils/userProfileHelpers';
 import { ProfileStats } from '@/components/UserProfile/ProfileStats';
@@ -220,9 +220,8 @@ const UserProfilePage = () => {
     }
   };
 
- // Zamijeni postojeći loading return s ovim:
 if (loading) {
-  return <UserProfileSkeleton />;
+  return <LoadingScreen message={t('profile.loadingProfile')} />;
 }
 
   if (!profile) {
@@ -264,10 +263,18 @@ if (loading) {
                     )}
                     <div className="flex items-center justify-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>
-                        {t('profile.joined')} {profile.joinedAt?.toDate ? 
-                          profile.joinedAt.toDate().getFullYear() : 
-                          new Date().getFullYear()
+                      <span className="text-sm">
+                        {t('profile.joined')} {profile.joinedAt?.toDate ?
+                          profile.joinedAt.toDate().toLocaleDateString('hr-HR', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric'
+                          }) :
+                          new Date().toLocaleDateString('hr-HR', {
+                            day: 'numeric',
+                            month: 'numeric',
+                            year: 'numeric'
+                          })
                         }
                       </span>
                     </div>
@@ -419,7 +426,7 @@ if (loading) {
                   {userPhotos.length > 0 ? (
                     <>
                       <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold mb-2">{t('profile.collectionOverview')}</h3>
+                        <h3 className="font-semibold mb-2 text-center">{t('profile.collectionOverview')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div className="text-center">
                             <div className="text-lg font-bold text-blue-600">
