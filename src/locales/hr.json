@@ -228,6 +228,7 @@
   "location.beFirst": "Budite prvi koji će podijeliti povijesnu fotografiju ove lokacije!",
   "location.clearAllFilters": "Očisti sve filtre",
   "location.loadingMemories": "Učitavanje sjećanja...",
+  "location.loadingPhotos": "Učitavanje fotografija...",
   "location.loadMoreMemories": "Učitaj više sjećanja",
   "location.uploadSuccess": "Fotografija uspješno učitana! Pojavit će se nakon pregleda admina.",
   "photoType.allTypes": "Sve vrste",

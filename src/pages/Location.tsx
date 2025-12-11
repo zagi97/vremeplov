@@ -19,7 +19,7 @@ import { municipalityData } from '../../data/municipalities';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
 import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
-import { PageSkeleton } from '@/components/common/Skeletons';
+import LoadingScreen from '@/components/LoadingScreen';
 import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions, YearRange } from '@/constants/filters';
 import { usePhotoFilters, DEFAULT_FILTERS } from '@/hooks/usePhotoFilters';
 import { PhotoFilterState } from '@/utils/photoFilters';
@@ -36,18 +36,6 @@ const translateCityType = (type: string, t: any) => {
 };
 
 // Interface definicije - now using PhotoFilterState from utils
-
-// Location.tsx - Dodaj ovu komponentu prije Location komponente
-
-const LocationSkeleton = () => {
-  return (
-    <>
-      <PageHeader title="Vremeplov.hr" />
-      <PageSkeleton photoCount={9} />
-      <Footer />
-    </>
-  );
-};
 
 const Location = () => {
   const { t } = useLanguage();
@@ -249,9 +237,9 @@ useEffect(() => {
   }, [filteredPhotos]);
 
   // hasFilters is now hasFilters from usePhotoFilters hook
-  
+
 if (loading) {
-  return <LocationSkeleton />;
+  return <LoadingScreen message={t('location.loadingPhotos')} />;
 }
 
   return (

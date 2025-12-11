@@ -12,11 +12,11 @@ import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
 import LazyImage from "@/components/LazyImage";
 import {
-  PhotoDetailSkeleton,
   PhotoStats,
   PhotoMetadata,
   PhotoTagging
 } from "@/components/PhotoDetails";
+import LoadingScreen from "@/components/LoadingScreen";
 import { usePhotoDetails } from "@/hooks/usePhotoDetails";
 
 const PhotoDetail = () => {
@@ -56,7 +56,7 @@ const PhotoDetail = () => {
   };
 
   if (loading) {
-    return <PhotoDetailSkeleton />;
+    return <LoadingScreen message={t('photoDetail.loading')} />;
   }
 
   if (!photo) {

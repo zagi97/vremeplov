@@ -37,7 +37,7 @@ import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
 import PageHeader from '@/components/PageHeader';
 import { formatActivityDate } from '../utils/dateUtils';
-import { UserProfileSkeleton } from '@/components/UserProfile/UserProfileSkeleton';
+import LoadingScreen from '@/components/LoadingScreen';
 import { useUserProfileData } from '@/hooks/useUserProfileData';
 import { getActivityDisplay, getActivityLink, getBadgeDetails } from '@/utils/userProfileHelpers';
 import { ProfileStats } from '@/components/UserProfile/ProfileStats';
@@ -220,9 +220,8 @@ const UserProfilePage = () => {
     }
   };
 
- // Zamijeni postojeći loading return s ovim:
 if (loading) {
-  return <UserProfileSkeleton />;
+  return <LoadingScreen message={t('profile.loadingProfile')} />;
 }
 
   if (!profile) {

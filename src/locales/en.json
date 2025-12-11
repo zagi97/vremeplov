@@ -159,6 +159,7 @@
   "location.beFirst": "Be the first to share a historical photo of this location!",
   "location.clearAllFilters": "Clear all filters",
   "location.loadingMemories": "Loading memories...",
+  "location.loadingPhotos": "Loading photos...",
   "location.loadMoreMemories": "Load More Memories",
   "location.uploadSuccess": "Photo uploaded successfully! It will appear after admin review.",
   "photoType.allTypes": "All Types",
