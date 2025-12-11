@@ -41,6 +41,8 @@
   "photoDetail.historicalContext": "Historical Context",
   "photoDetail.relatedPhotos": "Related Photos",
   "photoDetail.morePhotosFrom": "More Photos from",
+  "photoDetail.morePhotosFromCity": "More Photos from the city of",
+  "photoDetail.morePhotosFromMunicipality": "More Photos from the municipality of",
   "photoDetail.views": "views",
   "photoDetail.likes": "likes",
   "photoDetail.likePhoto": "Like Photo",
