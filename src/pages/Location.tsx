@@ -456,7 +456,7 @@ if (loading) {
                   placeholder={t('location.searchPlaceholder')}
                   value={filters.searchText}
                   onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
-                  className="pl-10"
+                  className="pl-10 placeholder:text-xs sm:placeholder:text-sm"
                 />
               </div>
             </div>

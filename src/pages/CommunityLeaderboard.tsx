@@ -398,7 +398,7 @@ const CommunityLeaderboard = () => {
       </div>
 
       {/* Leaderboard Content */}
-      <section className="py-6 sm:py-8 px-4">
+      <section className="py-6 sm:py-8 px-4 pb-20">
         <div className="container max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-8 sm:mb-10 gap-1 sm:gap-1 p-1 bg-gray-100">

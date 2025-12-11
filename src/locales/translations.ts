@@ -709,11 +709,15 @@ export const enTranslations = {
   "photo.pendingOwnerMessage": "This is your photo awaiting approval.",
   "tag.maxPerPhotoReason": "Maximum {limit} people per photo",
   "tag.hourlyLimitReason": "You have reached the hourly limit ({limit} tags/hour)",
-  "tag.dailyLimitReason": "You have reached the daily limit ({limit} tags/day)"
+  "tag.dailyLimitReason": "You have reached the daily limit ({limit} tags/day)",
+  "photoDetail.morePhotosFromCity": "More Photos from the city of",
+  "photoDetail.morePhotosFromMunicipality": "More Photos from the municipality of",
 } as const;
 
 export const hrTranslations = {
   "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
+  "photoDetail.morePhotosFromCity": "Više fotografija iz grada",
+  "photoDetail.morePhotosFromMunicipality": "Više fotografija iz općine",
   "upload.locationSelected": "Lokacija odabrana!",
   "upload.addressHelp": "Ako ne znate točnu adresu, ostavite polje prazno. Fotografija će biti vidljiva u galeriji.",
   "notifications.markingRead": "Označavam...",
