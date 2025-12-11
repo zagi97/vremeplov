@@ -712,10 +712,18 @@ export const enTranslations = {
   "tag.dailyLimitReason": "You have reached the daily limit ({limit} tags/day)",
   "photoDetail.morePhotosFromCity": "More Photos from the city of",
   "photoDetail.morePhotosFromMunicipality": "More Photos from the municipality of",
+  "community.photographerShort": "First photo",
+  "community.localHistorianShort": "+10 photos",
+  "community.heritageExplorerShort": "5+ locations",
+  "community.communityFavoriteShort": "100+ likes",
 } as const;
 
 export const hrTranslations = {
   "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
+  "community.communityFavoriteShort": "100+ sviđanja",
+  "community.heritageExplorerShort": "5+ lokacija",
+  "community.localHistorianShort": "+10 fotografija",
+  "community.photographerShort": "Prva fotografija",
   "photoDetail.morePhotosFromCity": "Više fotografija iz grada",
   "photoDetail.morePhotosFromMunicipality": "Više fotografija iz općine",
   "upload.locationSelected": "Lokacija odabrana!",
