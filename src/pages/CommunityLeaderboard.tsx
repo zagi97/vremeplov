@@ -75,15 +75,34 @@ const CommunityLeaderboard = () => {
   const [activeTab, setActiveTab] = useState('photos');
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('this-month');
 
+  // Pagination state for each tab
+  const [visibleCounts, setVisibleCounts] = useState({
+    photos: 12,
+    likes: 12,
+    locations: 12,
+    recent: 12
+  });
+  const USERS_PER_PAGE = 12;
+
+  // Reset pagination when time period changes
+  useEffect(() => {
+    setVisibleCounts({
+      photos: 12,
+      likes: 12,
+      locations: 12,
+      recent: 12
+    });
+  }, [timePeriod]);
+
   useEffect(() => {
     let isCancelled = false;
-    
+
     const loadLeaderboard = async () => {
       try {
         if (!isCancelled) setLoading(true);
 
         // Load leaderboard data from Firebase
-        const leaderboard = await userService.getLeaderboard(timePeriod, 10);
+        const leaderboard = await userService.getLeaderboard(timePeriod, 50); // Load more for pagination
         
         // Load community stats for current time period
         const stats = await userService.getCommunityStats(timePeriod);
@@ -121,6 +140,13 @@ const CommunityLeaderboard = () => {
       isCancelled = true;
     };
   }, [timePeriod, t]);
+
+  const loadMoreUsers = (tab: 'photos' | 'likes' | 'locations' | 'recent') => {
+    setVisibleCounts(prev => ({
+      ...prev,
+      [tab]: prev[tab] + USERS_PER_PAGE
+    }));
+  };
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
@@ -456,9 +482,23 @@ const CommunityLeaderboard = () => {
                           ))}
                         </>
                       ) : leaderboardData.photos.length > 0 ? (
-                        leaderboardData.photos.map(user => (
-                          <LeaderboardCard key={user.uid} user={user} category="photos" />
-                        ))
+                        <>
+                          {leaderboardData.photos.slice(0, visibleCounts.photos).map(user => (
+                            <LeaderboardCard key={user.uid} user={user} category="photos" />
+                          ))}
+                          {leaderboardData.photos.length > visibleCounts.photos && (
+                            <div className="mt-4 text-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => loadMoreUsers('photos')}
+                                className="w-full sm:w-auto"
+                              >
+                                <TrendingUp className="h-4 w-4 mr-2" />
+                                {t('community.loadMore')}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <EmptyState
                           icon={Camera}
@@ -485,9 +525,23 @@ const CommunityLeaderboard = () => {
                           ))}
                         </>
                       ) : leaderboardData.likes.length > 0 ? (
-                        leaderboardData.likes.map(user => (
-                          <LeaderboardCard key={user.uid} user={user} category="likes" />
-                        ))
+                        <>
+                          {leaderboardData.likes.slice(0, visibleCounts.likes).map(user => (
+                            <LeaderboardCard key={user.uid} user={user} category="likes" />
+                          ))}
+                          {leaderboardData.likes.length > visibleCounts.likes && (
+                            <div className="mt-4 text-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => loadMoreUsers('likes')}
+                                className="w-full sm:w-auto"
+                              >
+                                <TrendingUp className="h-4 w-4 mr-2" />
+                                {t('community.loadMore')}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <EmptyState
                           icon={Heart}
@@ -514,9 +568,23 @@ const CommunityLeaderboard = () => {
                           ))}
                         </>
                       ) : leaderboardData.locations.length > 0 ? (
-                        leaderboardData.locations.map(user => (
-                          <LeaderboardCard key={user.uid} user={user} category="locations" />
-                        ))
+                        <>
+                          {leaderboardData.locations.slice(0, visibleCounts.locations).map(user => (
+                            <LeaderboardCard key={user.uid} user={user} category="locations" />
+                          ))}
+                          {leaderboardData.locations.length > visibleCounts.locations && (
+                            <div className="mt-4 text-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => loadMoreUsers('locations')}
+                                className="w-full sm:w-auto"
+                              >
+                                <TrendingUp className="h-4 w-4 mr-2" />
+                                {t('community.loadMore')}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <EmptyState
                           icon={MapPin}
@@ -543,9 +611,23 @@ const CommunityLeaderboard = () => {
                           ))}
                         </>
                       ) : leaderboardData.recent.length > 0 ? (
-                        leaderboardData.recent.map(user => (
-                          <LeaderboardCard key={user.uid} user={user} category="recent" />
-                        ))
+                        <>
+                          {leaderboardData.recent.slice(0, visibleCounts.recent).map(user => (
+                            <LeaderboardCard key={user.uid} user={user} category="recent" />
+                          ))}
+                          {leaderboardData.recent.length > visibleCounts.recent && (
+                            <div className="mt-4 text-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => loadMoreUsers('recent')}
+                                className="w-full sm:w-auto"
+                              >
+                                <TrendingUp className="h-4 w-4 mr-2" />
+                                {t('community.loadMore')}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <EmptyState
                           icon={Users}

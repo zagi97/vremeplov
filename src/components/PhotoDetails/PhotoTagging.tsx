@@ -41,6 +41,7 @@ interface PhotoTaggingProps {
   MAX_TAGS_PER_PHOTO: number;
   MAX_TAGS_PER_HOUR: number;
   MAX_TAGS_PER_DAY: number;
+  isPhotoPending?: boolean;
 }
 
 export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
@@ -56,7 +57,8 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
   onCheckRateLimit,
   MAX_TAGS_PER_PHOTO,
   MAX_TAGS_PER_HOUR,
-  MAX_TAGS_PER_DAY
+  MAX_TAGS_PER_DAY,
+  isPhotoPending = false
 }) => {
   const { t } = useLanguage();
   const [isTagging, setIsTagging] = useState(false);
@@ -118,7 +120,8 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
     setHasSelectedPosition(false);
   };
 
-  const canUserTag = user && (user.uid === photoAuthorId || authService.isAdmin(user));
+  // ✅ Block tagging on pending photos
+  const canUserTag = user && (user.uid === photoAuthorId || authService.isAdmin(user)) && !isPhotoPending;
 
   return (
     <>

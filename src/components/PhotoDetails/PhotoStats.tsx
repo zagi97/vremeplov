@@ -15,6 +15,7 @@ interface PhotoStatsProps {
   user: User | null;
   hasPendingTags: boolean;
   onLike: () => void;
+  isPhotoPending?: boolean;
 }
 
 export const PhotoStats: React.FC<PhotoStatsProps> = ({
@@ -25,7 +26,8 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
   likeLoading,
   user,
   hasPendingTags,
-  onLike
+  onLike,
+  isPhotoPending = false
 }) => {
   const { t } = useLanguage();
 
@@ -54,7 +56,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
           {user ? (
             <Button
               onClick={onLike}
-              disabled={likeLoading}
+              disabled={likeLoading || isPhotoPending}
               variant={userHasLiked ? "default" : "outline"}
               className={`flex items-center gap-2 ${
                 userHasLiked
@@ -75,6 +77,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
                 toast.info(t('photoDetail.signInMessage'));
               }}
               variant="outline"
+              disabled={isPhotoPending}
               className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
             >
               <Heart className="h-4 w-4" />
@@ -109,7 +112,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
           {user ? (
             <Button
               onClick={onLike}
-              disabled={likeLoading}
+              disabled={likeLoading || isPhotoPending}
               variant={userHasLiked ? "default" : "outline"}
               className={`w-full flex items-center justify-center gap-2 ${
                 userHasLiked
@@ -130,6 +133,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
                 toast.info(t('photoDetail.signInMessage'));
               }}
               variant="outline"
+              disabled={isPhotoPending}
               className="w-full flex items-center justify-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
             >
               <Heart className="h-4 w-4" />
