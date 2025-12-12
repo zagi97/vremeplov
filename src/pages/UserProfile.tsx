@@ -127,11 +127,11 @@ const UserProfilePage = () => {
       filtered = filtered.filter(photo => photo.year?.toString() === selectedYear);
     }
 
-    // Sort
+    // Sort by upload date (createdAt timestamp)
     filtered.sort((a, b) => {
-      const yearA = a.year || 0;
-      const yearB = b.year || 0;
-      return sortOrder === 'newest' ? yearB - yearA : yearA - yearB;
+      const timestampA = a.createdAt?.toMillis() || 0;
+      const timestampB = b.createdAt?.toMillis() || 0;
+      return sortOrder === 'newest' ? timestampB - timestampA : timestampA - timestampB;
     });
 
     return filtered;
@@ -810,7 +810,6 @@ if (loading) {
                         <EmptyState
                           icon={Star}
                           title={t('profile.emptyActivity')}
-                          description={t('profile.emptyActivityDesc')}
                         />
                       )}
                     </CardContent>

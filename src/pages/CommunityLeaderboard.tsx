@@ -463,7 +463,6 @@ const CommunityLeaderboard = () => {
                         <EmptyState
                           icon={Camera}
                           title={t('community.emptyPhotos')}
-                          description={t('community.emptyPhotosDesc')}
                         />
                       )}
                     </CardContent>
@@ -493,7 +492,6 @@ const CommunityLeaderboard = () => {
                         <EmptyState
                           icon={Heart}
                           title={t('community.emptyActivity')}
-                          description={t('community.emptyActivityDesc')}
                         />
                       )}
                     </CardContent>
@@ -523,7 +521,6 @@ const CommunityLeaderboard = () => {
                         <EmptyState
                           icon={MapPin}
                           title={t('community.emptyLocations')}
-                          description={t('community.emptyLocationsDesc')}
                         />
                       )}
                     </CardContent>
@@ -553,7 +550,6 @@ const CommunityLeaderboard = () => {
                         <EmptyState
                           icon={Users}
                           title={t('community.emptyMembers')}
-                          description={t('community.emptyMembersDesc')}
                         />
                       )}
                     </CardContent>
