@@ -152,8 +152,8 @@ useEffect(() => {
 
   const handleUploadSuccess = async () => {
   setShowAddForm(false);
-  toast.success(t('location.uploadSuccess'));
-  
+  // Removed toast - PhotoUpload already shows success message
+
   try {
     const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
     setAllPhotos(locationPhotos);
