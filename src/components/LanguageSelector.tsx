@@ -11,10 +11,53 @@ import { Globe, ChevronDown } from 'lucide-react';
 
 // Flag SVG Components
 const CroatiaFlag = () => (
-  <svg width="20" height="15" viewBox="0 0 21 15" xmlns="http://www.w3.org/2000/svg">
-    <rect width="21" height="5" fill="#FF0000"/>
-    <rect y="5" width="21" height="5" fill="#FFFFFF"/>
-    <rect y="10" width="21" height="5" fill="#0000FF"/>
+  <svg width="20" height="15" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg">
+    {/* Horizontal stripes */}
+    <rect width="900" height="200" fill="#FF0000"/>
+    <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+    <rect y="400" width="900" height="200" fill="#0000FF"/>
+
+    {/* Coat of arms - simplified checkerboard (šahovnica) */}
+    <g transform="translate(450, 300)">
+      {/* Shield background */}
+      <path d="M -60,-80 L -60,60 Q -60,80 0,100 Q 60,80 60,60 L 60,-80 Z" fill="#FFFFFF" stroke="#000" strokeWidth="3"/>
+
+      {/* Red and white checkerboard pattern */}
+      {/* Row 1 */}
+      <rect x="-50" y="-70" width="20" height="20" fill="#FF0000"/>
+      <rect x="-30" y="-70" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="-10" y="-70" width="20" height="20" fill="#FF0000"/>
+      <rect x="10" y="-70" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="30" y="-70" width="20" height="20" fill="#FF0000"/>
+
+      {/* Row 2 */}
+      <rect x="-50" y="-50" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="-30" y="-50" width="20" height="20" fill="#FF0000"/>
+      <rect x="-10" y="-50" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="10" y="-50" width="20" height="20" fill="#FF0000"/>
+      <rect x="30" y="-50" width="20" height="20" fill="#FFFFFF"/>
+
+      {/* Row 3 */}
+      <rect x="-50" y="-30" width="20" height="20" fill="#FF0000"/>
+      <rect x="-30" y="-30" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="-10" y="-30" width="20" height="20" fill="#FF0000"/>
+      <rect x="10" y="-30" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="30" y="-30" width="20" height="20" fill="#FF0000"/>
+
+      {/* Row 4 */}
+      <rect x="-50" y="-10" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="-30" y="-10" width="20" height="20" fill="#FF0000"/>
+      <rect x="-10" y="-10" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="10" y="-10" width="20" height="20" fill="#FF0000"/>
+      <rect x="30" y="-10" width="20" height="20" fill="#FFFFFF"/>
+
+      {/* Row 5 */}
+      <rect x="-50" y="10" width="20" height="20" fill="#FF0000"/>
+      <rect x="-30" y="10" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="-10" y="10" width="20" height="20" fill="#FF0000"/>
+      <rect x="10" y="10" width="20" height="20" fill="#FFFFFF"/>
+      <rect x="30" y="10" width="20" height="20" fill="#FF0000"/>
+    </g>
   </svg>
 );
 
