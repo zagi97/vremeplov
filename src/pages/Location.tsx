@@ -5,7 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin, Tag, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin, Tag, Calendar, Camera } from "lucide-react";
 import PhotoUpload from "../components/PhotoUpload";
 import { photoService, Photo } from "../services/firebaseService";
 import { toast } from 'sonner';
