@@ -23,6 +23,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions, YearRange } from '@/constants/filters';
 import { usePhotoFilters, DEFAULT_FILTERS } from '@/hooks/usePhotoFilters';
 import { PhotoFilterState } from '@/utils/photoFilters';
+import EmptyState from '@/components/EmptyState';
 
 const translateCityType = (type: string, t: any) => {
   switch (type.toLowerCase()) {
@@ -591,21 +592,15 @@ if (loading) {
       <section className="py-12 px-4 flex-1 bg-[#F8F9FA]">
         <div className="container max-w-6xl mx-auto">
           {filteredPhotos.length === 0 ? (
-            <div className="text-center py-12">
-              <Tag className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('location.noPhotosFound')}</h3>
-              <p className="text-gray-600 mb-4">
-                {hasFilters 
-                  ? t('location.tryAdjusting')
-                  : t('location.beFirst')
-                }
-              </p>
-              {hasFilters && (
-                <Button onClick={clearFilters} variant="outline">
-                  {t('location.clearAllFilters')}
-                </Button>
-              )}
-            </div>
+            <EmptyState
+              icon={Camera}
+              title={t('location.noPhotos')}
+              description={hasFilters ? t('location.tryAdjusting') : t('location.noPhotosDesc')}
+              action={hasFilters ? {
+                label: t('location.clearAllFilters'),
+                onClick: clearFilters
+              } : undefined}
+            />
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

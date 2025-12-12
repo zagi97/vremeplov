@@ -1,5 +1,5 @@
 // src/pages/UserProfile.tsx - KOMPLETNA verzija sa Load More za fotografije
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import {
   ArrowLeft,
   MapPin,
@@ -24,7 +25,8 @@ import {
   Star,
   Heart,
   Eye,
-  Users
+  Users,
+  Filter
 } from "lucide-react";
 import LazyImage from "../components/LazyImage";
 import { photoService } from "../services/firebaseService";
@@ -44,6 +46,7 @@ import { ProfileStats } from '@/components/UserProfile/ProfileStats';
 import { ProfileBadges } from '@/components/UserProfile/ProfileBadges';
 import { getAvatarColor, getUserInitials } from '@/utils/avatarUtils';
 import { cn } from '@/lib/utils';
+import EmptyState from '@/components/EmptyState';
 
 
 
@@ -66,6 +69,10 @@ const UserProfilePage = () => {
   const [photoLimit, setPhotoLimit] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
+
+  // Filter state for photos
+  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   // Use custom hook for profile data
   const {
@@ -101,6 +108,34 @@ const UserProfilePage = () => {
       });
     }
   }, [profile]);
+
+  // Get unique years from photos
+  const availableYears = useMemo(() => {
+    const years = userPhotos
+      .map(photo => photo.year)
+      .filter((year): year is number => year !== null && year !== undefined)
+      .sort((a, b) => b - a); // Newest first
+    return Array.from(new Set(years));
+  }, [userPhotos]);
+
+  // Filter and sort photos
+  const filteredAndSortedPhotos = useMemo(() => {
+    let filtered = [...userPhotos];
+
+    // Filter by year
+    if (selectedYear !== 'all') {
+      filtered = filtered.filter(photo => photo.year?.toString() === selectedYear);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      const yearA = a.year || 0;
+      const yearB = b.year || 0;
+      return sortOrder === 'newest' ? yearB - yearA : yearA - yearB;
+    });
+
+    return filtered;
+  }, [userPhotos, selectedYear, sortOrder]);
 
   const handleFollowToggle = async () => {
     if (!profile || !currentUser || isOwnProfile || followLoading) return;
@@ -425,6 +460,40 @@ if (loading) {
                 <TabsContent value="photos" className="mt-6">
                   {userPhotos.length > 0 ? (
                     <>
+                      {/* Filters */}
+                      <div className="mb-4 flex flex-wrap gap-3 items-center bg-gray-50 p-3 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-4 w-4 text-gray-600" />
+                          <span className="text-sm font-medium text-gray-700">{t('profile.filterByYear')}:</span>
+                        </div>
+                        <Select value={selectedYear} onValueChange={setSelectedYear}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder={t('profile.allYears')} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">{t('profile.allYears')}</SelectItem>
+                            {availableYears.map(year => (
+                              <SelectItem key={year} value={year.toString()}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2 ml-auto">
+                          <span className="text-sm font-medium text-gray-700">{t('profile.sortBy')}:</span>
+                        </div>
+                        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="newest">{t('profile.newestFirst')}</SelectItem>
+                            <SelectItem value="oldest">{t('profile.oldestFirst')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
                       <div className="mb-4 p-4 bg-gray-50 rounded-lg">
                         <h3 className="font-semibold mb-2 text-center">{t('profile.collectionOverview')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -457,7 +526,7 @@ if (loading) {
                       
                       {/* Photo Grid with LazyImage */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {userPhotos.map(photo => (
+                        {filteredAndSortedPhotos.map(photo => (
                           <Link 
                             key={photo.id} 
                             to={`/photo/${photo.id}`}
@@ -738,19 +807,11 @@ if (loading) {
                           )}
                         </>
                       ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Star className="h-8 w-8 text-gray-400" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {t('profile.noRecentActivity')}
-                          </h3>
-                          {isOwnProfile && (
-                            <p className="text-sm text-gray-500">
-                              {t('profile.startUploading')}
-                            </p>
-                          )}
-                        </div>
+                        <EmptyState
+                          icon={Star}
+                          title={t('profile.emptyActivity')}
+                          description={t('profile.emptyActivityDesc')}
+                        />
                       )}
                     </CardContent>
                   </Card>
