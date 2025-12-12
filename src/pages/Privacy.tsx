@@ -114,6 +114,25 @@ const Privacy = () => {
             </div>
           </div>
 
+          {/* ✅ NEW: Cookies Section */}
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <Shield className="h-8 w-8 text-purple-500" />
+              <h3 className="text-2xl font-bold">{t('privacy.cookiesTitle')}</h3>
+            </div>
+            <div className="space-y-4">
+              <p className="text-gray-700 leading-relaxed">{t('privacy.cookiesText')}</p>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                <li>{t('privacy.cookiesAnalytics')}</li>
+                <li>{t('privacy.cookiesAuth')}</li>
+                <li>{t('privacy.cookiesPreferences')}</li>
+              </ul>
+              <p className="text-sm text-gray-600 bg-purple-50 p-4 rounded-lg">
+                {t('privacy.cookiesControl')}
+              </p>
+            </div>
+          </div>
+
           {/* ✅ NEW: Data Retention Section */}
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
