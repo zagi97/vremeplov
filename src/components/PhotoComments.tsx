@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { User, MessageSquare, Send, LogIn, AlertTriangle } from "lucide-react";
+import { User, MessageSquare, Send, LogIn, AlertTriangle, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { CharacterCounter } from "./ui/character-counter";
@@ -35,15 +35,20 @@ interface PhotoCommentsProps {
   photoId: string;
   photoAuthor?: string;
   photoAuthorId?: string;
+  isPhotoPending?: boolean;
 }
 
-const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsProps) => {
+const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = false }: PhotoCommentsProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
+
+  // ✅ PAGINATION STATE
+  const [visibleCount, setVisibleCount] = useState(10);
+  const COMMENTS_PER_PAGE = 10;
 
   // ✅ RATE LIMITING - using centralized hook
   const [rateLimitState, refreshRateLimit] = useCommentRateLimit(user?.uid);
@@ -126,7 +131,13 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId }: PhotoCommentsPro
   // Combine Firestore data with client-side tracking
   const totalCommentsInLastMinute = Math.max(commentsInLastMinute, recentSubmissionsInLastMinute);
 
-  const canComment = !rateLimitState.isLimited && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE;
+  // ✅ Block commenting on pending photos
+  const canComment = !isPhotoPending && !rateLimitState.isLimited && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE;
+
+  // ✅ LOAD MORE FUNCTION
+  const loadMoreComments = () => {
+    setVisibleCount(prev => prev + COMMENTS_PER_PAGE);
+  };
 
   const handleSignInToComment = async () => {
     try {
@@ -252,8 +263,25 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
       
       {user ? (
         <div className="mb-6">
+          {/* ✅ PENDING PHOTO WARNING */}
+          {isPhotoPending && (
+            <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-yellow-800 mb-1">
+                    {t('photo.pendingCommentsTitle')}
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    {t('photo.pendingCommentsMessage')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* RATE LIMIT WARNING (naranđasti okvir) */}
-{!canComment && (
+{!canComment && !isPhotoPending && (
   <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
     <div className="flex items-start gap-3">
       <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
@@ -334,38 +362,54 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
             </p>
           </div>
         ) : (
-          comments.map((comment) => {
-            const isPhotoAuthor = photoAuthorId && comment.userId === photoAuthorId;
-            
-            return (
-              <div 
-                key={comment.id} 
-                className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-2 gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                      <span className="font-medium break-words">
-                        {comment.userName || 'Nepoznato'}
-                      </span>
+          <>
+            {comments.slice(0, visibleCount).map((comment) => {
+              const isPhotoAuthor = photoAuthorId && comment.userId === photoAuthorId;
+
+              return (
+                <div
+                  key={comment.id}
+                  className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                        <span className="font-medium break-words">
+                          {comment.userName || 'Nepoznato'}
+                        </span>
+                      </div>
+                      {isPhotoAuthor && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">
+                          {t('comments.author')}
+                        </span>
+                      )}
                     </div>
-                    {isPhotoAuthor && (
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">
-                        {t('comments.author')}
-                      </span>
-                    )}
+                    <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
+                      {comment.date}
+                    </span>
                   </div>
-                  <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
-                    {comment.date}
-                  </span>
+                  <p className="text-gray-700 break-words leading-relaxed">
+                    {comment.text}
+                  </p>
                 </div>
-                <p className="text-gray-700 break-words leading-relaxed">
-                  {comment.text}
-                </p>
+              );
+            })}
+
+            {/* ✅ LOAD MORE BUTTON */}
+            {comments.length > visibleCount && (
+              <div className="mt-6 text-center">
+                <Button
+                  variant="outline"
+                  onClick={loadMoreComments}
+                  className="w-full sm:w-auto"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  {t('community.loadMore')}
+                </Button>
               </div>
-            );
-          })
+            )}
+          </>
         )}
       </div>
     </div>

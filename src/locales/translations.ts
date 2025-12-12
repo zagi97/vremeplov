@@ -757,7 +757,11 @@ export const enTranslations = {
   "admin.userDeleteFailed": "Failed to delete user account",
   "photo.pendingApproval": "This is your photo awaiting approval.",
   "photo.adminPreview": "Admin preview: Pending photo",
-  "photo.noAccess": "You don't have access to this photo."
+  "photo.noAccess": "You don't have access to this photo.",
+  "photo.pendingTitle": "Photo Awaiting Approval",
+  "photo.pendingMessage": "This photo is pending admin approval. Interactions (comments, likes, tags) are disabled until the photo is approved.",
+  "photo.pendingCommentsTitle": "Comments Disabled",
+  "photo.pendingCommentsMessage": "You cannot comment on this photo until it is approved by an administrator."
 } as const;
 
 export const hrTranslations = {
@@ -1511,5 +1515,9 @@ export const hrTranslations = {
   "admin.userDeleteFailed": "Neuspjelo brisanje korisničkog računa",
   "photo.pendingApproval": "Ovo je tvoja fotografija koja čeka odobrenje.",
   "photo.adminPreview": "Admin pregled: Pending fotografija",
-  "photo.noAccess": "Nemate pristup ovoj fotografiji."
+  "photo.noAccess": "Nemate pristup ovoj fotografiji.",
+  "photo.pendingTitle": "Fotografija čeka odobrenje",
+  "photo.pendingMessage": "Ova fotografija čeka odobrenje administratora. Interakcije (komentari, lajkovi, tagovi) su onemogućene dok se fotografija ne odobri.",
+  "photo.pendingCommentsTitle": "Komentari onemogućeni",
+  "photo.pendingCommentsMessage": "Ne možete komentirati ovu fotografiju dok je administrator ne odobri."
 } as const;

@@ -79,12 +79,13 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update their unapproved photos
-      // - ANY authenticated user can update ONLY likes/views/updatedAt (for like/view functionality)
+      // - ANY authenticated user can update ONLY likes/views/updatedAt (for like/view functionality) BUT ONLY ON APPROVED PHOTOS
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
                      resource.data.isApproved == false) ||
                     (isAuthenticated() &&
+                     resource.data.isApproved == true &&
                      request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(['likes', 'views', 'updatedAt']));
 

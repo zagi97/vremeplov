@@ -81,12 +81,34 @@ const PhotoDetail = () => {
     tag => tag.isApproved === false && tag.addedByUid === user?.uid
   );
 
+  // ✅ Check if photo is pending approval
+  const isPhotoPending = photo.isApproved === false;
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
       <PageHeader title="Vremeplov.hr" />
 
       <div className="container max-w-5xl mx-auto px-4 py-12 mt-20">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          {/* ✅ PENDING PHOTO WARNING */}
+          {isPhotoPending && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 m-6">
+              <div className="flex items-start gap-3">
+                <svg className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="font-medium text-yellow-800 mb-1">
+                    {t('photo.pendingTitle')}
+                  </p>
+                  <p className="text-sm text-yellow-700">
+                    {t('photo.pendingMessage')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Photo Tagging Component */}
           <PhotoTagging
             photoId={photoId!}
@@ -102,6 +124,7 @@ const PhotoDetail = () => {
             MAX_TAGS_PER_PHOTO={MAX_TAGS_PER_PHOTO}
             MAX_TAGS_PER_HOUR={MAX_TAGS_PER_HOUR}
             MAX_TAGS_PER_DAY={MAX_TAGS_PER_DAY}
+            isPhotoPending={isPhotoPending}
           />
 
           {/* Photo Stats Component */}
@@ -114,6 +137,7 @@ const PhotoDetail = () => {
             user={user}
             hasPendingTags={hasPendingTags}
             onLike={handleLike}
+            isPhotoPending={isPhotoPending}
           />
 
           {/* Photo Metadata Component */}
@@ -134,6 +158,7 @@ const PhotoDetail = () => {
               photoId={photoId!}
               photoAuthor={photo.uploadedBy || photo.author}
               photoAuthorId={photo.authorId}
+              isPhotoPending={isPhotoPending}
             />
           </div>
         </div>
