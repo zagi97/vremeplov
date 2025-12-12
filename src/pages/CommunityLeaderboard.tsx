@@ -28,6 +28,7 @@ import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
 import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/EmptyState";
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -459,9 +460,11 @@ const CommunityLeaderboard = () => {
                           <LeaderboardCard key={user.uid} user={user} category="photos" />
                         ))
                       ) : (
-                        <div className="text-center py-8 text-gray-500 text-sm">
-                          {t('community.noDataForPeriod')}
-                        </div>
+                        <EmptyState
+                          icon={Camera}
+                          title={t('community.emptyPhotos')}
+                          description={t('community.emptyPhotosDesc')}
+                        />
                       )}
                     </CardContent>
                   </Card>
@@ -482,10 +485,16 @@ const CommunityLeaderboard = () => {
                             <LeaderboardSkeleton key={i} />
                           ))}
                         </>
-                      ) : (
+                      ) : leaderboardData.likes.length > 0 ? (
                         leaderboardData.likes.map(user => (
                           <LeaderboardCard key={user.uid} user={user} category="likes" />
                         ))
+                      ) : (
+                        <EmptyState
+                          icon={Heart}
+                          title={t('community.emptyActivity')}
+                          description={t('community.emptyActivityDesc')}
+                        />
                       )}
                     </CardContent>
                   </Card>
@@ -506,10 +515,16 @@ const CommunityLeaderboard = () => {
                             <LeaderboardSkeleton key={i} />
                           ))}
                         </>
-                      ) : (
+                      ) : leaderboardData.locations.length > 0 ? (
                         leaderboardData.locations.map(user => (
                           <LeaderboardCard key={user.uid} user={user} category="locations" />
                         ))
+                      ) : (
+                        <EmptyState
+                          icon={MapPin}
+                          title={t('community.emptyLocations')}
+                          description={t('community.emptyLocationsDesc')}
+                        />
                       )}
                     </CardContent>
                   </Card>
@@ -530,10 +545,16 @@ const CommunityLeaderboard = () => {
                             <LeaderboardSkeleton key={i} />
                           ))}
                         </>
-                      ) : (
+                      ) : leaderboardData.recent.length > 0 ? (
                         leaderboardData.recent.map(user => (
                           <LeaderboardCard key={user.uid} user={user} category="recent" />
                         ))
+                      ) : (
+                        <EmptyState
+                          icon={Users}
+                          title={t('community.emptyMembers')}
+                          description={t('community.emptyMembersDesc')}
+                        />
                       )}
                     </CardContent>
                   </Card>
