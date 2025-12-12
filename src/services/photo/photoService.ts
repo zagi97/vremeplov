@@ -91,11 +91,11 @@ export class PhotoService {
         throw new Error(`Nepodržan format slike: ${file.type}. Dozvoljeni: JPG, PNG, WebP`);
       }
 
-      // Validate file size (20MB)
-      const MAX_SIZE = 10 * 1024 * 1024; // Reduced from 20MB to 10MB for security
+      // Validate file size (20MB limit for historical photos)
+      const MAX_SIZE = 20 * 1024 * 1024;
       if (file.size > MAX_SIZE) {
         const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-        throw new Error(`Slika je prevelika (${sizeMB}MB). Maksimalna veličina je 10MB.`);
+        throw new Error(`Slika je prevelika (${sizeMB}MB). Maksimalna veličina je 20MB.`);
       }
 
       const timestamp = Date.now();
