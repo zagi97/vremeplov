@@ -6,6 +6,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { getBadgeDetails } from '@/utils/userProfileHelpers';
+import { Award } from 'lucide-react';
+import EmptyState from '../EmptyState';
 
 interface ProfileBadgesProps {
   badges: string[];
@@ -14,7 +16,20 @@ interface ProfileBadgesProps {
 
 export const ProfileBadges: React.FC<ProfileBadgesProps> = ({ badges, t }) => {
   if (!badges || badges.length === 0) {
-    return null;
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">{t('profile.achievements')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState
+            icon={Award}
+            title={t('profile.noBadges')}
+            description={t('profile.noBadgesDesc')}
+          />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
