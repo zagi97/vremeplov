@@ -595,7 +595,7 @@ if (loading) {
             <EmptyState
               icon={Camera}
               title={t('location.noPhotos')}
-              description={hasFilters ? t('location.tryAdjusting') : t('location.noPhotosDesc')}
+              description={hasFilters ? t('location.tryAdjusting') : undefined}
               action={hasFilters ? {
                 label: t('location.clearAllFilters'),
                 onClick: clearFilters
