@@ -12,7 +12,7 @@ export const IMAGE_COMPRESSION_CONFIG = {
   DEFAULT_QUALITY: 0.85,
   QUALITY_LARGE_FILE: 0.75, // For files > 5MB
   QUALITY_MEDIUM_FILE: 0.80, // For files 2-5MB
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB (updated for Firebase Rules)
+  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB limit for historical photos
   LARGE_FILE_THRESHOLD: 5 * 1024 * 1024, // 5MB
   MEDIUM_FILE_THRESHOLD: 2 * 1024 * 1024, // 2MB
   OUTPUT_FORMAT: 'image/webp' as const, // Always output WebP for best compression

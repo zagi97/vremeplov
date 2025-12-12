@@ -76,19 +76,12 @@ export const useFileUpload = (t: TranslationFunction): UseFileUploadReturn => {
         // Set compressed file
         setSelectedFile(compressedFile);
 
-        // Show compression result
+        // Log compression stats (removed toast to avoid redundancy with upload success toast)
         const stats = getCompressionStats(file, compressedFile);
-
         if (stats.wasCompressed) {
-          toast.success(
-            translateWithParams(t, 'upload.compressed', {
-              original: stats.originalSize,
-              compressed: stats.compressedSize,
-              reduction: stats.reductionPercent,
-            })
-          );
+          console.log(`📸 Image compressed: ${stats.originalSize}MB → ${stats.compressedSize}MB (${stats.reductionPercent}% reduction)`);
         } else {
-          toast.success(t('upload.optimalSize'));
+          console.log(`📸 Image is optimal size (${stats.originalSize}MB)`);
         }
       } catch (error) {
         console.error('Error during compression:', error);
