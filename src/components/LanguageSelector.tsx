@@ -13,6 +13,18 @@ import 'flag-icons/css/flag-icons.min.css';
 const LanguageSelector: React.FC = () => {
   const { language, setLanguage } = useLanguage();
 
+  // Language names based on current language
+  const languageNames = {
+    hr: {
+      hr: 'Hrvatski',
+      en: 'Engleski'
+    },
+    en: {
+      hr: 'Croatian',
+      en: 'English'
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,14 +47,14 @@ const LanguageSelector: React.FC = () => {
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="fi fi-hr"></span>
-          <span>Hrvatski</span>
+          <span>{languageNames[language as 'hr' | 'en'].hr}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setLanguage('en')}
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="fi fi-gb"></span>
-          <span>English</span>
+          <span>{languageNames[language as 'hr' | 'en'].en}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
