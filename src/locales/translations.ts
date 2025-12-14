@@ -776,7 +776,7 @@ export const enTranslations = {
 export const hrTranslations = {
   "theme.light": "Svijetli",
   "theme.dark": "Tamni",
-  "theme.system": "Automatski"
+  "theme.system": "Automatski",
   "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
   "community.allTimeHighlights": "Najbolje svih vremena",
   "community.thisYearsHighlights": "Istaknuto ove godine",
