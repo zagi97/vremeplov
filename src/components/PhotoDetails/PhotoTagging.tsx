@@ -176,14 +176,22 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                   <div
                     onMouseEnter={() => setHoveredTag(person.id)}
                     onMouseLeave={() => setHoveredTag(null)}
-                    className={`pointer-events-auto absolute w-6 h-6 ${tagStyle.bgColor} backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg`}
+                    className={`pointer-events-auto absolute w-6 h-6 ${tagStyle.bgColor} backdrop-blur-sm rounded-full cursor-pointer hover:scale-110 transition-all duration-200 flex items-center justify-center shadow-lg -ml-3 -mt-3`}
+                    style={{ left: `${person.x}%`, top: `${person.y}%` }}
                   >
                     {tagStyle.icon}
                   </div>
 
                   {/* Name tooltip on hover */}
                   {hoveredTag === person.id && (
-                    <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in">
+                    <div
+                      className="absolute bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in"
+                      style={{
+                        left: `${person.x}%`,
+                        top: `calc(${person.y}% + 2rem)`,
+                        transform: 'translateX(-50%)'
+                      }}
+                    >
                       <div className="font-medium">{person.name}</div>
                       {isPending && (
                         <div className="text-xs text-orange-600 mt-1">
