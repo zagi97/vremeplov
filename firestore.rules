@@ -41,13 +41,10 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update own profile (except protected fields)
-      // - Any authenticated user can update ONLY stats/badges/lastActive (for photo approval, likes, etc.)
+      // 🔒 SECURITY FIX: Stats update samo za vlastiti profil
       allow update: if isAdmin() ||
                     (isOwner(userId) &&
-                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid'])) ||
-                    (isAuthenticated() &&
-                     request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['stats', 'badges', 'lastActive', 'updatedAt']));
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
@@ -79,15 +76,12 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update their unapproved photos
-      // - ANY authenticated user can update ONLY likes/views/updatedAt (for like/view functionality) BUT ONLY ON APPROVED PHOTOS
+      // 🔒 SECURITY FIX: Uklonjena mogućnost direktnog like/view updatea
+      // Likes/views trebaju biti updatirani kroz Cloud Functions (atomične operacije)
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
-                     resource.data.isApproved == false) ||
-                    (isAuthenticated() &&
-                     resource.data.isApproved == true &&
-                     request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['likes', 'views', 'updatedAt']));
+                     resource.data.isApproved == false);
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
@@ -193,7 +187,9 @@ service cloud.firestore {
         isAdmin()
       );
 
-      allow create: if isAuthenticated();
+      // 🔒 SECURITY FIX: Korisnik može kreirati samo svoje aktivnosti
+      allow create: if isAuthenticated() &&
+                    isOwner(request.resource.data.userId);
 
       allow update: if isAuthenticated() && (
         isOwner(resource.data.userId) || isAdmin()
@@ -209,19 +205,13 @@ service cloud.firestore {
     // ============================================
     match /userLikes/{likeId} {
 
-      // ✅ GET, LIST: Bilo koji ulogirani korisnik može DOHVATITI BILO KOJI DOKUMENT
-      // ako je dokument vezan za njega, ILI ako ga samo želi dohvatiti po ID-u (za provjeru).
-      // Ako dokument sadrži photoId, trebate ga provjeriti ovdje.
-      allow get, list: if isAuthenticated() && (
-        isOwner(resource.data.userId) || // Opcionalno, ali korisno
-        isAdmin() ||
-        true // GLAVNA PROMJENA: Dopustite čitanje ulogiranim korisnicima
-      ) && request.query.limit <= 100; // Ograničenje za list upite
-
-      // BITNA NAPOMENA ZA SIGURNOST: Ako dokument lajka sadrži osjetljive podatke
-      // ONDA NE KORISTITE 'true'. U tom slučaju, aplikacija mora znati ID dokumenta lajka
-      // i pokušati ga obrisati/kreirati bez čitanja.
-      // **Za potrebe lajkanja, dokument lajka obično nije osjetljiv.**
+      // ✅ GET, LIST: Samo vlasnik ili admin mogu čitati lajkove
+      // 🔒 SECURITY FIX: Uklonjen 'true' - sprječava privacy leak
+      allow get, list: if isAuthenticated() &&
+                       request.query.limit <= 100 && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
 
       // KREIRANJE (LAJKANJE)
       allow create: if isAuthenticated() &&
@@ -269,7 +259,12 @@ service cloud.firestore {
         isOwner(resource.data.userId)
       );
 
-      allow create: if isAuthenticated();
+      // 🔒 SECURITY FIX: Notifikacije mogu kreirati samo admini ili Cloud Functions
+      // Client-side može kreirati notifikacije samo sa validnim tipovima
+      allow create: if isAdmin() ||
+                    (isAuthenticated() &&
+                     request.resource.data.keys().hasAll(['userId', 'type', 'createdAt']) &&
+                     request.resource.data.type in ['like', 'comment', 'follow', 'tag', 'photo_approved', 'photo_rejected']);
 
       allow update: if isAuthenticated() &&
                     isOwner(resource.data.userId);

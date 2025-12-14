@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 import UserProfile from "@/components/UserProfile";
 import LanguageSelector from "@/components/LanguageSelector";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface PageHeaderProps {
@@ -64,6 +65,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
             </span>
           </Link>
 
+          <ThemeToggle />
           <LanguageSelector />
           <NotificationBell className="text-white hover:text-white" />
           <UserProfile className="text-white" />
