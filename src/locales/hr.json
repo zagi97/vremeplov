@@ -698,9 +698,9 @@
   "notifications.newNotifications": ": broj novih obavijesti",
   "photo.historicalDetails": "Povijesni detalji i informacije",
 
-  "tags.onPhoto": "Na slici",
-  "tags.hourly": "Satno",
-  "tags.daily": "Dnevno",
+  "tags.onPhoto": "Na slici: {count}/{max}",
+  "tags.hourly": "Satno: {count}/{max}",
+  "tags.daily": "Dnevno: {count}/{max}",
 
   "comments.perMinute": "Minutno",
   "comments.perHour": "Satno",
