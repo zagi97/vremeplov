@@ -763,5 +763,8 @@
   "admin.userDeleteFailed": "Neuspjelo brisanje korisničkog računa",
   "photo.pendingApproval": "Ovo je tvoja fotografija koja čeka odobrenje.",
   "photo.adminPreview": "Admin pregled: Pending fotografija",
-  "photo.noAccess": "Nemate pristup ovoj fotografiji."
+  "photo.noAccess": "Nemate pristup ovoj fotografiji.",
+  "theme.light": "Svijetli",
+  "theme.dark": "Tamni",
+  "theme.system": "Automatski"
 }
