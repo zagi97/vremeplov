@@ -767,10 +767,16 @@ export const enTranslations = {
   "photo.pendingTitle": "Photo Awaiting Approval",
   "photo.pendingMessage": "This photo is pending admin approval. Interactions (comments, likes, tags) are disabled until the photo is approved.",
   "photo.pendingCommentsTitle": "Comments Disabled",
-  "photo.pendingCommentsMessage": "You cannot comment on this photo until it is approved by an administrator."
+  "photo.pendingCommentsMessage": "You cannot comment on this photo until it is approved by an administrator.",
+  "theme.light": "Light",
+  "theme.dark": "Dark",
+  "theme.system": "System"
 } as const;
 
 export const hrTranslations = {
+  "theme.light": "Svijetli",
+  "theme.dark": "Tamni",
+  "theme.system": "Automatski"
   "upload.markerOutsideBounds": "Marker mora biti unutar odabranog mjesta! Odaberite lokaciju bliže centru (unutar crvenog kruga).",
   "community.allTimeHighlights": "Najbolje svih vremena",
   "community.thisYearsHighlights": "Istaknuto ove godine",
