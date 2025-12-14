@@ -690,9 +690,9 @@ export const enTranslations = {
   "notifications.tagRejectedReason": "The tag was rejected because it does not meet the quality criteria.",
   "photo.historicalDetails": "Historical details and information",
 
-  "tags.onPhoto": "On photo",
-  "tags.hourly": "Hourly",
-  "tags.daily": "Daily",
+  "tags.onPhoto": "On photo: {count}/{max}",
+  "tags.hourly": "Hourly: {count}/{max}",
+  "tags.daily": "Daily: {count}/{max}",
 
   "comments.perMinute": "Per minute",
   "comments.perHour": "Hourly",
@@ -1462,9 +1462,9 @@ export const hrTranslations = {
   "notifications.newNotifications": ": broj novih obavijesti",
   "photo.historicalDetails": "Povijesni detalji i informacije",
 
-  "tags.onPhoto": "Na slici",
-  "tags.hourly": "Satno",
-  "tags.daily": "Dnevno",
+  "tags.onPhoto": "Na slici: {count}/{max}",
+  "tags.hourly": "Satno: {count}/{max}",
+  "tags.daily": "Dnevno: {count}/{max}",
 
   "comments.perMinute": "Minutno",
   "comments.perHour": "Satno",

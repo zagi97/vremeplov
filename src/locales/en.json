@@ -705,9 +705,9 @@
   "notifications.tagRejectedReason": "The tag was rejected because it does not meet the quality criteria.",
   "photo.historicalDetails": "Historical details and information",
 
-  "tags.onPhoto": "On photo",
-  "tags.hourly": "Hourly",
-  "tags.daily": "Daily",
+  "tags.onPhoto": "On photo: {count}/{max}",
+  "tags.hourly": "Hourly: {count}/{max}",
+  "tags.daily": "Daily: {count}/{max}",
 
   "comments.perMinute": "Per minute",
   "comments.perHour": "Hourly",
