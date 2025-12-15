@@ -63,10 +63,10 @@ const PhotoDetail = () => {
 
   if (!photo) {
     return (
-      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('photoDetail.notFound')}</h2>
-          <p className="text-gray-600 mb-4">{t('photoDetail.notFoundDesc')}</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('photoDetail.notFound')}</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{t('photoDetail.notFoundDesc')}</p>
           <Link to="/">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               {t('photoDetail.returnHome')}
@@ -85,11 +85,11 @@ const PhotoDetail = () => {
   const isPhotoPending = photo.isApproved === false;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
       <PageHeader title="Vremeplov.hr" />
 
       <div className="container max-w-5xl mx-auto px-4 py-12 mt-20">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
           {/* ✅ PENDING PHOTO WARNING */}
           {isPhotoPending && (
             <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 m-6">
@@ -166,7 +166,7 @@ const PhotoDetail = () => {
         {/* Related Photos Grid */}
         {relatedPhotos.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6 text-center md:text-left">
+            <h2 className="text-2xl font-bold mb-6 text-center md:text-left text-gray-900 dark:text-gray-100">
               {(() => {
                 const cityType = getCityType(photo.location, municipalityData);
                 if (cityType === 'Grad') {
