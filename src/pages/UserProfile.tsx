@@ -264,17 +264,17 @@ if (loading) {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
       {/* Header */}
       <PageHeader title="Vremeplov.hr" />
 
       {/* Profile Section */}
-<section className="pt-20 sm:pt-24 pb-8 px-4 bg-white flex-1">
+<section className="pt-20 sm:pt-24 pb-8 px-4 bg-white dark:bg-gray-900 flex-1">
   <div className="container max-w-6xl mx-auto">
     <div className="flex flex-col lg:flex-row gap-8">
       {/* Profile Info */}
       <div className="lg:w-1/3">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-6 text-center">
             <Avatar className="w-24 h-24 mx-auto mb-4">
                     <AvatarImage src={profile.photoURL} alt={profile.displayName} />
@@ -282,14 +282,14 @@ if (loading) {
                       {getUserInitials(profile.displayName, null)}
                     </AvatarFallback>
                   </Avatar>
-                  
-                  <h2 className="text-2xl font-bold mb-2">{profile.displayName}</h2>
-                  
+
+                  <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{profile.displayName}</h2>
+
                   {profile.bio && (
-                    <p className="text-gray-600 mb-4">{profile.bio}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4">{profile.bio}</p>
                   )}
-                  
-                  <div className="space-y-2 text-sm text-gray-500 mb-4">
+
+                  <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
                     {profile.location && (
                       <div className="flex items-center justify-center gap-1">
                         <MapPin className="h-4 w-4" />
@@ -324,37 +324,40 @@ if (loading) {
         {t('profile.editProfile')}
       </Button>
     </DialogTrigger>
-    <DialogContent className="sm:max-w-[425px]">
+    <DialogContent className="sm:max-w-[425px] dark:bg-gray-800 dark:border-gray-700">
       <DialogHeader>
-        <DialogTitle>{t('profile.editProfile')}</DialogTitle>
-        <DialogDescription>
+        <DialogTitle className="dark:text-white">{t('profile.editProfile')}</DialogTitle>
+        <DialogDescription className="dark:text-gray-300">
           {t('profile.editProfileDescription')}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
         <div>
-          <label className="text-sm font-medium">{t('profile.displayName')}</label>
+          <label className="text-sm font-medium dark:text-gray-200">{t('profile.displayName')}</label>
           <Input
             value={editForm.displayName}
             onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
             placeholder={t('profile.displayNamePlaceholder')}
+            className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
           />
         </div>
         <div>
-          <label className="text-sm font-medium">{t('profile.bio')}</label>
+          <label className="text-sm font-medium dark:text-gray-200">{t('profile.bio')}</label>
           <Textarea
             value={editForm.bio}
             onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
             placeholder={t('profile.tellAboutYourself')}
             rows={3}
+            className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
           />
         </div>
         <div>
-          <label className="text-sm font-medium">{t('profile.locations')}</label>
+          <label className="text-sm font-medium dark:text-gray-200">{t('profile.locations')}</label>
           <Input
             value={editForm.location}
             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
             placeholder={t('profile.yourLocation')}
+            className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
           />
         </div>
         <div className="flex gap-2 pt-4">
@@ -396,9 +399,9 @@ if (loading) {
 
               {/* Badges */}
               {profile.badges.length > 0 && (
-                <Card className="mt-6">
+                <Card className="mt-6 dark:bg-gray-800 dark:border-gray-700">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 dark:text-white">
                       <Award className="h-5 w-5" />
                       {t('profile.achievements')} ({profile.badges.length})
                     </CardTitle>
@@ -413,7 +416,7 @@ if (loading) {
                             <div className={`w-12 h-12 rounded-full ${badge.color} flex items-center justify-center mx-auto mb-2 transition-transform hover:scale-110`}>
                               <IconComponent className="h-6 w-6 text-white" />
                             </div>
-                            <div className="text-xs font-medium">{badge.name}</div>
+                            <div className="text-xs font-medium dark:text-gray-200">{badge.name}</div>
                           </div>
                         );
                       })}
@@ -426,7 +429,7 @@ if (loading) {
             {/* Content Tabs */}
             <div className="lg:w-2/3">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3 gap-1">
+                <TabsList className="grid w-full grid-cols-3 gap-1 dark:bg-gray-800">
                   <TabsTrigger 
                     value="photos" 
                     title={t('profile.photos')}
@@ -461,19 +464,19 @@ if (loading) {
                   {userPhotos.length > 0 ? (
                     <>
                       {/* Filters */}
-                      <div className="mb-4 flex flex-wrap gap-3 items-center bg-gray-50 p-3 rounded-lg">
+                      <div className="mb-4 flex flex-wrap gap-3 items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <Filter className="h-4 w-4 text-gray-600" />
-                          <span className="text-sm font-medium text-gray-700">{t('profile.filterByYear')}:</span>
+                          <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.filterByYear')}:</span>
                         </div>
                         <Select value={selectedYear} onValueChange={setSelectedYear}>
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
                             <SelectValue placeholder={t('profile.allYears')} />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">{t('profile.allYears')}</SelectItem>
+                          <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                            <SelectItem value="all" className="dark:text-gray-200">{t('profile.allYears')}</SelectItem>
                             {availableYears.map(year => (
-                              <SelectItem key={year} value={year.toString()}>
+                              <SelectItem key={year} value={year.toString()} className="dark:text-gray-200">
                                 {year}
                               </SelectItem>
                             ))}
@@ -481,45 +484,45 @@ if (loading) {
                         </Select>
 
                         <div className="flex items-center gap-2 ml-auto">
-                          <span className="text-sm font-medium text-gray-700">{t('profile.sortBy')}:</span>
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.sortBy')}:</span>
                         </div>
                         <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
-                          <SelectTrigger className="w-[180px]">
+                          <SelectTrigger className="w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="newest">{t('profile.newestFirst')}</SelectItem>
-                            <SelectItem value="oldest">{t('profile.oldestFirst')}</SelectItem>
+                          <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                            <SelectItem value="newest" className="dark:text-gray-200">{t('profile.newestFirst')}</SelectItem>
+                            <SelectItem value="oldest" className="dark:text-gray-200">{t('profile.oldestFirst')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                        <h3 className="font-semibold mb-2 text-center">{t('profile.collectionOverview')}</h3>
+                      <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <h3 className="font-semibold mb-2 text-center dark:text-white">{t('profile.collectionOverview')}</h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div className="text-center">
-                            <div className="text-lg font-bold text-blue-600">
+                            <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                               {profile.stats.totalPhotos}
                             </div>
-                            <div className="text-gray-500">{t('profile.totalPhotos')}</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('profile.totalPhotos')}</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-bold text-green-600">
+                            <div className="text-lg font-bold text-green-600 dark:text-green-400">
                               {profile.stats.locationsContributed}
                             </div>
-                            <div className="text-gray-500">{t('profile.locations')}</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('profile.locations')}</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-bold text-red-600">
+                            <div className="text-lg font-bold text-red-600 dark:text-red-400">
                               {profile.stats.totalLikes}
                             </div>
-                            <div className="text-gray-500">{t('profile.totalLikes')}</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('profile.totalLikes')}</div>
                           </div>
                           <div className="text-center">
-                            <div className="text-lg font-bold text-purple-600">
+                            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                               {profile.stats.totalViews}
                             </div>
-                            <div className="text-gray-500">{t('profile.totalViews')}</div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('profile.totalViews')}</div>
                           </div>
                         </div>
                       </div>
@@ -527,13 +530,13 @@ if (loading) {
                       {/* Photo Grid with LazyImage */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filteredAndSortedPhotos.map(photo => (
-                          <Link 
-                            key={photo.id} 
+                          <Link
+                            key={photo.id}
                             to={`/photo/${photo.id}`}
                             className="group block"
                           >
-                            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full">
-                              <div className="aspect-[4/3] overflow-hidden bg-gray-100 relative">
+                            <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full dark:bg-gray-800 dark:border-gray-700">
+                              <div className="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700 relative">
                                 <LazyImage
                                   src={photo.imageUrl}
                                   alt={photo.description}

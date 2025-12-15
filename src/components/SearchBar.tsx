@@ -112,7 +112,7 @@ const SearchBar = () => {
               ref={inputRef}
               type="text"
               placeholder={t('search.placeholder')}
-              className="search-input pr-10 rounded-r-none h-10 md:h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
+              className="search-input pr-10 rounded-r-none h-10 md:h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-r-0 focus-visible:ring-offset-0 shadow-sm dark:border-gray-600"
               value={searchQuery}
               onChange={(e) => {
                 handleInputChange(e.target.value);
@@ -122,17 +122,13 @@ const SearchBar = () => {
                   setOpen(true);
                 }
               }}
-              style={{
-                backgroundColor: '#ffffff',
-                color: '#1f2937'
-              }}
               aria-label={t('search.placeholder')}
               aria-controls="location-listbox"
             />
           </div>
         </PopoverTrigger>
-        <PopoverContent 
-          className="p-0 w-[300px] md:w-[400px]" 
+        <PopoverContent
+          className="p-0 w-[300px] md:w-[400px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
           align="start"
           onOpenAutoFocus={(e: { preventDefault: () => any; }) => e.preventDefault()}
           onEscapeKeyDown={(e: { preventDefault: () => void; }) => {
@@ -152,16 +148,16 @@ const SearchBar = () => {
           <Command shouldFilter={false}>
             <CommandList id="location-listbox" role="listbox">
               {loading ? (
-                <CommandEmpty>{t('common.loading')}</CommandEmpty>
+                <CommandEmpty className="text-gray-600 dark:text-gray-300">{t('common.loading')}</CommandEmpty>
               ) : (
                 <>
-                  <CommandEmpty>{t('search.noLocations')}</CommandEmpty>
+                  <CommandEmpty className="text-gray-600 dark:text-gray-300">{t('search.noLocations')}</CommandEmpty>
                   <CommandGroup>
                     {filteredLocations.map((location) => (
                       <CommandItem
                         key={`${location.id}-${location.name}`}
                         onSelect={() => selectLocation(location)}
-                        className="cursor-pointer text-gray-900 hover:bg-gray-100"
+                        className="cursor-pointer text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onMouseDown={(e: { preventDefault: () => any; }) => e.preventDefault()}
                         role="option"
                         aria-selected={selectedLocation?.id === location.id}
@@ -169,7 +165,7 @@ const SearchBar = () => {
                         <div className="flex flex-col">
                           <span className="font-medium">{location.name}</span>
                           {location.displayName !== location.name && (
-                            <span className="text-sm text-gray-500">{location.county.replace(/^[IVX]+\s/, '')}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{location.county.replace(/^[IVX]+\s/, '')}</span>
                           )}
                         </div>
                       </CommandItem>
