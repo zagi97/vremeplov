@@ -76,12 +76,15 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update their unapproved photos
-      // 🔒 SECURITY FIX: Uklonjena mogućnost direktnog like/view updatea
-      // Likes/views trebaju biti updatirani kroz Cloud Functions (atomične operacije)
+      // - 🔒 SECURITY FIX (REVISED): Allow likes/views update for authenticated users
+      //   BUT ONLY if they're updating ONLY those fields (nothing else)
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
-                     resource.data.isApproved == false);
+                     resource.data.isApproved == false) ||
+                    (isAuthenticated() &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['likes', 'views', 'updatedAt']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
