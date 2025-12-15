@@ -112,7 +112,7 @@ const SearchBar = () => {
               ref={inputRef}
               type="text"
               placeholder={t('search.placeholder')}
-              className="search-input pr-10 rounded-r-none h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
+              className="search-input pr-10 rounded-r-none h-10 md:h-12 bg-white text-gray-900 placeholder:text-gray-500 border-r-0 focus-visible:ring-offset-0 shadow-sm"
               value={searchQuery}
               onChange={(e) => {
                 handleInputChange(e.target.value);
@@ -184,7 +184,7 @@ const SearchBar = () => {
       {/* ✅ FIX 2: Add aria-label to button */}
       <Button
         type="submit"
-        className="rounded-l-none h-12 px-4 bg-blue-600 hover:bg-blue-700 text-white"
+        className="rounded-l-none h-10 md:h-12 px-3 md:px-4 bg-blue-600 hover:bg-blue-700 text-white"
         disabled={!isValid || !searchQuery.trim()}
         aria-label={t('search.button') || 'Search photos'}
       >

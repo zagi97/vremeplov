@@ -41,10 +41,13 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update own profile (except protected fields)
-      // 🔒 SECURITY FIX: Stats update samo za vlastiti profil
+      // - ANY authenticated user can update stats/badges/lastActive (za auto-update pri lajkovima)
       allow update: if isAdmin() ||
                     (isOwner(userId) &&
-                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid'])) ||
+                    (isAuthenticated() &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['stats', 'badges', 'lastActive', 'updatedAt']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
@@ -76,12 +79,15 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update their unapproved photos
-      // 🔒 SECURITY FIX: Uklonjena mogućnost direktnog like/view updatea
-      // Likes/views trebaju biti updatirani kroz Cloud Functions (atomične operacije)
+      // - Authenticated users can like/view SAMO APPROVED photos
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
-                     resource.data.isApproved == false);
+                     resource.data.isApproved == false) ||
+                    (isAuthenticated() &&
+                     resource.data.isApproved == true &&
+                     request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['likes', 'views', 'updatedAt']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();

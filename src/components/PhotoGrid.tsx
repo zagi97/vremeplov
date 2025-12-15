@@ -90,7 +90,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
           className="group block"
         >
           <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="relative w-full h-64 overflow-hidden"> {/* Fiksna visina */}
+            <div className="relative w-full aspect-[4/3] overflow-hidden">
   <LazyImage
     src={photo.imageUrl}
     alt={photo.description}

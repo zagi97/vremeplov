@@ -89,7 +89,7 @@ const MapViewSkeleton = () => {
       {/* Map skeleton */}
       <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
         <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-          <div className="h-[600px] bg-gray-200 animate-pulse flex items-center justify-center">
+          <div className="h-[50vh] md:h-[60vh] lg:h-[600px] bg-gray-200 animate-pulse flex items-center justify-center">
             <div className="text-center">
               <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">{t('mapView.loadingMemoryMap')}</p>
@@ -332,7 +332,7 @@ if (loading) {
             {/* CUSTOM CLUSTERING MAPA */}
             <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-                    <div style={{ height: '600px', width: '100%' }}>
+                    <div className="h-[50vh] md:h-[60vh] lg:h-[600px] w-full">
                         <MapContainer
                             center={mapCenter}
                             zoom={mapZoom}
