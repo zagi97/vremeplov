@@ -185,7 +185,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                   {/* Name tooltip on hover */}
                   {hoveredTag === person.id && (
                     <div
-                      className="absolute bg-white text-gray-900 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 z-20 animate-fade-in"
+                      className="absolute bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap shadow-lg border border-gray-200 dark:border-gray-700 z-20 animate-fade-in"
                       style={{
                         left: `${person.x}%`,
                         top: `calc(${person.y}% + 2rem)`,
@@ -194,12 +194,12 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                     >
                       <div className="font-medium">{person.name}</div>
                       {isPending && (
-                        <div className="text-xs text-orange-600 mt-1">
+                        <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
                           {isUsersPendingTag ? t('tag.yourPendingTag') : t('tag.pendingApproval')}
                         </div>
                       )}
                       {/* Tooltip arrow */}
-                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white border-l border-t border-gray-200 rotate-45"></div>
+                      <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 rotate-45"></div>
                     </div>
                   )}
                 </div>
@@ -231,7 +231,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                       setIsTagging(true);
                     }}
                     variant="secondary"
-                    className="bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
+                    className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm shadow-lg"
                     disabled={!rateLimitInfo.canTag}
                   >
                     <Tag className="h-4 w-4 mr-2" />
@@ -246,12 +246,12 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
       {/* Rate Limit Warning */}
       {canUserTag && !rateLimitInfo.canTag && (
-        <div className="mb-4 p-3 bg-orange-50 border-l-4 border-orange-500 rounded">
+        <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 dark:border-orange-600 rounded">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-orange-800 text-sm">{t('tag.limitedTitle')}</p>
-              <p className="text-xs text-orange-700 mt-1">{rateLimitInfo.reason}</p>
+              <p className="font-medium text-orange-800 dark:text-orange-300 text-sm">{t('tag.limitedTitle')}</p>
+              <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">{rateLimitInfo.reason}</p>
             </div>
           </div>
         </div>
@@ -259,7 +259,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
       {/* Tag Statistics */}
       {canUserTag && rateLimitInfo.canTag && (
-        <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-gray-600 flex items-center justify-center gap-3">
+        <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-3">
           <span>📸 {translateWithParams(t, 'tags.onPhoto', { count: taggedPersons.length, max: MAX_TAGS_PER_PHOTO })}</span>
           <span>⏰ {translateWithParams(t, 'tags.hourly', { count: rateLimitInfo.tagsInLastHour, max: MAX_TAGS_PER_HOUR })}</span>
           <span>📅 {translateWithParams(t, 'tags.daily', { count: rateLimitInfo.tagsInLastDay, max: MAX_TAGS_PER_DAY })}</span>
@@ -268,10 +268,10 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
       {/* Tagging Interface - Below the image */}
       {isTagging && (
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
           {!hasSelectedPosition ? (
             <div className="text-center">
-              <p className="text-sm text-gray-600 mb-2">{t('photoDetail.clickToPosition')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('photoDetail.clickToPosition')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmitTag} className="space-y-3 max-w-md mx-auto">
