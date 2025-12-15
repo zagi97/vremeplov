@@ -20,7 +20,7 @@ const Index = () => {
   const { t } = useLanguage();
   
   return (
-    <div className="min-h-screen bg-[#F8F9FA] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 overflow-x-hidden">
       {/* ✅ Koristi PageHeader - automatski je fixed */}
       <PageHeader title="Vremeplov.hr" />
 
@@ -53,9 +53,9 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 bg-white">
+      <section className="py-20 px-4 bg-white dark:bg-gray-800">
         <div className="w-full max-w-full sm:max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-gray-900 dark:text-white">
             {t('home.reconnectTitle')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -81,12 +81,12 @@ const Index = () => {
       </section>
 
       {/* Memory Map Preview Section */}
-      <section className="py-20 px-4 bg-white border-t border-gray-200">
+      <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
             {t('home.exploreCroatiaTitle')}
           </h2>
-          <p className="text-lg text-gray-600 mb-10 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
             {t('home.exploreCroatiaDesc')}
           </p>
           <Link 
@@ -100,12 +100,12 @@ const Index = () => {
       </section>
 
       {/* Sample Gallery Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-20 px-4 bg-gray-50 dark:bg-gray-800">
         <div className="w-full max-w-full sm:max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-white">
             {t('home.glimpseTitle')}
           </h2>
-          <p className="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-16">
+          <p className="text-lg text-gray-600 dark:text-gray-300 text-center max-w-3xl mx-auto mb-16">
             {t('home.glimpseDesc')}
           </p>
           <Suspense fallback={<ComponentLoader />}>
