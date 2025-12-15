@@ -63,36 +63,36 @@ const MapViewSkeleton = () => {
   const { t } = useLanguage();
   
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
       <PageHeader title="Vremeplov.hr" fixed={false} />
-      
+
       {/* Hero section skeleton */}
-      <div className="bg-white border-b border-gray-200 py-12">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-12">
         <div className="container max-w-5xl mx-auto px-4 text-center">
-          <div className="h-9 w-64 bg-gray-200 rounded animate-pulse mx-auto mb-3" />
-          <div className="h-6 w-96 bg-gray-200 rounded animate-pulse mx-auto" />
+          <div className="h-9 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mb-3" />
+          <div className="h-6 w-96 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto" />
         </div>
       </div>
 
       {/* Filters skeleton */}
-      <div className="bg-white border-b border-gray-200 py-4">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
-            <div className="h-10 w-48 bg-gray-200 rounded animate-pulse" />
-            <div className="h-10 flex-1 md:flex-initial md:max-w-xs bg-gray-200 rounded animate-pulse" />
-            <div className="h-5 w-32 bg-gray-200 rounded animate-pulse md:ml-auto" />
+            <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-10 flex-1 md:flex-initial md:max-w-xs bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse md:ml-auto" />
           </div>
         </div>
       </div>
 
       {/* Map skeleton */}
       <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-          <div className="h-[50vh] md:h-[60vh] lg:h-[600px] bg-gray-200 animate-pulse flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-8">
+          <div className="h-[50vh] md:h-[60vh] lg:h-[600px] bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
             <div className="text-center">
-              <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">{t('mapView.loadingMemoryMap')}</p>
+              <MapPin className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">{t('mapView.loadingMemoryMap')}</p>
             </div>
           </div>
         </div>
@@ -100,17 +100,17 @@ const MapViewSkeleton = () => {
         {/* Photo grid skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="h-64 bg-gray-200 animate-pulse" />
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 animate-pulse" />
               <div className="p-5 space-y-3">
-                <div className="h-6 bg-gray-200 rounded animate-pulse w-3/4" />
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
                 <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-2/3" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
                 </div>
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-1/3" />
-                <div className="h-9 bg-gray-200 rounded animate-pulse w-full" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3" />
+                <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
               </div>
             </div>
           ))}
@@ -119,19 +119,19 @@ const MapViewSkeleton = () => {
         {/* Statistics skeleton */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white p-6 rounded-xl shadow-sm text-center">
-              <div className="h-9 w-16 bg-gray-200 rounded animate-pulse mx-auto mb-2" />
-              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mx-auto" />
+            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
+              <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mb-2" />
+              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto" />
             </div>
           ))}
         </div>
 
         {/* Info box skeleton */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <div className="h-5 w-48 bg-blue-200 rounded animate-pulse mb-2" />
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <div className="h-5 w-48 bg-blue-200 dark:bg-blue-800 rounded animate-pulse mb-2" />
           <div className="space-y-2">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-4 bg-blue-200 rounded animate-pulse" />
+              <div key={i} className="h-4 bg-blue-200 dark:bg-blue-800 rounded animate-pulse" />
             ))}
           </div>
         </div>
@@ -275,26 +275,26 @@ if (loading) {
 
     if (photos.length === 0) {
         return (
-            <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+            <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
     {/* Header NIJE fixed */}
     <PageHeader title="Vremeplov.hr" fixed={false} />
-    
+
     {/* Hero section - BEZ pt-28 jer header nije fixed */}
-    <div className="bg-white border-b border-gray-200 py-12">
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-12">
       <div className="container max-w-5xl mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
           {t('mapView.memoryMap')}
         </h2>
-        <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+        <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg max-w-2xl mx-auto">
           {t('mapView.exploreCroatian')}
         </p>
       </div>
     </div>
 
                 <div className="container max-w-6xl mx-auto px-4 py-12 text-center flex-1">
-                    <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">{t('mapView.noLocatedPhotos')}</h3>
-                    <p className="text-gray-600 mb-6">{t('mapView.photosWillAppear')}</p>
+                    <MapPin className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">{t('mapView.noLocatedPhotos')}</h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">{t('mapView.photosWillAppear')}</p>
                 </div>
                 <Footer />
             </div>
@@ -302,17 +302,17 @@ if (loading) {
     }
 
     return (
-       <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+       <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
     {/* Header NIJE fixed */}
     <PageHeader title="Vremeplov.hr" fixed={false} />
-    
+
     {/* Hero section - BEZ pt-28 jer header nije fixed */}
-    <div className="bg-white border-b border-gray-200 py-12">
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-12">
       <div className="container max-w-5xl mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
           {t('mapView.memoryMap')}
         </h2>
-        <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+        <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg max-w-2xl mx-auto">
           {t('mapView.exploreCroatian')}
         </p>
       </div>
@@ -331,7 +331,7 @@ if (loading) {
 
             {/* CUSTOM CLUSTERING MAPA */}
             <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-8">
                     <div className="h-[50vh] md:h-[60vh] lg:h-[600px] w-full">
                         <MapContainer
                             center={mapCenter}
@@ -448,35 +448,35 @@ if (loading) {
 
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
   {filteredPhotos.slice(0, displayedPhotosCount).map((photo) => (
-    <div key={photo.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div key={photo.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Fiksna visina slike */}
-      <div className="h-64 overflow-hidden bg-gray-100">
+      <div className="h-64 overflow-hidden bg-gray-100 dark:bg-gray-700">
         <LazyImage
           src={photo.imageUrl}
           alt={photo.description}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
-      
+
       {/* Content - više prostora */}
       <div className="p-5 space-y-3">
-        <h3 className="font-bold text-lg line-clamp-2 min-h-[3.5rem]">
+        <h3 className="font-bold text-lg line-clamp-2 min-h-[3.5rem] text-gray-900 dark:text-gray-100">
           {photo.description}
         </h3>
-        
-        <div className="space-y-2 text-sm text-gray-600">
+
+        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">{photo.location}</span>
           </div>
-          
+
           {photo.address && (
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500" />
-              <span className="truncate text-blue-600 text-xs">{photo.address}</span>
+              <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
+              <span className="truncate text-blue-600 dark:text-blue-400 text-xs">{photo.address}</span>
             </div>
           )}
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <Calendar className="h-4 w-4" />
@@ -488,12 +488,12 @@ if (loading) {
             </div>
           </div>
         </div>
-        
-        <div className="flex items-center gap-4 text-sm text-gray-500 pt-2 border-t border-gray-100">
+
+        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
           <span>❤️ {photo.likes || 0}</span>
           <span>👁️ {photo.views || 0}</span>
         </div>
-        
+
         <Link to={`/photo/${photo.id}`} className="block mt-3">
           <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
             {t('mapView.viewDetails')}
@@ -528,36 +528,36 @@ if (loading) {
 
                 {/* Statistics */}
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-blue-600 mb-2">{photos.length}</div>
-                        <div className="text-gray-600">{t('mapView.locatedPhotos')}</div>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
+                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{photos.length}</div>
+                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.locatedPhotos')}</div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-green-600 mb-2">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
+                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
                             {new Set(photos.map(p => p.location)).size}
                         </div>
-                        <div className="text-gray-600">{t('mapView.cities')}</div>
+                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.cities')}</div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-purple-600 mb-2">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
+                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                             {photos.filter(p => p.address).length}
                         </div>
-                        <div className="text-gray-600">{t('mapView.specificAddresses')}</div>
+                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.specificAddresses')}</div>
                     </div>
 
-                    <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-orange-600 mb-2">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
+                        <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
                             {getAvailableDecades().length}
                         </div>
-                        <div className="text-gray-600">{t('mapView.differentDecades')}</div>
+                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.differentDecades')}</div>
                     </div>
                 </div>
 
-                <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <h3 className="font-bold text-blue-800 mb-2">{t('mapView.howClusteringWorks')}</h3>
-                    <div className="text-blue-700 text-sm space-y-2">
+                <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                    <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2">{t('mapView.howClusteringWorks')}</h3>
+                    <div className="text-blue-700 dark:text-blue-300 text-sm space-y-2">
                         <p>{t('mapView.clusteringDesc1')}</p>
                         <p>{t('mapView.clusteringDesc2')}</p>
                         <p>{t('mapView.clusteringDesc3')}</p>

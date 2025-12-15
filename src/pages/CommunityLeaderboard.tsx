@@ -179,7 +179,7 @@ const CommunityLeaderboard = () => {
     };
 
     return (
-      <Card className={`mb-3 sm:mb-4 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
+      <Card className={`mb-3 sm:mb-4 dark:bg-gray-800 dark:border-gray-700 ${user.rank <= 3 ? 'border-2' : ''} ${user.rank === 1 ? 'border-yellow-400' : user.rank === 2 ? 'border-gray-400' : user.rank === 3 ? 'border-amber-400' : ''}`}>
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -198,14 +198,14 @@ const CommunityLeaderboard = () => {
                 </Avatar>
 
                 <div className="min-w-0 flex-1">
-                  <Link 
+                  <Link
                     to={`/user/${user.uid}`}
-                    className="font-semibold text-sm sm:text-base text-gray-900 hover:text-blue-600 transition-colors block truncate"
+                    className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 transition-colors block truncate"
                   >
                     {user.displayName}
                   </Link>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs sm:text-sm text-gray-500 truncate">
+                    <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                       {getDisplayValue()}
                     </span>
                   </div>
@@ -218,21 +218,21 @@ const CommunityLeaderboard = () => {
               {/* Recent Photo Preview */}
               {user.recentPhotoUrl && (
                 <LazyImage
-                  src={user.recentPhotoUrl} 
+                  src={user.recentPhotoUrl}
                   alt="Recent upload"
                   className="w-10 h-10 object-cover rounded hidden xs:block"
                   threshold={0.5}
                   rootMargin="50px"
                   placeholder={
-                    <div className="w-10 h-10 bg-gray-200 animate-pulse rounded flex items-center justify-center">
-                      <Camera className="h-4 w-4 text-gray-400" />
+                    <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 animate-pulse rounded flex items-center justify-center">
+                      <Camera className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                     </div>
                   }
                 />
               )}
 
               {/* Mini Stats */}
-              <div className="hidden md:flex items-center gap-3 lg:gap-4 text-xs sm:text-sm text-gray-500">
+              <div className="hidden md:flex items-center gap-3 lg:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>{user.totalPhotos}</span>
@@ -262,14 +262,14 @@ const CommunityLeaderboard = () => {
 
   // ✅ LEADERBOARD SKELETON
   const LeaderboardSkeleton = () => (
-    <Card className="mb-3 sm:mb-4">
+    <Card className="mb-3 sm:mb-4 dark:bg-gray-800 dark:border-gray-700">
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-center gap-2 sm:gap-4">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full animate-pulse" />
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-full animate-pulse" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-            <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
           </div>
         </div>
       </CardContent>
@@ -280,46 +280,46 @@ const CommunityLeaderboard = () => {
   const SidebarSkeleton = () => (
     <>
       {/* Community Stats Skeleton */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="pb-3 sm:pb-6">
-          <div className="h-5 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex justify-between">
-              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
-              <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             </div>
           ))}
         </CardContent>
       </Card>
 
       {/* Monthly Highlights Skeleton */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="pb-3 sm:pb-6">
-          <div className="h-5 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         </CardHeader>
         <CardContent className="space-y-4 sm:space-y-6">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="pb-3 sm:pb-4 border-b border-gray-100 last:border-b-0">
-              <div className="h-3 w-32 bg-gray-200 rounded animate-pulse mb-2" />
-              <div className="h-5 w-40 bg-gray-200 rounded animate-pulse mb-1" />
-              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse" />
+            <div key={i} className="pb-3 sm:pb-4 border-b border-gray-100 dark:border-gray-700 last:border-b-0">
+              <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+              <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-1" />
+              <div className="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             </div>
           ))}
         </CardContent>
       </Card>
 
       {/* Badge Showcase - ostaje statičan */}
-      <Card>
+      <Card className="dark:bg-gray-800 dark:border-gray-700">
         <CardHeader className="pb-3 sm:pb-6">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg dark:text-white">
             <Award className="h-4 w-4 sm:h-5 sm:w-5" />
             {t('community.achievementSystem')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-xs sm:text-sm text-gray-600 mb-3">
+          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-3">
             {t('community.earnBadges')}
           </div>
           <div className="space-y-2 text-xs">
@@ -354,20 +354,20 @@ const CommunityLeaderboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
       <PageHeader title="Vremeplov.hr"/>
-      
+
       {/* Hero section */}
-      <div className="bg-white border-b border-gray-200 py-8 pt-24">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-8 pt-24">
         <div className="container max-w-6xl mx-auto px-4">
           {/* Desktop layout */}
           <div className="hidden md:flex md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-                <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600" />
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                <Trophy className="h-6 w-6 md:h-7 md:w-7 text-blue-600 dark:text-blue-400" />
                 {t("community.leaderboard")}
               </h1>
-              <p className="text-gray-600 text-sm md:text-base">
+              <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base">
                 {t("community.celebratingContributors")}
               </p>
             </div>
