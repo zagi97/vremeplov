@@ -151,7 +151,7 @@ export function CookieConsent() {
             <div className="flex-1 flex items-start gap-3">
               <Cookie className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold mb-1">{t('cookies.banner.title')}</h3>
+                <h3 className="font-semibold mb-1 text-gray-900 dark:text-white">{t('cookies.banner.title')}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t('cookies.banner.description')}
                 </p>
