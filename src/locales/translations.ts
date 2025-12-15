@@ -770,7 +770,25 @@ export const enTranslations = {
   "photo.pendingCommentsMessage": "You cannot comment on this photo until it is approved by an administrator.",
   "theme.light": "Light",
   "theme.dark": "Dark",
-  "theme.system": "System"
+  "theme.system": "System",
+  "cookies.banner.title": "🍪 Cookies & Privacy",
+  "cookies.banner.description": "We use essential cookies for functionality and optional ones for analytics. You can accept all or only essential ones.",
+  "cookies.banner.learnMore": "Learn more about cookies",
+  "cookies.banner.accept": "Accept all",
+  "cookies.banner.reject": "Essential only",
+  "cookies.details.title": "Cookie Management",
+  "cookies.details.essential.title": "Essential Cookies",
+  "cookies.details.essential.required": "Required",
+  "cookies.details.essential.description": "These cookies are necessary for the basic functionality of the site and cannot be disabled.",
+  "cookies.details.essential.auth": "User authentication",
+  "cookies.details.essential.theme": "Theme settings (light/dark)",
+  "cookies.details.essential.language": "Language selection",
+  "cookies.details.essential.consent": "Cookie consent storage",
+  "cookies.details.analytics.title": "Analytics Cookies",
+  "cookies.details.analytics.optional": "Optional",
+  "cookies.details.analytics.description": "Help us understand how users interact with the site so we can improve it.",
+  "cookies.details.gdpr.title": "Your Rights (GDPR)",
+  "cookies.details.gdpr.description": "In accordance with GDPR, you have the right to access, correct or delete your data. You can withdraw your consent at any time in privacy settings."
 } as const;
 
 export const hrTranslations = {
@@ -1537,5 +1555,23 @@ export const hrTranslations = {
   "photo.pendingTitle": "Fotografija čeka odobrenje",
   "photo.pendingMessage": "Ova fotografija čeka odobrenje administratora. Interakcije (komentari, lajkovi, tagovi) su onemogućene dok se fotografija ne odobri.",
   "photo.pendingCommentsTitle": "Komentari onemogućeni",
-  "photo.pendingCommentsMessage": "Ne možete komentirati ovu fotografiju dok je administrator ne odobri."
+  "photo.pendingCommentsMessage": "Ne možete komentirati ovu fotografiju dok je administrator ne odobri.",
+  "cookies.banner.title": "🍪 Kolačići i privatnost",
+  "cookies.banner.description": "Koristimo nužne kolačiće za funkcionalnost i dodatne za analitiku. Možete prihvatiti sve ili samo nužne.",
+  "cookies.banner.learnMore": "Saznaj više o kolačićima",
+  "cookies.banner.accept": "Prihvati sve",
+  "cookies.banner.reject": "Samo nužni",
+  "cookies.details.title": "Upravljanje kolačićima",
+  "cookies.details.essential.title": "Nužni kolačići",
+  "cookies.details.essential.required": "Obavezno",
+  "cookies.details.essential.description": "Ovi kolačići su neophodni za osnovno funkcioniranje stranice i ne mogu se isključiti.",
+  "cookies.details.essential.auth": "Autentifikacija korisnika",
+  "cookies.details.essential.theme": "Postavke teme (svijetla/tamna)",
+  "cookies.details.essential.language": "Odabir jezika",
+  "cookies.details.essential.consent": "Spremanje pristanka za kolačiće",
+  "cookies.details.analytics.title": "Analitički kolačići",
+  "cookies.details.analytics.optional": "Opcionalno",
+  "cookies.details.analytics.description": "Pomažu nam razumjeti kako korisnici koriste stranicu kako bismo je mogli poboljšati.",
+  "cookies.details.gdpr.title": "Vaša prava (GDPR)",
+  "cookies.details.gdpr.description": "U skladu s GDPR-om, imate pravo pristupiti, ispraviti ili obrisati svoje podatke. Vaš pristanak možete povući u bilo kojem trenutku u postavkama privatnosti."
 } as const;
