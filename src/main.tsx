@@ -99,30 +99,20 @@ createRoot(document.getElementById('root')!).render(
 );
 
 // ✅ OPTIMIZED: Defer everything until after page is interactive
-// Priority: 1. Firebase (needed for functionality) 2. Service Worker (PWA features)
 window.addEventListener('load', () => {
-  // ✅ Use requestIdleCallback for better performance
+  // 🔒 FIX: Service Worker MORA biti registriran pouzdano (ne preko requestIdleCallback)
+  // PWA funkcionalnost ne smije biti opcionalna!
+  initializeServiceWorker();
+
+  // ✅ Firebase može biti deferirano jer nije kritično za prvi render
   if ('requestIdleCallback' in window) {
-    // ✅ PHASE 1: Initialize Firebase first (higher priority)
     requestIdleCallback(() => {
       initializeFirebase();
     }, { timeout: 2000 }); // Max 2s delay
-    
-    // ✅ PHASE 2: Initialize Service Worker later (lower priority)
-    requestIdleCallback(() => {
-      initializeServiceWorker();
-    }, { timeout: 5000 }); // Max 5s delay
-    
   } else {
-    // ✅ Fallback for browsers without requestIdleCallback
-    // Stagger initialization to avoid blocking main thread
     setTimeout(() => {
       initializeFirebase();
     }, 100); // Small delay
-    
-    setTimeout(() => {
-      initializeServiceWorker();
-    }, 500); // Larger delay for SW
   }
 });
 
