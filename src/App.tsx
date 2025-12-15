@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { CookieConsent } from "./components/CookieConsent";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { lazy, Suspense } from 'react';
 
@@ -89,6 +90,7 @@ const App = () => (
             <AuthProvider>
               <Toaster />
               <Sonner />
+              <CookieConsent />
               <AppContent />
             </AuthProvider>
           </LanguageProvider>
