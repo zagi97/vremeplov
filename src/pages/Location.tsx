@@ -244,30 +244,30 @@ if (loading) {
 }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F8F9FA] dark:bg-gray-900">
       {/* Global header */}
       <PageHeader title="Vremeplov.hr" />
 
       {/* Page intro section */}
-      <div className="bg-white border-b border-gray-200 py-10 mt-16 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-10 mt-16 shadow-sm">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             {/* Left side: location info */}
             <div className="flex-1 min-w-0">
-             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 break-words mb-4">
+             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 break-words mb-4">
   {locationData.displayName}
 </h2>
 
               {/* Info o županiji i tipu */}
               {locationData.isSpecific && locationData.county && locationData.type && (
                 <div className="mb-3">
-                  <div className="flex items-center gap-2 text-gray-600 flex-wrap">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 flex-wrap">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
                     <span className="text-sm sm:text-base">
                       {normalizeCountyName(locationData.county)}
                     </span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-xs sm:text-sm font-medium bg-gray-100 px-2 py-1 rounded text-gray-700">
+                    <span className="text-gray-400 dark:text-gray-600">•</span>
+                    <span className="text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
                       {translateCityType(locationData.type, t)}
                     </span>
                   </div>
@@ -283,13 +283,13 @@ if (loading) {
                     );
                     if (basicInfo) {
                       return (
-                        <div className="flex items-center gap-2 text-gray-600 flex-wrap">
+                        <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 flex-wrap">
                           <MapPin className="h-4 w-4 flex-shrink-0" />
                           <span className="text-sm sm:text-base">
                             {normalizeCountyName(basicInfo[1] as string)}
                           </span>
-                          <span className="text-gray-400">•</span>
-                          <span className="text-xs sm:text-sm font-medium bg-gray-100 px-2 py-1 rounded text-gray-700">
+                          <span className="text-gray-400 dark:text-gray-600">•</span>
+                          <span className="text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
                             {translateCityType(basicInfo[2] as string, t)}
                           </span>
                         </div>
@@ -301,7 +301,7 @@ if (loading) {
               )}
 
               {/* Broj fotografija */}
-              <p className="text-sm sm:text-base text-gray-600 break-words">
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 break-words">
                 {t("location.exploreHistory")}
                 {filteredPhotos.length !== allPhotos.length && (
                   <span className="ml-2 text-blue-600 font-medium">
@@ -447,17 +447,17 @@ if (loading) {
       </div>
 
       {/* Search and Filter Section */}
-      <section className="py-6 px-4 bg-white border-b">
+      <section className="py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
                 <Input
                   placeholder={t('location.searchPlaceholder')}
                   value={filters.searchText}
                   onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
-                  className="pl-10 placeholder:text-xs sm:placeholder:text-sm"
+                  className="pl-10 placeholder:text-xs sm:placeholder:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                 />
               </div>
             </div>
@@ -484,11 +484,11 @@ if (loading) {
           </div>
 
           {showFilters && (
-            <Card className="mt-4">
+            <Card className="mt-4 dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('location.timePeriod')}</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.timePeriod')}</label>
                     <Select
                       value={filters.yearRange?.label || 'all'}
                       onValueChange={(value) => {
@@ -515,7 +515,7 @@ if (loading) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('location.photoType')}</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.photoType')}</label>
                     <Select
                       value={filters.photoType}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, photoType: value }))}
@@ -534,7 +534,7 @@ if (loading) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('location.sortBy')}</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.sortBy')}</label>
                     <Select
                       value={filters.sortBy}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
@@ -576,9 +576,9 @@ if (loading) {
 
       {/* Results Summary */}
       {hasFilters && (
-        <section className="py-4 px-4 bg-blue-50">
+        <section className="py-4 px-4 bg-blue-50 dark:bg-blue-900/20">
           <div className="container max-w-6xl mx-auto">
-            <p className="text-blue-700">
+            <p className="text-blue-700 dark:text-blue-300">
               {t('location.showing')} {filteredPhotos.length} {t('common.of')} {allPhotos.length} {t('location.photos')}
               {filters.searchText && ` ${t('location.matching')} "${filters.searchText}"`}
               {filters.yearRange && ` ${t('location.from')} ${filters.yearRange.label}`}
