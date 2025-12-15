@@ -73,8 +73,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   if (displayPhotos.length === 0) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">No photos found</h3>
-        <p className="text-gray-600">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No photos found</h3>
+        <p className="text-gray-600 dark:text-gray-400">
           Be the first to share a historical photo of this location!
         </p>
       </div>
@@ -89,8 +89,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
           to={`/photo/${photo.id}`}
           className="group block"
         >
-          <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="relative w-full aspect-[4/3] overflow-hidden">
+          <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 dark:bg-gray-800 dark:border-gray-700">
+            <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
   <LazyImage
     src={photo.imageUrl}
     alt={photo.description}
@@ -98,8 +98,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
     threshold={0.2}
     rootMargin="150px"
     placeholder={
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-        <div className="text-center text-gray-500">
+      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center text-gray-500 dark:text-gray-400">
           <div className="text-sm font-medium">{photo.location}</div>
           <div className="text-xs">{photo.year}</div>
         </div>
@@ -108,11 +108,11 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   />
 </div>
             <CardContent className="p-4">
-              <h3 className="font-semibold text-lg mb-2 group-hover:text-blue-600 transition-colors">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                 {photo.description}
               </h3>
-              
-              <div className="space-y-2 text-sm text-gray-600">
+
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   <span>{photo.year}</span>
@@ -124,23 +124,23 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                 </div>
                 
                 <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
                       <span>{photo.views || 0}</span>
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => handleLike(e, photo.id!)}
-                      className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                      className="flex items-center gap-1 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     >
                       <Heart className="h-3 w-3" />
                       <span>{photo.likes || 0}</span>
                     </button>
                   </div>
-                  
+
                   {photo.photoType && (
                     <div className="flex gap-1">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
                         {photo.photoType}
                       </span>
                     </div>
