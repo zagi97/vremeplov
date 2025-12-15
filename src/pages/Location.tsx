@@ -589,7 +589,7 @@ if (loading) {
       )}
 
       {/* Feed Section */}
-      <section className="py-12 px-4 flex-1 bg-[#F8F9FA]">
+      <section className="py-12 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
         <div className="container max-w-6xl mx-auto">
           {filteredPhotos.length === 0 ? (
             <EmptyState
