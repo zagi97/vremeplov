@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { Analytics } from '@vercel/analytics/react';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { CookieConsent } from './components/CookieConsent';
 
 // ✅ IMMEDIATE: Only core App component
 import App from './App.tsx'
@@ -95,7 +94,6 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <App />
       <Analytics />
-      <CookieConsent />
     </ThemeProvider>
   </StrictMode>,
 );
