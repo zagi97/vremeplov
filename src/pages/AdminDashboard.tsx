@@ -322,7 +322,7 @@ export default function AdminDashboard() {
             <TabsList className="flex flex-wrap justify-start gap-2 md:grid md:grid-cols-5 md:gap-0 mb-12">
               <TabsTrigger
                 value="pending"
-                className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <span className="hidden sm:inline">Pending Photos</span>
                 <span className="sm:hidden">Pending</span>
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="approved"
-                className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <span className="hidden sm:inline">Approved Photos</span>
                 <span className="sm:hidden">Approved</span>
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="tags"
-                className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <span className="hidden sm:inline">Tagged Persons</span>
                 <span className="sm:hidden">Tags</span>
@@ -346,14 +346,14 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="comments"
-                className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <span className="hidden sm:inline">Comments</span>
                 <span className="sm:hidden">Comments</span>
               </TabsTrigger>
               <TabsTrigger
                 value="users"
-                className="whitespace-nowrap data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <span className="hidden sm:inline">User Management</span>
                 <span className="sm:hidden">Users</span>

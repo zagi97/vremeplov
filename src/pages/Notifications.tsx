@@ -247,11 +247,11 @@ return (
           <CardContent className="p-0">
             <Tabs value={activeFilter} onValueChange={(v) => setActiveFilter(v as 'all' | 'unread')} className="w-full">
               <div className="border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6">
-                <TabsList className="w-full sm:w-auto dark:bg-gray-700">
-                  <TabsTrigger value="all" className="flex-1 sm:flex-none dark:text-gray-300 dark:data-[state=active]:bg-gray-600 dark:data-[state=active]:text-white">
+                <TabsList className="w-full sm:w-auto bg-muted">
+                  <TabsTrigger value="all" className="flex-1 sm:flex-none">
                     {t('notifications.All')} ({notifications.length})
                   </TabsTrigger>
-                  <TabsTrigger value="unread" className="flex-1 sm:flex-none dark:text-gray-300 dark:data-[state=active]:bg-gray-600 dark:data-[state=active]:text-white">
+                  <TabsTrigger value="unread" className="flex-1 sm:flex-none">
                     {t('notifications.Unread')} ({unreadCount})
                   </TabsTrigger>
                 </TabsList>

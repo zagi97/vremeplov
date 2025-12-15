@@ -429,7 +429,7 @@ if (loading) {
             {/* Content Tabs */}
             <div className="lg:w-2/3">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3 gap-1 dark:bg-gray-800">
+                <TabsList className="grid w-full grid-cols-3 gap-1 bg-muted">
                   <TabsTrigger 
                     value="photos" 
                     title={t('profile.photos')}
