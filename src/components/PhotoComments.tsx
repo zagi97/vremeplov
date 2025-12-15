@@ -254,7 +254,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
 
   return (
     <div className="mt-8 px-4 sm:px-0">
-      <h2 className="text-2xl font-bold mb-4 flex items-center">
+      <h2 className="text-2xl font-bold mb-4 flex items-center text-gray-900 dark:text-gray-100">
         <MessageSquare className="h-5 w-5 mr-2 flex-shrink-0" />
         <span>
           {translateWithParams(t, 'comments.title', { count: comments.length })}
@@ -265,14 +265,14 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
         <div className="mb-6">
           {/* ✅ PENDING PHOTO WARNING */}
           {isPhotoPending && (
-            <div className="mb-4 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded">
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 dark:border-yellow-600 rounded">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-yellow-800 mb-1">
+                  <p className="font-medium text-yellow-800 dark:text-yellow-300 mb-1">
                     {t('photo.pendingCommentsTitle')}
                   </p>
-                  <p className="text-sm text-yellow-700">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
                     {t('photo.pendingCommentsMessage')}
                   </p>
                 </div>
@@ -282,14 +282,14 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
 
           {/* RATE LIMIT WARNING (naranđasti okvir) */}
 {!canComment && !isPhotoPending && (
-  <div className="mb-4 p-4 bg-orange-50 border-l-4 border-orange-500 rounded">
+  <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 dark:border-orange-600 rounded">
     <div className="flex items-start gap-3">
-      <AlertTriangle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+      <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-500 flex-shrink-0 mt-0.5" />
       <div>
-        <p className="font-medium text-orange-800 mb-1">
+        <p className="font-medium text-orange-800 dark:text-orange-300 mb-1">
           {t('rateLimit.commentWarningTitle')}
         </p>
-        <p className="text-sm text-orange-700">
+        <p className="text-sm text-orange-700 dark:text-orange-400">
           {totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
             <>{translateWithParams(t, 'rateLimit.canCommentAgainIn', { time: formatRemainingTime(rateLimitState.nextAvailableTime) })}</>
           )}
@@ -306,7 +306,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
 )}
 
           {/* ✅ RATE LIMIT INFO (uvijek prikaži) */}
-          <div className="mb-3 text-xs text-gray-500 flex items-center gap-4 flex-wrap">
+          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-4 flex-wrap">
   <span>{t('comments.perMinute')}: {totalCommentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}</span>
   <span>{t('comments.perHour')}: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}</span>
   <span>{t('comments.perDay')}: {commentsInLastDay}/{MAX_COMMENTS_PER_DAY}</span>
@@ -315,7 +315,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
           <form onSubmit={handleSubmitComment}>
             <Textarea
               placeholder={t('comments.placeholder')}
-              className="min-h-[80px] mb-2 w-full"
+              className="min-h-[80px] mb-2 w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               maxLength={250}
@@ -335,9 +335,9 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
           </form>
         </div>
       ) : (
-        <div className="mb-6 p-6 bg-gray-50 rounded-lg text-center">
-          <LogIn className="h-8 w-8 mx-auto mb-3 text-gray-400" />
-          <p className="text-gray-600 mb-4 px-4">{t('comments.signInMessage')}</p>
+        <div className="mb-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg text-center">
+          <LogIn className="h-8 w-8 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
+          <p className="text-gray-600 dark:text-gray-400 mb-4 px-4">{t('comments.signInMessage')}</p>
           <Button
             onClick={handleSignInToComment}
             className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -352,12 +352,12 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
         {loading ? (
           <div className="text-center py-8">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="text-gray-500 mt-2">{t('comments.loading')}</p>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">{t('comments.loading')}</p>
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-500">
+          <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+            <p className="text-gray-500 dark:text-gray-400">
               {t('comments.noComments')}
             </p>
           </div>
@@ -369,27 +369,27 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
               return (
                 <div
                   key={comment.id}
-                  className="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                        <span className="font-medium break-words">
+                        <User className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                        <span className="font-medium break-words text-gray-900 dark:text-gray-100">
                           {comment.userName || 'Nepoznato'}
                         </span>
                       </div>
                       {isPhotoAuthor && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full whitespace-nowrap">
                           {t('comments.author')}
                         </span>
                       )}
                     </div>
-                    <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
+                    <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap">
                       {comment.date}
                     </span>
                   </div>
-                  <p className="text-gray-700 break-words leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 break-words leading-relaxed">
                     {comment.text}
                   </p>
                 </div>
