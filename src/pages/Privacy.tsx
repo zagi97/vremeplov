@@ -66,7 +66,7 @@ const Privacy = () => {
               </ul>
               <div className="bg-indigo-50 dark:bg-indigo-900/30 p-4 rounded-lg mt-4">
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('privacy.rightsContact')} <span className="font-medium text-indigo-700">vremeplov.app@gmail.com</span>
+                  {t('privacy.rightsContact')} <span className="font-medium text-indigo-700 dark:text-indigo-300">vremeplov.app@gmail.com</span>
                 </p>
               </div>
             </div>
