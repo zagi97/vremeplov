@@ -462,34 +462,37 @@ if (loading) {
                   {userPhotos.length > 0 ? (
                     <>
                       {/* Filters */}
-                      <div className="mb-4 flex flex-wrap gap-2 sm:gap-3 items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0 hidden sm:block" />
-                        
-                        <Select value={selectedYear} onValueChange={setSelectedYear}>
-                          <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                            <SelectValue placeholder={t('profile.allYears')} />
-                          </SelectTrigger>
-                          <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                            <SelectItem value="all" className="dark:text-gray-200">{t('profile.allYears')}</SelectItem>
-                            {availableYears.map(year => (
-                              <SelectItem key={year} value={year.toString()} className="dark:text-gray-200">
-                                {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="mb-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial">
+                          <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.filterByYear')}:</span>
+                          <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="flex-1 sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                              <SelectValue placeholder={t('profile.allYears')} />
+                            </SelectTrigger>
+                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                              <SelectItem value="all" className="dark:text-gray-200">{t('profile.allYears')}</SelectItem>
+                              {availableYears.map(year => (
+                                <SelectItem key={year} value={year.toString()} className="dark:text-gray-200">
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
 
-                        <div className="hidden sm:block h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-
-                        <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
-                          <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                            <SelectItem value="newest" className="dark:text-gray-200">{t('profile.newestFirst')}</SelectItem>
-                            <SelectItem value="oldest" className="dark:text-gray-200">{t('profile.oldestFirst')}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">{t('profile.sortBy')}:</span>
+                          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
+                            <SelectTrigger className="flex-1 sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                              <SelectItem value="newest" className="dark:text-gray-200">{t('profile.newestFirst')}</SelectItem>
+                              <SelectItem value="oldest" className="dark:text-gray-200">{t('profile.oldestFirst')}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
 
                       <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
