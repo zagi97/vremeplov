@@ -225,7 +225,7 @@ const NotificationCenter = ({
 
     {/* Footer - vidi sve */}
     {displayNotifications.length > 0 && (
-      <div className="p-2.5 sm:p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+      <div className="p-2.5 sm:p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <Link
           to="/notifications"
           onClick={onClose}

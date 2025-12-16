@@ -81,23 +81,23 @@ const FAQ = () => {
   let questionCounter = 0;
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
       {/* Header */}
       <PageHeader title="Vremeplov.hr" />
 
-      <div className="bg-white border-b border-gray-200 py-12 pt-28">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-12 pt-28">
         <div className="container max-w-5xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
             {t("faq.title")}
           </h2>
-          <p className="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg max-w-2xl mx-auto">
             {t("faq.subtitle")}
           </p>
         </div>
       </div>
 
       <div className="container max-w-4xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-xl shadow-sm p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8">
           
           {/* FAQ Sections */}
           {faqSections.map((section, sectionIndex) => (
@@ -105,7 +105,7 @@ const FAQ = () => {
               {/* Section Header */}
               <div className="flex items-center gap-3 mb-6">
                 <section.icon className={`h-7 w-7 ${section.color}`} />
-                <h3 className="text-2xl font-bold text-gray-800">{section.title}</h3>
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{section.title}</h3>
               </div>
 
               {/* Questions in this section */}
@@ -118,24 +118,24 @@ const FAQ = () => {
                     <div
                       key={currentIndex}
                       className={`border rounded-lg overflow-hidden transition-all ${
-                        isOpen ? 'border-gray-300 shadow-sm' : 'border-gray-200'
+                        isOpen ? 'border-gray-300 dark:border-gray-600 shadow-sm' : 'border-gray-200 dark:border-gray-700'
                       }`}
                     >
                       {/* Question Button */}
                       <button
                         onClick={() => toggleAccordion(currentIndex)}
-                        className={`w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors ${
-                          isOpen ? section.bgColor : ''
+                        className={`w-full px-5 py-4 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                          isOpen ? section.bgColor + ' dark:bg-gray-700' : ''
                         }`}
                       >
                         <div className="flex items-start gap-3 flex-1">
                           <HelpCircle className={`h-5 w-5 mt-0.5 flex-shrink-0 ${section.color}`} />
-                          <span className="font-semibold text-gray-800 pr-4">
+                          <span className="font-semibold text-gray-800 dark:text-gray-100 pr-4">
                             {item.q}
                           </span>
                         </div>
                         <ChevronDown
-                          className={`h-5 w-5 text-gray-500 flex-shrink-0 transition-transform ${
+                          className={`h-5 w-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform ${
                             isOpen ? 'rotate-180' : ''
                           }`}
                         />
@@ -143,8 +143,8 @@ const FAQ = () => {
 
                       {/* Answer (collapsible) */}
                       {isOpen && (
-                        <div className={`px-5 py-4 border-t ${section.bgColor}`}>
-                          <p className="text-gray-700 leading-relaxed pl-8">
+                        <div className={`px-5 py-4 border-t border-gray-200 dark:border-gray-700 ${section.bgColor} dark:bg-gray-700`}>
+                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed pl-8">
                             {item.a}
                           </p>
                         </div>
@@ -157,16 +157,16 @@ const FAQ = () => {
           ))}
 
           {/* Still have questions box */}
-          <div className="mt-12 bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg text-center">
-            <HelpCircle className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-800 mb-3">
+          <div className="mt-12 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 p-6 rounded-lg text-center">
+            <HelpCircle className="h-12 w-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
               {t('faq.stillHaveQuestions')}
             </h3>
-            <p className="text-gray-700 mb-4">
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
               {t('faq.contactUs')}{' '}
-              <a 
-                href="mailto:vremeplov.app@gmail.com" 
-                className="font-semibold text-blue-600 hover:text-blue-700"
+              <a
+                href="mailto:vremeplov.app@gmail.com"
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
               >
                 vremeplov.app@gmail.com
               </a>{' '}
