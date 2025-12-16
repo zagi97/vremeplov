@@ -94,47 +94,47 @@ const YearPicker: React.FC<YearPickerProps> = ({
       {/* Year Input Field */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-3 py-2 border border-input bg-background rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring text-sm cursor-pointer flex items-center justify-between hover:border-gray-400 transition-colors ${
+        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring text-sm cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 transition-colors ${
           isOpen ? 'border-blue-500 ring-1 ring-blue-500' : ''
         }`}
       >
-        <span className={selectedYear ? 'text-gray-900' : 'text-gray-500'}>
+        <span className={selectedYear ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
           {selectedYear || getPlaceholderText()}
         </span>
-        <ChevronDown 
-          className={`h-4 w-4 text-gray-400 transition-transform ${
+        <ChevronDown
+          className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${
             isOpen ? 'rotate-180' : ''
-          }`} 
+          }`}
         />
       </div>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-hidden">
           {/* Header with navigation */}
-          <div className="flex items-center justify-between p-2 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={goToPreviousDecade}
               disabled={currentDecade <= minYear}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            
-            <span className="font-medium text-gray-700 text-sm">
+
+            <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">
               {getDecadeRange()}
             </span>
-            
+
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={goToNextDecade}
               disabled={currentDecade + 10 > currentYear}
-              className="h-8 w-8 p-0"
+              className="h-8 w-8 p-0 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -152,10 +152,10 @@ const YearPicker: React.FC<YearPickerProps> = ({
                   onClick={() => handleYearSelect(year)}
                   className={`h-8 text-xs ${
                     selectedYear === year.toString()
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
                       : year === currentYear
-                      ? 'bg-gray-100 text-gray-900 font-medium hover:bg-gray-200'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-200 dark:hover:bg-gray-600'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   {year}
