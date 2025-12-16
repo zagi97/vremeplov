@@ -306,7 +306,11 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                 onChange={(e) => setNewTagName(e.target.value)}
                 maxLength={40}
                 autoFocus
-                className={newTagName.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
+                className={`dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 ${
+                  newTagName.length >= 38
+                    ? "border-red-300 focus:border-red-500 dark:border-red-500 dark:focus:border-red-400"
+                    : ""
+                }`}
               />
               <CharacterCounter currentLength={newTagName.length} maxLength={40} />
               <div className="flex gap-2">
