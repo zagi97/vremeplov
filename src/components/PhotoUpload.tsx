@@ -465,7 +465,7 @@ if (coordinates && selectedAddress) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Area */}
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 bg-white dark:bg-gray-750">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 bg-white dark:bg-gray-800">
             {!selectedFile ? (
               <div className="text-center">
                 <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
