@@ -32,20 +32,20 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
   const { t } = useLanguage();
 
   return (
-    <div className="p-6 border-b border-gray-200">
+    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
       {/* Desktop layout (md and up) - original design */}
       <div className="hidden md:flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Eye className="h-5 w-5" />
             <span className="text-sm">{views} {t('photoDetail.views')}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Heart className="h-5 w-5" />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
           </div>
           {taggedPersonsCount > 0 && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Users className="h-5 w-5" />
               <span className="text-sm">{taggedPersonsCount} {t('photoDetail.taggedPeople')}</span>
             </div>
@@ -91,16 +91,16 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
       <div className="md:hidden space-y-4">
         {/* Stats */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Eye className="h-5 w-5" />
             <span className="text-sm">{views} {t('photoDetail.views')}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Heart className="h-5 w-5" />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
           </div>
           {taggedPersonsCount > 0 && (
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Users className="h-5 w-5" />
               <span className="text-sm">{taggedPersonsCount} {t('photoDetail.taggedPeople')}</span>
             </div>
@@ -145,8 +145,8 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
 
       {/* Hover instruction for tagged persons */}
       {taggedPersonsCount > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800 flex items-center gap-2">
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-300 flex items-center gap-2">
             <Users className="h-4 w-4 flex-shrink-0" />
             <span className="hidden md:inline">{t('photo.tag.tip.desktop')}</span>
             <span className="md:hidden">{t('photo.tag.tip.mobile')}</span>
@@ -156,8 +156,8 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
 
       {/* Pending tags notification */}
       {hasPendingTags && (
-        <div className="mt-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
-          <p className="text-sm text-orange-800 flex items-center gap-2">
+        <div className="mt-4 p-3 bg-orange-50 dark:bg-orange-900/30 rounded-lg border border-orange-200 dark:border-orange-800">
+          <p className="text-sm text-orange-800 dark:text-orange-300 flex items-center gap-2">
             <Clock className="h-4 w-4" />
             {t('photo.tag.pendingInfo')}
           </p>

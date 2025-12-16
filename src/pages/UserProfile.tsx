@@ -644,66 +644,66 @@ if (loading) {
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.totalPhotos')}</span>
-                          <span className="font-bold text-blue-600">{profile.stats.totalPhotos}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.totalPhotos')}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{profile.stats.totalPhotos}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.uniqueLocations')}</span>
-                          <span className="font-bold text-green-600">{profile.stats.locationsContributed}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.uniqueLocations')}</span>
+                          <span className="font-bold text-green-600 dark:text-green-400">{profile.stats.locationsContributed}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.totalLikesReceived')}</span>
-                          <span className="font-bold text-red-600">{profile.stats.totalLikes}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.totalLikesReceived')}</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">{profile.stats.totalLikes}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.totalViews')}</span>
-                          <span className="font-bold text-purple-600">{profile.stats.totalViews}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.totalViews')}</span>
+                          <span className="font-bold text-purple-600 dark:text-purple-400">{profile.stats.totalViews}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.achievementsEarned')}</span>
-                          <span className="font-bold text-yellow-600">{profile.badges.length}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.achievementsEarned')}</span>
+                          <span className="font-bold text-yellow-600 dark:text-yellow-400">{profile.badges.length}</span>
                         </div>
                       </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                       <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
+                        <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                           <Users className="h-5 w-5" />
                           {t('profile.communityImpact')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.followers')}</span>
-                          <span className="font-bold text-blue-600">{profile.stats.followers}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.followers')}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{profile.stats.followers}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.following')}</span>
-                          <span className="font-bold text-blue-600">{profile.stats.following}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.following')}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{profile.stats.following}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.avgLikesPerPhoto')}</span>
-                          <span className="font-bold text-red-600">
-                            {profile.stats.totalPhotos > 0 
-                              ? Math.round(profile.stats.totalLikes / profile.stats.totalPhotos) 
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.avgLikesPerPhoto')}</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">
+                            {profile.stats.totalPhotos > 0
+                              ? Math.round(profile.stats.totalLikes / profile.stats.totalPhotos)
                               : 0
                             }
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.avgViewsPerPhoto')}</span>
-                          <span className="font-bold text-purple-600">
-                            {profile.stats.totalPhotos > 0 
-                              ? Math.round(profile.stats.totalViews / profile.stats.totalPhotos) 
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.avgViewsPerPhoto')}</span>
+                          <span className="font-bold text-purple-600 dark:text-purple-400">
+                            {profile.stats.totalPhotos > 0
+                              ? Math.round(profile.stats.totalViews / profile.stats.totalPhotos)
                               : 0
                             }
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span>{t('profile.memberSince')}</span>
-                          <span className="font-bold text-gray-600">
-                            {profile.joinedAt?.toDate ? 
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.memberSince')}</span>
+                          <span className="font-bold text-gray-600 dark:text-gray-300">
+                            {profile.joinedAt?.toDate ?
                               profile.joinedAt.toDate().toLocaleDateString('hr-HR') :
                               new Date().toLocaleDateString('hr-HR')
                             }
@@ -715,9 +715,9 @@ if (loading) {
                 </TabsContent>
 
                 <TabsContent value="activity" className="mt-6">
-                  <Card>
+                  <Card className="dark:bg-gray-800 dark:border-gray-700">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
+                      <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                         <Star className="h-5 w-5" />
                         {t('profile.activity')}
                       </CardTitle>
@@ -730,63 +730,63 @@ if (loading) {
                               const activityInfo = getActivityDisplay(activity.type, t);
                               const IconComponent = activityInfo.icon;
                               const activityLink = getActivityLink(activity);
-                              
+
                               return (
                                 <Link
                                   key={activity.id}
                                   to={activityLink || '#'}
-                                  className={`flex gap-3 p-4 border rounded-lg transition-colors ${
-                                    activityLink 
-                                      ? 'hover:bg-gray-50 hover:border-gray-300 cursor-pointer' 
+                                  className={`flex gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors ${
+                                    activityLink
+                                      ? 'hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
                                       : 'cursor-default'
                                   }`}
                                   onClick={(e) => !activityLink && e.preventDefault()}
                                 >
-                                  <div className={`p-2 rounded-full bg-gray-100 ${activityInfo.color} flex-shrink-0 h-fit`}>
+                                  <div className={`p-2 rounded-full bg-gray-100 dark:bg-gray-700 ${activityInfo.color} flex-shrink-0 h-fit`}>
                                     <IconComponent className="h-4 w-4" />
                                   </div>
-                                  
+
                                   <div className="flex-1 min-w-0">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:gap-1 sm:flex-wrap">
-                                      <span className="font-medium text-gray-900">
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">
                                         {profile.displayName}
                                       </span>
-                                      <span className="text-gray-600 text-sm sm:text-base">
+                                      <span className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
                                         {activityInfo.text}
                                       </span>
-                                      
+
                                       {activity.metadata?.photoTitle && (
-                                        <span className="font-medium text-blue-600 truncate">
+                                        <span className="font-medium text-blue-600 dark:text-blue-400 truncate">
                                           "{activity.metadata.photoTitle}"
                                         </span>
                                       )}
                                       {activity.metadata?.targetUserName && (
-                                        <span className="font-medium text-blue-600">
+                                        <span className="font-medium text-blue-600 dark:text-blue-400">
                                           {activity.metadata.targetUserName}
                                         </span>
                                       )}
                                       {activity.metadata?.badgeName && (
-                                        <span className="font-medium text-yellow-600 flex items-center gap-1">
+                                        <span className="font-medium text-yellow-600 dark:text-yellow-400 flex items-center gap-1">
                                           <Award className="h-3 w-3" />
                                           {activity.metadata.badgeName}
                                         </span>
                                       )}
                                     </div>
-                                    
+
                                     {activity.metadata?.location && (
-                                      <div className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                      <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
                                         <MapPin className="h-3 w-3 flex-shrink-0" />
                                         <span className="truncate">{activity.metadata.location}</span>
                                       </div>
                                     )}
-                                    
-                                    <div className="text-xs text-gray-400 mt-1">
+
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                                       {formatActivityDate(activity.createdAt)}
                                     </div>
                                   </div>
-                                  
+
                                   {activityLink && (
-                                    <div className="flex items-center text-gray-400">
+                                    <div className="flex items-center text-gray-400 dark:text-gray-500">
                                       <ArrowRight className="h-4 w-4" />
                                     </div>
                                   )}
