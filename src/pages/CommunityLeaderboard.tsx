@@ -431,7 +431,7 @@ const CommunityLeaderboard = () => {
             <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-10 sm:mb-12 gap-1 sm:gap-1 p-1 bg-muted">
               <TabsTrigger
                 value="photos"
-                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
               >
                 <Camera className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostPhotos')}</span>
@@ -439,7 +439,7 @@ const CommunityLeaderboard = () => {
               </TabsTrigger>
               <TabsTrigger
                 value="likes"
-                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
               >
                 <Heart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostLiked')}</span>
@@ -447,7 +447,7 @@ const CommunityLeaderboard = () => {
               </TabsTrigger>
               <TabsTrigger
                 value="locations"
-                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
               >
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostLocations')}</span>
@@ -455,7 +455,7 @@ const CommunityLeaderboard = () => {
               </TabsTrigger>
               <TabsTrigger
                 value="recent"
-                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
               >
                 <Star className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.newMembers')}</span>
