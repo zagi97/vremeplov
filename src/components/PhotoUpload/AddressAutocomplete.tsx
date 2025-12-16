@@ -437,19 +437,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {showDropdown && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto"
         >
           {loadingAddresses && (
-            <div className="p-3 text-sm text-gray-500 text-center">
+            <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">
               {t('upload.searchingAddresses')}
             </div>
           )}
 
           {!loadingAddresses && availableAddresses.length === 0 && value.length >= 2 && (
-            <div className="p-3 text-sm text-gray-600 text-center space-y-2">
+            <div className="p-3 text-sm text-gray-600 dark:text-gray-300 text-center space-y-2">
               <div>{t('upload.noAddressesFound')}</div>
-              <div className="text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded border border-blue-200">
-                💡 Pritisnite <kbd className="px-2 py-1 bg-white border border-blue-300 rounded text-blue-900 font-mono text-xs">Enter</kbd> za ručni unos
+              <div className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-2 rounded border border-blue-200 dark:border-blue-800">
+                💡 Pritisnite <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-blue-300 dark:border-blue-700 rounded text-blue-900 dark:text-blue-300 font-mono text-xs">Enter</kbd> za ručni unos
               </div>
             </div>
           )}
@@ -458,7 +458,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             <div
               key={index}
               onClick={() => handleSelect(address)}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b last:border-b-0"
+              className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-sm text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 last:border-b-0"
             >
               {address}
             </div>
