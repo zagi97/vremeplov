@@ -21,12 +21,12 @@ const CharacterCounter: React.FC<CharacterCounterProps> = ({
   
   // Color logic:
   // - Green/gray: 0-79%
-  // - Yellow/warning: 80-94% 
+  // - Yellow/warning: 80-94%
   // - Red: 95-100%
   const getColorClass = () => {
-    if (percentage >= 95) return "text-red-600 font-medium";
-    if (percentage >= 80) return "text-yellow-600 font-medium";
-    return "text-gray-500";
+    if (percentage >= 95) return "text-red-600 dark:text-red-400 font-medium";
+    if (percentage >= 80) return "text-yellow-600 dark:text-yellow-400 font-medium";
+    return "text-gray-500 dark:text-gray-400";
   };
 
   return (
