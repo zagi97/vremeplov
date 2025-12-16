@@ -1,4 +1,4 @@
-// src/pages/UserProfile.tsx - KOMPLETNA verzija sa Load More za fotografije
+// src/pages/UserProfile.tsx - UPDATED filter widths
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
@@ -112,8 +112,8 @@ const UserProfilePage = () => {
   // Get unique years from photos
   const availableYears = useMemo(() => {
     const years = userPhotos
-      .map(photo => photo.year)
-      .filter((year): year is number => year !== null && year !== undefined)
+      .map(photo => photo.year ? parseInt(photo.year, 10) : null)
+      .filter((year): year is number => year !== null && !isNaN(year))
       .sort((a, b) => b - a); // Newest first
     return Array.from(new Set(years));
   }, [userPhotos]);
@@ -154,21 +154,19 @@ const UserProfilePage = () => {
       } else {
         await userService.followUser(currentUser.uid, userId!);
 
-        // ✅✅✅ DODAJ OVAJ NOVI KOD ✅✅✅
-      // Send notification to followed user
-      if (userId) {
-        try {
-          await notificationService.notifyNewFollower(
-            userId,                               // User being followed
-            currentUser.uid,                      // Follower ID
-            currentUser.displayName || 'Anonymous', // Follower name
-            currentUser.photoURL || undefined     // Follower avatar
-          );
-        } catch (notifError) {
-          console.error('⚠️ Failed to send follow notification:', notifError);
+        // ✅ Send notification to followed user
+        if (userId) {
+          try {
+            await notificationService.notifyNewFollower(
+              userId,
+              currentUser.uid,
+              currentUser.displayName || 'Anonymous',
+              currentUser.photoURL || undefined
+            );
+          } catch (notifError) {
+            console.error('⚠️ Failed to send follow notification:', notifError);
+          }
         }
-      }
-      // ✅✅✅ KRAJ NOVOG KODA ✅✅✅
 
         setIsFollowing(true);
         setProfile(prev => prev ? {
@@ -231,7 +229,7 @@ const UserProfilePage = () => {
     }
   };
 
-  // ✅ NEW - Load more photos
+  // Load more photos
   const loadMorePhotos = async () => {
     if (!userId || loadingMorePhotos) return;
     
@@ -465,9 +463,10 @@ if (loading) {
                     <>
                       {/* Filters */}
                       <div className="mb-4 flex flex-wrap gap-2 sm:gap-3 items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+                        <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0 hidden sm:block" />
+                        
                         <Select value={selectedYear} onValueChange={setSelectedYear}>
-                          <SelectTrigger className="w-[140px] sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                          <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
                             <SelectValue placeholder={t('profile.allYears')} />
                           </SelectTrigger>
                           <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -480,10 +479,10 @@ if (loading) {
                           </SelectContent>
                         </Select>
 
-                        <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 hidden sm:block"></div>
+                        <div className="hidden sm:block h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
 
                         <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
-                          <SelectTrigger className="w-[140px] sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                          <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
@@ -584,7 +583,7 @@ if (loading) {
                         ))}
                       </div>
 
-                      {/* ✅ NEW - Load More Photos Button */}
+                      {/* Load More Photos Button */}
                       {hasMorePhotos && userPhotos.length > 0 && (
                         <div className="text-center mt-6 pt-4 border-t">
                           <Button 
