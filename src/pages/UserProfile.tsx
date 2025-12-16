@@ -555,21 +555,21 @@ if (loading) {
                               </div>
                               
                               <CardContent className="p-4">
-                                <h3 className="font-semibold text-lg mb-1 line-clamp-1">
+                                <h3 className="font-semibold text-lg mb-1 line-clamp-1 text-gray-900 dark:text-gray-100">
                                   {photo.description}
                                 </h3>
-                                
-                                <div className="flex items-center text-sm text-gray-500 mb-2">
+
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                                   <Calendar className="h-3 w-3 mr-1" />
                                   <span>{photo.year || t('profile.unknown')}</span>
                                 </div>
-                                
-                                <div className="flex items-center text-sm text-gray-500 mb-3">
+
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
                                   <MapPin className="h-3 w-3 mr-1" />
                                   <span className="line-clamp-1">{photo.location}</span>
                                 </div>
-                                
-                                <div className="flex items-center justify-between text-sm text-gray-500">
+
+                                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                                   <div className="flex items-center gap-3">
                                     <span className="flex items-center gap-1">
                                       <Heart className="h-3 w-3" />
@@ -580,7 +580,7 @@ if (loading) {
                                       {photo.views || 0}
                                     </span>
                                   </div>
-                                  <span className="truncate">{photo.author || photo.uploadedBy || t('profile.unknown')}</span>
+                                  <span className="truncate text-gray-500 dark:text-gray-400">{photo.author || photo.uploadedBy || t('profile.unknown')}</span>
                                 </div>
                               </CardContent>
                             </Card>
