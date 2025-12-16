@@ -100,8 +100,8 @@ export default function CommentModerationTab() {
             {paginatedComments.map((comment) => (
               <Card
                 key={comment.id}
-                className={`overflow-hidden transition-colors ${
-                  comment.isFlagged ? 'border-red-300 bg-red-50' : ''
+                className={`overflow-hidden transition-colors dark:bg-gray-800 dark:border-gray-700 ${
+                  comment.isFlagged ? 'border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/30' : ''
                 }`}
               >
                 <CardContent className="p-6">
@@ -109,10 +109,10 @@ export default function CommentModerationTab() {
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-3 break-words">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="font-medium">{comment.userName}</span>
-                        <span className="text-gray-400 text-sm">•</span>
-                        <span className="text-gray-500 text-sm break-words">
+                        <User className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                        <span className="font-medium dark:text-gray-200">{comment.userName}</span>
+                        <span className="text-gray-400 dark:text-gray-500 text-sm">•</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-sm break-words">
                           {comment.userEmail}
                         </span>
                         {comment.isFlagged && (
@@ -149,8 +149,8 @@ export default function CommentModerationTab() {
                   </div>
 
                   {/* Comment Text */}
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-                    <p className="text-gray-800 leading-relaxed break-words">
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-800 dark:text-gray-200 leading-relaxed break-words">
                       {comment.text}
                     </p>
                   </div>

@@ -70,7 +70,7 @@ function UserManagementCard({
   }) || 'Unknown';
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700">
       <CardContent className="p-6">
         {/* User Header */}
         <div className="flex items-start justify-between mb-4 gap-4">
@@ -82,8 +82,8 @@ function UserManagementCard({
 
             {/* User Info */}
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-lg break-words">{user.displayName || 'Unknown User'}</h3>
-              <p className="text-sm text-muted-foreground break-words">{user.email}</p>
+              <h3 className="font-semibold text-lg break-words dark:text-gray-200">{user.displayName || 'Unknown User'}</h3>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 break-words">{user.email}</p>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {getStatusBadge()}
                 <span className="text-xs text-muted-foreground">Joined: {joinDate}</span>
@@ -93,40 +93,40 @@ function UserManagementCard({
         </div>
 
         {/* User Stats */}
-        <div className="grid grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{user.stats?.totalPhotos || 0}</div>
-            <div className="text-xs text-muted-foreground">Photos</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{user.stats?.totalPhotos || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Photos</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-red-600">{user.stats?.totalLikes || 0}</div>
-            <div className="text-xs text-muted-foreground">Likes</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{user.stats?.totalLikes || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Likes</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{user.stats?.totalViews || 0}</div>
-            <div className="text-xs text-muted-foreground">Views</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{user.stats?.totalViews || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Views</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{user.stats?.locationsContributed || 0}</div>
-            <div className="text-xs text-muted-foreground">Locations</div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{user.stats?.locationsContributed || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Locations</div>
           </div>
         </div>
 
         {/* Suspension/Ban Info */}
         {user.status === 'suspended' && user.suspendedUntil && (
-          <div className="bg-orange-50 border-l-4 border-orange-500 p-3 mb-4 rounded">
-            <p className="text-sm font-medium text-orange-800">Suspended until: {user.suspendedUntil.toDate().toLocaleDateString('hr-HR')}</p>
+          <div className="bg-orange-50 dark:bg-orange-950/30 border-l-4 border-orange-500 dark:border-orange-600 p-3 mb-4 rounded">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-300">Suspended until: {user.suspendedUntil.toDate().toLocaleDateString('hr-HR')}</p>
             {user.suspendReason && (
-              <p className="text-xs text-orange-600 mt-1 break-words">Reason: {user.suspendReason}</p>
+              <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 break-words">Reason: {user.suspendReason}</p>
             )}
           </div>
         )}
 
         {user.status === 'banned' && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded">
-            <p className="text-sm font-medium text-red-800">Permanently Banned</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 dark:border-red-600 p-3 mb-4 rounded">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">Permanently Banned</p>
             {user.banReason && (
-              <p className="text-xs text-red-600 mt-1 break-words">Reason: {user.banReason}</p>
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1 break-words">Reason: {user.banReason}</p>
             )}
           </div>
         )}
