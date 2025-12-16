@@ -139,8 +139,8 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             responsiveImages={responsiveImages}
           />
 
-          {/* Toggle button for showing/hiding tags */}
-          <div className="absolute top-4 left-4 z-30">
+          {/* Toggle button for showing/hiding tags - MOBILE ONLY */}
+          <div className="absolute top-4 left-4 z-30 md:hidden">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
@@ -157,8 +157,8 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
           {/* Overlay container for tags and buttons */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            {/* Hover-Only Tagged Persons */}
-            {showTags && taggedPersons.map((person) => {
+            {/* Tagged Persons - Mobile: controlled by showTags, Desktop: show on hover */}
+            {taggedPersons.map((person) => {
               // Determine tag type and styling
               const isApproved = person.isApproved !== false;
               const isPending = person.isApproved === false;
@@ -189,7 +189,10 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
               return (
                 <div
                   key={person.id}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  className={`absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-200 ${
+                    // Mobile: controlled by showTags state
+                    showTags ? 'opacity-100' : 'opacity-0'
+                  } md:opacity-0 md:group-hover:opacity-100`}
                 >
                   <div
                     onMouseEnter={() => setHoveredTag(person.id)}
@@ -236,8 +239,11 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             )}
 
             {/* Tag Button - Only show if user is photo owner or admin */}
-            {canUserTag && showTags && (
-              <div className="absolute bottom-4 right-4 z-30">
+            {canUserTag && (
+              <div className={`absolute bottom-4 right-4 z-30 transition-opacity duration-200 ${
+                // Mobile: controlled by showTags state
+                showTags ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              } md:opacity-0 md:pointer-events-auto md:group-hover:opacity-100`}>
                 {!isTagging && (
                   <Button
                     onClick={(e) => {
