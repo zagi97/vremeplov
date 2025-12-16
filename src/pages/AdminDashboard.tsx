@@ -5,8 +5,9 @@ import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Check, X, Eye, BarChart3, Users, MessageSquare, Tag, LogOut } from 'lucide-react';
+import { Check, X, Eye, BarChart3, Users, MessageSquare, Tag, LogOut, Sun, Moon } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Import custom hooks
 import { usePhotoModeration } from '@/hooks/admin/usePhotoModeration';
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   const { user, isAdmin, loading, exitAdminMode } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { theme, setTheme, resolvedTheme } = useTheme();
 
   const photoMod = usePhotoModeration();
   const tagMod = useTagModeration();
@@ -132,10 +134,10 @@ export default function AdminDashboard() {
   // Show loading spinner while auth is initializing
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     );
@@ -143,10 +145,10 @@ export default function AdminDashboard() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-96">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Card className="w-96 dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="text-center text-destructive">
+            <CardTitle className="text-center text-red-600 dark:text-red-400">
               Access Denied
             </CardTitle>
           </CardHeader>
@@ -161,7 +163,7 @@ export default function AdminDashboard() {
               <Button
                 variant="outline"
                 onClick={() => (window.location.href = '/')}
-                className="w-full"
+                className="w-full dark:border-gray-600 dark:hover:bg-gray-700"
               >
                 Back to Home
               </Button>
@@ -175,45 +177,60 @@ export default function AdminDashboard() {
   // Show loading spinner only if we're in admin mode and data is loading
   if (photoMod.loading && tagMod.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading admin dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-lg p-4 md:p-8 border-t-4 border-blue-500">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 md:p-8 border-t-4 border-blue-500 dark:border-blue-400">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                   Admin Dashboard
                 </h1>
-                <p className="text-gray-600 text-sm md:text-base mt-2">
+                <p className="text-gray-600 dark:text-gray-300 text-sm md:text-base mt-2">
                   Manage photos, tags, users, and content moderation
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-                <span className="text-xs md:text-sm text-gray-600 truncate max-w-[200px] sm:max-w-none">
+                <span className="text-xs md:text-sm text-gray-600 dark:text-gray-300 truncate max-w-[200px] sm:max-w-none">
                   Welcome, {user?.email}
                 </span>
-              
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 border-blue-300 hover:bg-blue-50 transition-colors w-full sm:w-auto"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
+
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                    className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {resolvedTheme === 'dark' ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Moon className="h-4 w-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 border-blue-300 dark:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex-1 sm:flex-initial"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -289,10 +306,10 @@ export default function AdminDashboard() {
           ].map((item, idx) => (
             <Card
               key={idx}
-              className={`${item.border} hover:shadow-lg transition-all duration-300 hover:scale-[1.03]`}
+              className={`${item.border} dark:border-gray-700 dark:bg-gray-800 hover:shadow-lg dark:hover:shadow-blue-900/20 transition-all duration-300 hover:scale-[1.03]`}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-700">
+                <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {item.title}
                 </CardTitle>
                 <div
@@ -305,7 +322,7 @@ export default function AdminDashboard() {
                 <div
                   className={`text-3xl font-bold ${
                     item.textGradient.startsWith('text-')
-                      ? item.textGradient
+                      ? item.textGradient + ' dark:text-opacity-90'
                       : `bg-gradient-to-r ${item.textGradient} bg-clip-text text-transparent`
                   }`}
                 >
