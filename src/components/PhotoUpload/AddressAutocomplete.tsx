@@ -420,7 +420,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   return (
     <div className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
         <Input
           ref={searchInputRef}
           type="text"
@@ -429,7 +429,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
-          className="pl-10"
+          className="pl-10 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
         />
       </div>
 
