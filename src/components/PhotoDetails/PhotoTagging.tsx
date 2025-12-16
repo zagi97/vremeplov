@@ -155,10 +155,10 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             </Button>
           </div>
 
-          {/* Hover-Only Tagged Persons */}
-          {showTags && (
+          {/* Overlay container for tags and buttons */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            {taggedPersons.map((person) => {
+            {/* Hover-Only Tagged Persons */}
+            {showTags && taggedPersons.map((person) => {
               // Determine tag type and styling
               const isApproved = person.isApproved !== false;
               const isPending = person.isApproved === false;
@@ -223,8 +223,6 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                 </div>
               );
             })}
-          </div>
-          )}
 
             {/* Current tag position marker (when tagging) */}
             {isTagging && hasSelectedPosition && (
