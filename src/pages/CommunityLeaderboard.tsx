@@ -646,37 +646,37 @@ const CommunityLeaderboard = () => {
                 ) : (
                   <>
                     {/* Community Stats */}
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                       <CardHeader className="pb-3 sm:pb-6">
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-gray-100">
                           <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                           {t('community.communityStats')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3 sm:space-y-4">
                         <div className="flex justify-between text-sm sm:text-base">
-                          <span className="text-gray-600">{t('community.totalMembers')}</span>
-                          <span className="font-bold">{communityStats.totalMembers.toLocaleString()}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('community.totalMembers')}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.totalMembers.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm sm:text-base">
-                          <span className="text-gray-600">{t('community.photosShared')}</span>
-                          <span className="font-bold">{communityStats.photosShared.toLocaleString()}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('community.photosShared')}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.photosShared.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm sm:text-base">
-                          <span className="text-gray-600">{t('community.locationsDocumented')}</span>
-                          <span className="font-bold">{communityStats.locationsDocumented.toLocaleString()}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('community.locationsDocumented')}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.locationsDocumented.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm sm:text-base">
-                          <span className="text-gray-600">{t('profile.totalLikes')}</span>
-                          <span className="font-bold">{communityStats.totalLikes.toLocaleString()}</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('profile.totalLikes')}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.totalLikes.toLocaleString()}</span>
                         </div>
                       </CardContent>
                     </Card>
 
                     {/* Highlights */}
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                       <CardHeader className="pb-3 sm:pb-6">
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-gray-100">
                           <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
                           {timePeriod === 'all-time' && t('community.allTimeHighlights')}
                           {timePeriod === 'this-year' && t('community.thisYearsHighlights')}
@@ -684,38 +684,38 @@ const CommunityLeaderboard = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4 sm:space-y-6">
-                        <div className="pb-3 sm:pb-4 border-b border-gray-100">
-                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                        <div className="pb-3 sm:pb-4 border-b border-gray-100 dark:border-gray-700">
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.mostActiveLocation')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg">
+                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100">
                             {monthlyHighlights.mostActiveLocation.name}
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
                           </div>
                         </div>
-                        
-                        <div className="pb-3 sm:pb-4 border-b border-gray-100">
-                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+
+                        <div className="pb-3 sm:pb-4 border-b border-gray-100 dark:border-gray-700">
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.photoOfTheMonth')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg">
+                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100">
                             {monthlyHighlights.photoOfTheMonth.title}
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
                           </div>
                         </div>
-                        
+
                         <div>
-                          <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                          <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.newMembers')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg">
+                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100">
                             {monthlyHighlights.newMembers.count} {t('community.joined')}
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-500 mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {monthlyHighlights.newMembers.percentageChange > 0 ? '+' : ''}
                             {monthlyHighlights.newMembers.percentageChange}% {t('community.fromLastMonth')}
                           </div>
@@ -724,15 +724,15 @@ const CommunityLeaderboard = () => {
                     </Card>
 
                     {/* Badge Showcase */}
-                    <Card>
+                    <Card className="dark:bg-gray-800 dark:border-gray-700">
                       <CardHeader className="pb-3 sm:pb-6">
-                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg text-gray-900 dark:text-gray-100">
                           <Award className="h-4 w-4 sm:h-5 sm:w-5" />
                           {t('community.achievementSystem')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="text-xs sm:text-sm text-gray-600 mb-3">
+                        <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3">
                           {t('community.earnBadges')}
                         </div>
                         <div className="space-y-2 text-xs">
