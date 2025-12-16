@@ -369,7 +369,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
               return (
                 <div
                   key={comment.id}
-                  className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
+                  className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
