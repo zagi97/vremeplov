@@ -35,8 +35,8 @@ const Contact = () => {
                 <Mail className="h-12 w-12 text-blue-600" />
               </div>
             </div>
-            <h3 className="text-3xl font-bold mb-4">{t('contact.getInTouch')}</h3>
-            <p className="text-gray-700 text-lg mb-6">
+            <h3 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('contact.getInTouch')}</h3>
+            <p className="text-gray-700 dark:text-gray-300 text-lg mb-6">
               {t('contact.getInTouchText')}
             </p>
             <div className="bg-blue-50 dark:bg-blue-900/30 p-6 rounded-lg inline-block">
@@ -66,7 +66,7 @@ const Contact = () => {
 
           {/* Contact Reasons */}
           <div className="mb-12">
-            <h3 className="text-2xl font-bold mb-8 text-center">{t('contact.whatCanWeHelp')}</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-8 text-center">{t('contact.whatCanWeHelp')}</h3>
             <div className="grid md:grid-cols-2 gap-6">
               
               <div className="bg-green-50 dark:bg-green-900/30 p-6 rounded-lg">
@@ -138,7 +138,7 @@ const Contact = () => {
             <p className="text-gray-700 dark:text-gray-300 mb-6">
               {t('contact.otherWaysText')}
             </p>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
               {t('contact.newsletter')}
             </p>
           </div>
