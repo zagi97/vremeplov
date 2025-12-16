@@ -28,20 +28,9 @@ input[placeholder*="Search"]::placeholder {
   opacity: 1 !important;
 }
 
+/* REMOVED: Hard-coded white background that was breaking dark mode */
 /* Specific override for your search component */
-form input[type="text"] {
-  background-color: #ffffff !important;
-  color: #1f2937 !important;
-  border: 1px solid #d1d5db !important;
-}
-
-form input[type="text"]:focus {
-  background-color: #ffffff !important;
-  color: #1f2937 !important;
-  border-color: #3b82f6 !important;
-  outline: none !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-}
+/* Dark mode is now handled by Tailwind classes in components */
 
 /* ✅ CUSTOM LEAFLET STYLES */
 /* Custom styles za photo markers */
