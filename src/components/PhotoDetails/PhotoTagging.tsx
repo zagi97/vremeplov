@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CharacterCounter } from "@/components/ui/character-counter";
-import { Tag, Users, Clock, AlertTriangle } from "lucide-react";
+import { Tag, Users, Clock, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import LazyImage from "@/components/LazyImage";
@@ -66,6 +66,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
+  const [showTags, setShowTags] = useState(true);
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
@@ -138,9 +139,26 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             responsiveImages={responsiveImages}
           />
 
-          {/* Hover-Only Tagged Persons */}
+          {/* Toggle button for showing/hiding tags */}
+          <div className="absolute top-4 left-4 z-30">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowTags(!showTags);
+              }}
+              variant="secondary"
+              size="icon"
+              className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm shadow-lg"
+              aria-label={showTags ? t('photoDetail.hideTags') : t('photoDetail.showTags')}
+            >
+              {showTags ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {/* Overlay container for tags and buttons */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            {taggedPersons.map((person) => {
+            {/* Hover-Only Tagged Persons */}
+            {showTags && taggedPersons.map((person) => {
               // Determine tag type and styling
               const isApproved = person.isApproved !== false;
               const isPending = person.isApproved === false;
@@ -218,7 +236,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             )}
 
             {/* Tag Button - Only show if user is photo owner or admin */}
-            {canUserTag && (
+            {canUserTag && showTags && (
               <div className="absolute bottom-4 right-4 z-30">
                 {!isTagging && (
                   <Button

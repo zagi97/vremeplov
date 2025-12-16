@@ -100,14 +100,11 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
         {/* Tagged People - only approved tags */}
         {approvedTags.length > 0 && (
           <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 mb-3">
               <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                {t('photoDetail.taggedPeople')}
+                {t('photoDetail.taggedPeople')} ({approvedTags.length})
               </h4>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {approvedTags.length} osoba
-              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {approvedTags.map((person) => (
