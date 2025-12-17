@@ -49,10 +49,12 @@ const SearchBar = () => {
     }
   };
 
-  const filteredLocations = allLocations.filter((location: Location) =>
-    location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    location.displayName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredLocations = allLocations
+    .filter((location: Location) =>
+      location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      location.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, 'hr'));
 
   const selectLocation = (location: Location) => {
     setSearchQuery(location.displayName);
@@ -112,7 +114,7 @@ const SearchBar = () => {
               ref={inputRef}
               type="text"
               placeholder={t('search.placeholder')}
-              className="search-input pr-10 rounded-r-none h-10 md:h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-r-0 focus-visible:ring-offset-0 shadow-sm dark:border-gray-600"
+              className="search-input pr-10 rounded-r-none h-10 md:h-12 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 border-r-0 focus-visible:ring-0 focus-visible:ring-offset-0 dark:focus:border-gray-600 shadow-sm dark:border-gray-600"
               value={searchQuery}
               onChange={(e) => {
                 handleInputChange(e.target.value);
@@ -148,10 +150,10 @@ const SearchBar = () => {
           <Command shouldFilter={false}>
             <CommandList id="location-listbox" role="listbox">
               {loading ? (
-                <CommandEmpty className="text-gray-600 dark:text-gray-300">{t('common.loading')}</CommandEmpty>
+                <CommandEmpty className="py-6 text-center text-gray-600 dark:text-gray-300">{t('common.loading')}</CommandEmpty>
               ) : (
                 <>
-                  <CommandEmpty className="text-gray-600 dark:text-gray-300">{t('search.noLocations')}</CommandEmpty>
+                  <CommandEmpty className="py-6 text-center text-gray-600 dark:text-gray-300">{t('search.noLocations')}</CommandEmpty>
                   <CommandGroup>
                     {filteredLocations.map((location) => (
                       <CommandItem
