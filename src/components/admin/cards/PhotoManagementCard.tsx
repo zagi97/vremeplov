@@ -173,12 +173,12 @@ const buildDeleteReasonText = () => {
     <Button
       size="sm"
       variant="outline"
-      className="text-red-600 border-red-600 hover:bg-red-50"
+      className="text-red-600 dark:text-red-400 border-red-600 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
     >
       <Trash2 className="h-4 w-4" />
     </Button>
   </AlertDialogTrigger>
-  <AlertDialogContent className="max-w-xl">
+  <AlertDialogContent className="max-w-xl dark:bg-gray-800 dark:border-gray-700">
     <AlertDialogHeader>
       <AlertDialogTitle>Delete Approved Memory</AlertDialogTitle>
       <AlertDialogDescription>
@@ -195,9 +195,9 @@ const buildDeleteReasonText = () => {
             onChange={(e) => setDeleteReason(prev => ({ ...prev, reported: e.target.checked }))}
             className="w-4 h-4 text-red-600 rounded"
           />
-          <span className="text-sm">Prijavljeno od drugih korisnika</span>
+          <span className="text-sm dark:text-gray-200">Prijavljeno od drugih korisnika</span>
         </label>
-        
+
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
@@ -205,9 +205,9 @@ const buildDeleteReasonText = () => {
             onChange={(e) => setDeleteReason(prev => ({ ...prev, duplicate: e.target.checked }))}
             className="w-4 h-4 text-red-600 rounded"
           />
-          <span className="text-sm">Duplikat postojeće fotografije</span>
+          <span className="text-sm dark:text-gray-200">Duplikat postojeće fotografije</span>
         </label>
-        
+
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
@@ -215,9 +215,9 @@ const buildDeleteReasonText = () => {
             onChange={(e) => setDeleteReason(prev => ({ ...prev, inappropriate: e.target.checked }))}
             className="w-4 h-4 text-red-600 rounded"
           />
-          <span className="text-sm">Neprimjeren sadržaj</span>
+          <span className="text-sm dark:text-gray-200">Neprimjeren sadržaj</span>
         </label>
-        
+
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
@@ -225,9 +225,9 @@ const buildDeleteReasonText = () => {
             onChange={(e) => setDeleteReason(prev => ({ ...prev, outdated: e.target.checked }))}
             className="w-4 h-4 text-red-600 rounded"
           />
-          <span className="text-sm">Zastarjele/netočne informacije</span>
+          <span className="text-sm dark:text-gray-200">Zastarjele/netočne informacije</span>
         </label>
-        
+
         <label className="flex items-center space-x-2 cursor-pointer">
           <input
             type="checkbox"
@@ -235,12 +235,12 @@ const buildDeleteReasonText = () => {
             onChange={(e) => setDeleteReason(prev => ({ ...prev, copyrightViolation: e.target.checked }))}
             className="w-4 h-4 text-red-600 rounded"
           />
-          <span className="text-sm">Kršenje autorskih prava</span>
+          <span className="text-sm dark:text-gray-200">Kršenje autorskih prava</span>
         </label>
       </div>
-      
+
       <div>
-        <label className="text-sm font-medium block mb-2">Ostalo (ručni unos):</label>
+        <label className="text-sm font-medium block mb-2 dark:text-gray-200">Ostalo (ručni unos):</label>
         <Textarea
           value={deleteReason.custom}
           onChange={(e) => {
@@ -250,19 +250,21 @@ const buildDeleteReasonText = () => {
           placeholder="Dodatni razlog brisanja..."
           rows={3}
           maxLength={250}
-          className={`w-full ${deleteReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500' : ''}`}
+          className={`w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 ${
+            deleteReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500 dark:border-red-500 dark:focus:border-red-400' : ''
+          }`}
         />
         <p className={`text-sm mt-1 ${
-          deleteReason.custom.length > 240 
-            ? 'text-red-600 font-bold' 
-            : 'text-muted-foreground'
+          deleteReason.custom.length > 240
+            ? 'text-orange-600 dark:text-orange-400 font-bold'
+            : 'text-muted-foreground dark:text-gray-400'
         }`}>
           {deleteReason.custom.length}/250 znakova
         </p>
       </div>
-      
+
       {!hasDeleteReason && (
-        <p className="text-sm text-red-600">
+        <p className="text-sm text-orange-600 dark:text-orange-400">
           Morate odabrati barem jedan razlog ili napisati prilagođeni razlog (max 250 znakova).
         </p>
       )}

@@ -118,7 +118,7 @@ const hasRejectReason = (
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
         <div className="flex-shrink-0 relative group w-full sm:w-48">
           <Dialog>
@@ -157,10 +157,10 @@ const hasRejectReason = (
         <div className="flex-1 min-w-0 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
+              <Badge variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-500">
                 Pending Review
               </Badge>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">
                 Uploaded: {photo.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
                   day: '2-digit',
                   month: '2-digit',
@@ -182,7 +182,7 @@ const hasRejectReason = (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    className="text-green-600 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/30"
                   >
                     <Check className="h-4 w-4" />
                     Approve
@@ -210,13 +210,13 @@ const hasRejectReason = (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50"
+                    className="text-red-600 dark:text-red-400 border-red-600 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
                   >
                     <X className="h-4 w-4" />
                     Reject
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="max-w-xl">
+                <AlertDialogContent className="max-w-xl dark:bg-gray-800 dark:border-gray-700">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Reject Memory</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -233,9 +233,9 @@ const hasRejectReason = (
                           onChange={(e) => setRejectReason(prev => ({ ...prev, lowQuality: e.target.checked }))}
                           className="w-4 h-4 text-red-600 rounded"
                         />
-                        <span className="text-sm">Niska kvaliteta slike</span>
+                        <span className="text-sm dark:text-gray-200">Niska kvaliteta slike</span>
                       </label>
-                      
+
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -243,9 +243,9 @@ const hasRejectReason = (
                           onChange={(e) => setRejectReason(prev => ({ ...prev, notRelevant: e.target.checked }))}
                           className="w-4 h-4 text-red-600 rounded"
                         />
-                        <span className="text-sm">Sadržaj nije relevantan</span>
+                        <span className="text-sm dark:text-gray-200">Sadržaj nije relevantan</span>
                       </label>
-                      
+
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -253,9 +253,9 @@ const hasRejectReason = (
                           onChange={(e) => setRejectReason(prev => ({ ...prev, wrongLocation: e.target.checked }))}
                           className="w-4 h-4 text-red-600 rounded"
                         />
-                        <span className="text-sm">Netočna lokacija ili godina</span>
+                        <span className="text-sm dark:text-gray-200">Netočna lokacija ili godina</span>
                       </label>
-                      
+
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -263,9 +263,9 @@ const hasRejectReason = (
                           onChange={(e) => setRejectReason(prev => ({ ...prev, duplicate: e.target.checked }))}
                           className="w-4 h-4 text-red-600 rounded"
                         />
-                        <span className="text-sm">Duplikat postojeće fotografije</span>
+                        <span className="text-sm dark:text-gray-200">Duplikat postojeće fotografije</span>
                       </label>
-                      
+
                       <label className="flex items-center space-x-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -273,12 +273,12 @@ const hasRejectReason = (
                           onChange={(e) => setRejectReason(prev => ({ ...prev, inappropriate: e.target.checked }))}
                           className="w-4 h-4 text-red-600 rounded"
                         />
-                        <span className="text-sm">Neprimjeren sadržaj</span>
+                        <span className="text-sm dark:text-gray-200">Neprimjeren sadržaj</span>
                       </label>
                     </div>
-                    
+
                     <div>
-  <label className="text-sm font-medium block mb-2">Ostalo (ručni unos):</label>
+  <label className="text-sm font-medium block mb-2 dark:text-gray-200">Ostalo (ručni unos):</label>
   <Textarea
     value={rejectReason.custom}
     onChange={(e) => {
@@ -288,12 +288,14 @@ const hasRejectReason = (
     placeholder="Dodatni razlog odbijanja..."
     rows={3}
     maxLength={250}
-    className={`w-full ${rejectReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500' : ''}`}
+    className={`w-full dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 ${
+      rejectReason.custom.length >= 240 ? 'border-red-300 focus:border-red-500 dark:border-red-500 dark:focus:border-red-400' : ''
+    }`}
   />
   <p className={`text-sm mt-1 ${
-    rejectReason.custom.length > 240 
-      ? 'text-red-600 font-bold' 
-      : 'text-muted-foreground'
+    rejectReason.custom.length > 240
+      ? 'text-orange-600 dark:text-orange-400 font-bold'
+      : 'text-muted-foreground dark:text-gray-400'
   }`}>
     {rejectReason.custom.length}/250 znakova
   </p>
