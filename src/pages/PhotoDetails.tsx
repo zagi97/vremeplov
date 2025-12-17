@@ -129,6 +129,7 @@ const PhotoDetail = () => {
 
           {/* Photo Stats Component */}
           <PhotoStats
+            photoId={photoId!}
             views={views}
             likes={likes}
             taggedPersonsCount={taggedPersons.length}
@@ -146,6 +147,7 @@ const PhotoDetail = () => {
             author={photo.author}
             location={photo.location}
             uploadedBy={photo.uploadedBy}
+            uploadedByUid={photo.authorId}
             uploadedAt={photo.uploadedAt}
             description={photo.description}
             detailedDescription={photo.detailedDescription}

@@ -1,12 +1,14 @@
 // src/components/PhotoDetails/PhotoStats.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Heart, Eye, Users, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { User } from 'firebase/auth';
+import { LikesModal } from "@/components/LikesModal";
 
 interface PhotoStatsProps {
+  photoId: string;
   views: number;
   likes: number;
   taggedPersonsCount: number;
@@ -19,6 +21,7 @@ interface PhotoStatsProps {
 }
 
 export const PhotoStats: React.FC<PhotoStatsProps> = ({
+  photoId,
   views,
   likes,
   taggedPersonsCount,
@@ -30,6 +33,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
   isPhotoPending = false
 }) => {
   const { t } = useLanguage();
+  const [likesModalOpen, setLikesModalOpen] = useState(false);
 
   return (
     <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -40,10 +44,14 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             <Eye className="h-5 w-5" />
             <span className="text-sm">{views} {t('photoDetail.views')}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <button
+            onClick={() => likes > 0 && setLikesModalOpen(true)}
+            className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
+            disabled={likes === 0}
+          >
             <Heart className="h-5 w-5" />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
-          </div>
+          </button>
           {taggedPersonsCount > 0 && (
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Users className="h-5 w-5" />
@@ -95,10 +103,14 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             <Eye className="h-5 w-5" />
             <span className="text-sm">{views} {t('photoDetail.views')}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+          <button
+            onClick={() => likes > 0 && setLikesModalOpen(true)}
+            className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
+            disabled={likes === 0}
+          >
             <Heart className="h-5 w-5" />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
-          </div>
+          </button>
           {taggedPersonsCount > 0 && (
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
               <Users className="h-5 w-5" />
@@ -163,6 +175,14 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
           </p>
         </div>
       )}
+
+      <LikesModal
+        photoId={photoId}
+        isOpen={likesModalOpen}
+        onClose={() => setLikesModalOpen(false)}
+        totalLikes={likes}
+      />
     </div>
   );
 };
+

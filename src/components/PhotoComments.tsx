@@ -1,5 +1,6 @@
 // src/components/PhotoComments.tsx
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { User, MessageSquare, Send, LogIn, AlertTriangle, TrendingUp } from "lucide-react";
@@ -375,9 +376,18 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
-                        <span className="font-medium break-words text-gray-900 dark:text-gray-100">
-                          {comment.userName || 'Nepoznato'}
-                        </span>
+                        {comment.userId ? (
+                          <Link
+                            to={`/user/${comment.userId}`}
+                            className="font-medium break-words text-blue-600 dark:text-blue-400 hover:underline"
+                          >
+                            {comment.userName || 'Nepoznato'}
+                          </Link>
+                        ) : (
+                          <span className="font-medium break-words text-gray-900 dark:text-gray-100">
+                            {comment.userName || 'Nepoznato'}
+                          </span>
+                        )}
                       </div>
                       {isPhotoAuthor && (
                         <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full whitespace-nowrap">

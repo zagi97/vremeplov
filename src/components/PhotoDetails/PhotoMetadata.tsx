@@ -1,5 +1,6 @@
 // src/components/PhotoDetails/PhotoMetadata.tsx
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
 import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
 
@@ -16,6 +17,7 @@ interface PhotoMetadataProps {
   author: string;
   location: string;
   uploadedBy?: string;
+  uploadedByUid?: string;
   uploadedAt?: string;
   description: string;
   detailedDescription?: string;
@@ -27,6 +29,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
   author,
   location,
   uploadedBy,
+  uploadedByUid,
   uploadedAt,
   description,
   detailedDescription,
@@ -71,7 +74,13 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
             <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
               <Upload className="h-6 w-6 mx-auto text-orange-600 dark:text-orange-400 mb-2" />
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.uploadedBy')}</p>
-              <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{uploadedBy}</p>
+              {uploadedByUid ? (
+                <Link to={`/user/${uploadedByUid}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline block">
+                  {uploadedBy}
+                </Link>
+              ) : (
+                <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{uploadedBy}</p>
+              )}
               {uploadedAt && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(uploadedAt).toLocaleDateString('hr-HR', {
