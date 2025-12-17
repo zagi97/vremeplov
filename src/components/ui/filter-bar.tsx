@@ -42,12 +42,12 @@ export function FilterBar({
     <div className="flex gap-4 items-center flex-wrap">
       {/* Search Input */}
       <div className="flex-1 min-w-[300px] relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground dark:text-gray-400" />
         <Input
           placeholder={searchPlaceholder}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
+          className="pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
         />
       </div>
       
@@ -56,7 +56,7 @@ export function FilterBar({
         <select
           value={filterValue}
           onChange={(e) => onFilterChange(e.target.value)}
-          className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-2 border border-input bg-background dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {filterOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -65,13 +65,13 @@ export function FilterBar({
           ))}
         </select>
       )}
-      
+
       {/* Sort Dropdown */}
       {sortOptions && onSortChange && (
         <select
           value={sortValue}
           onChange={(e) => onSortChange(e.target.value)}
-          className="px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="px-3 py-2 border border-input bg-background dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {sortOptions.map(option => (
             <option key={option.value} value={option.value}>
