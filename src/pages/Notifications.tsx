@@ -235,7 +235,7 @@ return (
                   size="sm"
                   onClick={handleMarkAllAsRead}
                   disabled={markingAllRead}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 dark:hover:text-white"
                 >
                   <CheckCheck className="h-4 w-4 mr-2" />
                   {t('notifications.markAllLikeRead')}
