@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
 import { cn } from "@/lib/utils";
 
@@ -61,22 +61,30 @@ export const LikesModal: React.FC<LikesModalProps> = ({
 
         // Fetch user details for each user ID
         const userPromises = userIds.map(async (userId) => {
-          console.log('[LikesModal] Fetching user data for userId:', userId);
-          const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId)));
-          console.log('[LikesModal] User query result for', userId, '- empty:', userDoc.empty, 'size:', userDoc.size);
+          try {
+            console.log('[LikesModal] Fetching user data for userId:', userId);
 
-          if (!userDoc.empty) {
-            const userData = userDoc.docs[0].data();
-            console.log('[LikesModal] User data:', userData);
-            return {
-              uid: userId,
-              displayName: userData.displayName || userData.email?.split('@')[0] || 'Unknown User',
-              photoURL: userData.photoURL,
-              email: userData.email
-            };
+            // Direct document fetch instead of query
+            const userDocRef = doc(db, 'users', userId);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+              const userData = userDocSnap.data();
+              console.log('[LikesModal] User data found:', userData);
+              return {
+                uid: userId,
+                displayName: userData.displayName || userData.email?.split('@')[0] || 'Unknown User',
+                photoURL: userData.photoURL,
+                email: userData.email
+              };
+            }
+
+            console.log('[LikesModal] No user document found for userId:', userId);
+            return null;
+          } catch (error) {
+            console.error('[LikesModal] Error fetching user:', userId, error);
+            return null;
           }
-          console.log('[LikesModal] No user found for userId:', userId);
-          return null;
         });
 
         const users = (await Promise.all(userPromises)).filter((u): u is LikedByUser => u !== null);
