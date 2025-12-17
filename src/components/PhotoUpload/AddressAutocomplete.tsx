@@ -48,6 +48,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const debouncedSearchTerm = useDebounce(value, 500);
   const currentRequestRef = useRef<AbortController | null>(null);
   const isSelectingAddressRef = useRef(false);
+  const lastSelectedAddressRef = useRef<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -249,6 +250,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       return;
     }
 
+    // Don't re-search if this is the same address that was just selected
+    if (debouncedSearchTerm === lastSelectedAddressRef.current) {
+      return;
+    }
+
     if (debouncedSearchTerm.length >= 2) {
       searchAddresses(debouncedSearchTerm);
     } else {
@@ -270,6 +276,12 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     isSelectingAddressRef.current = false;
+
+    // Reset last selected address when user starts typing again
+    if (newValue !== lastSelectedAddressRef.current) {
+      lastSelectedAddressRef.current = '';
+    }
+
     onChange(newValue);
 
     if (newValue.length >= 2 && !loadingAddresses) {
@@ -366,6 +378,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   const handleSelect = async (address: string) => {
     isSelectingAddressRef.current = true;
+    lastSelectedAddressRef.current = address;
     closeDropdown();
 
     if (address.includes('(kliknite za broj')) {

@@ -690,7 +690,7 @@ const CommunityLeaderboard = () => {
                           </div>
                           <Link
                             to={`/location/${encodeURIComponent(monthlyHighlights.mostActiveLocation.name)}`}
-                            className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 truncate block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            className="font-medium text-base sm:text-lg text-blue-600 dark:text-blue-400 truncate block hover:text-blue-700 dark:hover:text-blue-500 transition-colors underline decoration-blue-600/30 dark:decoration-blue-400/30 hover:decoration-blue-700 dark:hover:decoration-blue-500"
                           >
                             {monthlyHighlights.mostActiveLocation.name}
                           </Link>
@@ -706,7 +706,7 @@ const CommunityLeaderboard = () => {
                           {monthlyHighlights.photoOfTheMonth.id ? (
                             <Link
                               to={`/photo/${monthlyHighlights.photoOfTheMonth.id}`}
-                              className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2 block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                              className="font-medium text-base sm:text-lg text-blue-600 dark:text-blue-400 line-clamp-2 block hover:text-blue-700 dark:hover:text-blue-500 transition-colors underline decoration-blue-600/30 dark:decoration-blue-400/30 hover:decoration-blue-700 dark:hover:decoration-blue-500"
                             >
                               {monthlyHighlights.photoOfTheMonth.title}
                             </Link>
