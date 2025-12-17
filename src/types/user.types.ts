@@ -129,6 +129,7 @@ export interface MonthlyHighlights {
     photoCount: number;
   };
   photoOfTheMonth: {
+    id: string | null;
     title: string;
     author: string;
   };
