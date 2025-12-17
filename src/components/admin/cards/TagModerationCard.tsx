@@ -66,7 +66,7 @@ export default function TagModerationCard({
   };
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden dark:bg-gray-800 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-6">
         {photo && (
           <div className="flex-shrink-0 relative group w-full sm:w-48">
@@ -115,10 +115,10 @@ export default function TagModerationCard({
         <div className="flex-1 min-w-0 space-y-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <Badge variant="outline" className="text-orange-600 border-orange-600">
+              <Badge variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-500">
                 Pending Tag Review
               </Badge>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">
                 Tagged: {tag.createdAt?.toDate()?.toLocaleDateString('hr-HR', {
                   day: '2-digit',
                   month: '2-digit',
@@ -141,7 +141,7 @@ export default function TagModerationCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    className="text-green-600 dark:text-green-400 border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/30"
                   >
                     <Check className="h-4 w-4" />
                     Approve
@@ -171,7 +171,7 @@ export default function TagModerationCard({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="text-red-600 border-red-600 hover:bg-red-50"
+                    className="text-red-600 dark:text-red-400 border-red-600 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
                   >
                     <X className="h-4 w-4" />
                     Reject
@@ -202,7 +202,7 @@ export default function TagModerationCard({
           {isEditing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium">Person Name *</label>
+                <label className="text-sm font-medium dark:text-gray-200">Person Name *</label>
                 <Input
                   value={editData.name}
                   onChange={(e) => {
@@ -211,12 +211,14 @@ export default function TagModerationCard({
                   }}
                   maxLength={40}
                   placeholder="Enter person's name"
-                  className={editData.name.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
+                  className={`dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400 ${
+                    editData.name.length >= 38 ? "border-red-300 focus:border-red-500 dark:border-red-500 dark:focus:border-red-400" : ""
+                  }`}
                 />
                 <CharacterCounter currentLength={editData.name.length} maxLength={40} />
               </div>
               <div>
-                <label className="text-sm font-medium">Description (Optional)</label>
+                <label className="text-sm font-medium dark:text-gray-200">Description (Optional)</label>
                 <Textarea
                   value={editData.description}
                   onChange={(e) => {
@@ -226,6 +228,7 @@ export default function TagModerationCard({
                   maxLength={100}
                   placeholder="Additional information about this person"
                   rows={2}
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                 />
                 <CharacterCounter currentLength={editData.description.length} maxLength={100} />
               </div>
@@ -244,15 +247,15 @@ export default function TagModerationCard({
             </div>
           ) : (
             <div className="min-w-0 overflow-hidden">
-              <h3 className="font-medium flex items-center gap-2">
-                <User className="h-4 w-4 flex-shrink-0" />
+              <h3 className="font-medium flex items-center gap-2 dark:text-gray-200">
+                <User className="h-4 w-4 flex-shrink-0 dark:text-gray-400" />
                 <span className="break-all min-w-0 flex-1">{tag.name}</span>
               </h3>
-              <p className="text-sm text-muted-foreground break-all">
+              <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
                 Tagged in: {photo?.description} • {photo?.location} • {photo?.year}
               </p>
-              {tag.description && <p className="text-sm mt-2 break-all">{tag.description}</p>}
-              <p className="text-xs text-muted-foreground mt-2">
+              {tag.description && <p className="text-sm mt-2 break-all dark:text-gray-300">{tag.description}</p>}
+              <p className="text-xs text-muted-foreground dark:text-gray-500 mt-2">
                 Position: {tag.x.toFixed(1)}%, {tag.y.toFixed(1)}%
               </p>
             </div>
