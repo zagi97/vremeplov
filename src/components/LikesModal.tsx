@@ -55,9 +55,15 @@ export const LikesModal: React.FC<LikesModalProps> = ({
         console.log('[LikesModal] Likes snapshot size:', snapshot.size);
         console.log('[LikesModal] Likes documents:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
 
+        // DEBUG: Alert for production debugging
+        alert(`🔍 DEBUG:\n\nLikes found: ${snapshot.size}\nPhoto ID: ${photoId}`);
+
         // Get unique user IDs
         const userIds = Array.from(new Set(snapshot.docs.map(doc => doc.data().userId)));
         console.log('[LikesModal] Unique user IDs:', userIds);
+
+        // DEBUG: Alert user IDs
+        alert(`👥 User IDs found:\n\n${userIds.join('\n')}\n\nTotal: ${userIds.length}`);
 
         // Fetch user details for each user ID
         const userPromises = userIds.map(async (userId) => {
@@ -71,9 +77,16 @@ export const LikesModal: React.FC<LikesModalProps> = ({
             if (userDocSnap.exists()) {
               const userData = userDocSnap.data();
               console.log('[LikesModal] User data found:', userData);
+
+              // Better fallback chain for displayName
+              const displayName = userData.displayName
+                || userData.email?.split('@')[0]
+                || `User-${userId.substring(0, 8)}`
+                || 'Unknown User';
+
               return {
                 uid: userId,
-                displayName: userData.displayName || userData.email?.split('@')[0] || 'Unknown User',
+                displayName,
                 photoURL: userData.photoURL,
                 email: userData.email
               };
@@ -89,6 +102,10 @@ export const LikesModal: React.FC<LikesModalProps> = ({
 
         const users = (await Promise.all(userPromises)).filter((u): u is LikedByUser => u !== null);
         console.log('[LikesModal] Final users array:', users);
+
+        // DEBUG: Alert final results
+        alert(`✅ Final result:\n\nUsers to display: ${users.length}\nNames: ${users.map(u => u.displayName).join(', ')}`);
+
         setLikedByUsers(users);
       } catch (error) {
         console.error('[LikesModal] Error fetching liked by users:', error);
