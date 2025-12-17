@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, limit } from 'firebase/firestore';
 import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +56,7 @@ export const LikesModal: React.FC<LikesModalProps> = ({
       try {
         // Get all likes for this photo
         const likesRef = collection(db, 'userLikes');
-        const q = query(likesRef, where('photoId', '==', photoId));
+        const q = query(likesRef, where('photoId', '==', photoId), limit(100));
         const snapshot = await getDocs(q);
 
         // Get unique user IDs
