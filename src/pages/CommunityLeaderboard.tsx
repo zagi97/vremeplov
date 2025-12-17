@@ -688,7 +688,7 @@ const CommunityLeaderboard = () => {
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.mostActiveLocation')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100">
+                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 truncate">
                             {monthlyHighlights.mostActiveLocation.name}
                           </div>
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -700,10 +700,10 @@ const CommunityLeaderboard = () => {
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.photoOfTheMonth')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100">
+                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
                             {monthlyHighlights.photoOfTheMonth.title}
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
                             {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
                           </div>
                         </div>

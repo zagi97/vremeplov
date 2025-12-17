@@ -108,7 +108,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   />
 </div>
             <CardContent className="p-4">
-              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                 {photo.description}
               </h3>
 
@@ -119,8 +119,8 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span>{photo.author}</span>
+                  <User className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{photo.author}</span>
                 </div>
                 
                 <div className="flex items-center justify-between pt-2">

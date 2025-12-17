@@ -337,7 +337,11 @@ if (loading) {
             onChange={(e) => setEditForm(prev => ({ ...prev, displayName: e.target.value }))}
             placeholder={t('profile.displayNamePlaceholder')}
             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+            maxLength={50}
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {editForm.displayName.length}/50
+          </p>
         </div>
         <div>
           <label className="text-sm font-medium dark:text-gray-200">{t('profile.bio')}</label>
@@ -347,7 +351,11 @@ if (loading) {
             placeholder={t('profile.tellAboutYourself')}
             rows={3}
             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+            maxLength={200}
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {editForm.bio.length}/200
+          </p>
         </div>
         <div>
           <label className="text-sm font-medium dark:text-gray-200">{t('profile.locations')}</label>
@@ -356,7 +364,11 @@ if (loading) {
             onChange={(e) => setEditForm(prev => ({ ...prev, location: e.target.value }))}
             placeholder={t('profile.yourLocation')}
             className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+            maxLength={100}
           />
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {editForm.location.length}/100
+          </p>
         </div>
         <div className="flex gap-2 pt-4">
           <Button onClick={handleEditProfile} className="flex-1">
