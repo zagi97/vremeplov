@@ -795,7 +795,13 @@ export const enTranslations = {
   "cookies.details.analytics.optional": "Optional",
   "cookies.details.analytics.description": "Help us understand how users interact with the site so we can improve it.",
   "cookies.details.gdpr.title": "Your Rights (GDPR)",
-  "cookies.details.gdpr.description": "In accordance with GDPR, you have the right to access, correct or delete your data. You can withdraw your consent at any time in privacy settings."
+  "cookies.details.gdpr.description": "In accordance with GDPR, you have the right to access, correct or delete your data. You can withdraw your consent at any time in privacy settings.",
+  "notFound.title": "404",
+  "notFound.heading": "Page Not Found",
+  "notFound.description": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.",
+  "notFound.goBack": "Go Back",
+  "notFound.returnHome": "Return Home",
+  "notFound.footer": "Preserving Croatian heritage, one memory at a time."
 } as const;
 
 export const hrTranslations = {
@@ -1591,5 +1597,11 @@ export const hrTranslations = {
   "cookies.details.analytics.optional": "Opcionalno",
   "cookies.details.analytics.description": "Pomažu nam razumjeti kako korisnici koriste stranicu kako bismo je mogli poboljšati.",
   "cookies.details.gdpr.title": "Vaša prava (GDPR)",
-  "cookies.details.gdpr.description": "U skladu s GDPR-om, imate pravo pristupiti, ispraviti ili obrisati svoje podatke. Vaš pristanak možete povući u bilo kojem trenutku u postavkama privatnosti."
+  "cookies.details.gdpr.description": "U skladu s GDPR-om, imate pravo pristupiti, ispraviti ili obrisati svoje podatke. Vaš pristanak možete povući u bilo kojem trenutku u postavkama privatnosti.",
+  "notFound.title": "404",
+  "notFound.heading": "Stranica nije pronađena",
+  "notFound.description": "Stranica koju tražite je možda uklonjena, preimenovana ili je privremeno nedostupna.",
+  "notFound.goBack": "Natrag",
+  "notFound.returnHome": "Povratak na početnu",
+  "notFound.footer": "Čuvamo hrvatsku baštinu, jedno sjećanje odjednom."
 } as const;
