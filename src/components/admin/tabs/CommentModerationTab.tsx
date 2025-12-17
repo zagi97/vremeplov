@@ -101,7 +101,7 @@ export default function CommentModerationTab() {
               <Card
                 key={comment.id}
                 className={`overflow-hidden transition-colors dark:bg-gray-800 dark:border-gray-700 ${
-                  comment.isFlagged ? 'border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/30' : ''
+                  comment.isFlagged ? 'border-red-400 bg-red-50 dark:border-red-600 dark:bg-gray-800' : ''
                 }`}
               >
                 <CardContent className="p-6">
@@ -109,10 +109,20 @@ export default function CommentModerationTab() {
                   <div className="flex flex-wrap items-start justify-between gap-4 mb-3 break-words">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <User className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                        <span className="font-medium dark:text-gray-200">{comment.userName}</span>
-                        <span className="text-gray-400 dark:text-gray-500 text-sm">•</span>
-                        <span className="text-gray-500 dark:text-gray-400 text-sm break-words">
+                        <User className={`h-4 w-4 flex-shrink-0 ${
+                          comment.isFlagged ? 'text-gray-700 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
+                        }`} />
+                        <span className={`font-medium ${
+                          comment.isFlagged ? 'text-gray-900 dark:text-white' : 'dark:text-gray-200'
+                        }`}>
+                          {comment.userName}
+                        </span>
+                        <span className={`text-sm ${
+                          comment.isFlagged ? 'text-gray-600 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'
+                        }`}>•</span>
+                        <span className={`text-sm break-words ${
+                          comment.isFlagged ? 'text-gray-700 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'
+                        }`}>
                           {comment.userEmail}
                         </span>
                         {comment.isFlagged && (
@@ -122,7 +132,9 @@ export default function CommentModerationTab() {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+                      <div className={`flex items-center gap-2 text-sm flex-wrap ${
+                        comment.isFlagged ? 'text-gray-700 dark:text-gray-100' : 'text-muted-foreground'
+                      }`}>
                         <Image className="h-4 w-4 flex-shrink-0" />
                         <span>Photo: {comment.photoTitle}</span>
                         {comment.photoLocation && (
@@ -135,7 +147,9 @@ export default function CommentModerationTab() {
                       </div>
                     </div>
 
-                    <span className="text-muted-foreground text-sm whitespace-nowrap flex-shrink-0">
+                    <span className={`text-sm whitespace-nowrap flex-shrink-0 ${
+                      comment.isFlagged ? 'text-gray-700 dark:text-gray-100' : 'text-muted-foreground'
+                    }`}>
                       {comment.createdAt?.toDate?.() ? (() => {
                         const date = comment.createdAt.toDate();
                         const day = String(date.getDate()).padStart(2, '0');
@@ -149,8 +163,16 @@ export default function CommentModerationTab() {
                   </div>
 
                   {/* Comment Text */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-700">
-                    <p className="text-gray-800 dark:text-gray-200 leading-relaxed break-words">
+                  <div className={`rounded-lg p-4 mb-4 border ${
+                    comment.isFlagged 
+                      ? 'bg-red-100 dark:bg-gray-900 border-red-300 dark:border-red-600' 
+                      : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700'
+                  }`}>
+                    <p className={`leading-relaxed break-words ${
+                      comment.isFlagged
+                        ? 'text-gray-900 dark:text-white'
+                        : 'text-gray-800 dark:text-gray-200'
+                    }`}>
                       {comment.text}
                     </p>
                   </div>
