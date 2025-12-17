@@ -40,43 +40,37 @@ export const LikesModal: React.FC<LikesModalProps> = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !photoId) return;
+    if (!isOpen || !photoId) {
+      // Debug: Store why modal didn't fetch
+      (window as any).__likesModalDebug = {
+        reason: 'Modal not opened or photoId missing',
+        isOpen,
+        photoId,
+        timestamp: new Date().toISOString()
+      };
+      return;
+    }
 
     const fetchLikedByUsers = async () => {
       setLoading(true);
       try {
-        console.log('[LikesModal] Fetching likes for photoId:', photoId);
-
         // Get all likes for this photo
         const likesRef = collection(db, 'userLikes');
         const q = query(likesRef, where('photoId', '==', photoId));
         const snapshot = await getDocs(q);
 
-        console.log('[LikesModal] Likes snapshot size:', snapshot.size);
-        console.log('[LikesModal] Likes documents:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
-
-        // DEBUG: Alert for production debugging
-        alert(`🔍 DEBUG:\n\nLikes found: ${snapshot.size}\nPhoto ID: ${photoId}`);
-
         // Get unique user IDs
         const userIds = Array.from(new Set(snapshot.docs.map(doc => doc.data().userId)));
-        console.log('[LikesModal] Unique user IDs:', userIds);
-
-        // DEBUG: Alert user IDs
-        alert(`👥 User IDs found:\n\n${userIds.join('\n')}\n\nTotal: ${userIds.length}`);
 
         // Fetch user details for each user ID
         const userPromises = userIds.map(async (userId) => {
           try {
-            console.log('[LikesModal] Fetching user data for userId:', userId);
-
             // Direct document fetch instead of query
             const userDocRef = doc(db, 'users', userId);
             const userDocSnap = await getDoc(userDocRef);
 
             if (userDocSnap.exists()) {
               const userData = userDocSnap.data();
-              console.log('[LikesModal] User data found:', userData);
 
               // Better fallback chain for displayName
               const displayName = userData.displayName
@@ -92,7 +86,6 @@ export const LikesModal: React.FC<LikesModalProps> = ({
               };
             }
 
-            console.log('[LikesModal] No user document found for userId:', userId);
             return null;
           } catch (error) {
             console.error('[LikesModal] Error fetching user:', userId, error);
@@ -101,15 +94,26 @@ export const LikesModal: React.FC<LikesModalProps> = ({
         });
 
         const users = (await Promise.all(userPromises)).filter((u): u is LikedByUser => u !== null);
-        console.log('[LikesModal] Final users array:', users);
 
-        // DEBUG: Alert final results
-        alert(`✅ Final result:\n\nUsers to display: ${users.length}\nNames: ${users.map(u => u.displayName).join(', ')}`);
+        // Store debug info in window for inspection
+        (window as any).__likesModalDebug = {
+          photoId,
+          likesCount: snapshot.size,
+          userIds,
+          usersFound: users.length,
+          users: users.map(u => ({ uid: u.uid, displayName: u.displayName })),
+          timestamp: new Date().toISOString()
+        };
 
         setLikedByUsers(users);
       } catch (error) {
         console.error('[LikesModal] Error fetching liked by users:', error);
-        console.error('[LikesModal] Error details:', JSON.stringify(error, null, 2));
+        // Store debug info in window for inspection
+        (window as any).__likesModalDebug = {
+          error,
+          photoId,
+          timestamp: new Date().toISOString()
+        };
       } finally {
         setLoading(false);
       }
