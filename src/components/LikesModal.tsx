@@ -45,19 +45,29 @@ export const LikesModal: React.FC<LikesModalProps> = ({
     const fetchLikedByUsers = async () => {
       setLoading(true);
       try {
+        console.log('[LikesModal] Fetching likes for photoId:', photoId);
+
         // Get all likes for this photo
-        const likesRef = collection(db, 'likes');
+        const likesRef = collection(db, 'userLikes');
         const q = query(likesRef, where('photoId', '==', photoId));
         const snapshot = await getDocs(q);
 
+        console.log('[LikesModal] Likes snapshot size:', snapshot.size);
+        console.log('[LikesModal] Likes documents:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+
         // Get unique user IDs
         const userIds = Array.from(new Set(snapshot.docs.map(doc => doc.data().userId)));
+        console.log('[LikesModal] Unique user IDs:', userIds);
 
         // Fetch user details for each user ID
         const userPromises = userIds.map(async (userId) => {
+          console.log('[LikesModal] Fetching user data for userId:', userId);
           const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId)));
+          console.log('[LikesModal] User query result for', userId, '- empty:', userDoc.empty, 'size:', userDoc.size);
+
           if (!userDoc.empty) {
             const userData = userDoc.docs[0].data();
+            console.log('[LikesModal] User data:', userData);
             return {
               uid: userId,
               displayName: userData.displayName || userData.email?.split('@')[0] || 'Unknown User',
@@ -65,13 +75,16 @@ export const LikesModal: React.FC<LikesModalProps> = ({
               email: userData.email
             };
           }
+          console.log('[LikesModal] No user found for userId:', userId);
           return null;
         });
 
         const users = (await Promise.all(userPromises)).filter((u): u is LikedByUser => u !== null);
+        console.log('[LikesModal] Final users array:', users);
         setLikedByUsers(users);
       } catch (error) {
-        console.error('Error fetching liked by users:', error);
+        console.error('[LikesModal] Error fetching liked by users:', error);
+        console.error('[LikesModal] Error details:', JSON.stringify(error, null, 2));
       } finally {
         setLoading(false);
       }
