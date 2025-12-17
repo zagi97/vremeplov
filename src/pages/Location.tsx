@@ -619,11 +619,11 @@ if (loading) {
 />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
                     <div className="absolute bottom-0 left-0 p-4 w-full">
-                      <h3 className="text-white text-lg font-semibold">{photo.description}</h3>
+                      <h3 className="text-white text-lg font-semibold line-clamp-2">{photo.description}</h3>
                       <div className="flex items-center mt-2 text-gray-200 text-sm">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span className="mr-3">{photo.location}</span>
-                        <Calendar className="h-4 w-4 mr-1" />
+                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                        <span className="mr-3 truncate">{photo.location}</span>
+                        <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
                         <span>{photo.year}</span>
                       </div>
                     </div>
