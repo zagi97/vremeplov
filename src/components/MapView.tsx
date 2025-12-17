@@ -477,15 +477,14 @@ if (loading) {
             </div>
           )}
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>{photo.year}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
-              <span className="truncate">{photo.author}</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 flex-shrink-0" />
+            <span>{photo.year}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{photo.author}</span>
           </div>
         </div>
 

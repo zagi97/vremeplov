@@ -14,6 +14,7 @@ import {
   MapPin,
   Calendar,
   Edit,
+  User,
   UserPlus,
   UserCheck,
   ArrowRight,
@@ -565,32 +566,34 @@ if (loading) {
                               </div>
                               
                               <CardContent className="p-4">
-                                <h3 className="font-semibold text-lg mb-1 line-clamp-1 text-gray-900 dark:text-gray-100">
+                                <h3 className="font-semibold text-lg mb-2 line-clamp-2 text-gray-900 dark:text-gray-100">
                                   {photo.description}
                                 </h3>
 
                                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                                  <Calendar className="h-3 w-3 mr-1" />
+                                  <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
                                   <span>{photo.year || t('profile.unknown')}</span>
                                 </div>
 
-                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-3">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  <span className="line-clamp-1">{photo.location}</span>
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                  <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                                  <span className="truncate">{photo.location}</span>
                                 </div>
 
-                                <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                                  <div className="flex items-center gap-3">
-                                    <span className="flex items-center gap-1">
-                                      <Heart className="h-3 w-3" />
-                                      {photo.likes || 0}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Eye className="h-3 w-3" />
-                                      {photo.views || 0}
-                                    </span>
-                                  </div>
-                                  <span className="truncate text-gray-500 dark:text-gray-400">{photo.author || photo.uploadedBy || t('profile.unknown')}</span>
+                                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                  <User className="h-4 w-4 mr-1 flex-shrink-0" />
+                                  <span className="truncate">{photo.author || photo.uploadedBy || t('profile.unknown')}</span>
+                                </div>
+
+                                <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
+                                  <span className="flex items-center gap-1">
+                                    <Heart className="h-3 w-3" />
+                                    {photo.likes || 0}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="h-3 w-3" />
+                                    {photo.views || 0}
+                                  </span>
                                 </div>
                               </CardContent>
                             </Card>

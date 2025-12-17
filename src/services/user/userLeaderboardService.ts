@@ -309,6 +309,7 @@ class UserLeaderboardService {
       return {
         mostActiveLocation,
         photoOfTheMonth: {
+          id: mostLikedPhoto?.id || null,
           title: mostLikedPhoto?.description || 'No photos this month',
           author: mostLikedPhoto?.author || 'Unknown'
         },
@@ -321,7 +322,7 @@ class UserLeaderboardService {
       console.error('Error fetching monthly highlights:', error);
       return {
         mostActiveLocation: { name: 'Error loading', photoCount: 0 },
-        photoOfTheMonth: { title: 'Error loading', author: 'Unknown' },
+        photoOfTheMonth: { id: null, title: 'Error loading', author: 'Unknown' },
         newMembers: { count: 0, percentageChange: 0 }
       };
     }
@@ -406,6 +407,7 @@ class UserLeaderboardService {
       return {
         mostActiveLocation,
         photoOfTheMonth: { // Naziv ostaje isti za kompatibilnost s interfaceom
+          id: mostLikedPhoto?.id || null,
           title: mostLikedPhoto?.description || 'No photos this year',
           author: mostLikedPhoto?.author || 'Unknown'
         },
@@ -418,7 +420,7 @@ class UserLeaderboardService {
       console.error('Error fetching yearly highlights:', error);
       return {
         mostActiveLocation: { name: 'Error loading', photoCount: 0 },
-        photoOfTheMonth: { title: 'Error loading', author: 'Unknown' },
+        photoOfTheMonth: { id: null, title: 'Error loading', author: 'Unknown' },
         newMembers: { count: 0, percentageChange: 0 }
       };
     }

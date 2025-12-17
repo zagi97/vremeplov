@@ -688,9 +688,12 @@ const CommunityLeaderboard = () => {
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.mostActiveLocation')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 truncate">
+                          <Link
+                            to={`/location/${encodeURIComponent(monthlyHighlights.mostActiveLocation.name)}`}
+                            className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 truncate block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          >
                             {monthlyHighlights.mostActiveLocation.name}
-                          </div>
+                          </Link>
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
                           </div>
@@ -700,9 +703,18 @@ const CommunityLeaderboard = () => {
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.photoOfTheMonth')}
                           </div>
-                          <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
-                            {monthlyHighlights.photoOfTheMonth.title}
-                          </div>
+                          {monthlyHighlights.photoOfTheMonth.id ? (
+                            <Link
+                              to={`/photo/${monthlyHighlights.photoOfTheMonth.id}`}
+                              className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2 block hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                            >
+                              {monthlyHighlights.photoOfTheMonth.title}
+                            </Link>
+                          ) : (
+                            <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
+                              {monthlyHighlights.photoOfTheMonth.title}
+                            </div>
+                          )}
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
                             {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
                           </div>
