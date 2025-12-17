@@ -705,10 +705,6 @@
   "notifications.remaining": "remaining",
   "notifications.loadMoreWithCount": "Load more ({{count}} remaining)",
   "notifications.AllRead": "All notifications marked as read",
-  "notifications.zeroUnreadNotifications": "You have no unread notifications",
-  "notifications.zeroNotifications": "You have no notifications",
-  "notifications.notificationsAllRead": "All notifications have been read",
-  "notifications.hereAppearNotifications": "Your notifications will appear here",
   "notifications.tagRejectedReason": "The tag was rejected because it does not meet the quality criteria.",
   "photo.historicalDetails": "Historical details and information",
 
