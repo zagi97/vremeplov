@@ -302,7 +302,7 @@ const hasRejectReason = (
 </div>
                     
                     {!hasRejectReason && (
-                      <p className="text-sm text-red-600">
+                      <p className="text-sm text-orange-600 dark:text-orange-400">
                         Morate odabrati barem jedan razlog ili napisati prilagođeni razlog.
                       </p>
                     )}
@@ -363,8 +363,8 @@ const hasRejectReason = (
                 {/* ✅ Character counter */}
   <p className={`text-sm mt-1 ${
   editData.description.length > 240
-    ? 'text-red-600 font-bold'
-    : 'text-muted-foreground'
+    ? 'text-orange-600 dark:text-orange-400 font-bold'
+    : 'text-muted-foreground dark:text-gray-400'
 }`}>
   {editData.description.length}/250 znakova
 </p>
