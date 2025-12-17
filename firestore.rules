@@ -207,17 +207,13 @@ service cloud.firestore {
     }
 
     // ============================================
-    // ❤️ USER LIKES - AŽURIRANA PRAVILA ZA 'TOGGLE'
+    // ❤️ USER LIKES - JAVNO ČITANJE, PRIVATNO PISANJE
     // ============================================
     match /userLikes/{likeId} {
 
-      // ✅ GET, LIST: Samo vlasnik ili admin mogu čitati lajkove
-      // 🔒 SECURITY FIX: Uklonjen 'true' - sprječava privacy leak
-      allow get, list: if isAuthenticated() &&
-                       request.query.limit <= 100 && (
-        isOwner(resource.data.userId) ||
-        isAdmin()
-      );
+      // ✅ GET, LIST: Javno - svi autentificirani korisnici mogu vidjeti tko je lajkao
+      // Ovo je javna informacija (kao Instagram "Liked by") - omogućava prikaz liste ljudi
+      allow get, list: if isAuthenticated() && request.query.limit <= 100;
 
       // KREIRANJE (LAJKANJE)
       allow create: if isAuthenticated() &&
