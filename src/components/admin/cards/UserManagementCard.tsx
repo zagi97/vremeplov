@@ -172,42 +172,43 @@ function UserManagementCard({
               {/* Suspend Dropdown */}
               <AlertDialog open={showSuspendDialog} onOpenChange={setShowSuspendDialog}>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="text-orange-600 border-orange-600">
+                  <Button size="sm" variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-600 dark:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/30">
                     ⏸️ Suspend
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Suspend User</AlertDialogTitle>
                     <AlertDialogDescription>
                       Suspend this user temporarily. They won't be able to upload photos, comment, or tag during suspension.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  
+
                   <div className="space-y-4 py-4">
                     <div>
-                      <label className="text-sm font-medium block mb-2">Suspension Duration:</label>
+                      <label className="text-sm font-medium block mb-2 dark:text-gray-200">Suspension Duration:</label>
                       <select
                         value={suspendDays}
                         onChange={(e) => setSuspendDays(Number(e.target.value))}
-                        className="w-full px-3 py-2 border rounded-md"
+                        className="w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                       >
                         <option value={7}>7 days</option>
                         <option value={30}>30 days</option>
                         <option value={90}>90 days</option>
                       </select>
                     </div>
-                    
+
                     <div>
-                      <label className="text-sm font-medium block mb-2">Reason:</label>
+                      <label className="text-sm font-medium block mb-2 dark:text-gray-200">Reason:</label>
                       <Textarea
                         value={suspendReason}
                         onChange={(e) => setSuspendReason(e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION))}
                         placeholder="Explain why this user is being suspended..."
                         rows={3}
                         maxLength={250}
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                       />
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">
                         {suspendReason.length}/250 characters
                       </p>
                     </div>
@@ -235,29 +236,30 @@ function UserManagementCard({
               {/* Ban Button */}
               <AlertDialog open={showBanDialog} onOpenChange={setShowBanDialog}>
                 <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="text-red-600 border-red-600">
+                  <Button size="sm" variant="outline" className="text-red-600 dark:text-red-400 border-red-600 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/30">
                     🚫 Ban
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="dark:bg-gray-800 dark:border-gray-700">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Ban User Permanently</AlertDialogTitle>
                     <AlertDialogDescription>
                       This will permanently ban the user from the platform. They will not be able to access their account.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  
+
                   <div className="space-y-4 py-4">
                     <div>
-                      <label className="text-sm font-medium block mb-2">Reason:</label>
+                      <label className="text-sm font-medium block mb-2 dark:text-gray-200">Reason:</label>
                       <Textarea
                         value={banReason}
                         onChange={(e) => setBanReason(e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION))}
                         placeholder="Explain why this user is being banned..."
                         rows={3}
                         maxLength={250}
+                        className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400"
                       />
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-sm text-muted-foreground dark:text-gray-400 mt-1">
                         {banReason.length}/250 characters
                       </p>
                     </div>
