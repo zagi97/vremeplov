@@ -29,8 +29,8 @@ service cloud.firestore {
       // ✅ LIST: Authenticated users can list (needed for leaderboard)
       allow list: if isAuthenticated();
 
-      // ✅ GET: Any authenticated user can read profiles
-      allow get: if isAuthenticated();
+      // ✅ GET: Public - anyone can view user profiles (like Instagram)
+      allow get: if true;
 
       // ✅ CREATE: User creates own profile on signup
       allow create: if isAuthenticated() &&
@@ -211,9 +211,11 @@ service cloud.firestore {
     // ============================================
     match /userLikes/{likeId} {
 
-      // ✅ GET, LIST: Javno - svi autentificirani korisnici mogu vidjeti tko je lajkao
-      // Ovo je javna informacija (kao Instagram "Liked by") - omogućava prikaz liste ljudi
-      allow get, list: if isAuthenticated() && request.query.limit <= 100;
+      // ✅ GET: Public - anyone can see who liked (like Instagram "Liked by")
+      allow get: if true;
+
+      // ✅ LIST: Public with limit - anyone can see likes list
+      allow list: if request.query.limit <= 100;
 
       // KREIRANJE (LAJKANJE)
       allow create: if isAuthenticated() &&

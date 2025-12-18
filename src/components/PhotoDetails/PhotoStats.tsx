@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Heart, Eye, Users, Clock } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { User } from 'firebase/auth';
 import { LikesModal } from "@/components/LikesModal";
 
@@ -33,6 +33,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
   isPhotoPending = false
 }) => {
   const { t } = useLanguage();
+  const { signInWithGoogle } = useAuth();
   const [likesModalOpen, setLikesModalOpen] = useState(false);
 
   return (
@@ -81,9 +82,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             </Button>
           ) : (
             <Button
-              onClick={() => {
-                toast.info(t('photoDetail.signInMessage'));
-              }}
+              onClick={signInWithGoogle}
               variant="outline"
               disabled={isPhotoPending}
               className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
@@ -141,9 +140,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             </Button>
           ) : (
             <Button
-              onClick={() => {
-                toast.info(t('photoDetail.signInMessage'));
-              }}
+              onClick={signInWithGoogle}
               variant="outline"
               disabled={isPhotoPending}
               className="w-full flex items-center justify-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"

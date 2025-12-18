@@ -141,13 +141,8 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = f
   };
 
   const handleSignInToComment = async () => {
-    try {
-      await signInWithGoogle();
-      toast.success(t('comments.signInSuccess'));
-    } catch (error) {
-      console.error('Greška pri prijavi:', error);
-      toast.error(t('comments.signInError'));
-    }
+    // signInWithGoogle handles success/error toasts internally
+    await signInWithGoogle();
   };
 
 const handleSubmitComment = async (e: React.FormEvent) => {
