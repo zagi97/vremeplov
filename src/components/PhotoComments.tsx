@@ -379,7 +379,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
                         {comment.userId ? (
                           <Link
                             to={`/user/${comment.userId}`}
-                            className="font-medium break-words text-blue-600 dark:text-blue-400 hover:underline"
+                            className="font-medium break-words text-blue-600 dark:text-blue-400 underline"
                           >
                             {comment.userName || 'Nepoznato'}
                           </Link>

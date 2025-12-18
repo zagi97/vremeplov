@@ -75,7 +75,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
               <Upload className="h-6 w-6 mx-auto text-orange-600 dark:text-orange-400 mb-2" />
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.uploadedBy')}</p>
               {uploadedByUid ? (
-                <Link to={`/user/${uploadedByUid}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline block">
+                <Link to={`/user/${uploadedByUid}`} className="text-xs font-bold text-blue-600 dark:text-blue-400 underline block">
                   {uploadedBy}
                 </Link>
               ) : (
