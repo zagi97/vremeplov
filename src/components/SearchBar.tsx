@@ -125,7 +125,7 @@ const SearchBar = () => {
                 }
               }}
               aria-label={t('search.placeholder')}
-              aria-controls="location-listbox"
+              aria-controls={open ? "location-listbox" : undefined}
             />
           </div>
         </PopoverTrigger>
