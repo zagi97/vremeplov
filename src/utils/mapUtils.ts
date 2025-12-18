@@ -30,16 +30,16 @@ export const createClusterIcon = (count: number): L.DivIcon => {
 };
 
 /**
- * Custom photo marker icon
+ * Custom photo marker icon - sized for accessibility (44px minimum touch target)
  */
-export const photoIcon = new L.Icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+export const photoIcon = new L.DivIcon({
+  html: `<img src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png"
+         alt="Marker"
+         style="width: 25px; height: 41px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%);" />`,
+  className: 'photo-marker-icon',
+  iconSize: [44, 44],
+  iconAnchor: [22, 44],
+  popupAnchor: [0, -41]
 });
 
 /**
