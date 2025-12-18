@@ -54,6 +54,7 @@ const AppContent = () => {
     <>
       <OfflineIndicator />
       <Suspense fallback={<PageLoader />}>
+        <main>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/admin" element={
@@ -75,6 +76,7 @@ const AppContent = () => {
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </main>
       </Suspense>
     </>
   );
