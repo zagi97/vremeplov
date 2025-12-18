@@ -41,9 +41,14 @@ export const MapFilters: React.FC<MapFiltersProps> = ({
 
           {/* Decade dropdown - custom styled */}
           <div className="relative w-full md:w-auto">
+            <label htmlFor="decade-filter" className="sr-only">
+              {t('mapView.filterByDecade')}
+            </label>
             <select
+              id="decade-filter"
               value={selectedDecade}
               onChange={(e) => onDecadeChange(e.target.value)}
+              aria-label={t('mapView.filterByDecade')}
               className="appearance-none px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full md:min-w-[200px] cursor-pointer"
             >
               <option value="all">{t('mapView.allDecades')}</option>

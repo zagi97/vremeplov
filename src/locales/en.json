@@ -260,6 +260,7 @@
   "mapView.exploreLocations": "Explore Locations",
   "mapView.addPhotosTo": "Add Photos to {location}",
   "mapView.filters": "Filters:",
+  "mapView.filterByDecade": "Filter by decade",
   "mapView.allDecades": "All decades",
   "mapView.searchByLocation": "Search by location...",
   "mapView.showing": "Showing {filtered} of {total} photos",

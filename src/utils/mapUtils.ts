@@ -8,17 +8,17 @@ type MunicipalityRecordWithCoords = [number, string, string, string, number, num
  */
 export const createClusterIcon = (count: number): L.DivIcon => {
   let className = 'cluster-small';
-  let size = 35;
+  let size = 44; // Minimum 44px for accessibility touch targets
 
   if (count < 10) {
     className = 'cluster-small';
-    size = 35;
+    size = 44;
   } else if (count < 100) {
     className = 'cluster-medium';
-    size = 40;
+    size = 48;
   } else {
     className = 'cluster-large';
-    size = 45;
+    size = 52;
   }
 
   return new L.DivIcon({

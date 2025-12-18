@@ -469,10 +469,10 @@ const CommunityLeaderboard = () => {
                 <TabsContent value="photos">
                   <Card>
                     <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold leading-none tracking-tight">
                         <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
                         {t('community.topContributorsByPhotos')}
-                      </CardTitle>
+                      </h2>
                     </CardHeader>
                     <CardContent>
                       {loading ? (
@@ -512,10 +512,10 @@ const CommunityLeaderboard = () => {
                 <TabsContent value="likes">
                   <Card>
                     <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold leading-none tracking-tight">
                         <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
                         {t('community.mostAppreciatedContributors')}
-                      </CardTitle>
+                      </h2>
                     </CardHeader>
                     <CardContent>
                       {loading ? (
@@ -555,10 +555,10 @@ const CommunityLeaderboard = () => {
                 <TabsContent value="locations">
                   <Card>
                     <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold leading-none tracking-tight">
                         <MapPin className="h-4 w-4 sm:h-5 sm:w-5" />
                         {t('community.heritageExplorers')}
-                      </CardTitle>
+                      </h2>
                     </CardHeader>
                     <CardContent>
                       {loading ? (
@@ -598,10 +598,10 @@ const CommunityLeaderboard = () => {
                 <TabsContent value="recent">
                   <Card>
                     <CardHeader className="pb-3 sm:pb-6">
-                      <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold leading-none tracking-tight">
                         <Star className="h-4 w-4 sm:h-5 sm:w-5" />
                         {t('community.welcomeNewMembers')}
-                      </CardTitle>
+                      </h2>
                     </CardHeader>
                     <CardContent>
                       {loading ? (

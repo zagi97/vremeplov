@@ -124,16 +124,16 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                 </div>
                 
                 <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+                      <Eye className="h-4 w-4" />
                       <span>{photo.views || 0}</span>
                     </div>
                     <button
                       onClick={(e) => handleLike(e, photo.id!)}
-                      className="flex items-center gap-1 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                      className="flex items-center gap-1 min-h-[44px] min-w-[44px] justify-center hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     >
-                      <Heart className="h-3 w-3" />
+                      <Heart className="h-4 w-4" />
                       <span>{photo.likes || 0}</span>
                     </button>
                   </div>

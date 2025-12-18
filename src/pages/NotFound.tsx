@@ -40,7 +40,7 @@ const NotFound = () => {
         </div>
         <div className="mt-8 text-gray-500 dark:text-gray-400">
           <p>
-            <Link to="/" className="text-blue-600 dark:text-blue-400 hover:underline">
+            <Link to="/" className="text-blue-600 dark:text-blue-400 underline hover:no-underline">
               Vremeplov.hr
             </Link>
             {' — '}{t('notFound.footer')}

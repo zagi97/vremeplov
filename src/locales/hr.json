@@ -309,6 +309,7 @@
   "mapView.photosWillAppear": "Fotografije će se pojaviti na karti kada budu učitane s određenim adresama.",
   "mapView.addPhotosTo": "Dodaj fotografije u {location}",
   "mapView.filters": "Filteri:",
+  "mapView.filterByDecade": "Filtriraj po desetljeću",
   "mapView.allDecades": "Sva desetljeća",
   "mapView.searchByLocation": "Pretraži po lokaciji...",
   "mapView.showing": "Prikazano {filtered} od {total} fotografija",
