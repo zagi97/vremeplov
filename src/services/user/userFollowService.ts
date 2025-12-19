@@ -9,6 +9,7 @@ import {
   deleteDoc,
   updateDoc,
   increment,
+  limit,
   Timestamp
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
@@ -66,10 +67,12 @@ class UserFollowService {
   async unfollowUser(followerId: string, followingId: string): Promise<void> {
     try {
       // Find and delete follow relationship
+      // ✅ FIX: Added limit(1) to comply with Firestore rules
       const followsQuery = query(
         collection(db, 'follows'),
         where('followerId', '==', followerId),
-        where('followingId', '==', followingId)
+        where('followingId', '==', followingId),
+        limit(1)
       );
 
       const followDocs = await getDocs(followsQuery);
@@ -98,10 +101,12 @@ class UserFollowService {
    */
   async checkIfFollowing(followerId: string, followingId: string): Promise<boolean> {
     try {
+      // ✅ FIX: Added limit(1) to comply with Firestore rules
       const followsQuery = query(
         collection(db, 'follows'),
         where('followerId', '==', followerId),
-        where('followingId', '==', followingId)
+        where('followingId', '==', followingId),
+        limit(1)
       );
 
       const followDocs = await getDocs(followsQuery);
@@ -117,9 +122,11 @@ class UserFollowService {
    */
   async getUserFollowers(userId: string): Promise<UserProfile[]> {
     try {
+      // ✅ FIX: Added limit(100) to comply with Firestore rules
       const followsQuery = query(
         collection(db, 'follows'),
-        where('followingId', '==', userId)
+        where('followingId', '==', userId),
+        limit(100)
       );
 
       const followDocs = await getDocs(followsQuery);
@@ -168,9 +175,11 @@ class UserFollowService {
    */
   async getUserFollowing(userId: string): Promise<UserProfile[]> {
     try {
+      // ✅ FIX: Added limit(100) to comply with Firestore rules
       const followsQuery = query(
         collection(db, 'follows'),
-        where('followerId', '==', userId)
+        where('followerId', '==', userId),
+        limit(100)
       );
 
       const followDocs = await getDocs(followsQuery);
