@@ -639,7 +639,7 @@ if (loading) {
   </p>
   {isOwnProfile && (
     <p className="text-sm text-gray-500">
-      ({t('profile.uploadFirstPhoto')}
+      {t('profile.uploadFirstPhoto')}
     </p>
   )}
 </div>
