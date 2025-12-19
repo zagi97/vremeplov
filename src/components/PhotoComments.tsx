@@ -325,7 +325,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
                 disabled={!newComment.trim() || !canComment || isSubmitting}
               >
                 <Send className="h-4 w-4 mr-2" />
-                {isSubmitting ? 'Šaljem...' : t('comments.postComment')}
+                {isSubmitting ? t('comments.sending') : t('comments.postComment')}
               </Button>
             </div>
           </form>
