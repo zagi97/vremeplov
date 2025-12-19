@@ -224,6 +224,7 @@
   "comments.title": "Comments ({count})",
   "comments.placeholder": "Share your memories or knowledge about this photo...",
   "comments.postComment": "Post Comment",
+  "comments.sending": "Sending...",
   "comments.signInMessage": "Sign in to share your memories and comments",
   "comments.signInToComment": "Sign In to Comment",
   "comments.signInSuccess": "Successfully signed in! You can now comment.",

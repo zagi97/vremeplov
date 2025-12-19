@@ -282,6 +282,7 @@
   "comments.title": "Komentari ({count})",
   "comments.placeholder": "Podijelite svoja sjećanja ili znanje o ovoj fotografiji...",
   "comments.postComment": "Objavi komentar",
+  "comments.sending": "Šaljem...",
   "comments.signInMessage": "Prijavite se da podijelite svoja sjećanja i komentare",
   "comments.signInToComment": "Prijavite se za komentiranje",
   "comments.signInSuccess": "Uspješno ste se prijavili! Sada možete komentirati.",
