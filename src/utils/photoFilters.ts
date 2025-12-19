@@ -28,15 +28,17 @@ export const DEFAULT_FILTERS: PhotoFilterState = {
 
 /**
  * Filter photos by search text
+ * Searches in: description, detailedDescription, author, and year
  */
 export const filterBySearch = (photos: Photo[], searchText: string): Photo[] => {
   if (!searchText.trim()) return photos;
 
-  const searchLower = searchText.toLowerCase();
+  const searchLower = searchText.toLowerCase().trim();
   return photos.filter(photo =>
     photo.description.toLowerCase().includes(searchLower) ||
     photo.detailedDescription?.toLowerCase().includes(searchLower) ||
-    photo.author.toLowerCase().includes(searchLower)
+    photo.author.toLowerCase().includes(searchLower) ||
+    photo.year.toString().includes(searchLower)
   );
 };
 

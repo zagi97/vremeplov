@@ -67,7 +67,12 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
             <MapPin className="h-6 w-6 mx-auto text-green-600 dark:text-green-400 mb-2" />
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.location')}</p>
-            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 break-all">{location}</p>
+            <Link
+              to={`/location/${encodeURIComponent(location)}`}
+              className="text-sm font-bold text-blue-600 dark:text-blue-400 underline break-all hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              {location}
+            </Link>
           </div>
 
           {uploadedBy && (

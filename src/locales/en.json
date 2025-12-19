@@ -143,7 +143,7 @@
   "location.photos": "photos",
   "location.addMemory": "Add Memory",
   "location.signInToAdd": "Sign In to Add Memory",
-  "location.searchPlaceholder": "Search photos...",
+  "location.searchPlaceholder": "Search photos, descriptions, authors, years...",
   "location.searchPlaceholderShort": "Search photos...",
   "location.filters": "Filters",
   "location.clear": "Clear",
