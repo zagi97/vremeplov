@@ -31,7 +31,18 @@ import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import { OfflineIndicator } from './components/OfflineIndicator';
 import ScrollToTop from "./components/ScrollToTop";
 
-const queryClient = new QueryClient();
+// ✅ OPTIMIZED: QueryClient with caching to reduce Firestore queries
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // 5 minuta - podaci su "svježi" 5 min (nema refetch)
+      gcTime: 30 * 60 * 1000,        // 30 minuta - cache ostaje u memoriji
+      retry: 1,                       // Samo 1 retry ako upit faila
+      refetchOnWindowFocus: false,    // Ne refetchaj kad se vrati na tab
+      refetchOnReconnect: 'always',   // Ali refetchaj kad se vrati internet
+    },
+  },
+});
 
 // Loading component za Suspense
 const PageLoader = () => (
