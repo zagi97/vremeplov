@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
    isAdmin: boolean;
    isAdminMode: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<boolean>;
    signInAdmin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
    exitAdminMode: () => Promise<void>;
   logout: () => Promise<void>;
@@ -61,10 +61,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (): Promise<boolean> => {
   try {
     await signInWithPopup(auth, googleProvider);
     toast.success(t('auth.signInSuccess'));
+    return true;
   } catch (error: unknown) {
     console.error('Error signing in:', error);
 
@@ -78,11 +79,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       error.code === 'auth/cancelled-popup-request'
     )) {
       // Ne prikazuj error - korisnik je samo zatvorio popup
-      return;
+      return false;
     }
-    
+
     // ✅ Prikaži error samo za prave greške
     toast.error(t('errors.signInFailed'));
+    return false;
   }
 };
 

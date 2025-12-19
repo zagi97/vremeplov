@@ -142,12 +142,8 @@ useEffect(() => {
 
   // Handler funkcije
   const handleSignInToAddMemory = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error) {
-      toast.error(t('comments.signInError'));
-      
-    }
+    // signInWithGoogle handles success/error toasts internally
+    await signInWithGoogle();
   };
 
   const handleUploadSuccess = async () => {
