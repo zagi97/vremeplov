@@ -688,12 +688,18 @@ const CommunityLeaderboard = () => {
                           <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {t('community.mostActiveLocation')}
                           </div>
-                          <Link
-                            to={`/location/${encodeURIComponent(monthlyHighlights.mostActiveLocation.name)}`}
-                            className="font-medium text-base sm:text-lg text-blue-600 dark:text-blue-400 truncate block hover:text-blue-700 dark:hover:text-blue-500 transition-colors underline decoration-blue-600/30 dark:decoration-blue-400/30 hover:decoration-blue-700 dark:hover:decoration-blue-500"
-                          >
-                            {monthlyHighlights.mostActiveLocation.name}
-                          </Link>
+                          {monthlyHighlights.mostActiveLocation.photoCount > 0 ? (
+                            <Link
+                              to={`/location/${encodeURIComponent(monthlyHighlights.mostActiveLocation.name)}`}
+                              className="font-medium text-base sm:text-lg text-blue-600 dark:text-blue-400 truncate block hover:text-blue-700 dark:hover:text-blue-500 transition-colors underline decoration-blue-600/30 dark:decoration-blue-400/30 hover:decoration-blue-700 dark:hover:decoration-blue-500"
+                            >
+                              {monthlyHighlights.mostActiveLocation.name}
+                            </Link>
+                          ) : (
+                            <div className="font-medium text-base sm:text-lg text-red-500 dark:text-red-400 truncate">
+                              {monthlyHighlights.mostActiveLocation.name}
+                            </div>
+                          )}
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                             {monthlyHighlights.mostActiveLocation.photoCount} {getPhotoText(monthlyHighlights.mostActiveLocation.photoCount, t)}
                           </div>
