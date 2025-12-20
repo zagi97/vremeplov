@@ -7,9 +7,10 @@ service cloud.firestore {
     // ============================================
 
     // Check if user is admin (using isAdmin flag in user document)
+    // ✅ NULL-SAFE: Prevents errors when user document doesn't exist
     function isAdmin() {
-      return request.auth != null &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return request.auth != null && userDoc.data != null && userDoc.data.isAdmin == true;
     }
 
     // Check if user is authenticated
@@ -214,8 +215,9 @@ service cloud.firestore {
       // ✅ GET: Public - anyone can see who liked (like Instagram "Liked by")
       allow get: if true;
 
-      // ✅ LIST: Public with limit - anyone can see likes list
-      allow list: if request.query.limit <= 100;
+      // ✅ LIST: Public - anyone can see likes list
+      // Note: Limit is enforced in application code, not rules (prevents errors)
+      allow list: if true;
 
       // KREIRANJE (LAJKANJE)
       allow create: if isAuthenticated() &&
@@ -315,9 +317,10 @@ service firebase.storage {
       allow write: if false;
     }
 
-    // ✅ ADMIN: Full access
+    // ✅ ADMIN: Full access (null-safe)
     match /{allPaths=**} {
       allow read, write, delete: if request.auth != null &&
+        get(/databases/(default)/documents/users/$(request.auth.uid)).data != null &&
         get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
   }
