@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://vremeplov.hr/sitemap.xml
+Sitemap: https://vremeplov.vercel.app/sitemap.xml
