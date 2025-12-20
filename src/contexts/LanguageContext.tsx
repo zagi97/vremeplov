@@ -36,12 +36,12 @@ export const translateWithParams = (
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    // Check localStorage first, then browser language, fallback to English
+    // Check localStorage first, default to Croatian (primary target audience)
     const saved = localStorage.getItem('language') as Language;
     if (saved) return saved;
 
-    const browserLang = navigator.language.toLowerCase();
-    return browserLang.startsWith('hr') ? 'hr' : 'en';
+    // Default to Croatian - users can manually switch to English if needed
+    return 'hr';
   });
 
   useEffect(() => {
