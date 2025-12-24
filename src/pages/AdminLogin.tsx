@@ -72,7 +72,7 @@ const AdminLogin = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="vremeplov.app@gmail.com"
+                  placeholder="Unesite email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
