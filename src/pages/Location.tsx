@@ -48,9 +48,11 @@ const Location = () => {
   const locationData = parseLocationFromUrl(decodedLocationName, municipalityData);
   const actualCityName = locationData.cityName;
   
-  // Validacija
+  // Validacija - case-insensitive (parseLocationFromUrl već vraća ispravno ime)
   const allLocations: string[] = municipalityData.records.map(record => record[3] as string);
-  const isValidLocation = allLocations.includes(actualCityName);
+  const isValidLocation = allLocations.some(
+    loc => loc.toLowerCase() === actualCityName.toLowerCase()
+  );
 
   // Konstante - koristi centralizirane definicije iz filters.ts
   const PHOTO_TYPES = getPhotoTypeOptions(t);

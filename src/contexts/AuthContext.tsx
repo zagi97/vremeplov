@@ -44,6 +44,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Load user's admin status from Firestore
       if (user) {
+        // ✅ FIX: Create/update user profile on sign-in (fixes 0/0 upload limit bug)
+        await authService.createOrUpdateUser({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL
+        });
+
         const userIsAdmin = await authService.checkIsAdminFromFirestore(user.uid);
         setIsAdmin(userIsAdmin);
 

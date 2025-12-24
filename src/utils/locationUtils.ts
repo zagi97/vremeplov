@@ -107,6 +107,7 @@ export interface ParsedLocation {
 /**
  * Parses a location from a URL parameter format (e.g., "Zagreb-Zagrebačka")
  * This function is used to extract location information from URL slugs.
+ * ✅ Case-insensitive matching - /location/split works same as /location/Split
  *
  * @param urlParam - The URL parameter to parse
  * @param municipalityData - Municipality data containing records
@@ -116,40 +117,65 @@ export function parseLocationFromUrl(
   urlParam: string,
   municipalityData: { records: Array<[string | number, string, string, string]> }
 ): ParsedLocation {
+  const urlParamLower = urlParam.toLowerCase();
+
   if (urlParam.includes('-')) {
     const parts = urlParam.split('-');
-    const cityName = parts[0];
+    const cityNameFromUrl = parts[0];
     const countyFromUrl = parts.slice(1).join('-');
 
+    // ✅ Case-insensitive matching
     const record = municipalityData.records.find(record => {
-      const recordName = record[3] as string;
-      const recordCounty = normalizeCountyForComparison(record[1] as string);
+      const recordName = (record[3] as string).toLowerCase();
+      const recordCounty = normalizeCountyForComparison(record[1] as string).toLowerCase();
 
-      return recordName === cityName && recordCounty === countyFromUrl;
+      return recordName === cityNameFromUrl.toLowerCase() && recordCounty === countyFromUrl.toLowerCase();
     });
 
     if (record) {
+      // ✅ Use the correctly-cased name from data, not from URL
+      const correctCityName = record[3] as string;
       const formattedCounty = normalizeCountyName(record[1] as string);
 
       return {
-        cityName,
+        cityName: correctCityName,
         county: record[1] as string,
         type: record[2] as string,
-        displayName: formatLocationDisplay(cityName, formattedCounty),
+        displayName: formatLocationDisplay(correctCityName, formattedCounty),
         isSpecific: true,
       };
     } else {
-      const fallbackRecord = municipalityData.records.find(record => record[3] === cityName);
+      // ✅ Case-insensitive fallback
+      const fallbackRecord = municipalityData.records.find(
+        record => (record[3] as string).toLowerCase() === cityNameFromUrl.toLowerCase()
+      );
       if (fallbackRecord) {
+        const correctCityName = fallbackRecord[3] as string;
         return {
-          cityName,
+          cityName: correctCityName,
           county: fallbackRecord[1] as string,
           type: fallbackRecord[2] as string,
-          displayName: cityName,
+          displayName: correctCityName,
           isSpecific: false,
         };
       }
     }
+  }
+
+  // ✅ Simple case (no hyphen) - case-insensitive matching
+  const simpleRecord = municipalityData.records.find(
+    record => (record[3] as string).toLowerCase() === urlParamLower
+  );
+
+  if (simpleRecord) {
+    const correctCityName = simpleRecord[3] as string;
+    return {
+      cityName: correctCityName,
+      county: simpleRecord[1] as string,
+      type: simpleRecord[2] as string,
+      displayName: correctCityName,
+      isSpecific: false,
+    };
   }
 
   return {
@@ -163,6 +189,7 @@ export function parseLocationFromUrl(
 
 /**
  * Gets the city type (Grad/Općina) for a given location name
+ * ✅ Case-insensitive matching
  *
  * @param locationName - The location name to look up
  * @param municipalityData - Municipality data containing records
@@ -172,6 +199,8 @@ export function getCityType(
   locationName: string,
   municipalityData: { records: Array<[string | number, string, string, string]> }
 ): string | null {
-  const record = municipalityData.records.find(record => record[3] === locationName);
+  const record = municipalityData.records.find(
+    record => (record[3] as string).toLowerCase() === locationName.toLowerCase()
+  );
   return record ? (record[2] as string) : null;
 }
