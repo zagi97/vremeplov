@@ -334,16 +334,20 @@ exports.sendContentNotification = onDocumentCreated(
       // ✅ Initialize Resend inside function with secret value
       const resend = new Resend(resendApiKey.value());
       const result = await resend.emails.send(emailData);
-      console.log('✅ Email sent successfully via Resend:', result.data?.id);
+      const emailId = result.data?.id || result.id || null;
+      console.log('✅ Email sent successfully via Resend:', emailId);
 
       // Označi da je email poslan
-      await snapshot.ref.update({
+      const updateData = {
         emailSent: true,
         emailSentAt: FieldValue.serverTimestamp(),
-        emailId: result.data?.id
-      });
+      };
+      if (emailId) {
+        updateData.emailId = emailId;
+      }
+      await snapshot.ref.update(updateData);
 
-      return { success: true, emailId: result.data?.id };
+      return { success: true, emailId };
     } catch (error) {
       console.error('❌ Error sending email via Resend:', error);
 
