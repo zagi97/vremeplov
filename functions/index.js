@@ -1,20 +1,12 @@
 const {onDocumentCreated} = require('firebase-functions/v2/firestore');
 const {initializeApp} = require('firebase-admin/app');
 const {getFirestore, FieldValue} = require('firebase-admin/firestore');
-const nodemailer = require('nodemailer');
+const {Resend} = require('resend');
 
 initializeApp();
 
-// ✅ SendGrid transporter
-const transporter = nodemailer.createTransport({
-  host: 'smtp.sendgrid.net',
-  port: 587,
-  secure: false, // use TLS
-  auth: {
-    user: 'apikey', // Ovo je SendGrid standard - ne mijenjaj!
-    pass: process.env.SENDGRID_API_KEY // API Key iz environment variables
-  }
-});
+// ✅ Resend client (100 emails/day FREE forever!)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ✅ Cloud Function v2 sintaksa - AŽURIRANO za in-app notifikacije
 exports.sendContentNotification = onDocumentCreated(
@@ -28,7 +20,7 @@ exports.sendContentNotification = onDocumentCreated(
 
     const data = snapshot.data();
     console.log('📧 New notification created:', data);
-    
+
     // ✅ ✅ ✅ KRITIČNO - Provjeri requiresEmail flag
     // Ako je false ili undefined, ovo je samo in-app notifikacija
     if (!data.requiresEmail) {
@@ -36,19 +28,19 @@ exports.sendContentNotification = onDocumentCreated(
       console.log('✅ In-app notification created successfully');
       return null; // Izađi brzo, ne troši resurse
     }
-    
+
     console.log('📨 This is a critical notification - sending email for type:', data.type);
-    
+
     const db = getFirestore();
-    
+
     // Dohvati korisničke podatke
     const userDoc = await db.collection('users').doc(data.userId).get();
-    
+
     if (!userDoc.exists) {
       console.error('❌ User not found:', data.userId);
       return;
     }
-    
+
     const userData = userDoc.data();
     const userEmail = userData.email;
     const userName = userData.displayName || 'Korisniče';
@@ -56,15 +48,15 @@ exports.sendContentNotification = onDocumentCreated(
     console.log('👤 Sending email to:', userEmail);
 
     // Email template ovisno o tipu notifikacije
-    let mailOptions;
+    let emailData;
 
     switch(data.type) {
       // ========================================
       // 📸 PHOTO REJECTED (EMAIL)
       // ========================================
       case 'photo_rejected':
-        mailOptions = {
-          from: '"Vremeplov.hr" <vremeplov.app@gmail.com>',
+        emailData = {
+          from: 'Vremeplov.hr <onboarding@resend.dev>',
           to: userEmail,
           subject: '📸 Vremeplov.hr - Fotografija odbijena',
           html: `
@@ -88,18 +80,18 @@ exports.sendContentNotification = onDocumentCreated(
                 </div>
                 <div class="content">
                   <p>Poštovani <strong>${userName}</strong>,</p>
-                  
+
                   <p>Vaša fotografija je odbijena iz sljedećeg razloga:</p>
-                  
+
                   <div class="danger-box">
                     <p><strong>Razlog:</strong></p>
                     <p>${data.reason || 'Nije naveden razlog.'}</p>
                   </div>
-                  
+
                   <p>Molimo vas da pročitate naše smjernice zajednice prije ponovnog uploada.</p>
-                  
+
                   <p>Ako smatrate da je ovo učinjeno greškom, možete nas kontaktirati na <a href="mailto:vremeplov.app@gmail.com" style="color: #3b82f6;">vremeplov.app@gmail.com</a></p>
-                  
+
                   <div class="footer">
                     <p>Vremeplov.hr - Čuvamo sjećanja naših mjesta</p>
                   </div>
@@ -115,8 +107,8 @@ exports.sendContentNotification = onDocumentCreated(
       // 🚫 USER BANNED (EMAIL)
       // ========================================
       case 'user_banned':
-        mailOptions = {
-          from: '"Vremeplov.hr" <vremeplov.app@gmail.com>',
+        emailData = {
+          from: 'Vremeplov.hr <onboarding@resend.dev>',
           to: userEmail,
           subject: '🚫 Vremeplov.hr - Račun bannan',
           html: `
@@ -140,18 +132,18 @@ exports.sendContentNotification = onDocumentCreated(
                 </div>
                 <div class="content">
                   <p>Poštovani <strong>${userName}</strong>,</p>
-                  
+
                   <p>Vaš račun na Vremeplov.hr je trajno bannan.</p>
-                  
+
                   <div class="danger-box">
                     <p><strong>Razlog:</strong></p>
                     <p>${data.reason || 'Kršenje pravila zajednice.'}</p>
                   </div>
-                  
+
                   <p>Više nećete moći pristupiti svojem računu.</p>
-                  
+
                   <p>Ako smatrate da je ovo učinjeno greškom, možete nas kontaktirati na <a href="mailto:vremeplov.app@gmail.com" style="color: #3b82f6;">vremeplov.app@gmail.com</a></p>
-                  
+
                   <div class="footer">
                     <p>Vremeplov.hr - Čuvamo sjećanja naših mjesta</p>
                   </div>
@@ -167,8 +159,8 @@ exports.sendContentNotification = onDocumentCreated(
       // ⚠️ USER SUSPENDED (EMAIL)
       // ========================================
       case 'user_suspended':
-        mailOptions = {
-          from: '"Vremeplov.hr" <vremeplov.app@gmail.com>',
+        emailData = {
+          from: 'Vremeplov.hr <onboarding@resend.dev>',
           to: userEmail,
           subject: '⚠️ Vremeplov.hr - Račun suspendiran',
           html: `
@@ -192,19 +184,19 @@ exports.sendContentNotification = onDocumentCreated(
                 </div>
                 <div class="content">
                   <p>Poštovani <strong>${userName}</strong>,</p>
-                  
+
                   <p>Vaš račun na Vremeplov.hr je privremeno suspendiran.</p>
-                  
+
                   <div class="warning-box">
                     <p><strong>Razlog:</strong></p>
                     <p>${data.reason || 'Kršenje pravila zajednice.'}</p>
                     ${data.suspendedUntil ? `<p><strong>Suspenzija traje do:</strong> ${data.suspendedUntil}</p>` : ''}
                   </div>
-                  
+
                   <p>Nakon isteka suspenzije moći ćete ponovo pristupiti svojem računu.</p>
-                  
+
                   <p>Ako imate pitanja, možete nas kontaktirati na <a href="mailto:vremeplov.app@gmail.com" style="color: #3b82f6;">vremeplov.app@gmail.com</a></p>
-                  
+
                   <div class="footer">
                     <p>Vremeplov.hr - Čuvamo sjećanja naših mjesta</p>
                   </div>
@@ -220,8 +212,8 @@ exports.sendContentNotification = onDocumentCreated(
       // ✅ USER UNBANNED (EMAIL)
       // ========================================
       case 'user_unbanned':
-        mailOptions = {
-          from: '"Vremeplov.hr" <vremeplov.app@gmail.com>',
+        emailData = {
+          from: 'Vremeplov.hr <onboarding@resend.dev>',
           to: userEmail,
           subject: '✅ Vremeplov.hr - Dobrodošao/la natrag!',
           html: `
@@ -246,21 +238,21 @@ exports.sendContentNotification = onDocumentCreated(
                 </div>
                 <div class="content">
                   <p>Poštovani <strong>${userName}</strong>,</p>
-                  
+
                   <div class="success-box">
                     <p><strong>Tvoj račun je ponovo aktivan! 🎉</strong></p>
                     <p>Možeš se ponovno prijaviti i nastaviti koristiti Vremeplov.hr</p>
                   </div>
-                  
+
                   <p>Nadamo se da ćeš nastaviti pozitivno doprinositi našoj zajednici.</p>
-                  
+
                   <div style="text-align: center;">
-                    <a href="https://vremeplov.vercel.app" 
+                    <a href="https://vremeplov.vercel.app"
                        style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: 500;">
                       Prijavi se
                     </a>
                   </div>
-                  
+
                   <div class="footer">
                     <p>Vremeplov.hr - Čuvamo sjećanja naših mjesta</p>
                   </div>
@@ -276,8 +268,8 @@ exports.sendContentNotification = onDocumentCreated(
       // ✅ USER UNSUSPENDED (EMAIL)
       // ========================================
       case 'user_unsuspended':
-        mailOptions = {
-          from: '"Vremeplov.hr" <vremeplov.app@gmail.com>',
+        emailData = {
+          from: 'Vremeplov.hr <onboarding@resend.dev>',
           to: userEmail,
           subject: '✅ Vremeplov.hr - Suspenzija uklonjena',
           html: `
@@ -302,21 +294,21 @@ exports.sendContentNotification = onDocumentCreated(
                 </div>
                 <div class="content">
                   <p>Poštovani <strong>${userName}</strong>,</p>
-                  
+
                   <div class="success-box">
                     <p><strong>Suspenzija tvog računa je uklonjena! 🎉</strong></p>
                     <p>Možeš se ponovno prijaviti i nastaviti koristiti Vremeplov.hr</p>
                   </div>
-                  
+
                   <p>Dobrodošao/la natrag u našu zajednicu!</p>
-                  
+
                   <div style="text-align: center;">
-                    <a href="https://vremeplov.vercel.app" 
+                    <a href="https://vremeplov.vercel.app"
                        style="display: inline-block; background: #2563eb; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: 500;">
                       Prijavi se
                     </a>
                   </div>
-                  
+
                   <div class="footer">
                     <p>Vremeplov.hr - Čuvamo sjećanja naših mjesta</p>
                   </div>
@@ -333,27 +325,28 @@ exports.sendContentNotification = onDocumentCreated(
         return null;
     }
 
-    // Pošalji email
+    // Pošalji email preko Resend
     try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully:', info.messageId);
-      
+      const result = await resend.emails.send(emailData);
+      console.log('✅ Email sent successfully via Resend:', result.data?.id);
+
       // Označi da je email poslan
       await snapshot.ref.update({
         emailSent: true,
-        emailSentAt: FieldValue.serverTimestamp()
+        emailSentAt: FieldValue.serverTimestamp(),
+        emailId: result.data?.id
       });
-      
-      return { success: true, messageId: info.messageId };
+
+      return { success: true, emailId: result.data?.id };
     } catch (error) {
-      console.error('❌ Error sending email:', error);
-      
+      console.error('❌ Error sending email via Resend:', error);
+
       // Označi da email nije uspio
       await snapshot.ref.update({
         emailSent: false,
         emailError: error.message
       });
-      
+
       throw error;
     }
   }
