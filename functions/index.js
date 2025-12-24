@@ -1,16 +1,20 @@
 const {onDocumentCreated} = require('firebase-functions/v2/firestore');
+const {defineSecret} = require('firebase-functions/params');
 const {initializeApp} = require('firebase-admin/app');
 const {getFirestore, FieldValue} = require('firebase-admin/firestore');
 const {Resend} = require('resend');
 
 initializeApp();
 
-// ✅ Resend client (100 emails/day FREE forever!)
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ✅ Define secret for Firebase Functions
+const resendApiKey = defineSecret('RESEND_API_KEY');
 
 // ✅ Cloud Function v2 sintaksa - AŽURIRANO za in-app notifikacije
 exports.sendContentNotification = onDocumentCreated(
-  'notifications/{notificationId}',
+  {
+    document: 'notifications/{notificationId}',
+    secrets: [resendApiKey],
+  },
   async (event) => {
     const snapshot = event.data;
     if (!snapshot) {
@@ -327,6 +331,8 @@ exports.sendContentNotification = onDocumentCreated(
 
     // Pošalji email preko Resend
     try {
+      // ✅ Initialize Resend inside function with secret value
+      const resend = new Resend(resendApiKey.value());
       const result = await resend.emails.send(emailData);
       console.log('✅ Email sent successfully via Resend:', result.data?.id);
 
