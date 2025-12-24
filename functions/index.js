@@ -334,20 +334,26 @@ exports.sendContentNotification = onDocumentCreated(
       // ✅ Initialize Resend inside function with secret value
       const resend = new Resend(resendApiKey.value());
       const result = await resend.emails.send(emailData);
-      const emailId = result.data?.id || result.id || null;
-      console.log('✅ Email sent successfully via Resend:', emailId);
 
-      // Označi da je email poslan
-      const updateData = {
-        emailSent: true,
-        emailSentAt: FieldValue.serverTimestamp(),
-      };
-      if (emailId) {
-        updateData.emailId = emailId;
+      // Log full response for debugging
+      console.log('📬 Resend response:', JSON.stringify(result));
+
+      // Safely extract emailId
+      let emailId = null;
+      if (result && result.data && result.data.id) {
+        emailId = result.data.id;
+      } else if (result && result.id) {
+        emailId = result.id;
       }
-      await snapshot.ref.update(updateData);
+      console.log('✅ Email sent successfully via Resend! ID:', emailId);
 
-      return { success: true, emailId };
+      // Označi da je email poslan - use simple update without optional fields
+      await snapshot.ref.update({
+        emailSent: true,
+        emailSentAt: FieldValue.serverTimestamp()
+      });
+
+      return { success: true };
     } catch (error) {
       console.error('❌ Error sending email via Resend:', error);
 
