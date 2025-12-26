@@ -16,20 +16,22 @@ interface LazyImageProps {
   rootMargin?: string;
   aspectRatio?: string;
   responsiveImages?: ResponsiveImages;
-  priority?: boolean; // ✅ NOVO!
+  priority?: boolean;
+  objectFit?: 'cover' | 'contain'; // cover = crop, contain = show full image
 }
 
-const LazyImage: React.FC<LazyImageProps> = ({ 
-  src, 
-  alt, 
-  className = '', 
+const LazyImage: React.FC<LazyImageProps> = ({
+  src,
+  alt,
+  className = '',
   onError,
   placeholder,
   threshold = 0.1,
   rootMargin = '100px',
   aspectRatio = '4/3',
   responsiveImages,
-  priority = false // ✅ NOVO - default false
+  priority = false,
+  objectFit = 'cover' // default: crop to fill
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority); // ✅ Ako priority=true, odmah renderaj
@@ -183,14 +185,14 @@ const LazyImage: React.FC<LazyImageProps> = ({
           <img
             src={getFallbackSrc()}
             alt={alt}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`${aspectRatio === 'auto' ? 'relative' : 'absolute inset-0'} w-full ${aspectRatio === 'auto' ? 'h-auto' : 'h-full'} transition-opacity duration-500 ${
+              objectFit === 'contain' ? 'object-contain' : 'object-cover'
+            } ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
             onLoad={handleLoad}
             onError={handleError}
-            loading={priority ? "eager" : "lazy"} // ✅ eager ako je priority!
+            loading={priority ? "eager" : "lazy"}
             decoding="async"
-            fetchPriority={priority ? "high" : undefined} // ✅ high priority ako je priority!
+            fetchPriority={priority ? "high" : undefined}
           />
         </picture>
       )}

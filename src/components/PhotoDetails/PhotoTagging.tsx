@@ -135,9 +135,11 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
           <LazyImage
             src={photoImageUrl}
             alt={photoDescription}
-            className="w-full h-auto rounded-lg"
+            className="w-full h-auto max-h-[80vh] rounded-lg"
             responsiveImages={responsiveImages}
             priority={true}
+            aspectRatio="auto"
+            objectFit="contain"
           />
 
           {/* Toggle button for showing/hiding tags - MOBILE ONLY */}
