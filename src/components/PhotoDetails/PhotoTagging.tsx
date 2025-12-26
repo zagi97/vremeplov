@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CharacterCounter } from "@/components/ui/character-counter";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Tag, Users, Clock, AlertTriangle, Eye, EyeOff, ZoomIn } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Tag, Users, Clock, AlertTriangle, ZoomIn, X } from "lucide-react";
 import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import LazyImage from "@/components/LazyImage";
@@ -67,7 +67,6 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
-  const [showTags, setShowTags] = useState(true);
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
@@ -143,22 +142,6 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             objectFit="contain"
           />
 
-          {/* Toggle button for showing/hiding tags - MOBILE ONLY */}
-          <div className="absolute top-4 left-4 z-30 md:hidden">
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowTags(!showTags);
-              }}
-              variant="secondary"
-              size="icon"
-              className="bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm shadow-lg"
-              aria-label={showTags ? t('photoDetail.hideTags') : t('photoDetail.showTags')}
-            >
-              {showTags ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-            </Button>
-          </div>
-
           {/* Zoom button - opens fullscreen image view */}
           <Dialog>
             <DialogTrigger asChild>
@@ -172,18 +155,23 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
                 <ZoomIn className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+            <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none [&>button]:hidden">
+              {/* Custom close button - outside image */}
+              <DialogClose className="absolute -top-12 right-0 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg transition-colors">
+                <X className="h-6 w-6" />
+                <span className="sr-only">Close</span>
+              </DialogClose>
               <img
                 src={photoImageUrl}
                 alt={photoDescription}
-                className="w-full h-full object-contain max-h-[90vh]"
+                className="w-full h-full object-contain max-h-[85vh] rounded-lg"
               />
             </DialogContent>
           </Dialog>
 
           {/* Overlay container for tags and buttons */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
-            {/* Tagged Persons - Mobile: controlled by showTags, Desktop: show on hover */}
+            {/* Tagged Persons - Mobile: always visible, Desktop: show on hover */}
             {taggedPersons.map((person) => {
               // Determine tag type and styling
               const isApproved = person.isApproved !== false;
@@ -215,10 +203,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
               return (
                 <div
                   key={person.id}
-                  className={`absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-200 ${
-                    // Mobile: controlled by showTags state
-                    showTags ? 'opacity-100' : 'opacity-0'
-                  } md:opacity-0 md:group-hover:opacity-100`}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100"
                 >
                   <div
                     onMouseEnter={() => setHoveredTag(person.id)}
@@ -266,10 +251,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
 
             {/* Tag Button - Only show if user is photo owner or admin */}
             {canUserTag && (
-              <div className={`absolute bottom-4 right-4 z-30 transition-opacity duration-200 ${
-                // Mobile: controlled by showTags state
-                showTags ? 'opacity-100' : 'opacity-0 pointer-events-none'
-              } md:opacity-0 md:pointer-events-auto md:group-hover:opacity-100`}>
+              <div className="absolute bottom-4 right-4 z-30 transition-opacity duration-200 opacity-100 md:opacity-0 md:pointer-events-auto md:group-hover:opacity-100">
                 {!isTagging && (
                   <Button
                     onClick={(e) => {
