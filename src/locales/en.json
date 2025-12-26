@@ -708,6 +708,8 @@
   "notifications.loadMoreWithCount": "Load more ({{count}} remaining)",
   "notifications.AllRead": "All notifications marked as read",
   "notifications.tagRejectedReason": "The tag was rejected because it does not meet the quality criteria.",
+  "notifications.until": "until",
+  "notifications.reason": "Reason",
   "photo.historicalDetails": "Historical details and information",
 
   "tags.onPhoto": "On photo: {count}/{max}",
