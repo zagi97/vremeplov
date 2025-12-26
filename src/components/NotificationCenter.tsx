@@ -30,8 +30,18 @@ const NotificationCenter = ({
   const navigate = useNavigate();
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
+  // Truncate text for dropdown display
+  const truncate = (text: string, maxLength: number = 80): string => {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+  };
+
   const getNotificationMessage = (notification: Notification): string => {
     const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil } = notification;
+
+    // Truncate reason/changes for dropdown view
+    const shortReason = truncate(reason || '');
+    const shortChanges = truncate(changes || '');
 
     switch (type) {
       case 'new_comment':
@@ -47,22 +57,22 @@ const NotificationCenter = ({
       case 'photo_approved':
         return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.approved')}`;
       case 'photo_rejected':
-        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
+        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'photo_edited':
-        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}${changes ? `: ${changes}` : ''}`;
+        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}${shortChanges ? `: ${shortChanges}` : ''}`;
       case 'photo_deleted':
-        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}${reason ? `: ${reason}` : ''}`;
+        return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'tag_approved':
         return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.approved')}`;
       case 'tag_rejected':
-        return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
+        return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'comment_deleted':
-        return `${t('notifications.yourCommentDeleted')}${reason ? `: ${reason}` : ''}`;
+        return `${t('notifications.yourCommentDeleted')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'user_banned':
-        return `${t('notifications.accountBanned')}${reason ? `: ${reason}` : ''}`;
+        return `${t('notifications.accountBanned')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'user_suspended':
         const untilDate = suspendedUntil ? new Date(suspendedUntil).toLocaleDateString('hr-HR') : '';
-        return `${t('notifications.accountSuspended')}${untilDate ? ` ${t('notifications.until')} ${untilDate}` : ''}${reason ? `. ${t('notifications.reason')}: ${reason}` : ''}`;
+        return `${t('notifications.accountSuspended')}${untilDate ? ` ${t('notifications.until')} ${untilDate}` : ''}${shortReason ? `. ${t('notifications.reason')}: ${shortReason}` : ''}`;
       case 'user_unbanned':
         return t('notifications.accountActive');
       case 'user_unsuspended':
