@@ -138,6 +138,8 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
             className="w-full h-auto rounded-lg"
             responsiveImages={responsiveImages}
             priority={true}
+            aspectRatio="auto"
+            objectFit="contain"
           />
 
           {/* Toggle button for showing/hiding tags - MOBILE ONLY */}
