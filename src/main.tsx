@@ -121,4 +121,37 @@ window.addEventListener('error', (event) => {
   if (event.filename?.includes('sw.js')) {
     console.error('Service Worker error:', event.error);
   }
+
+  // Handle chunk loading errors (after new deployment)
+  if (event.message?.includes('dynamically imported module') ||
+      event.message?.includes('Loading chunk') ||
+      event.message?.includes('Failed to fetch')) {
+    handleChunkError();
+  }
 });
+
+// ✅ Global handler for async chunk loading errors
+window.addEventListener('unhandledrejection', (event) => {
+  const message = event.reason?.message || String(event.reason);
+
+  if (message.includes('dynamically imported module') ||
+      message.includes('Loading chunk') ||
+      message.includes('Failed to fetch')) {
+    event.preventDefault(); // Prevent default error logging
+    handleChunkError();
+  }
+});
+
+// ✅ Handle chunk loading error - reload once
+function handleChunkError() {
+  const reloadKey = 'chunk_error_reload';
+  const lastReload = sessionStorage.getItem(reloadKey);
+  const now = Date.now();
+
+  // Only reload if we haven't reloaded in the last 10 seconds
+  if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+    console.log('🔄 Chunk loading error detected, reloading...');
+    sessionStorage.setItem(reloadKey, now.toString());
+    window.location.reload();
+  }
+}
