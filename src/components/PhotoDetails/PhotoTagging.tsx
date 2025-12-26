@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CharacterCounter } from "@/components/ui/character-counter";
-import { Tag, Users, Clock, AlertTriangle, Eye, EyeOff } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Tag, Users, Clock, AlertTriangle, Eye, EyeOff, ZoomIn } from "lucide-react";
 import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import LazyImage from "@/components/LazyImage";
@@ -157,6 +158,28 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
               {showTags ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </Button>
           </div>
+
+          {/* Zoom button - opens fullscreen image view */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                onClick={(e) => e.stopPropagation()}
+                variant="secondary"
+                size="icon"
+                className="absolute top-4 right-4 z-30 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm shadow-lg"
+                aria-label={t('photoDetail.zoomImage')}
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+              <img
+                src={photoImageUrl}
+                alt={photoDescription}
+                className="w-full h-full object-contain max-h-[90vh]"
+              />
+            </DialogContent>
+          </Dialog>
 
           {/* Overlay container for tags and buttons */}
           <div className="absolute inset-0 rounded-lg overflow-hidden">
