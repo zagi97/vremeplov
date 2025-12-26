@@ -62,7 +62,7 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
 
   // Get notification message
   const getNotificationMessage = (notification: Notification): string => {
-    const { type, actorName, photoTitle, badgeName, taggedPersonName } = notification;
+    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil } = notification;
 
     switch (type) {
     case 'new_comment':
@@ -78,21 +78,22 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
     case 'photo_approved':
       return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.approved')}`;
     case 'photo_rejected':
-      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}: ${t('notifications.tagRejectedReason')}`;
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
     case 'photo_edited':
-      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}`;
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.edited')}${changes ? `: ${changes}` : ''}`;
     case 'photo_deleted':
-      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}`;
+      return `${t('notifications.yourPhoto')} "${photoTitle}" ${t('notifications.deleted')}${reason ? `: ${reason}` : ''}`;
     case 'tag_approved':
       return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.approved')}`;
     case 'tag_rejected':
-      return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}: ${t('notifications.tagRejectedReason')}`;
+      return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
     case 'comment_deleted':
-      return t('notifications.yourCommentDeleted');
+      return `${t('notifications.yourCommentDeleted')}${reason ? `: ${reason}` : ''}`;
     case 'user_banned':
-      return t('notifications.accountBanned');
+      return `${t('notifications.accountBanned')}${reason ? `: ${reason}` : ''}`;
     case 'user_suspended':
-      return t('notifications.accountSuspended');
+      const untilDate = suspendedUntil ? new Date(suspendedUntil).toLocaleDateString('hr-HR') : '';
+      return `${t('notifications.accountSuspended')}${untilDate ? ` ${t('notifications.until')} ${untilDate}` : ''}${reason ? `. ${t('notifications.reason')}: ${reason}` : ''}`;
     case 'user_unbanned':
       return t('notifications.accountActive');
     case 'user_unsuspended':

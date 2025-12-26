@@ -701,6 +701,8 @@
   "notifications.notificationsAllRead": "Sve obavijesti su pročitane",
   "notifications.hereAppearNotifications": "Ovdje će se pojaviti tvoje obavijesti",
   "notifications.tagRejectedReason": "Tag je odbijen jer ne zadovoljava kriterije kvalitete.",
+  "notifications.until": "do",
+  "notifications.reason": "Razlog",
   "community.badgesPlural": "značke",
   "community.newPhotosMany": "novih fotografija",
   "community.newPhotosPlural": "nove fotografije",
