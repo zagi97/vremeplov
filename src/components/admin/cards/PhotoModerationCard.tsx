@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Check, X, Edit, Expand } from 'lucide-react';
+import { Check, X, Edit, Expand, MapPin } from 'lucide-react';
 import LazyImage from '@/components/LazyImage';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -326,7 +326,7 @@ const hasRejectReason = (
           {isEditing ? (
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium">Author *</label>
+                <label className="text-sm font-medium dark:text-gray-200">Author *</label>
                 <Input
                   value={editData.author}
                   onChange={(e) => {
@@ -334,12 +334,12 @@ const hasRejectReason = (
                     setEditData(prev => ({ ...prev, author: value }));
                   }}
                   maxLength={40}
-                  className={editData.author.length >= 38 ? "border-red-300 focus:border-red-500" : ""}
+                  className={`dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ${editData.author.length >= 38 ? "border-red-300 focus:border-red-500 dark:border-red-500" : ""}`}
                 />
                 <CharacterCounter currentLength={editData.author.length} maxLength={40} />
               </div>
               <div>
-                <label className="text-sm font-medium">Year *</label>
+                <label className="text-sm font-medium dark:text-gray-200">Year *</label>
                 <YearPicker
                   selectedYear={editData.year}
                   onYearSelect={(year) => setEditData(prev => ({ ...prev, year }))}
@@ -349,16 +349,16 @@ const hasRejectReason = (
                 />
               </div>
               <div>
-                <label className="text-sm font-medium block mb-1">Description</label>
+                <label className="text-sm font-medium block mb-1 dark:text-gray-200">Description</label>
                 <Textarea
                   value={editData.description}
                   onChange={(e) => {
-      // ✅ Ograniči na TEXT_LIMITS.DESCRIPTION karaktera
-      const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
-      setEditData(prev => ({ ...prev, description: value }));
-    }}
+                    const value = e.target.value.slice(0, TEXT_LIMITS.DESCRIPTION);
+                    setEditData(prev => ({ ...prev, description: value }));
+                  }}
                   rows={2}
                   maxLength={250}
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
                 />
                 {/* ✅ Character counter */}
   <p className={`text-sm mt-1 ${
@@ -378,12 +378,28 @@ const hasRejectReason = (
             </div>
           ) : (
             <div className="min-w-0 overflow-hidden">
-              <h3 className="font-medium break-all">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground break-all">
+              <h3 className="font-medium break-all dark:text-gray-100">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
-                <p className="text-sm mt-2 break-all">{photo.detailedDescription}</p>
+                <p className="text-sm mt-2 break-all dark:text-gray-300">{photo.detailedDescription}</p>
+              )}
+              {/* Show coordinates/address if available */}
+              {photo.coordinates && (
+                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-800 dark:text-blue-300">
+                        📍 {photo.coordinates.address || 'Lokacija označena'}
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Koordinate: {photo.coordinates.latitude.toFixed(5)}, {photo.coordinates.longitude.toFixed(5)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
