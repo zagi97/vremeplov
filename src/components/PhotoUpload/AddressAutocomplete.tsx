@@ -51,6 +51,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const lastSelectedAddressRef = useRef<string>('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const selectionTimestampRef = useRef<number>(0); // Lock reopening for 1 second after selection
 
   // Helper function
   const extractStreetName = (fullAddress: string): string => {
@@ -86,6 +87,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Search addresses function
   const searchAddresses = useCallback(async (searchTerm: string) => {
+    // Don't search if we just selected an address (1 second lock)
+    if (Date.now() - selectionTimestampRef.current < 1000) {
+      return;
+    }
+
     // Check cache first
     const cacheKey = `${searchTerm}_${locationName}`;
     if (searchCache.has(cacheKey)) {
@@ -302,7 +308,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleInputFocus = () => {
-    // Don't show dropdown if we just selected an address
+    // Don't show dropdown if we just selected an address (1 second lock)
+    if (Date.now() - selectionTimestampRef.current < 1000) {
+      return;
+    }
     if (isSelectingAddressRef.current || value === lastSelectedAddressRef.current) {
       return;
     }
@@ -377,13 +386,21 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleSelect = async (address: string) => {
+    // Set all flags to prevent reopening
     isSelectingAddressRef.current = true;
     lastSelectedAddressRef.current = address;
+    selectionTimestampRef.current = Date.now(); // Lock for 1 second
 
     // Immediately hide dropdown and clear addresses to prevent flickering
     setShowDropdown(false);
     setAvailableAddresses([]);
     setLoadingAddresses(false);
+
+    // Cancel any pending search requests
+    if (currentRequestRef.current) {
+      currentRequestRef.current.abort();
+      currentRequestRef.current = null;
+    }
 
     if (address.includes('(kliknite za broj')) {
       return;
