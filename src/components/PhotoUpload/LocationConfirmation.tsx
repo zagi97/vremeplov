@@ -31,21 +31,9 @@ export const LocationConfirmation: React.FC<LocationConfirmationProps> = ({
   t,
 }) => {
   const handleChangeClick = () => {
-    // Check if we have data for manual positioning
-    if (streetName && houseNumber) {
-      // Return to manual positioning mode
-      onChangeLocation();
-      toast.info(
-        translateWithParams(t, 'upload.selectNewLocation', {
-          street: streetName,
-          number: houseNumber,
-        })
-      );
-    } else {
-      // No data, completely reset
-      onReset();
-      toast.info(t('upload.canSearchAgain'));
-    }
+    // Always reset to allow searching again
+    onReset();
+    toast.info(t('upload.canSearchAgain'));
   };
 
   return (

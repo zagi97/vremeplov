@@ -302,20 +302,20 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   };
 
   const handleInputFocus = () => {
+    // Don't show dropdown if we just selected an address
+    if (isSelectingAddressRef.current || value === lastSelectedAddressRef.current) {
+      return;
+    }
     if (value.length > 0 && availableAddresses.length > 0) {
       setShowDropdown(true);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && value.trim().length >= 2) {
+    if (e.key === 'Enter') {
       e.preventDefault();
-
-      // If no results found, allow manual entry
-      if (!loadingAddresses && availableAddresses.length === 0) {
-        handleManualEntry();
-      } else if (availableAddresses.length === 1) {
-        // Auto-select if only one result
+      // Auto-select if only one result
+      if (!loadingAddresses && availableAddresses.length === 1) {
         handleSelect(availableAddresses[0]);
       }
     }
@@ -379,7 +379,11 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const handleSelect = async (address: string) => {
     isSelectingAddressRef.current = true;
     lastSelectedAddressRef.current = address;
-    closeDropdown();
+
+    // Immediately hide dropdown and clear addresses to prevent flickering
+    setShowDropdown(false);
+    setAvailableAddresses([]);
+    setLoadingAddresses(false);
 
     if (address.includes('(kliknite za broj')) {
       return;
@@ -459,11 +463,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           )}
 
           {!loadingAddresses && availableAddresses.length === 0 && value.length >= 2 && (
-            <div className="p-3 text-sm text-gray-600 dark:text-gray-300 text-center space-y-2">
-              <div>{t('upload.noAddressesFound')}</div>
-              <div className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-2 rounded border border-blue-200 dark:border-blue-800">
-                💡 Pritisnite <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-blue-300 dark:border-blue-700 rounded text-blue-900 dark:text-blue-300 font-mono text-xs">Enter</kbd> za ručni unos
-              </div>
+            <div className="p-3 text-sm text-gray-600 dark:text-gray-300 text-center">
+              {t('upload.noAddressesFound')}
             </div>
           )}
 
