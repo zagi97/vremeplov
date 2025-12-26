@@ -334,11 +334,7 @@ export const usePhotoDetails = ({ photoId, user, t }: UsePhotoDetailsProps) => {
       };
 
       setTaggedPersons([...taggedPersons, newTagWithId]);
-
-      toast.success(
-        translateWithParams(t, 'photoDetail.tagPending', { name: newTag.name }),
-        { duration: 4000 }
-      );
+      // Toast is shown in PhotoTagging component, not here (to avoid duplicate)
     } catch (error) {
       console.error('Error adding tag:', error);
       toast.error(t('photoDetail.tagSaveFailed'));
