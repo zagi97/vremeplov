@@ -143,7 +143,7 @@ const PhotoDetail = () => {
 
           {/* Photo Metadata Component */}
           <PhotoMetadata
-            year={parseInt(photo.year, 10)}
+            year={photo.year}
             author={photo.author}
             location={photo.location}
             uploadedBy={photo.uploadedBy}
