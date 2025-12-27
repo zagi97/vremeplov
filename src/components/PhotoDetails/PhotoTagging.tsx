@@ -67,6 +67,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
   const [tagPosition, setTagPosition] = useState({ x: 0, y: 0 });
   const [hasSelectedPosition, setHasSelectedPosition] = useState(false);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
 
   const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isTagging) return;
@@ -143,7 +144,7 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
           />
 
           {/* Zoom button - opens fullscreen image view */}
-          <Dialog>
+          <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
             <DialogTrigger asChild>
               <Button
                 onClick={(e) => e.stopPropagation()}
@@ -156,15 +157,25 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-transparent border-none [&>button]:hidden">
-              {/* Custom close button - outside image */}
-              <DialogClose className="absolute -top-12 right-0 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg transition-colors">
+              {/* Clickable backdrop inside DialogContent to close on click outside image */}
+              <div
+                className="absolute inset-0 cursor-pointer"
+                onClick={() => setIsZoomOpen(false)}
+                aria-label={t('photoDetail.closeZoom') || 'Close'}
+              />
+              {/* Custom close button - top right corner */}
+              <button
+                onClick={() => setIsZoomOpen(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-lg transition-colors"
+                aria-label={t('photoDetail.closeZoom') || 'Close'}
+              >
                 <X className="h-6 w-6" />
-                <span className="sr-only">Close</span>
-              </DialogClose>
+              </button>
+              {/* Image - clicks don't close the dialog */}
               <img
                 src={photoImageUrl}
                 alt={photoDescription}
-                className="w-full h-full object-contain max-h-[85vh] rounded-lg"
+                className="relative z-[1] w-full h-full object-contain max-h-[85vh] rounded-lg pointer-events-none"
               />
             </DialogContent>
           </Dialog>
