@@ -38,9 +38,11 @@ const YearPicker: React.FC<YearPickerProps> = ({
 
   // Set initial decade based on selected year or current year
   useEffect(() => {
-    if (selectedYear) {
+    if (selectedYear && selectedYear !== 'unknown') {
       const year = parseInt(selectedYear);
-      setCurrentDecade(Math.floor(year / 10) * 10);
+      if (!isNaN(year)) {
+        setCurrentDecade(Math.floor(year / 10) * 10);
+      }
     } else {
       setCurrentDecade(Math.floor(currentYear / 10) * 10);
     }
