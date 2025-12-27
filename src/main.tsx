@@ -116,27 +116,44 @@ window.addEventListener('load', () => {
   }
 });
 
-// ✅ Global error handling za service worker
+// ✅ Check if error is a chunk loading error
+function isChunkLoadError(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  const patterns = [
+    'dynamically imported module',
+    'loading chunk',
+    'failed to fetch',
+    'loading css chunk',
+    'unable to preload',
+    'failed to load module',
+    'syntaxerror',
+    'unexpected token \'<\'', // HTML returned instead of JS (404 redirect)
+    'is not valid javascript',
+    'error loading',
+  ];
+  return patterns.some(pattern => lowerMessage.includes(pattern));
+}
+
+// ✅ Global error handling za service worker i chunk errors
 window.addEventListener('error', (event) => {
   if (event.filename?.includes('sw.js')) {
     console.error('Service Worker error:', event.error);
   }
 
   // Handle chunk loading errors (after new deployment)
-  if (event.message?.includes('dynamically imported module') ||
-      event.message?.includes('Loading chunk') ||
-      event.message?.includes('Failed to fetch')) {
+  const message = event.message || event.error?.message || '';
+  if (isChunkLoadError(message)) {
+    console.log('🔄 [ERROR] Chunk error detected:', message);
     handleChunkError();
   }
 });
 
 // ✅ Global handler for async chunk loading errors
 window.addEventListener('unhandledrejection', (event) => {
-  const message = event.reason?.message || String(event.reason);
+  const message = event.reason?.message || String(event.reason) || '';
 
-  if (message.includes('dynamically imported module') ||
-      message.includes('Loading chunk') ||
-      message.includes('Failed to fetch')) {
+  if (isChunkLoadError(message)) {
+    console.log('🔄 [UNHANDLED REJECTION] Chunk error detected:', message);
     event.preventDefault(); // Prevent default error logging
     handleChunkError();
   }
@@ -150,8 +167,10 @@ function handleChunkError() {
 
   // Only reload if we haven't reloaded in the last 10 seconds
   if (!lastReload || (now - parseInt(lastReload)) > 10000) {
-    console.log('🔄 Chunk loading error detected, reloading...');
+    console.log('🔄 Chunk loading error - reloading page...');
     sessionStorage.setItem(reloadKey, now.toString());
     window.location.reload();
+  } else {
+    console.warn('⚠️ Chunk reload already attempted recently, not reloading again');
   }
 }
