@@ -58,9 +58,17 @@ const YearPicker: React.FC<YearPickerProps> = ({
     return years;
   };
 
-  const handleYearSelect = (year: number) => {
+  const handleYearSelect = (year: number | 'unknown') => {
     onYearSelect(year.toString());
     setIsOpen(false);
+  };
+
+  const getDisplayValue = () => {
+    if (!selectedYear) return null;
+    if (selectedYear === 'unknown') {
+      return t ? t('upload.unknownYear') : 'Unknown year';
+    }
+    return selectedYear;
   };
 
   const goToPreviousDecade = () => {
@@ -99,7 +107,7 @@ const YearPicker: React.FC<YearPickerProps> = ({
         }`}
       >
         <span className={selectedYear ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
-          {selectedYear || getPlaceholderText()}
+          {getDisplayValue() || getPlaceholderText()}
         </span>
         <ChevronDown
           className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${
@@ -137,6 +145,23 @@ const YearPicker: React.FC<YearPickerProps> = ({
               className="h-8 w-8 p-0 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Unknown Year Option */}
+          <div className="px-3 pt-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+            <Button
+              type="button"
+              variant={selectedYear === 'unknown' ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleYearSelect('unknown')}
+              className={`w-full text-xs ${
+                selectedYear === 'unknown'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              {t ? t('upload.unknownYear') : 'Unknown year'}
             </Button>
           </div>
 
