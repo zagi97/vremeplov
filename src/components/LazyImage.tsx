@@ -148,9 +148,9 @@ const LazyImage: React.FC<LazyImageProps> = ({
   };
 
   return (
-    <div 
-      ref={imgRef} 
-      className={`relative overflow-hidden bg-gray-100 ${className}`}
+    <div
+      ref={imgRef}
+      className={`relative overflow-hidden bg-gray-100 ${aspectRatio === 'auto' ? 'inline-block' : ''} ${className}`}
       style={getAspectRatioStyle()}
     >
       {/* Placeholder */}
@@ -185,7 +185,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
           <img
             src={getFallbackSrc()}
             alt={alt}
-            className={`${aspectRatio === 'auto' ? 'relative' : 'absolute inset-0'} w-full ${aspectRatio === 'auto' ? 'h-auto' : 'h-full'} transition-opacity duration-500 ${
+            className={`${aspectRatio === 'auto' ? 'relative max-w-full max-h-full' : 'absolute inset-0 w-full h-full'} ${aspectRatio === 'auto' ? 'h-auto w-auto' : ''} transition-opacity duration-500 ${
               objectFit === 'contain' ? 'object-contain' : 'object-cover'
             } ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
             onLoad={handleLoad}
