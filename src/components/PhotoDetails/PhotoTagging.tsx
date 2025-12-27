@@ -128,15 +128,15 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
   return (
     <>
       {/* Image with tagging overlay */}
-      <div className="relative w-full">
+      <div className="relative w-full flex justify-center">
         <div
-          className="relative w-full cursor-pointer group"
+          className="relative inline-block cursor-pointer group"
           onClick={handleImageClick}
         >
           <LazyImage
             src={photoImageUrl}
             alt={photoDescription}
-            className="w-full h-auto max-h-[80vh] rounded-lg"
+            className="h-auto max-h-[85vh] max-w-full rounded-lg"
             responsiveImages={responsiveImages}
             priority={true}
             aspectRatio="auto"

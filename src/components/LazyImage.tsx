@@ -148,9 +148,9 @@ const LazyImage: React.FC<LazyImageProps> = ({
   };
 
   return (
-    <div 
-      ref={imgRef} 
-      className={`relative overflow-hidden bg-gray-100 ${className}`}
+    <div
+      ref={imgRef}
+      className={`relative overflow-hidden bg-gray-100 ${aspectRatio === 'auto' ? 'inline-block' : ''} ${className}`}
       style={getAspectRatioStyle()}
     >
       {/* Placeholder */}
