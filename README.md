@@ -1,12 +1,12 @@
 # 📸 Vremeplov - Connecting Communities Through History
 
-*Vremeplov* (Time Machine) is a social platform that brings communities together by sharing and preserving local history through photos, videos, and stories.
+*Vremeplov* (Time Machine) is a social platform that brings communities together by sharing and preserving local history through photos and stories.
 
 ## 🎯 The Vision
 
 Every city and village has untold stories waiting to be shared. Vremeplov creates a digital space where people can:
 
-- **Discover** old photos and videos from their hometown
+- **Discover** old photos from their hometown
 - **Share** historical moments and family memories
 - **Connect** with others who share the same roots
 - **Preserve** local history for future generations
@@ -19,7 +19,7 @@ Every city and village has untold stories waiting to be shared. Vremeplov create
 - Localized feeds for each community
 
 ### 📷 Community Timeline
-- Upload historical photos and videos
+- Upload historical photos
 - Share stories from the past (near or distant)
 - Tag people and locations in photos
 - Comment and engage with local history
