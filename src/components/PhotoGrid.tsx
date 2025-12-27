@@ -20,6 +20,11 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   const [photosState, setPhotosState] = useState<Photo[]>(photos);
   const { user } = useAuth();
   const { t } = useLanguage();
+
+  // Helper to display year with translation for unknown
+  const formatYear = (year: string) => {
+    return year === 'unknown' ? t('upload.unknownYear') : year;
+  };
   
   // Update local state when photos prop changes
   React.useEffect(() => {
@@ -101,7 +106,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
       <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center text-gray-500 dark:text-gray-400">
           <div className="text-sm font-medium">{photo.location}</div>
-          <div className="text-xs">{photo.year}</div>
+          <div className="text-xs">{formatYear(photo.year)}</div>
         </div>
       </div>
     }
@@ -115,7 +120,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>{photo.year}</span>
+                  <span>{formatYear(photo.year)}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">

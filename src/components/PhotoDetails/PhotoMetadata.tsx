@@ -13,7 +13,7 @@ interface TaggedPerson {
 }
 
 interface PhotoMetadataProps {
-  year: number;
+  year: number | string;
   author: string;
   location: string;
   uploadedBy?: string;
@@ -37,6 +37,14 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  // Helper to display year with translation for unknown
+  const formatYear = (yearValue: number | string) => {
+    if (yearValue === 'unknown' || yearValue === 'Nepoznata godina') {
+      return t('upload.unknownYear');
+    }
+    return yearValue;
+  };
+
   // Filter only approved tags
   const approvedTags = taggedPersons.filter(person => person.isApproved === true);
 
@@ -55,7 +63,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
             <Calendar className="h-6 w-6 mx-auto text-blue-600 dark:text-blue-400 mb-2" />
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.year')}</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{year}</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatYear(year)}</p>
           </div>
 
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">

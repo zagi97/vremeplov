@@ -13,6 +13,11 @@ const SampleGallery = () => {
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
+  // Helper to display year with translation for unknown
+  const formatYear = (year: string) => {
+    return year === 'unknown' ? t('upload.unknownYear') : year;
+  };
+
   useEffect(() => {
     const loadRecentPhotos = async () => {
       try {
@@ -62,7 +67,7 @@ const SampleGallery = () => {
           <div className="aspect-[4/3] overflow-hidden relative">
             <LazyImage
               src={photo.imageUrl}
-              alt={`${photo.location}, ${photo.year}`}
+              alt={`${photo.location}, ${formatYear(photo.year)}`}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
           </div>
@@ -73,7 +78,7 @@ const SampleGallery = () => {
               <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
               <span className="mr-3 truncate">{photo.location}</span>
               <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-              <span>{photo.year}</span>
+              <span>{formatYear(photo.year)}</span>
             </div>
           </div>
         </Link>
