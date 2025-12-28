@@ -42,13 +42,10 @@ service cloud.firestore {
       // ✅ UPDATE:
       // - Admin can update anything
       // - Owner can update own profile (except protected fields)
-      // - ANY authenticated user can update stats/badges/lastActive (za auto-update pri lajkovima)
+      // 🔒 SECURITY FIX: Removed ability for ANY user to update ANY user's stats
       allow update: if isAdmin() ||
                     (isOwner(userId) &&
-                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid'])) ||
-                    (isAuthenticated() &&
-                     request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['stats', 'badges', 'lastActive', 'updatedAt']));
+                     !request.resource.data.diff(resource.data).affectedKeys().hasAny(['isAdmin', 'isBanned', 'uid']));
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
@@ -81,6 +78,7 @@ service cloud.firestore {
       // - Admin can update anything
       // - Owner can update their unapproved photos
       // - Authenticated users can like/view SAMO APPROVED photos
+      // 🔒 SECURITY FIX: Validate likes can only change by +1 or -1
       allow update: if isAdmin() ||
                     (isAuthenticated() &&
                      isOwner(resource.data.uploaderId) &&
@@ -88,7 +86,9 @@ service cloud.firestore {
                     (isAuthenticated() &&
                      resource.data.isApproved == true &&
                      request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['likes', 'views', 'updatedAt']));
+                       .hasOnly(['likes', 'views', 'updatedAt']) &&
+                     request.resource.data.likes >= resource.data.likes - 1 &&
+                     request.resource.data.likes <= resource.data.likes + 1);
 
       // ✅ DELETE: Only admin
       allow delete: if isAdmin();
