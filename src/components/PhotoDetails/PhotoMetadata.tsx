@@ -69,7 +69,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
             <Camera className="h-6 w-6 mx-auto text-purple-600 dark:text-purple-400 mb-2" />
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.author')}</p>
-            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 break-all">{author}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100 break-words">{author}</p>
           </div>
 
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -77,7 +77,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.location')}</p>
             <Link
               to={`/location/${encodeURIComponent(location)}`}
-              className="text-sm font-bold text-blue-600 dark:text-blue-400 underline break-all hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              className="text-sm font-bold text-blue-600 dark:text-blue-400 underline break-words hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             >
               {location}
             </Link>
@@ -109,7 +109,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 
         {/* Description */}
         <div className="mb-6">
-          <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-all">
+          <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words">
             {detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
               year,
               description,
@@ -132,10 +132,10 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
               {approvedTags.map((person) => (
                 <span
                   key={person.id || `temp-${person.x}-${person.y}`}
-                  className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors break-all"
+                  className="inline-flex items-center gap-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-800/50 transition-colors break-words"
                 >
                   <User className="h-3 w-3 flex-shrink-0" />
-                  <span className="break-all">{person.name}</span>
+                  <span className="break-words">{person.name}</span>
                 </span>
               ))}
             </div>
