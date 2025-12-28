@@ -378,12 +378,12 @@ const hasRejectReason = (
             </div>
           ) : (
             <div className="min-w-0 overflow-hidden">
-              <h3 className="font-medium break-all dark:text-gray-100">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground dark:text-gray-400 break-all">
+              <h3 className="font-medium break-words dark:text-gray-100">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground dark:text-gray-400 break-words">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
               {photo.detailedDescription && (
-                <p className="text-sm mt-2 break-all dark:text-gray-300">{photo.detailedDescription}</p>
+                <p className="text-sm mt-2 break-words dark:text-gray-300">{photo.detailedDescription}</p>
               )}
               {/* Show coordinates/address if available */}
               {photo.coordinates && (

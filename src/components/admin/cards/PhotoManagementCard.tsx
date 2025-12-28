@@ -335,8 +335,8 @@ const buildDeleteReasonText = () => {
             </div>
           ) : (
             <div className="min-w-0 overflow-hidden">
-              <h3 className="font-medium break-all">{photo.description}</h3>
-              <p className="text-sm text-muted-foreground break-all">
+              <h3 className="font-medium break-words">{photo.description}</h3>
+              <p className="text-sm text-muted-foreground break-words">
                 By {photo.author} • {photo.year} • {photo.location}
               </p>
             </div>
