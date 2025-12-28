@@ -21,10 +21,40 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   static isChunkLoadError(error: Error): boolean {
-    const message = error.message || '';
-    return message.includes('dynamically imported module') ||
-           message.includes('Loading chunk') ||
-           message.includes('Failed to fetch');
+    const message = error.message?.toLowerCase() || '';
+    const stack = error.stack?.toLowerCase() || '';
+    const name = error.name?.toLowerCase() || '';
+
+    // Common chunk loading error patterns
+    const chunkErrorPatterns = [
+      'dynamically imported module',
+      'loading chunk',
+      'failed to fetch',
+      'loading css chunk',
+      'unable to preload',
+      'failed to load module',
+      // Vite-specific patterns
+      'error loading dynamically imported module',
+      // Network errors for JS files
+      'syntaxerror',
+      'unexpected token',
+    ];
+
+    const isChunkPattern = chunkErrorPatterns.some(pattern =>
+      message.includes(pattern) || stack.includes(pattern)
+    );
+
+    // Also check if it's a TypeError from failed dynamic import
+    const isTypeError = name === 'typeerror' && (
+      message.includes('failed to fetch') ||
+      message.includes('module') ||
+      message.includes('import')
+    );
+
+    // Check for ChunkLoadError name (webpack)
+    const isChunkLoadErrorName = name.includes('chunkloaderror');
+
+    return isChunkPattern || isTypeError || isChunkLoadErrorName;
   }
 
   static getDerivedStateFromError(error: Error): State {
