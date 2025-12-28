@@ -111,7 +111,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
         <div className="mb-6">
           <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words">
             {detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
-              year,
+              year: formatYear(year),
               description,
               location,
               author
