@@ -52,12 +52,6 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
     return yearValue;
   };
 
-  // Helper to check if author is unknown
-  const isAuthorUnknown = (authorValue: string) => {
-    const unknownValues = ['nepoznato', 'unknown', 'nepoznat', 'anonimno', 'anoniman'];
-    return unknownValues.includes(authorValue.toLowerCase().trim());
-  };
-
   // Get municipality type for location
   const getMunicipalityPrefix = (loc: string) => {
     const cityType = getCityType(loc, municipalityData);
@@ -88,11 +82,9 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
     const prefix = getMunicipalityPrefix(location);
     parts.push(`u ${prefix} ${location}.`);
 
-    // Add contributor
-    if (isAuthorUnknown(author)) {
-      parts.push('Doprinijela ju je u arhiv Vremeplov.hr nepoznata osoba.');
-    } else {
-      parts.push(`Doprinijela ju je u arhiv Vremeplov.hr osoba ${author}.`);
+    // Add contributor (uploadedBy, not author - author is the photographer)
+    if (uploadedBy) {
+      parts.push(`Doprinijela ju je u arhiv Vremeplov.hr osoba ${uploadedBy}.`);
     }
 
     return parts.join(' ');
