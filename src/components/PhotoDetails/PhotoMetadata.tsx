@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCityType } from "@/utils/locationUtils";
-import { municipalityData } from "../../data/municipalities";
+import { municipalityData } from "../../../data/municipalities";
 
 interface TaggedPerson {
   id: string;
