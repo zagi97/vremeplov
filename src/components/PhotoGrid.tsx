@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LazyImage from './LazyImage';
 import { useLanguage } from "../contexts/LanguageContext";
 import { getPhotoTypeOptions } from "@/constants/filters";
+import { formatYear } from '@/utils/dateUtils';
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -21,11 +22,6 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   const [photosState, setPhotosState] = useState<Photo[]>(photos);
   const { user } = useAuth();
   const { t } = useLanguage();
-
-  // Helper to display year with translation for unknown
-  const formatYear = (year: string) => {
-    return year === 'unknown' ? t('upload.unknownYear') : year;
-  };
 
   // Helper to translate photo type
   const translatePhotoType = (photoType: string) => {
@@ -114,7 +110,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
       <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
         <div className="text-center text-gray-500 dark:text-gray-400">
           <div className="text-sm font-medium">{photo.location}</div>
-          <div className="text-xs">{formatYear(photo.year)}</div>
+          <div className="text-xs">{formatYear(photo.year, t)}</div>
         </div>
       </div>
     }
@@ -128,7 +124,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatYear(photo.year)}</span>
+                  <span>{formatYear(photo.year, t)}</span>
                 </div>
                 
                 <div className="flex items-center gap-2">

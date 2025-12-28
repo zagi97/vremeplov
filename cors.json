@@ -1,8 +1,12 @@
 [
-    {
-      "origin": ["http://localhost:5173"],
-      "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
-      "responseHeader": ["Content-Type"],
-      "maxAgeSeconds": 3600
-    }
-  ]
+  {
+    "origin": [
+      "https://vremeplov.vercel.app",
+      "https://vremeplov.hr",
+      "http://localhost:5173"
+    ],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "responseHeader": ["Content-Type"],
+    "maxAgeSeconds": 3600
+  }
+]

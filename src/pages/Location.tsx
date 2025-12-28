@@ -19,6 +19,7 @@ import { municipalityData } from '../../data/municipalities';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
 import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
+import { formatYear } from '@/utils/dateUtils';
 import LoadingScreen from '@/components/LoadingScreen';
 import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions, YearRange } from '@/constants/filters';
 import { usePhotoFilters, DEFAULT_FILTERS } from '@/hooks/usePhotoFilters';
@@ -40,11 +41,6 @@ const translateCityType = (type: string, t: any) => {
 
 const Location = () => {
   const { t } = useLanguage();
-
-  // Helper to display year with translation for unknown
-  const formatYear = (year: string) => {
-    return year === 'unknown' ? t('upload.unknownYear') : year;
-  };
 
   const { locationName } = useParams<{ locationName: string }>();
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
@@ -206,25 +202,10 @@ useEffect(() => {
 
       try {
         setLoading(true);
-        console.log('🔵 Loading photos for location:', actualCityName);
         const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
-        console.log('✅ Loaded photos:', {
-          location: actualCityName,
-          count: locationPhotos.length,
-          photos: locationPhotos.map(p => ({
-            id: p.id,
-            description: p.description,
-            year: p.year,
-            isApproved: p.isApproved,
-            location: p.location
-          }))
-        });
         setAllPhotos(locationPhotos);
       } catch (error) {
-        console.error('❌ Error loading photos:', error);
-        // ✅ FIX: Don't show error toast for empty location
-        // Empty state is OK, only show error for real failures
-        // toast.error(t('errors.photoLoadFailed'));
+        console.error('Error loading photos:', error);
       } finally {
         setLoading(false);
       }
@@ -616,7 +597,7 @@ if (loading) {
 >
 <LazyImage
   src={photo.imageUrl}
-  alt={`${photo.location}, ${formatYear(photo.year)}`}
+  alt={`${photo.location}, ${formatYear(photo.year, t)}`}
   className="transition-transform duration-500 group-hover:scale-110"
   aspectRatio="4/3"
   responsiveImages={photo.responsiveImages} // ✅ ADD THIS!
@@ -628,7 +609,7 @@ if (loading) {
                         <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
                         <span className="mr-3 truncate">{photo.location}</span>
                         <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                        <span>{formatYear(photo.year)}</span>
+                        <span>{formatYear(photo.year, t)}</span>
                       </div>
                     </div>
                   </Link>

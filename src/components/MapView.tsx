@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
+import { formatYear } from '@/utils/dateUtils';
 
 // 🆕 Import TypeScript podataka o općinama
 import { municipalityData } from '../../data/municipalities';
@@ -146,11 +147,6 @@ const MapViewSkeleton = () => {
 
 const MapView: React.FC = () => {
     const { t } = useLanguage();
-
-    // Helper to display year with translation for unknown
-    const formatYear = (year: string) => {
-      return year === 'unknown' ? t('upload.unknownYear') : year;
-    };
 
     const [photos, setPhotos] = useState<PhotoWithCoordinates[]>([]);
     const [filteredPhotos, setFilteredPhotos] = useState<PhotoWithCoordinates[]>([]);
@@ -386,7 +382,7 @@ if (loading) {
                                                         )}
                                                         <div className="flex items-center gap-1">
                                                             <Calendar className="h-3 w-3 flex-shrink-0" />
-                                                            <span>{formatYear(item.photo.year)}</span>
+                                                            <span>{formatYear(item.photo.year, t)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <User className="h-3 w-3 flex-shrink-0" />
@@ -432,7 +428,7 @@ if (loading) {
                                                                 </div>
                                                                 <div className="text-xs">
                                                                     <div className="font-medium truncate">{photo.description}</div>
-                                                                    <div className="text-gray-500">{formatYear(photo.year)}</div>
+                                                                    <div className="text-gray-500">{formatYear(photo.year, t)}</div>
                                                                 </div>
                                                             </Link>
                                                         ))}
@@ -485,7 +481,7 @@ if (loading) {
 
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span>{formatYear(photo.year)}</span>
+            <span>{formatYear(photo.year, t)}</span>
           </div>
 
           <div className="flex items-center gap-2">

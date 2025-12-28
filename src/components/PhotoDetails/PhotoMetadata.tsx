@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getCityType } from "@/utils/locationUtils";
+import { formatYear, isYearUnknown } from "@/utils/dateUtils";
 import { municipalityData } from "../../../data/municipalities";
 
 interface TaggedPerson {
@@ -38,19 +39,6 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
   taggedPersons
 }) => {
   const { t } = useLanguage();
-
-  // Helper to check if year is unknown
-  const isYearUnknown = (yearValue: number | string) => {
-    return yearValue === 'unknown' || yearValue === 'Nepoznata godina';
-  };
-
-  // Helper to display year with translation for unknown
-  const formatYear = (yearValue: number | string) => {
-    if (isYearUnknown(yearValue)) {
-      return t('upload.unknownYear');
-    }
-    return yearValue;
-  };
 
   // Get municipality type for location
   const getMunicipalityPrefix = (loc: string) => {
@@ -108,7 +96,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
             <Calendar className="h-6 w-6 mx-auto text-blue-600 dark:text-blue-400 mb-2" />
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide font-medium">{t('photoDetail.year')}</p>
-            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatYear(year)}</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatYear(year, t)}</p>
           </div>
 
           <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
