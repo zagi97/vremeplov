@@ -270,22 +270,11 @@ const sanitizedLocation = locationName
   .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 const baseName = `${sanitizedLocation}-${timestamp}`;
 
-console.log('📤 Upload debug info:', {
-  locationName,
-  sanitizedLocation,
-  baseName,
-  userId: user.uid,
-  photoId,
-  originalBlobType: imageSizes.original.blob.type,
-  originalBlobSize: imageSizes.original.blob.size,
-});
-
 // ✅ OPTIMIZED: Upload all images in parallel (3x faster!)
 const uploadPromises: Promise<any>[] = [];
 
 // Prepare original upload
 const originalFileName = `${baseName}-original.jpg`;
-console.log('📤 Uploading original:', { fileName: originalFileName, type: imageSizes.original.blob.type });
 uploadPromises.push(
   photoService.uploadImage(
     imageSizes.original.blob,
@@ -298,7 +287,6 @@ uploadPromises.push(
 // Prepare WebP uploads
 for (const webp of imageSizes.webp) {
   const webpFileName = `${baseName}-${webp.suffix}.webp`;
-  console.log('📤 Uploading WebP:', { fileName: webpFileName, type: webp.blob.type, size: webp.blob.size });
   uploadPromises.push(
     photoService.uploadImage(
       webp.blob,
@@ -312,7 +300,6 @@ for (const webp of imageSizes.webp) {
 // Prepare JPEG uploads
 for (const jpeg of imageSizes.jpeg) {
   const jpegFileName = `${baseName}-${jpeg.suffix}.jpg`;
-  console.log('📤 Uploading JPEG:', { fileName: jpegFileName, type: jpeg.blob.type, size: jpeg.blob.size });
   uploadPromises.push(
     photoService.uploadImage(
       jpeg.blob,

@@ -23,8 +23,6 @@ import CommentModerationTab from '@/components/admin/tabs/CommentModerationTab';
 import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
 
 export default function AdminDashboard() {
-  console.log('🔵 [1] AdminDashboard RENDER START');
-
   const { user, isAdmin, loading, exitAdminMode } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();

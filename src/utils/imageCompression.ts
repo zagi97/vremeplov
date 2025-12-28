@@ -6,13 +6,15 @@
  * ✅ WebP Optimization: Saves 25-35% bandwidth vs JPEG = Lower Firebase Storage costs!
  */
 
+import { MAX_FILE_SIZE } from '@/constants';
+
 export const IMAGE_COMPRESSION_CONFIG = {
   MAX_WIDTH: 1920,
   // WebP quality settings (WebP gives better compression than JPEG at same quality)
   DEFAULT_QUALITY: 0.85,
   QUALITY_LARGE_FILE: 0.75, // For files > 5MB
   QUALITY_MEDIUM_FILE: 0.80, // For files 2-5MB
-  MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB limit for historical photos
+  MAX_FILE_SIZE, // Use centralized constant (10MB, matches Firebase Rules)
   LARGE_FILE_THRESHOLD: 5 * 1024 * 1024, // 5MB
   MEDIUM_FILE_THRESHOLD: 2 * 1024 * 1024, // 2MB
   OUTPUT_FORMAT: 'image/webp' as const, // Always output WebP for best compression

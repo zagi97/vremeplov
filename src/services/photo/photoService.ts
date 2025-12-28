@@ -621,14 +621,16 @@ export class PhotoService {
   }
 
   /**
-   * Get all approved photos
+   * Get all approved photos with optional limit
+   * @param maxPhotos - Maximum number of photos to return (default 500 for performance)
    */
-  async getAllPhotos(): Promise<Photo[]> {
+  async getAllPhotos(maxPhotos: number = 500): Promise<Photo[]> {
     try {
       const photosQuery = query(
         collection(db, 'photos'),
         where('isApproved', '==', true),
-        orderBy('createdAt', 'desc')
+        orderBy('createdAt', 'desc'),
+        limit(maxPhotos)
       );
 
       const photoSnapshot = await getDocs(photosQuery);

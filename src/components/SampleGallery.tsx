@@ -7,16 +7,12 @@ import { Link } from 'react-router-dom';
 import { photoService, Photo } from "../services/firebaseService";
 import LazyImage from "./LazyImage";
 import { useLanguage } from '../contexts/LanguageContext';
+import { formatYear } from '@/utils/dateUtils';
 
 const SampleGallery = () => {
   const [recentPhotos, setRecentPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
-
-  // Helper to display year with translation for unknown
-  const formatYear = (year: string) => {
-    return year === 'unknown' ? t('upload.unknownYear') : year;
-  };
 
   useEffect(() => {
     const loadRecentPhotos = async () => {
@@ -67,7 +63,7 @@ const SampleGallery = () => {
           <div className="aspect-[4/3] overflow-hidden relative">
             <LazyImage
               src={photo.imageUrl}
-              alt={`${photo.location}, ${formatYear(photo.year)}`}
+              alt={`${photo.location}, ${formatYear(photo.year, t)}`}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
             />
           </div>
@@ -78,7 +74,7 @@ const SampleGallery = () => {
               <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
               <span className="mr-3 truncate">{photo.location}</span>
               <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-              <span>{formatYear(photo.year)}</span>
+              <span>{formatYear(photo.year, t)}</span>
             </div>
           </div>
         </Link>

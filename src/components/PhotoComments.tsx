@@ -13,7 +13,7 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot,
+  getDocs,
   addDoc,
   serverTimestamp,
   Timestamp
@@ -62,62 +62,62 @@ const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = f
   const MAX_COMMENTS_PER_HOUR = COMMENT_RATE_LIMIT_CONFIG.timeWindows[1].maxRequests;
   const MAX_COMMENTS_PER_DAY = COMMENT_RATE_LIMIT_CONFIG.timeWindows[2].maxRequests;
 
-  // LIVE LISTENER za komentare
-  useEffect(() => {
+  // Fetch comments function (one-time read instead of real-time listener)
+  const fetchComments = async () => {
     if (!photoId) {
       setLoading(false);
       return;
     }
 
-    const commentsRef = collection(db, 'comments');
-    const q = query(
-      commentsRef,
-      where('photoId', '==', photoId),
-      where('isApproved', '==', true),
-      orderBy('createdAt', 'desc')
-    );
+    try {
+      const commentsRef = collection(db, 'comments');
+      const q = query(
+        commentsRef,
+        where('photoId', '==', photoId),
+        where('isApproved', '==', true),
+        orderBy('createdAt', 'desc')
+      );
 
-    const unsubscribe = onSnapshot(
-      q, 
-      (snapshot) => {
-        const fetchedComments: Comment[] = [];
-        
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          
-          fetchedComments.push({
-            id: doc.id,
-            userId: data.userId || '',
-            userName: data.userName || 'Nepoznato',
-            text: data.text || '',
-            photoId: data.photoId || '',
-            timestamp: data.createdAt || null,
-            date: data.createdAt
-              ? (() => {
-                  const date = new Date(data.createdAt.toMillis());
-                  const day = String(date.getDate()).padStart(2, '0');
-                  const month = String(date.getMonth() + 1).padStart(2, '0');
-                  const year = date.getFullYear();
-                  const hours = String(date.getHours()).padStart(2, '0');
-                  const minutes = String(date.getMinutes()).padStart(2, '0');
-                  return `${day}.${month}.${year}. ${hours}:${minutes}`;
-                })()
-              : 'Upravo sad'
-          });
+      const snapshot = await getDocs(q);
+      const fetchedComments: Comment[] = [];
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+
+        fetchedComments.push({
+          id: doc.id,
+          userId: data.userId || '',
+          userName: data.userName || 'Nepoznato',
+          text: data.text || '',
+          photoId: data.photoId || '',
+          timestamp: data.createdAt || null,
+          date: data.createdAt
+            ? (() => {
+                const date = new Date(data.createdAt.toMillis());
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                return `${day}.${month}.${year}. ${hours}:${minutes}`;
+              })()
+            : 'Upravo sad'
         });
-        
-        setComments(fetchedComments);
-        setLoading(false);
-      }, 
-      (error) => {
-        console.error('Greška pri dohvaćanju komentara:', error);
-        toast.error(t('comments.loadError'));
-        setLoading(false);
-      }
-    );
+      });
 
-    return () => unsubscribe();
-  }, [photoId, t]);
+      setComments(fetchedComments);
+    } catch (error) {
+      console.error('Greška pri dohvaćanju komentara:', error);
+      toast.error(t('comments.loadError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load comments on mount
+  useEffect(() => {
+    fetchComments();
+  }, [photoId]);
 
   // Helper getters for cleaner code
   const commentsInLastMinute = rateLimitState.counts[0] || 0;
@@ -221,6 +221,9 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
     setTimeout(() => {
       refreshRateLimit(); // After Firestore indexes (1s delay)
     }, 1000);
+
+    // ✅ Refresh comments to show the new comment
+    await fetchComments();
 
   } catch (error) {
     console.error('Greška pri dodavanju komentara:', error);

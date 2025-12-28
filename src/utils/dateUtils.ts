@@ -128,3 +128,23 @@ export function formatTime(timestamp: TimestampValue): string {
     minute: '2-digit'
   });
 }
+
+/**
+ * Format year for display, translating 'unknown' to localized text
+ * @param year - The year (string or number, could be 'unknown' or a year like '1985')
+ * @param t - Translation function from useLanguage context
+ * @returns Formatted year string
+ */
+export function formatYear(year: string | number, t: TranslationFunction): string {
+  if (isYearUnknown(year)) {
+    return t('upload.unknownYear');
+  }
+  return String(year);
+}
+
+/**
+ * Check if year is unknown
+ */
+export function isYearUnknown(year: string | number): boolean {
+  return year === 'unknown' || year === 'Nepoznata godina' || year === '' || !year;
+}
