@@ -2,7 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
-import { useLanguage, translateWithParams } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getCityType } from "@/utils/locationUtils";
+import { municipalityData } from "../../data/municipalities";
 
 interface TaggedPerson {
   id: string;
@@ -37,12 +39,63 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 }) => {
   const { t } = useLanguage();
 
+  // Helper to check if year is unknown
+  const isYearUnknown = (yearValue: number | string) => {
+    return yearValue === 'unknown' || yearValue === 'Nepoznata godina';
+  };
+
   // Helper to display year with translation for unknown
   const formatYear = (yearValue: number | string) => {
-    if (yearValue === 'unknown' || yearValue === 'Nepoznata godina') {
+    if (isYearUnknown(yearValue)) {
       return t('upload.unknownYear');
     }
     return yearValue;
+  };
+
+  // Helper to check if author is unknown
+  const isAuthorUnknown = (authorValue: string) => {
+    const unknownValues = ['nepoznato', 'unknown', 'nepoznat', 'anonimno', 'anoniman'];
+    return unknownValues.includes(authorValue.toLowerCase().trim());
+  };
+
+  // Get municipality type for location
+  const getMunicipalityPrefix = (loc: string) => {
+    const cityType = getCityType(loc, municipalityData);
+    if (cityType === 'Grad') {
+      return 'gradu';
+    } else if (cityType === 'Općina') {
+      return 'općini';
+    }
+    return 'mjestu';
+  };
+
+  // Build smart default description
+  const buildDefaultDescription = () => {
+    const parts: string[] = [];
+
+    // Start sentence
+    if (isYearUnknown(year)) {
+      parts.push('Ova povijesna fotografija prikazuje');
+    } else {
+      parts.push(`Ova povijesna fotografija iz ${year}. godine prikazuje`);
+    }
+
+    // Add description (lowercase first letter for mid-sentence)
+    const descLower = description.charAt(0).toLowerCase() + description.slice(1);
+    parts.push(descLower);
+
+    // Add location with municipality type
+    const prefix = getMunicipalityPrefix(location);
+    parts.push(`u ${prefix} ${location}.`);
+
+    // Add contributor
+    if (isAuthorUnknown(author)) {
+      parts.push('Doprinijela ju je u arhiv Vremeplov.hr nepoznata osoba.');
+    } else {
+      parts.push(`Doprinijela ju je u arhiv Vremeplov.hr osoba ${author}.`);
+    }
+
+    return parts.join(' ');
   };
 
   // Filter only approved tags
@@ -110,12 +163,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
         {/* Description */}
         <div className="mb-6">
           <p className="text-gray-700 dark:text-gray-300 leading-relaxed break-words">
-            {detailedDescription || translateWithParams(t, 'photoDetail.defaultDescription', {
-              year: formatYear(year),
-              description,
-              location,
-              author
-            })}
+            {detailedDescription || buildDefaultDescription()}
           </p>
         </div>
 
