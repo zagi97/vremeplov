@@ -15,9 +15,7 @@ const SampleGallery = () => {
 
   // Helper to display year with translation for unknown
   const formatYear = (year: string) => {
-    const translated = t('upload.unknownYear');
-    console.log('[DEBUG formatYear]', { year, translated, language: localStorage.getItem('language') });
-    return year === 'unknown' ? translated : year;
+    return year === 'unknown' ? t('upload.unknownYear') : year;
   };
 
   useEffect(() => {
