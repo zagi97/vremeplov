@@ -40,6 +40,12 @@ const translateCityType = (type: string, t: any) => {
 
 const Location = () => {
   const { t } = useLanguage();
+
+  // Helper to display year with translation for unknown
+  const formatYear = (year: string) => {
+    return year === 'unknown' ? t('upload.unknownYear') : year;
+  };
+
   const { locationName } = useParams<{ locationName: string }>();
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
   const { user, signInWithGoogle } = useAuth();
@@ -610,7 +616,7 @@ if (loading) {
 >
 <LazyImage
   src={photo.imageUrl}
-  alt={`${photo.location}, ${photo.year}`}
+  alt={`${photo.location}, ${formatYear(photo.year)}`}
   className="transition-transform duration-500 group-hover:scale-110"
   aspectRatio="4/3"
   responsiveImages={photo.responsiveImages} // ✅ ADD THIS!
@@ -622,7 +628,7 @@ if (loading) {
                         <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
                         <span className="mr-3 truncate">{photo.location}</span>
                         <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                        <span>{photo.year}</span>
+                        <span>{formatYear(photo.year)}</span>
                       </div>
                     </div>
                   </Link>

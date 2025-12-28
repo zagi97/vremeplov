@@ -146,6 +146,12 @@ const MapViewSkeleton = () => {
 
 const MapView: React.FC = () => {
     const { t } = useLanguage();
+
+    // Helper to display year with translation for unknown
+    const formatYear = (year: string) => {
+      return year === 'unknown' ? t('upload.unknownYear') : year;
+    };
+
     const [photos, setPhotos] = useState<PhotoWithCoordinates[]>([]);
     const [filteredPhotos, setFilteredPhotos] = useState<PhotoWithCoordinates[]>([]);
     const [loading, setLoading] = useState(true);
@@ -380,7 +386,7 @@ if (loading) {
                                                         )}
                                                         <div className="flex items-center gap-1">
                                                             <Calendar className="h-3 w-3 flex-shrink-0" />
-                                                            <span>{item.photo.year}</span>
+                                                            <span>{formatYear(item.photo.year)}</span>
                                                         </div>
                                                         <div className="flex items-center gap-1">
                                                             <User className="h-3 w-3 flex-shrink-0" />
@@ -426,7 +432,7 @@ if (loading) {
                                                                 </div>
                                                                 <div className="text-xs">
                                                                     <div className="font-medium truncate">{photo.description}</div>
-                                                                    <div className="text-gray-500">{photo.year}</div>
+                                                                    <div className="text-gray-500">{formatYear(photo.year)}</div>
                                                                 </div>
                                                             </Link>
                                                         ))}
@@ -479,7 +485,7 @@ if (loading) {
 
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span>{photo.year}</span>
+            <span>{formatYear(photo.year)}</span>
           </div>
 
           <div className="flex items-center gap-2">
