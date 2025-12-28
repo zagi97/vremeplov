@@ -28,10 +28,11 @@ export const ITEMS_PER_PAGE = {
 
 /**
  * Maximum file size for image uploads (in bytes)
- * 10MB = 10 * 1024 * 1024
- * ✅ Reduced from 20MB to match Firebase Rules and encourage WebP optimization
+ * 20MB = 20 * 1024 * 1024
+ * Note: This is for the INPUT file before compression.
+ * Firebase Storage rules enforce 10MB limit on compressed files.
  */
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+export const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 /**
  * Supported image file formats
