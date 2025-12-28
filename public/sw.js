@@ -1,9 +1,11 @@
 // Kreirajte public/sw.js
 
-const CACHE_NAME = 'vremeplov-v1.0.0';
-const STATIC_CACHE = 'vremeplov-static-v1';
-const DYNAMIC_CACHE = 'vremeplov-dynamic-v1';
-const IMAGE_CACHE = 'vremeplov-images-v1';
+// IMPORTANT: Bump VERSION on each deployment to invalidate old caches
+const VERSION = '2.0.0';
+const CACHE_NAME = `vremeplov-v${VERSION}`;
+const STATIC_CACHE = `vremeplov-static-v${VERSION}`;
+const DYNAMIC_CACHE = `vremeplov-dynamic-v${VERSION}`;
+const IMAGE_CACHE = `vremeplov-images-v${VERSION}`;
 
 // Files to cache immediately (essential for offline)
 const STATIC_ASSETS = [
@@ -45,17 +47,17 @@ self.addEventListener('install', (event) => {
 
 // Activate event - cleanup old caches
 self.addEventListener('activate', (event) => {
-  console.log('SW: Activate event');
-  
+  console.log('SW: Activate event, version:', VERSION);
+
+  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, IMAGE_CACHE, CACHE_NAME];
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            // Delete old versions
-            if (cacheName !== STATIC_CACHE && 
-                cacheName !== DYNAMIC_CACHE && 
-                cacheName !== IMAGE_CACHE) {
+            // Delete ANY cache that's not in our current version list
+            if (!currentCaches.includes(cacheName)) {
               console.log('SW: Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
@@ -80,7 +82,11 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Handle different types of requests
-  if (isImageRequest(request)) {
+  // IMPORTANT: Navigation (HTML) requests ALWAYS use Network First
+  // This ensures new deployments work immediately
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(handleNavigationRequest(request));
+  } else if (isImageRequest(request)) {
     event.respondWith(handleImageRequest(request));
   } else if (isFirebaseRequest(request)) {
     event.respondWith(handleFirebaseRequest(request));
@@ -182,25 +188,80 @@ async function handleFirebaseRequest(request) {
   }
 }
 
-// Handle static assets - Cache First
-async function handleStaticRequest(request) {
+// Handle navigation requests (HTML pages) - Network First
+// CRITICAL: This ensures new deployments work immediately after F5
+async function handleNavigationRequest(request) {
   try {
+    console.log('SW: Navigation request (Network First):', request.url);
+    const response = await fetch(request);
+
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    console.log('SW: Navigation fetch failed, trying cache');
     const cache = await caches.open(STATIC_CACHE);
     const cachedResponse = await cache.match(request);
-    
+
     if (cachedResponse) {
-      console.log('SW: Static asset served from cache:', request.url);
+      console.log('SW: Navigation served from cache (offline)');
       return cachedResponse;
     }
 
+    // Ultimate fallback - serve cached root
+    const fallback = await cache.match('/');
+    if (fallback) {
+      console.log('SW: Serving root as fallback');
+      return fallback;
+    }
+
+    throw error;
+  }
+}
+
+// Handle static assets - Stale While Revalidate for JS/CSS with hashes
+async function handleStaticRequest(request) {
+  const url = new URL(request.url);
+
+  // For versioned assets (with hash in filename), use Cache First
+  // These are immutable - same hash = same content
+  const hasHash = /\.[a-f0-9]{8,}\.(js|css)$/i.test(url.pathname);
+
+  try {
+    const cache = await caches.open(STATIC_CACHE);
+    const cachedResponse = await cache.match(request);
+
+    if (cachedResponse && hasHash) {
+      // Versioned asset - cache is reliable
+      console.log('SW: Versioned asset from cache:', request.url);
+      return cachedResponse;
+    }
+
+    // Fetch from network
     const response = await fetch(request);
+
     if (response.ok) {
       cache.put(request, response.clone());
+    } else if (response.status === 404 && cachedResponse) {
+      // Asset not found on server but we have cache - might be old deployment issue
+      // Don't serve stale cache for 404 - let it fail so app can handle
+      console.log('SW: Asset 404, not serving stale cache:', request.url);
     }
-    
+
     return response;
   } catch (error) {
     console.log('SW: Static asset fetch failed:', error);
+
+    // Try cache as fallback for network errors
+    const cache = await caches.open(STATIC_CACHE);
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
     throw error;
   }
 }

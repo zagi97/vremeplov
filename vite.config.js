@@ -1,9 +1,31 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+
+// Custom plugin to inject build timestamp into Service Worker
+function swVersionPlugin() {
+  return {
+    name: 'sw-version-plugin',
+    writeBundle() {
+      const swPath = path.resolve(__dirname, 'dist/sw.js');
+      if (fs.existsSync(swPath)) {
+        let swContent = fs.readFileSync(swPath, 'utf-8');
+        const buildTimestamp = Date.now();
+        // Replace the hardcoded VERSION with build timestamp
+        swContent = swContent.replace(
+          /const VERSION = ['"][^'"]+['"]/,
+          `const VERSION = '${buildTimestamp}'`
+        );
+        fs.writeFileSync(swPath, swContent);
+        console.log(`✅ SW version updated to: ${buildTimestamp}`);
+      }
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), swVersionPlugin()],
   
   resolve: {
     alias: {
