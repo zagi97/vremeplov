@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from '../contexts/AuthContext';
 import LazyImage from './LazyImage';
 import { useLanguage } from "../contexts/LanguageContext";
+import { getPhotoTypeOptions } from "@/constants/filters";
 
 interface PhotoGridProps {
   photos: Photo[];
@@ -24,6 +25,13 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
   // Helper to display year with translation for unknown
   const formatYear = (year: string) => {
     return year === 'unknown' ? t('upload.unknownYear') : year;
+  };
+
+  // Helper to translate photo type
+  const translatePhotoType = (photoType: string) => {
+    const photoTypes = getPhotoTypeOptions(t);
+    const found = photoTypes.find(pt => pt.value === photoType);
+    return found?.label || photoType;
   };
   
   // Update local state when photos prop changes
@@ -146,7 +154,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ photos, currentPhotoId, onPhotoUp
                   {photo.photoType && (
                     <div className="flex gap-1">
                       <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
-                        {photo.photoType}
+                        {translatePhotoType(photo.photoType)}
                       </span>
                     </div>
                   )}
