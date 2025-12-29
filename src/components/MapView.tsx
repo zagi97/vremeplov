@@ -259,16 +259,18 @@ useEffect(() => {
         setFilteredPhotos(filtered);
     }, [photos, selectedDecade, searchLocation]);
 
-    // Get unique decades for filter
-    const getAvailableDecades = () => {
+    // Get unique decades for filter - memoized to avoid recalculation on every render
+    const availableDecades = useMemo(() => {
         const decades = new Set<number>();
         photos.forEach(photo => {
             const year = parseInt(photo.year);
-            const decade = Math.floor(year / 10) * 10;
-            decades.add(decade);
+            if (!isNaN(year)) {
+                const decade = Math.floor(year / 10) * 10;
+                decades.add(decade);
+            }
         });
         return Array.from(decades).sort();
-    };
+    }, [photos]);
 
 // NOVO - dodaj ovo:
 if (loading) {
@@ -326,7 +328,7 @@ if (loading) {
             onDecadeChange={setSelectedDecade}
             searchLocation={searchLocation}
             onSearchChange={setSearchLocation}
-            availableDecades={getAvailableDecades()}
+            availableDecades={availableDecades}
             filteredCount={filteredPhotos.length}
             totalCount={photos.length}
           />
@@ -550,7 +552,7 @@ if (loading) {
 
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
                         <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                            {getAvailableDecades().length}
+                            {availableDecades.length}
                         </div>
                         <div className="text-gray-600 dark:text-gray-300">{t('mapView.differentDecades')}</div>
                     </div>

@@ -802,5 +802,8 @@
   "notFound.description": "Stranica koju tražite je možda uklonjena, preimenovana ili je privremeno nedostupna.",
   "notFound.goBack": "Natrag",
   "notFound.returnHome": "Povratak na početnu",
-  "notFound.footer": "Čuvamo hrvatsku baštinu, jedno sjećanje odjednom."
+  "notFound.footer": "Čuvamo hrvatsku baštinu, jedno sjećanje odjednom.",
+  "seo.photoDescription": "Stara fotografija iz {{location}}, {{year}}. godine. Autor: {{author}}",
+  "seo.locationTitle": "Stare fotografije - {{location}}",
+  "seo.locationDescription": "Pregledajte {{count}} starih fotografija iz {{location}}. Otkrijte povijest i uspomene ovog mjesta kroz vrijeme."
 }

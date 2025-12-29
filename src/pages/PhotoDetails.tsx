@@ -6,11 +6,12 @@ import { ArrowLeft } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoComments from "../components/PhotoComments";
 import { useAuth } from "../contexts/AuthContext";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
 import LazyImage from "@/components/LazyImage";
+import SEO from "@/components/SEO";
 import {
   PhotoStats,
   PhotoMetadata,
@@ -86,6 +87,20 @@ const PhotoDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      {/* Dynamic SEO meta tags for social sharing */}
+      <SEO
+        title={`${photo.description} - ${photo.location} (${photo.year})`}
+        description={photo.detailedDescription || translateWithParams(t, 'seo.photoDescription', {
+          location: photo.location,
+          year: photo.year,
+          author: photo.author
+        })}
+        image={photo.imageUrl}
+        url={`/photo/${photoId}`}
+        type="article"
+        author={photo.author}
+        publishedTime={photo.uploadedAt}
+      />
       <PageHeader title="Vremeplov.hr" />
 
       <div className="container max-w-5xl mx-auto px-4 py-12 mt-20">
