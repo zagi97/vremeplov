@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import PhotoGrid from "../components/PhotoGrid";
 import PhotoComments from "../components/PhotoComments";
 import { useAuth } from "../contexts/AuthContext";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
@@ -90,7 +90,11 @@ const PhotoDetail = () => {
       {/* Dynamic SEO meta tags for social sharing */}
       <SEO
         title={`${photo.description} - ${photo.location} (${photo.year})`}
-        description={photo.detailedDescription || `Stara fotografija iz ${photo.location}, ${photo.year}. godine. Autor: ${photo.author}`}
+        description={photo.detailedDescription || translateWithParams(t, 'seo.photoDescription', {
+          location: photo.location,
+          year: photo.year,
+          author: photo.author
+        })}
         image={photo.imageUrl}
         url={`/photo/${photoId}`}
         type="article"

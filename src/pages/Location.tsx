@@ -13,7 +13,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import LazyImage from "../components/LazyImage";
 import LanguageSelector from "../components/LanguageSelector";
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
 import { municipalityData } from '../../data/municipalities';
 import Footer from '@/components/Footer';
@@ -233,8 +233,11 @@ if (loading) {
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] dark:bg-gray-900">
       {/* Dynamic SEO meta tags */}
       <SEO
-        title={`Stare fotografije - ${locationData.displayName}`}
-        description={`Pregledajte ${totalCount} starih fotografija iz ${locationData.cityName}. Otkrijte povijest i uspomene ovog mjesta kroz vrijeme.`}
+        title={translateWithParams(t, 'seo.locationTitle', { location: locationData.displayName })}
+        description={translateWithParams(t, 'seo.locationDescription', {
+          count: totalCount,
+          location: locationData.cityName
+        })}
         url={`/location/${encodeURIComponent(decodedLocationName)}`}
       />
       {/* Global header */}
