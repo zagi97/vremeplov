@@ -18,6 +18,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { municipalityData } from '../../data/municipalities';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
+import SEO from '@/components/SEO';
 import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
 import { formatYear } from '@/utils/dateUtils';
 import LoadingScreen from '@/components/LoadingScreen';
@@ -230,6 +231,12 @@ if (loading) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] dark:bg-gray-900">
+      {/* Dynamic SEO meta tags */}
+      <SEO
+        title={`Stare fotografije - ${locationData.displayName}`}
+        description={`Pregledajte ${totalCount} starih fotografija iz ${locationData.cityName}. Otkrijte povijest i uspomene ovog mjesta kroz vrijeme.`}
+        url={`/location/${encodeURIComponent(decodedLocationName)}`}
+      />
       {/* Global header */}
       <PageHeader title="Vremeplov.hr" />
 

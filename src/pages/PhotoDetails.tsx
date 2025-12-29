@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import Footer from "@/components/Footer";
 import PageHeader from "@/components/PageHeader";
 import LazyImage from "@/components/LazyImage";
+import SEO from "@/components/SEO";
 import {
   PhotoStats,
   PhotoMetadata,
@@ -86,6 +87,16 @@ const PhotoDetail = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      {/* Dynamic SEO meta tags for social sharing */}
+      <SEO
+        title={`${photo.description} - ${photo.location} (${photo.year})`}
+        description={photo.detailedDescription || `Stara fotografija iz ${photo.location}, ${photo.year}. godine. Autor: ${photo.author}`}
+        image={photo.imageUrl}
+        url={`/photo/${photoId}`}
+        type="article"
+        author={photo.author}
+        publishedTime={photo.uploadedAt}
+      />
       <PageHeader title="Vremeplov.hr" />
 
       <div className="container max-w-5xl mx-auto px-4 py-12 mt-20">
