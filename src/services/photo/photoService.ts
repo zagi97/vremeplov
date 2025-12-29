@@ -61,8 +61,17 @@ const cleanupCache = () => {
   }
 };
 
-// Run cleanup every 10 minutes
-setInterval(cleanupCache, 10 * 60 * 1000);
+// Run cleanup every 10 minutes (with singleton pattern to prevent memory leaks)
+let cacheCleanupInterval: ReturnType<typeof setInterval> | null = null;
+
+const startCacheCleanup = () => {
+  if (cacheCleanupInterval === null) {
+    cacheCleanupInterval = setInterval(cleanupCache, 10 * 60 * 1000);
+  }
+};
+
+// Start cleanup on module load
+startCacheCleanup();
 
 export class PhotoService {
   private photosCollection = collection(db, 'photos');

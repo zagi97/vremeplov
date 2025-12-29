@@ -47,39 +47,6 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
 
   const { user } = useAuth();
 
-/*   // ✅ DODAJ OVO - Tier Status State
-const [uploadLimitInfo, setUploadLimitInfo] = useState<{
-  canUpload: boolean;
-  uploadsToday: number;
-  remainingToday: number;
-  userTier: string;
-  dailyLimit: number;
-  nextTierInfo?: string;
-} | null>(null);
-
-// ✅ DODAJ OVO - Check upload limit on mount and when user changes
-useEffect(() => {
-  const checkUploadLimit = async () => {
-    if (!user) return;
-    
-    try {
-      const limitCheck = await photoService.canUserUploadToday(user.uid);
-      setUploadLimitInfo({
-        canUpload: limitCheck.allowed,
-        uploadsToday: limitCheck.uploadsToday,
-        remainingToday: limitCheck.remainingToday,
-        userTier: limitCheck.userTier,
-        dailyLimit: limitCheck.dailyLimit,
-        nextTierInfo: limitCheck.nextTierInfo
-      });
-    } catch (error) {
-      console.error('Error checking upload limit:', error);
-    }
-  };
-  
-  checkUploadLimit();
-}, [user]); */
-
   const PHOTO_TYPES = getPhotoTypeOptions(t);
 
   // File upload hook
@@ -249,16 +216,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
     // ✅ STEP 1: Generate all image sizes
 const imageSizes = await generateImageSizes(selectedFile);
-
-// ✅ STEP 2: Sanitize location name for filename (Firebase Storage rules only allow [a-zA-Z0-9_-])
-const sanitizeFileName = (name: string): string => {
-  return name
-    .normalize('NFD') // Decompose special characters
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-    .replace(/[^a-zA-Z0-9_-]/g, '_') // Replace non-allowed chars with underscore
-    .replace(/_+/g, '_') // Replace multiple underscores with single
-    .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
-};
 
 const timestamp = Date.now();
 // Sanitize location name for filename - handle Croatian characters (č,ć,š,ž,đ → c,c,s,z,d)
@@ -447,8 +404,6 @@ if (coordinates && selectedAddress) {
           {getUploadTitle(parsedLocation.type, parsedLocation.displayName, t)}
         </CardTitle>
       </CardHeader>
-        {/* ✅ DODAJ OVO - TIER STATUS BADGE */}
-      {/* ✅ TIER STATUS BADGE - IMPROVED VERSION */}
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* File Upload Area */}
