@@ -304,12 +304,45 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
   </div>
 )}
 
-          {/* ✅ RATE LIMIT INFO (uvijek prikaži) */}
-          <div className="mb-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-4 flex-wrap">
-  <span>{t('comments.perMinute')}: {totalCommentsInLastMinute}/{MAX_COMMENTS_PER_MINUTE}</span>
-  <span>{t('comments.perHour')}: {commentsInLastHour}/{MAX_COMMENTS_PER_HOUR}</span>
-  <span>{t('comments.perDay')}: {commentsInLastDay}/{MAX_COMMENTS_PER_DAY}</span>
-</div>
+          {/* ✅ SMART RATE LIMIT INFO - prikaži samo relevantnu informaciju */}
+          {(() => {
+            const remainingMinute = MAX_COMMENTS_PER_MINUTE - totalCommentsInLastMinute;
+            const remainingHour = MAX_COMMENTS_PER_HOUR - commentsInLastHour;
+            const remainingDay = MAX_COMMENTS_PER_DAY - commentsInLastDay;
+
+            // Pronađi najmanji preostali limit
+            const minRemaining = Math.min(remainingMinute, remainingHour, remainingDay);
+
+            // Ako su svi limiti daleko (više od 5), ne prikazuj ništa
+            if (minRemaining > 5) return null;
+
+            // Ako je minutni limit dosegnut
+            if (remainingMinute <= 0) {
+              return (
+                <div className="mb-3 text-xs text-orange-600 dark:text-orange-400">
+                  {translateWithParams(t, 'rateLimit.waitMinutes', { minutes: 1 })}
+                </div>
+              );
+            }
+
+            // Prikaži najrestriktivniji limit
+            let message = '';
+            if (remainingMinute <= remainingHour && remainingMinute <= remainingDay) {
+              message = remainingMinute === 1
+                ? t('rateLimit.remainingOne')
+                : translateWithParams(t, 'rateLimit.remaining', { count: remainingMinute });
+            } else if (remainingHour <= remainingDay) {
+              message = translateWithParams(t, 'rateLimit.remainingThisHour', { count: remainingHour });
+            } else {
+              message = translateWithParams(t, 'rateLimit.remainingToday', { count: remainingDay });
+            }
+
+            return (
+              <div className={`mb-3 text-xs ${minRemaining <= 2 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                {message}
+              </div>
+            );
+          })()}
 
           <form onSubmit={handleSubmitComment}>
             <Textarea

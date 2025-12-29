@@ -300,14 +300,34 @@ export const PhotoTagging: React.FC<PhotoTaggingProps> = ({
         </div>
       )}
 
-      {/* Tag Statistics */}
-      {canUserTag && rateLimitInfo.canTag && (
-        <div className="mb-4 p-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-gray-600 dark:text-gray-400 flex items-center justify-center gap-3">
-          <span>📸 {translateWithParams(t, 'tags.onPhoto', { count: taggedPersons.length, max: MAX_TAGS_PER_PHOTO })}</span>
-          <span>⏰ {translateWithParams(t, 'tags.hourly', { count: rateLimitInfo.tagsInLastHour, max: MAX_TAGS_PER_HOUR })}</span>
-          <span>📅 {translateWithParams(t, 'tags.daily', { count: rateLimitInfo.tagsInLastDay, max: MAX_TAGS_PER_DAY })}</span>
-        </div>
-      )}
+      {/* Smart Tag Statistics - prikaži samo relevantnu informaciju */}
+      {canUserTag && rateLimitInfo.canTag && (() => {
+        const remainingOnPhoto = MAX_TAGS_PER_PHOTO - taggedPersons.length;
+        const remainingHour = MAX_TAGS_PER_HOUR - rateLimitInfo.tagsInLastHour;
+        const remainingDay = MAX_TAGS_PER_DAY - rateLimitInfo.tagsInLastDay;
+        const minRemaining = Math.min(remainingOnPhoto, remainingHour, remainingDay);
+
+        // Ako su svi limiti daleko (više od 5), ne prikazuj ništa
+        if (minRemaining > 5) return null;
+
+        // Prikaži najrestriktivniji limit
+        let message = '';
+        if (remainingOnPhoto <= remainingHour && remainingOnPhoto <= remainingDay) {
+          message = remainingOnPhoto === 1
+            ? t('tags.oneRemainingOnPhoto')
+            : translateWithParams(t, 'tags.remainingOnPhoto', { count: remainingOnPhoto });
+        } else if (remainingHour <= remainingDay) {
+          message = translateWithParams(t, 'tags.remainingThisHour', { count: remainingHour });
+        } else {
+          message = translateWithParams(t, 'tags.remainingToday', { count: remainingDay });
+        }
+
+        return (
+          <div className={`mb-4 p-2 rounded text-xs text-center ${minRemaining <= 2 ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'bg-blue-50 dark:bg-blue-900/30 text-gray-600 dark:text-gray-400'}`}>
+            {message}
+          </div>
+        );
+      })()}
 
       {/* Tagging Interface - Below the image */}
       {isTagging && (
