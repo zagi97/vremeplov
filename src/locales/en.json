@@ -716,20 +716,20 @@
   "tags.onPhoto": "On photo: {count}/{max}",
   "tags.hourly": "Hourly: {count}/{max}",
   "tags.daily": "Daily: {count}/{max}",
-  "tags.remainingOnPhoto": "{{count}} tags left on photo",
-  "tags.remainingThisHour": "{{count}} tags left this hour",
-  "tags.remainingToday": "{{count}} tags left today",
+  "tags.remainingOnPhoto": "{count} tags left on photo",
+  "tags.remainingThisHour": "{count} tags left this hour",
+  "tags.remainingToday": "{count} tags left today",
   "tags.oneRemainingOnPhoto": "1 tag left on photo",
 
   "comments.perMinute": "Per minute",
   "comments.perHour": "Hourly",
   "comments.perDay": "Daily",
 
-  "rateLimit.remaining": "{{count}} comments left",
+  "rateLimit.remaining": "{count} comments left",
   "rateLimit.remainingOne": "1 comment left",
-  "rateLimit.remainingThisHour": "{{count}} left this hour",
-  "rateLimit.remainingToday": "{{count}} left today",
-  "rateLimit.waitMinutes": "Wait {{minutes}} min",
+  "rateLimit.remainingThisHour": "{count} left this hour",
+  "rateLimit.remainingToday": "{count} left today",
+  "rateLimit.waitMinutes": "Wait {minutes} min",
   "rateLimit.commentWarningTitle": "You've reached the comment limit",
   "rateLimit.canCommentAgainIn": "You can comment again {time}.",
   "rateLimit.hourlyLimitReached": "You've reached the hourly limit ({limit} comments/hour).",
@@ -815,7 +815,7 @@
   "notFound.goBack": "Go Back",
   "notFound.returnHome": "Return Home",
   "notFound.footer": "Preserving Croatian heritage, one memory at a time.",
-  "seo.photoDescription": "Historical photo from {{location}}, {{year}}. Author: {{author}}",
-  "seo.locationTitle": "Historical Photos - {{location}}",
-  "seo.locationDescription": "Browse {{count}} historical photos from {{location}}. Discover the history and memories of this place through time."
+  "seo.photoDescription": "Historical photo from {location}, {year}. Author: {author}",
+  "seo.locationTitle": "Historical Photos - {location}",
+  "seo.locationDescription": "Browse {count} historical photos from {location}. Discover the history and memories of this place through time."
 }
