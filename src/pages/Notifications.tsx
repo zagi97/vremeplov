@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
-import { useLanguage } from '../contexts/LanguageContext';
+import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 import Footer from '../components/Footer';
 import PageHeader from '@/components/PageHeader';
 
@@ -224,7 +224,7 @@ return (
                   <CardTitle className="text-lg sm:text-xl dark:text-white">{t('notifications.title')}</CardTitle>
                   {unreadCount > 0 && (
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                      {unreadCount} {t(unreadCount === 1 ? 'notifications.newNotificationSingular' : 'notifications.newNotifications')}
+                      {translateWithParams(t, unreadCount === 1 ? 'notifications.newNotificationSingular' : 'notifications.newNotifications', { count: unreadCount })}
                     </p>
                   )}
                 </div>
