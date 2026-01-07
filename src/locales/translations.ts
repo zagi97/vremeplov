@@ -813,7 +813,10 @@ export const enTranslations = {
   "notFound.description": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.",
   "notFound.goBack": "Go Back",
   "notFound.returnHome": "Return Home",
-  "notFound.footer": "Preserving Croatian heritage, one memory at a time."
+  "notFound.footer": "Preserving Croatian heritage, one memory at a time.",
+  "seo.locationTitle": "Historical Photos - {location}",
+  "seo.locationDescription": "Browse {count} historical photos from {location}. Discover the history and memories of this place through time.",
+  "seo.photoDescription": "Historical photo from {location}, {year}. Author: {author}"
 } as const;
 
 export const hrTranslations = {
@@ -1627,5 +1630,8 @@ export const hrTranslations = {
   "notFound.description": "Stranica koju tražite je možda uklonjena, preimenovana ili je privremeno nedostupna.",
   "notFound.goBack": "Natrag",
   "notFound.returnHome": "Povratak na početnu",
-  "notFound.footer": "Čuvamo hrvatsku baštinu, jedno sjećanje odjednom."
+  "notFound.footer": "Čuvamo hrvatsku baštinu, jedno sjećanje odjednom.",
+  "seo.locationTitle": "Stare fotografije - {location}",
+  "seo.locationDescription": "Pregledajte {count} starih fotografija iz {location}. Otkrijte povijest i uspomene ovog mjesta kroz vrijeme.",
+  "seo.photoDescription": "Stara fotografija iz {location}, {year}. godine. Autor: {author}"
 } as const;
