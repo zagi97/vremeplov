@@ -64,7 +64,7 @@
   "photoDetail.photoUnliked": "Photo unliked!",
   "photoDetail.likeFailed": "Failed to update like",
   "photoDetail.historicalContextDesc": "This period marked significant developments in the local history of {location}. Many similar photographs from this era document the changing landscape and daily life of inhabitants.",
-  "photoDetail.defaultDescription": "This historical photograph from {year} shows {description} in {location}. It was contributed to the Vremeplov.hr archive by {author}.",
+  "photoDetail.defaultDescription": "{title} — historical photo from the Vremeplov.hr archive.",
   "photoDetail.tagPending": "Tagged {name}! Tag is pending admin approval.",
   "upload.title": "Share Historical Photo",
   "upload.select": "Select Photo",

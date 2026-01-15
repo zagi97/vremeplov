@@ -3,9 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Camera, MapPin, Upload, User, Users } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getCityType } from "@/utils/locationUtils";
-import { formatYear, isYearUnknown } from "@/utils/dateUtils";
-import { municipalityData } from "../../../data/municipalities";
+import { formatYear } from "@/utils/dateUtils";
 
 interface TaggedPerson {
   id: string;
@@ -40,42 +38,9 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 }) => {
   const { t } = useLanguage();
 
-  // Get municipality type for location
-  const getMunicipalityPrefix = (loc: string) => {
-    const cityType = getCityType(loc, municipalityData);
-    if (cityType === 'Grad') {
-      return 'gradu';
-    } else if (cityType === 'Općina') {
-      return 'općini';
-    }
-    return 'mjestu';
-  };
-
-  // Build smart default description
+  // Build default description using translation
   const buildDefaultDescription = () => {
-    const parts: string[] = [];
-
-    // Start sentence
-    if (isYearUnknown(year)) {
-      parts.push('Ova povijesna fotografija prikazuje');
-    } else {
-      parts.push(`Ova povijesna fotografija iz ${year}. godine prikazuje`);
-    }
-
-    // Add description (lowercase first letter for mid-sentence)
-    const descLower = description.charAt(0).toLowerCase() + description.slice(1);
-    parts.push(descLower);
-
-    // Add location with municipality type
-    const prefix = getMunicipalityPrefix(location);
-    parts.push(`u ${prefix} ${location}.`);
-
-    // Add contributor (uploadedBy, not author - author is the photographer)
-    if (uploadedBy) {
-      parts.push(`Doprinijela ju je u arhiv Vremeplov.hr osoba ${uploadedBy}.`);
-    }
-
-    return parts.join(' ');
+    return t('photoDetail.defaultDescription', { title: description });
   };
 
   // Filter only approved tags
