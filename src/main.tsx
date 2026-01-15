@@ -54,7 +54,7 @@ const initializeServiceWorker = async () => {
       updateViaCache: 'none'
     });
 
-    // Setup update handler
+    // Setup update handler - auto reload when new SW takes control
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
       if (!newWorker) return;
@@ -63,13 +63,15 @@ const initializeServiceWorker = async () => {
         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
           // Pošalji custom event da komponente mogu reagirati
           window.dispatchEvent(new CustomEvent('app-update-available'));
-
-          // Opcionalno: Automatski prompt (možeš ovo prebaciti u komponentu)
-          if (confirm('Nova verzija aplikacije je dostupna. Želite li ažurirati?')) {
-            window.location.reload();
-          }
+          console.log('🔄 Nova verzija aplikacije dostupna, reload...');
         }
       });
+    });
+
+    // Auto-reload when new SW takes control (after skipWaiting + clients.claim)
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('🔄 Novi Service Worker preuzeo kontrolu, reloadam stranicu...');
+      window.location.reload();
     });
 
     // Background sync
