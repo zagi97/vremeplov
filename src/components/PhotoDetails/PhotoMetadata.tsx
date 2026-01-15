@@ -40,11 +40,7 @@ export const PhotoMetadata: React.FC<PhotoMetadataProps> = ({
 
   // Build default description using translation
   const buildDefaultDescription = () => {
-    return t('photoDetail.defaultDescription', {
-      title: description,
-      location: location,
-      uploader: uploadedBy || t('profile.unknown')
-    });
+    return t('photoDetail.defaultDescription', { title: description });
   };
 
   // Filter only approved tags

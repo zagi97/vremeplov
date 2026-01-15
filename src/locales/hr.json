@@ -114,7 +114,7 @@
   "photoDetail.photoUnliked": "Fotografija ti se više ne sviđa",
   "photoDetail.likeFailed": "Neuspješno ažuriranje ocjene",
   "photoDetail.historicalContextDesc": "Ovo razdoblje je obilježilo značajan razvoj u lokalnoj povijesti mjesta {location}. Mnoge slične fotografije iz tog doba dokumentiraju mijenjajući se krajolik i svakodnevni život stanovnika.",
-  "photoDetail.defaultDescription": "{title} — povijesna fotografija iz arhiva Vremeplov.hr.\nLokacija: {location}.\nUčitao/la: {uploader}.",
+  "photoDetail.defaultDescription": "{title} — povijesna fotografija iz arhiva Vremeplov.hr.",
   "photoDetail.tagPending": "Označena osoba {name}! Oznaka čeka odobrenje admina.",
   "upload.title": "Podijeli povijesnu fotografiju",
   "upload.select": "Odaberi fotografiju",
