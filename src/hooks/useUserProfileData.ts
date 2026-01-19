@@ -99,7 +99,8 @@ export const useUserProfileData = ({
 
         let finalProfile = userProfile;
 
-        if (needsUpdate) {
+        // Only update stats if viewing own profile (Firestore rules prevent updating others)
+        if (needsUpdate && ownProfile) {
           const updatedStats = {
             totalPhotos: allPhotos.length,
             totalLikes: totalLikes,
@@ -112,7 +113,8 @@ export const useUserProfileData = ({
           finalProfile = updatedProfile || userProfile;
         }
 
-        if (allPhotos.length > 0 || needsUpdate) {
+        // Only check badges if viewing own profile
+        if ((allPhotos.length > 0 || needsUpdate) && ownProfile) {
           await userService.checkAndAwardBadges(userId);
           const profileWithBadges = await userService.getUserProfile(userId);
           finalProfile = profileWithBadges || finalProfile;
