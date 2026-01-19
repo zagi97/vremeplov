@@ -311,19 +311,6 @@ if (loading) {
 <div className="flex-shrink-0 w-full sm:w-auto">
   {user ? (
     <div className="w-full sm:w-auto">
-      {/* ✅ TIER INFO BADGE - Desktop Only */}
-      {uploadLimitInfo && (
-        <div className="hidden sm:block mb-2 text-xs text-right">
-          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-            uploadLimitInfo.canUpload 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-red-100 text-red-700'
-          }`}>
-            {uploadLimitInfo.canUpload ? '✓' : '✕'} {uploadLimitInfo.remainingToday}/{uploadLimitInfo.dailyLimit} {t('upload.remaining')}
-          </span>
-        </div>
-      )}
-      
       {/* ✅ BUTTON with Tooltip */}
       <div className="relative group">
         <Button
