@@ -259,7 +259,7 @@ export class PhotoService {
       }
 
       // ✅ TEST ACCOUNTS - Unlimited uploads for testing
-      const TEST_ACCOUNTS = ['kzaga99@gmail.com', 'vremeplov.app@gmail.com'];
+      const TEST_ACCOUNTS = ['kzaga99@gmail.com', 'vremeplov.app@gmail.com', 'povijestnovabukovica@gmail.com'];
       if (userProfile.email && TEST_ACCOUNTS.includes(userProfile.email.toLowerCase())) {
         return {
           allowed: true,
