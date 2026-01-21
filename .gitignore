@@ -20,6 +20,7 @@ yarn-error.log*
 .env.production.local
 
 # Firebase & lokalni mock podaci
+.firebase/
 serviceAccountKey.json
 mockUser.json
 importUser.cjs
