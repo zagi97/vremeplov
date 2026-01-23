@@ -14,8 +14,8 @@ interface SEOProps {
 
 const DEFAULT_TITLE = 'Vremeplov - Hrvatska fotografska baština';
 const DEFAULT_DESCRIPTION = 'Otkrijte i podijelite stare fotografije iz Hrvatske. Putovanje kroz vrijeme i mjesta naše baštine.';
-const DEFAULT_IMAGE = 'https://vremeplov.vercel.app/icon-512.png';
-const SITE_URL = 'https://vremeplov.vercel.app';
+const DEFAULT_IMAGE = 'https://vremeplov.hr/icon-512.png';
+const SITE_URL = 'https://vremeplov.hr';
 
 export const SEO: React.FC<SEOProps> = ({
   title,
