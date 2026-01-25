@@ -88,7 +88,8 @@ const PhotoUpload: React.FC<PhotoUploadProps> = ({
     description: '',
     detailedDescription: '',
     author: '',
-    photoType: '', // Dodaj ovo
+    photoType: '',
+    sublocation: '',
   });
 
     // Handler for when address is selected from autocomplete
@@ -319,6 +320,7 @@ const photoData: any = {
   author: formData.author,
   authorId: user.uid,
   location: locationName,
+  sublocation: formData.sublocation.trim() || '',
   photoType: formData.photoType,
   taggedPersons: taggedPersons.map(person => ({
     name: person.name,
@@ -362,7 +364,8 @@ if (coordinates && selectedAddress) {
       description: '',
       detailedDescription: '',
       author: '',
-      photoType: ''
+      photoType: '',
+      sublocation: ''
     });
 
     onSuccess?.();
@@ -590,6 +593,25 @@ if (coordinates && selectedAddress) {
               disabled
               className="bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
             />
+          </div>
+
+          {/* Sublocation (Mjesto / Kvart) - Optional */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+              <MapPin className="inline h-4 w-4 mr-1" />
+              {t('upload.sublocation')} {t('upload.optional')}
+            </label>
+            <Input
+              type="text"
+              placeholder={t('upload.sublocationPlaceholder')}
+              value={formData.sublocation}
+              onChange={(e) => setFormData({...formData, sublocation: e.target.value})}
+              maxLength={50}
+              className={`bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 ${formData.sublocation.length >= 48 ? "border-red-300 focus:border-red-500" : ""}`}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {t('upload.sublocationHelp')}
+            </p>
           </div>
 
           {/* Description */}

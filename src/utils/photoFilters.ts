@@ -28,7 +28,7 @@ export const DEFAULT_FILTERS: PhotoFilterState = {
 
 /**
  * Filter photos by search text
- * Searches in: description, detailedDescription, author, and year
+ * Searches in: description, detailedDescription, author, year, and sublocation
  */
 export const filterBySearch = (photos: Photo[], searchText: string): Photo[] => {
   if (!searchText.trim()) return photos;
@@ -38,7 +38,8 @@ export const filterBySearch = (photos: Photo[], searchText: string): Photo[] => 
     photo.description.toLowerCase().includes(searchLower) ||
     photo.detailedDescription?.toLowerCase().includes(searchLower) ||
     photo.author.toLowerCase().includes(searchLower) ||
-    photo.year.toString().includes(searchLower)
+    photo.year.toString().includes(searchLower) ||
+    photo.sublocation?.toLowerCase().includes(searchLower)
   );
 };
 
