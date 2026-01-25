@@ -28,6 +28,7 @@ export interface Photo {
   author: string;
   authorId?: string;
   location: string;
+  sublocation?: string;
   responsiveImages?: {
     webp: Array<{ url: string; width: number; suffix: string }>;
     jpeg: Array<{ url: string; width: number; suffix: string }>;
