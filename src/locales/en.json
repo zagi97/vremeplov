@@ -209,7 +209,7 @@
   "upload.foundAddresses": "Found {count} address",
   "upload.foundAddressesPlural": "Found {count} addresses",
   "upload.sublocation": "Village / Neighborhood",
-  "upload.sublocationPlaceholder": "e.g. Bukvik, Trnje, Dubrava...",
+  "upload.sublocationPlaceholder": "Village or neighborhood name...",
   "upload.sublocationHelp": "Enter the name of a smaller village or neighborhood if the photo belongs to a specific location within the municipality/city.",
   "upload.cached": "cached",
   "upload.noAddressesFound": "No addresses found for",
