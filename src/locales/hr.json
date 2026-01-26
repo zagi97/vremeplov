@@ -268,7 +268,7 @@
   "upload.foundAddresses": "Pronađena {count} adresa",
   "upload.foundAddressesPlural": "Pronađeno {count} adresa",
   "upload.sublocation": "Mjesto / Kvart",
-  "upload.sublocationPlaceholder": "npr. Bukvik, Trnje, Dubrava...",
+  "upload.sublocationPlaceholder": "Naziv mjesta ili kvarta...",
   "upload.sublocationHelp": "Unesite naziv manjeg mjesta ili kvarta ako fotografija pripada specifičnoj lokaciji unutar općine/grada.",
   "upload.cached": "spremljeno",
   "upload.noAddressesFound": "Nema pronađenih adresa za",
