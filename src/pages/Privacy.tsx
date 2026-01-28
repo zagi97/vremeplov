@@ -6,12 +6,14 @@ import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
 import { resetConsent } from '@/components/CookieConsent';
+import SEO from '@/components/SEO';
 
 const Privacy = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      <SEO title={t('privacy.title')} description={t('privacy.subtitle')} url="/privacy" />
       {/* Header */}
                   <PageHeader title="Vremeplov.hr" />
                   
