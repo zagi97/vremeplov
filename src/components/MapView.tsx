@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 import { formatYear } from '@/utils/dateUtils';
+import SEO from './SEO';
 
 // 🆕 Import TypeScript podataka o općinama
 import { municipalityData } from '../../data/municipalities';
@@ -307,6 +308,12 @@ if (loading) {
 
     return (
        <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+    {/* SEO meta tags */}
+    <SEO
+      title={t('mapView.memoryMap')}
+      description={t('mapView.exploreCroatian')}
+      url="/map"
+    />
     {/* Header NIJE fixed */}
     <PageHeader title="Vremeplov.hr" fixed={false} />
 

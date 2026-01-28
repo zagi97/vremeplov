@@ -48,6 +48,7 @@ import { ProfileBadges } from '@/components/UserProfile/ProfileBadges';
 import { getAvatarColor, getUserInitials } from '@/utils/avatarUtils';
 import { cn } from '@/lib/utils';
 import EmptyState from '@/components/EmptyState';
+import SEO from '@/components/SEO';
 
 
 
@@ -264,6 +265,12 @@ if (loading) {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      {/* SEO meta tags */}
+      <SEO
+        title={`${profile.displayName} - ${t('profile.title')}`}
+        description={profile.bio || t('profile.defaultDescription')}
+        url={`/user/${userId}`}
+      />
       {/* Header */}
       <PageHeader title="Vremeplov.hr" />
 

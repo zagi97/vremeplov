@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
 import { MapPin, Archive, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import PageHeader from "@/components/PageHeader"; // ✅ Dodaj import
+import PageHeader from "@/components/PageHeader";
+import SEO from "@/components/SEO";
 
 // Static imports
 import SearchBar from "@/components/SearchBar";
@@ -21,6 +22,9 @@ const Index = () => {
   
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 overflow-x-hidden">
+      {/* SEO meta tags */}
+      <SEO url="/" />
+
       {/* ✅ Koristi PageHeader - automatski je fixed */}
       <PageHeader title="Vremeplov.hr" />
 

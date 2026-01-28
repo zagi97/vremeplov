@@ -29,6 +29,7 @@ import PageHeader from "@/components/PageHeader";
 import { getAvatarColor, getUserInitials } from "@/utils/avatarUtils";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
+import SEO from "@/components/SEO";
 
 // Time period for leaderboard
 type TimePeriod = 'all-time' | 'this-year' | 'this-month';
@@ -355,6 +356,12 @@ const CommunityLeaderboard = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      {/* SEO meta tags */}
+      <SEO
+        title={t('community.leaderboard')}
+        description={t('community.celebratingContributors')}
+        url="/community"
+      />
       <PageHeader title="Vremeplov.hr"/>
 
       {/* Hero section */}

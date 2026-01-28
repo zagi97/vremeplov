@@ -13,6 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 import Footer from '../components/Footer';
 import PageHeader from '@/components/PageHeader';
+import SEO from '@/components/SEO';
 
 const NotificationsPage = () => {
   const { t, language } = useLanguage();
@@ -199,6 +200,12 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
 
 return (
   <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+    {/* SEO - noIndex since this is a private page */}
+    <SEO
+      title={t('notifications.title')}
+      url="/notifications"
+      noIndex={true}
+    />
     {/* Navigation Header */}
     <PageHeader title="Vremeplov.hr" />
 

@@ -132,19 +132,43 @@ const LazyImage: React.FC<LazyImageProps> = ({
   const getAspectRatioStyle = (): React.CSSProperties => {
     try {
       if (!aspectRatio || aspectRatio === 'auto') {
+        // Reserve space during loading to prevent CLS (layout shift)
+        // Use min-height that scales with viewport for better mobile experience
+        if (!isLoaded) {
+          return { minHeight: 'min(60vh, 400px)' };
+        }
         return {};
       }
-      
+
       if (aspectRatio.includes('/')) {
         return { aspectRatio: aspectRatio.replace('/', ' / ') };
       }
-      
+
       return { aspectRatio };
-      
+
     } catch (err) {
       console.error('LazyImage: Error setting aspect ratio', err);
       return {};
     }
+  };
+
+  // Get dimensions from responsive images for width/height attributes (helps with CLS)
+  const getImageDimensions = (): { width?: number; height?: number } => {
+    if (responsiveImages?.webp && responsiveImages.webp.length > 0) {
+      // Use the largest webp image dimensions
+      const largest = responsiveImages.webp.reduce((prev, curr) =>
+        curr.width > prev.width ? curr : prev
+      );
+      // Assume 4:3 aspect ratio if height not available
+      return { width: largest.width, height: Math.round(largest.width * 0.75) };
+    }
+    if (responsiveImages?.jpeg && responsiveImages.jpeg.length > 0) {
+      const largest = responsiveImages.jpeg.reduce((prev, curr) =>
+        curr.width > prev.width ? curr : prev
+      );
+      return { width: largest.width, height: Math.round(largest.width * 0.75) };
+    }
+    return {};
   };
 
   return (
@@ -193,6 +217,7 @@ const LazyImage: React.FC<LazyImageProps> = ({
             loading={priority ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={priority ? "high" : undefined}
+            {...getImageDimensions()}
           />
         </picture>
       )}

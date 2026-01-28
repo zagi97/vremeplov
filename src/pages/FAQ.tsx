@@ -6,6 +6,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
 import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
+import SEO from '@/components/SEO';
 
 const FAQ = () => {
   const { t } = useLanguage();
@@ -82,6 +83,7 @@ const FAQ = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      <SEO title={t('faq.title')} url="/faq" />
       {/* Header */}
       <PageHeader title="Vremeplov.hr" />
 

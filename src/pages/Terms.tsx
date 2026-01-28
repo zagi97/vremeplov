@@ -5,12 +5,14 @@ import { translateWithParams, useLanguage } from '@/contexts/LanguageContext';
 import LanguageSelector from '@/components/LanguageSelector';
 import Footer from '@/components/Footer';
 import PageHeader from '@/components/PageHeader';
+import SEO from '@/components/SEO';
 
 const Terms = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
+      <SEO title={t('terms.title')} description={t('terms.subtitle')} url="/terms" />
       {/* Header */}
             <PageHeader title="Vremeplov.hr" />
             
