@@ -2,30 +2,35 @@
 <html lang="hr">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- ✅ CRITICAL: Preconnect hints MUST be first for maximum impact -->
+    <!-- These establish early connections to reduce latency for critical resources -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://vremeplov-b411b.firebaseapp.com" crossorigin>
+    <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://apis.google.com" crossorigin>
+    <link rel="preconnect" href="https://firebaseinstallations.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
+
+    <!-- Map tiles - preconnect to all subdomains -->
+    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://b.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://c.tile.openstreetmap.org" crossorigin>
+    <link rel="preconnect" href="https://nominatim.openstreetmap.org" crossorigin>
+
+    <!-- DNS Prefetch fallback for older browsers -->
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
+    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
+    <link rel="dns-prefetch" href="https://www.googleapis.com">
+    <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Force HTTPS -->
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
-    
-    <!-- ✅ PERFORMANCE: Preconnect to external origins -->
-    <link rel="preconnect" href="https://vremeplov-b411b.firebaseapp.com" crossorigin>
-    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://www.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://apis.google.com" crossorigin>
-    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://firebaseinstallations.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://securetoken.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://nominatim.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-
-    <!-- DNS Prefetch fallback for older browsers -->
-    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com">
-    <link rel="dns-prefetch" href="https://www.googleapis.com">
-    <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com">
-    <link rel="dns-prefetch" href="https://firestore.googleapis.com">
-    <link rel="dns-prefetch" href="https://nominatim.openstreetmap.org">
     
     <!-- ✅ Basic CSS -->
     <style>
