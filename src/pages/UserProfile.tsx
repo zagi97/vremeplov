@@ -547,7 +547,7 @@ if (loading) {
                       
                       {/* Photo Grid with LazyImage */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filteredAndSortedPhotos.map(photo => (
+                        {filteredAndSortedPhotos.map((photo, index) => (
                           <Link
                             key={photo.id}
                             to={`/photo/${photo.id}`}
@@ -559,6 +559,8 @@ if (loading) {
                                   src={photo.imageUrl}
                                   alt={photo.description}
                                   className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-200 ${!photo.isApproved ? 'opacity-60' : ''}`}
+                                  responsiveImages={photo.responsiveImages}
+                                  priority={index === 0}
                                 />
                                 {!photo.isApproved && (
                                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
