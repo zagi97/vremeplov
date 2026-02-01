@@ -54,9 +54,9 @@ const SampleGallery = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {recentPhotos.map((photo) => (
-        <Link 
-          key={photo.id} 
+      {recentPhotos.map((photo, index) => (
+        <Link
+          key={photo.id}
           to={`/photo/${photo.id}`}
           className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
         >
@@ -65,6 +65,8 @@ const SampleGallery = () => {
               src={photo.imageUrl}
               alt={`${photo.location}, ${formatYear(photo.year, t)}`}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              responsiveImages={photo.responsiveImages}
+              priority={index === 0} // First image is potential LCP - load eagerly
             />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
