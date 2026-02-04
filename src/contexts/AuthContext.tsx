@@ -39,26 +39,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-
-      // Load user's admin status from Firestore
-      if (user) {
-        // ✅ FIX: Create/update user profile on sign-in (fixes 0/0 upload limit bug)
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Create/update user profile BEFORE setting user state
+        // so that Location.tsx useEffect([user]) finds the profile in Firestore
         await authService.createOrUpdateUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL
         });
 
-        const userIsAdmin = await authService.checkIsAdminFromFirestore(user.uid);
+        const userIsAdmin = await authService.checkIsAdminFromFirestore(firebaseUser.uid);
         setIsAdmin(userIsAdmin);
 
-        // Check if we're in admin mode from session storage
         const adminModeFromStorage = sessionStorage.getItem('adminMode') === 'true';
         setIsAdminMode(adminModeFromStorage && userIsAdmin);
+
+        // Set user AFTER profile exists - prevents 0/0 upload limit on first login
+        setUser(firebaseUser);
       } else {
+        setUser(null);
         setIsAdmin(false);
         setIsAdminMode(false);
       }
