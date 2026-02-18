@@ -5,9 +5,11 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin, Tag, Calendar, Camera } from "lucide-react";
+import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin, Tag, Calendar, Camera, BookOpen, User } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import PhotoUpload from "../components/PhotoUpload";
-import { photoService, Photo } from "../services/firebaseService";
+import StoryForm from "../components/StoryForm";
+import { photoService, Photo, storyService, Story } from "../services/firebaseService";
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
@@ -62,9 +64,13 @@ const Location = () => {
   const SORT_OPTIONS = getSortOptions(t);
 
   // State
+  const [activeTab, setActiveTab] = useState('photos');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showStoryForm, setShowStoryForm] = useState(false);
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [displayedPhotos, setDisplayedPhotos] = useState<Photo[]>([]);
+  const [stories, setStories] = useState<Story[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -194,6 +200,31 @@ useEffect(() => {
     }
     
     setLoadingMore(false);
+  };
+
+  // Load stories when tab changes
+  const loadStories = async () => {
+    if (!actualCityName) return;
+    try {
+      setStoriesLoading(true);
+      const locationStories = await storyService.getStoriesByLocation(actualCityName);
+      setStories(locationStories);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+    } finally {
+      setStoriesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'stories' && stories.length === 0 && !storiesLoading) {
+      loadStories();
+    }
+  }, [activeTab, actualCityName]);
+
+  const handleStorySuccess = () => {
+    setShowStoryForm(false);
+    loadStories();
   };
 
   // useEffect hooks
@@ -428,8 +459,8 @@ if (loading) {
         </div>
       </div>
 
-      {/* Search and Filter Section */}
-      <section className="py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      {/* Search and Filter Section (photos only) */}
+      <section className={`py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${activeTab !== 'photos' ? 'hidden' : ''}`}>
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
@@ -548,7 +579,7 @@ if (loading) {
               {t('upload.addPhotoTo')} {locationData.displayName}
             </DialogTitle>
           </DialogHeader>
-          <PhotoUpload 
+          <PhotoUpload
             locationName={actualCityName}
             onSuccess={handleUploadSuccess}
             onCancel={() => setShowAddForm(false)}
@@ -556,8 +587,48 @@ if (loading) {
         </DialogContent>
       </Dialog>
 
+      {/* Story Form Modal */}
+      <Dialog open={showStoryForm} onOpenChange={setShowStoryForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {t('stories.shareStory')} - {locationData.displayName}
+            </DialogTitle>
+          </DialogHeader>
+          <StoryForm
+            locationName={actualCityName}
+            onSuccess={handleStorySuccess}
+            onCancel={() => setShowStoryForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Tabs */}
+      <section className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="container max-w-6xl mx-auto px-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-transparent border-b-0 h-auto p-0 gap-0">
+              <TabsTrigger
+                value="photos"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                {t('stories.tabPhotos')} ({allPhotos.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="stories"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                {t('stories.tabStories')} ({stories.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </section>
+
       {/* Results Summary */}
-      {hasFilters && (
+      {activeTab === 'photos' && hasFilters && (
         <section className="py-4 px-4 bg-blue-50 dark:bg-blue-900/20">
           <div className="container max-w-6xl mx-auto">
             <p className="text-blue-700 dark:text-blue-300">
@@ -570,23 +641,24 @@ if (loading) {
         </section>
       )}
 
-      {/* Feed Section */}
-      <section className="py-12 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
-        <div className="container max-w-6xl mx-auto">
-          {filteredPhotos.length === 0 ? (
-            <EmptyState
-              icon={Camera}
-              title={t('location.noPhotos')}
-              description={hasFilters ? t('location.tryAdjusting') : undefined}
-              action={hasFilters ? {
-                label: t('location.clearAllFilters'),
-                onClick: clearFilters
-              } : undefined}
-            />
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayedPhotos.map((photo, index) => (
+      {/* Photos Feed Section */}
+      {activeTab === 'photos' && (
+        <section className="py-12 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
+          <div className="container max-w-6xl mx-auto">
+            {filteredPhotos.length === 0 ? (
+              <EmptyState
+                icon={Camera}
+                title={t('location.noPhotos')}
+                description={hasFilters ? t('location.tryAdjusting') : undefined}
+                action={hasFilters ? {
+                  label: t('location.clearAllFilters'),
+                  onClick: clearFilters
+                } : undefined}
+              />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {displayedPhotos.map((photo, index) => (
 <Link
   key={photo.id}
   to={`/photo/${photo.id}`}
@@ -598,37 +670,108 @@ if (loading) {
   className="transition-transform duration-500 group-hover:scale-110"
   aspectRatio="4/3"
   responsiveImages={photo.responsiveImages}
-  priority={index === 0} // ✅ First image is LCP - load eagerly with high priority
+  priority={index === 0}
 />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
-                    <div className="absolute bottom-0 left-0 p-4 w-full">
-                      <h3 className="text-white text-lg font-semibold line-clamp-1">{photo.description}</h3>
-                      <div className="flex items-center mt-2 text-gray-200 text-sm">
-                        <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                        <span className="mr-3 truncate">{photo.location}</span>
-                        <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                        <span>{formatYear(photo.year, t)}</span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
+                      <div className="absolute bottom-0 left-0 p-4 w-full">
+                        <h3 className="text-white text-lg font-semibold line-clamp-1">{photo.description}</h3>
+                        <div className="flex items-center mt-2 text-gray-200 text-sm">
+                          <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span className="mr-3 truncate">{photo.location}</span>
+                          <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span>{formatYear(photo.year, t)}</span>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div className="mt-12 text-center">
+                    <Button
+                      onClick={loadMorePhotos}
+                      disabled={loadingMore}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {loadingMore ? t('common.loading') : t('location.loadMoreMemories')}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Stories Section */}
+      {activeTab === 'stories' && (
+        <section className="py-12 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
+          <div className="container max-w-4xl mx-auto">
+            {/* Add story button */}
+            <div className="flex justify-end mb-6">
+              {user ? (
+                <Button
+                  onClick={() => setShowStoryForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  {t('stories.addStory')}
+                </Button>
+              ) : (
+                <Button
+                  onClick={signInWithGoogle}
+                  className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  {t('stories.signInToAdd')}
+                </Button>
+              )}
+            </div>
+
+            {storiesLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-500 dark:text-gray-400">{t('stories.loading')}</p>
+              </div>
+            ) : stories.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title={t('stories.noStories')}
+                description={t('stories.noStoriesDesc')}
+              />
+            ) : (
+              <div className="space-y-6">
+                {stories.map((story) => (
+                  <Link key={story.id} to={`/story/${story.id}`} className="block">
+                    <Card className="hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
+                      <CardContent className="p-6">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">
+                          {story.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 mb-4">
+                          {story.content}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" />
+                            {story.authorName}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {story.createdAt?.toDate ? story.createdAt.toDate().toLocaleDateString('hr-HR', {
+                              day: 'numeric', month: 'long', year: 'numeric'
+                            }) : ''}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </Link>
                 ))}
               </div>
-              
-              {hasMore && (
-                <div className="mt-12 text-center">
-                  <Button
-                    onClick={loadMorePhotos}
-                    disabled={loadingMore}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {loadingMore ? t('common.loading') : t('location.loadMoreMemories')}
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      )}
 
      {/* Footer */}
       <Footer/>

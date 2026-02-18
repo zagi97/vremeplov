@@ -24,6 +24,8 @@ const FAQ = lazy(() => import('./pages/FAQ'));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Stories = lazy(() => import("./pages/Stories"));
+const StoryDetails = lazy(() => import("./pages/StoryDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Static imports (lightweight components)
@@ -80,6 +82,8 @@ const AppContent = () => {
           <Route path="/user/:userId" element={<UserProfilePage />} />
           <Route path="/community" element={<CommunityLeaderboard />} />
           <Route path="/notifications" element={<Notifications />} />
+          <Route path="/stories" element={<Stories />} />
+          <Route path="/story/:storyId" element={<StoryDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/privacy" element={<Privacy />} />

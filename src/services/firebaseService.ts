@@ -103,6 +103,22 @@ export interface UserView {
   createdAt: Timestamp;
 }
 
+export interface Story {
+  id?: string;
+  title: string;
+  content: string;
+  authorId: string;
+  authorName: string;
+  location: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  likes: number;
+  views: number;
+  isApproved: boolean;
+  approvedAt?: Timestamp;
+  approvedBy?: string;
+}
+
 export interface UserDocument {
   uid: string;
   displayName: string;
@@ -286,6 +302,9 @@ export { commentService } from './photo/commentService';
 export { tagService } from './photo/tagService';
 export { likeService } from './photo/likeService';
 export { viewService } from './photo/viewService';
+
+// Story service
+export { storyService } from './story/storyService';
 
 // Auth service
 export { authService } from './authService';

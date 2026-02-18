@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Check, X, Eye, BarChart3, Users, MessageSquare, Tag, LogOut, Sun, Moon } from 'lucide-react';
+import { Check, X, Eye, BarChart3, Users, MessageSquare, Tag, LogOut, Sun, Moon, BookOpen } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -14,6 +14,7 @@ import { usePhotoModeration } from '@/hooks/admin/usePhotoModeration';
 import { useTagModeration } from '@/hooks/admin/useTagModeration';
 import { useCommentModeration } from '@/hooks/admin/useCommentModeration';
 import { useUserManagement } from '@/hooks/admin/useUserManagement';
+import { useStoryModeration } from '@/hooks/admin/useStoryModeration';
 
 // Import tab components
 import PendingPhotosTab from '@/components/admin/tabs/PendingPhotosTab';
@@ -21,6 +22,7 @@ import ApprovedPhotosTab from '@/components/admin/tabs/ApprovedPhotosTab';
 import TagModerationTab from '@/components/admin/tabs/TagModerationTab';
 import CommentModerationTab from '@/components/admin/tabs/CommentModerationTab';
 import UserManagementTab from '@/components/admin/tabs/UserManagementTab';
+import StoryModerationTab from '@/components/admin/tabs/StoryModerationTab';
 
 export default function AdminDashboard() {
   const { user, isAdmin, loading, exitAdminMode } = useAuth();
@@ -32,6 +34,7 @@ export default function AdminDashboard() {
   const tagMod = useTagModeration();
   const commentMod = useCommentModeration();
   const userMod = useUserManagement();
+  const storyMod = useStoryModeration();
 
   const [activeTab, setActiveTab] = useState('pending');
   const [stats, setStats] = useState({
@@ -94,9 +97,10 @@ export default function AdminDashboard() {
       tagMod.loadTags(),
     ]);
 
-    // Load comments and users in parallel (don't wait for them to calculate stats)
+    // Load comments, users, and stories in parallel
     commentMod.loadComments();
     userMod.loadUsers();
+    storyMod.loadStories();
 
     const rejectedCount = parseInt(
       localStorage.getItem('rejectedPhotosCount') || '0',
@@ -334,7 +338,7 @@ export default function AdminDashboard() {
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="-mx-4 px-4 md:mx-0 md:px-0">
-            <TabsList className="flex flex-wrap justify-start gap-2 md:grid md:grid-cols-5 md:gap-0 mb-12">
+            <TabsList className="flex flex-wrap justify-start gap-2 md:grid md:grid-cols-6 md:gap-0 mb-12">
               <TabsTrigger
                 value="pending"
                 className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -365,6 +369,14 @@ export default function AdminDashboard() {
               >
                 <span className="hidden sm:inline">Comments</span>
                 <span className="sm:hidden">Comments</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="stories"
+                className="whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <span className="hidden sm:inline">Stories</span>
+                <span className="sm:hidden">Stories</span>
+                <span className="ml-1">({storyMod.pendingStories.length})</span>
               </TabsTrigger>
               <TabsTrigger
                 value="users"
@@ -416,6 +428,17 @@ export default function AdminDashboard() {
 
           <TabsContent value="comments" className="space-y-6">
             <CommentModerationTab />
+          </TabsContent>
+
+          <TabsContent value="stories" className="space-y-6">
+            <StoryModerationTab
+              pendingStories={storyMod.pendingStories}
+              approvedStories={storyMod.approvedStories}
+              loading={storyMod.loading}
+              adminUid={user?.uid || 'admin'}
+              handleApproveStory={storyMod.handleApproveStory}
+              handleDeleteStory={storyMod.handleDeleteStory}
+            />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">

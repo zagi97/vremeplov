@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 import UserProfile from "@/components/UserProfile";
@@ -53,6 +53,18 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
         {/* Right side */}
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+          {/* Stories link */}
+          <Link
+            to="/stories"
+            className="flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium px-1.5 sm:px-2 py-1 gap-1 rounded-md hover:bg-white/10"
+            aria-label={t("nav.stories") || "Priče"}
+          >
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden md:inline text-xs md:text-sm">
+              {t("nav.stories")}
+            </span>
+          </Link>
+
           {/* Map View link */}
           <Link
             to="/map"

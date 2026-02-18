@@ -20,10 +20,13 @@ import { db } from '../lib/firebase';
 
 export interface NotificationData {
   userId: string;
-  type: 'photo_rejected' | 'photo_approved' | 'tag_rejected' | 'tag_approved' | 
-        'comment_deleted' | 'photo_edited' | 'photo_deleted' | 
+  type: 'photo_rejected' | 'photo_approved' | 'tag_rejected' | 'tag_approved' |
+        'comment_deleted' | 'photo_edited' | 'photo_deleted' |
         'user_suspended' | 'user_banned' | 'user_unsuspended' | 'user_unbanned' |
-        'new_comment' | 'new_like' | 'new_follower' | 'new_tag' | 'badge_earned';
+        'new_comment' | 'new_like' | 'new_follower' | 'new_tag' | 'badge_earned' |
+        'story_approved';
+  storyId?: string;
+  storyTitle?: string;
   reason?: string;
   photoId?: string;
   taggedPersonName?: string;
@@ -387,6 +390,22 @@ export const notifyPhotoRejected = async (
   });
 };
 
+/**
+ * Helper: Create notification for story approved
+ */
+export const notifyStoryApproved = async (
+  userId: string,
+  storyId: string,
+  storyTitle: string
+): Promise<void> => {
+  await sendNotification({
+    userId,
+    type: 'story_approved',
+    storyId,
+    storyTitle
+  });
+};
+
 export const notificationService = {
   sendNotification,
   getUserNotifications,
@@ -400,5 +419,6 @@ export const notificationService = {
   notifyNewTag,
   notifyBadgeEarned,
   notifyPhotoApproved,
-  notifyPhotoRejected
+  notifyPhotoRejected,
+  notifyStoryApproved
 };
