@@ -63,7 +63,7 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
 
   // Get notification message
   const getNotificationMessage = (notification: Notification): string => {
-    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil } = notification;
+    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil, storyTitle } = notification;
 
     switch (type) {
     case 'new_comment':
@@ -90,6 +90,12 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
       return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
     case 'comment_deleted':
       return `${t('notifications.yourCommentDeleted')}${reason ? `: ${reason}` : ''}`;
+    case 'story_approved':
+      return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.approved')}`;
+    case 'story_rejected':
+      return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
+    case 'story_deleted':
+      return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.deleted')}${reason ? `: ${reason}` : ''}`;
     case 'user_banned':
       return `${t('notifications.accountBanned')}${reason ? `: ${reason}` : ''}`;
     case 'user_suspended':
@@ -109,30 +115,37 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
     // Don't link to deleted, rejected, or edited photos/content
     const nonClickableTypes = [
       'photo_deleted',
-      'photo_rejected', 
+      'photo_rejected',
       'photo_edited',
       'comment_deleted',
       'tag_rejected',
       'user_banned',
       'user_suspended',
       'user_unbanned',
-      'user_unsuspended'
+      'user_unsuspended',
+      'story_rejected',
+      'story_deleted'
     ];
-    
+
     if (nonClickableTypes.includes(notification.type)) {
       return null;
     }
-    
+
+    // Link to story for story-related notifications
+    if (notification.storyId) {
+      return `/story/${notification.storyId}`;
+    }
+
     // Link to photo for photo-related notifications
     if (notification.photoId) {
       return `/photo/${notification.photoId}`;
     }
-    
+
     // Link to user profile for follower notifications
     if (notification.actorId && notification.type === 'new_follower') {
       return `/user/${notification.actorId}`;
     }
-    
+
     return null;
   };
 

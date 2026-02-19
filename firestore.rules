@@ -270,7 +270,7 @@ service cloud.firestore {
       allow create: if isAdmin() ||
                     (isAuthenticated() &&
                      request.resource.data.keys().hasAll(['userId', 'type', 'createdAt']) &&
-                     request.resource.data.type in ['like', 'comment', 'follow', 'tag', 'photo_approved', 'photo_rejected', 'story_approved']);
+                     request.resource.data.type in ['like', 'comment', 'follow', 'tag', 'photo_approved', 'photo_rejected', 'story_approved', 'story_rejected', 'story_deleted']);
 
       allow update: if isAuthenticated() &&
                     isOwner(resource.data.userId);

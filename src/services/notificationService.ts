@@ -24,7 +24,7 @@ export interface NotificationData {
         'comment_deleted' | 'photo_edited' | 'photo_deleted' |
         'user_suspended' | 'user_banned' | 'user_unsuspended' | 'user_unbanned' |
         'new_comment' | 'new_like' | 'new_follower' | 'new_tag' | 'badge_earned' |
-        'story_approved';
+        'story_approved' | 'story_rejected' | 'story_deleted';
   storyId?: string;
   storyTitle?: string;
   reason?: string;
@@ -406,6 +406,42 @@ export const notifyStoryApproved = async (
   });
 };
 
+/**
+ * Helper: Create notification for story rejected
+ */
+export const notifyStoryRejected = async (
+  userId: string,
+  storyId: string,
+  storyTitle: string,
+  reason?: string
+): Promise<void> => {
+  await sendNotification({
+    userId,
+    type: 'story_rejected',
+    storyId,
+    storyTitle,
+    reason
+  });
+};
+
+/**
+ * Helper: Create notification for story deleted
+ */
+export const notifyStoryDeleted = async (
+  userId: string,
+  storyId: string,
+  storyTitle: string,
+  reason?: string
+): Promise<void> => {
+  await sendNotification({
+    userId,
+    type: 'story_deleted',
+    storyId,
+    storyTitle,
+    reason
+  });
+};
+
 export const notificationService = {
   sendNotification,
   getUserNotifications,
@@ -420,5 +456,7 @@ export const notificationService = {
   notifyBadgeEarned,
   notifyPhotoApproved,
   notifyPhotoRejected,
-  notifyStoryApproved
+  notifyStoryApproved,
+  notifyStoryRejected,
+  notifyStoryDeleted
 };

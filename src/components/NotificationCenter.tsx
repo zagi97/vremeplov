@@ -37,7 +37,7 @@ const NotificationCenter = ({
   };
 
   const getNotificationMessage = (notification: Notification): string => {
-    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil } = notification;
+    const { type, actorName, photoTitle, badgeName, taggedPersonName, reason, changes, suspendedUntil, storyTitle } = notification;
 
     // Truncate reason/changes for dropdown view
     const shortReason = truncate(reason || '');
@@ -68,6 +68,12 @@ const NotificationCenter = ({
         return `${t('notifications.tag')} "${taggedPersonName}" ${t('notifications.rejected')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'comment_deleted':
         return `${t('notifications.yourCommentDeleted')}${shortReason ? `: ${shortReason}` : ''}`;
+      case 'story_approved':
+        return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.approved')}`;
+      case 'story_rejected':
+        return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.rejected')}${shortReason ? `: ${shortReason}` : ''}`;
+      case 'story_deleted':
+        return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.deleted')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'user_banned':
         return `${t('notifications.accountBanned')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'user_suspended':
@@ -86,10 +92,12 @@ const NotificationCenter = ({
     const nonClickableTypes = [
       'photo_deleted', 'photo_rejected', 'photo_edited',
       'comment_deleted', 'tag_rejected',
-      'user_banned', 'user_suspended', 'user_unbanned', 'user_unsuspended'
+      'user_banned', 'user_suspended', 'user_unbanned', 'user_unsuspended',
+      'story_rejected', 'story_deleted'
     ];
-    
+
     if (nonClickableTypes.includes(notification.type)) return null;
+    if (notification.storyId) return `/story/${notification.storyId}`;
     if (notification.photoId) return `/photo/${notification.photoId}`;
     if (notification.actorId && notification.type === 'new_follower') {
       return `/user/${notification.actorId}`;

@@ -16,7 +16,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   AlertCircle,
-  Camera
+  Camera,
+  BookOpen
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -55,7 +56,10 @@ export const NOTIFICATION_ICONS: Record<string, IconConfig> = {
   user_banned: { icon: Ban, color: 'text-red-600 bg-red-50' },
   user_suspended: { icon: ShieldAlert, color: 'text-orange-600 bg-orange-50' },
   user_unbanned: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' },
-  user_unsuspended: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' }
+  user_unsuspended: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' },
+  story_approved: { icon: BookOpen, color: 'text-green-600 bg-green-50' },
+  story_rejected: { icon: BookOpen, color: 'text-red-600 bg-red-50' },
+  story_deleted: { icon: BookOpen, color: 'text-gray-600 bg-gray-50' }
 };
 
 /**

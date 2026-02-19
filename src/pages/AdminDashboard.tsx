@@ -437,7 +437,9 @@ export default function AdminDashboard() {
               loading={storyMod.loading}
               adminUid={user?.uid || 'admin'}
               handleApproveStory={storyMod.handleApproveStory}
+              handleRejectStory={storyMod.handleRejectStory}
               handleDeleteStory={storyMod.handleDeleteStory}
+              handleEditStory={storyMod.handleEditStory}
             />
           </TabsContent>
 
