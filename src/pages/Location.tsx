@@ -459,8 +459,65 @@ if (loading) {
         </div>
       </div>
 
+      {/* Upload Form Modal */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {t('upload.addPhotoTo')} {locationData.displayName}
+            </DialogTitle>
+          </DialogHeader>
+          <PhotoUpload
+            locationName={actualCityName}
+            onSuccess={handleUploadSuccess}
+            onCancel={() => setShowAddForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Story Form Modal */}
+      <Dialog open={showStoryForm} onOpenChange={setShowStoryForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {t('stories.shareStory')} - {locationData.displayName}
+            </DialogTitle>
+          </DialogHeader>
+          <StoryForm
+            locationName={actualCityName}
+            onSuccess={handleStorySuccess}
+            onCancel={() => setShowStoryForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Tabs */}
+      <section className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="container max-w-6xl mx-auto px-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-transparent border-b-0 h-auto p-0 gap-0">
+              <TabsTrigger
+                value="photos"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
+              >
+                <Camera className="h-4 w-4" />
+                {t('stories.tabPhotos')} ({allPhotos.length})
+              </TabsTrigger>
+              <TabsTrigger
+                value="stories"
+                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
+              >
+                <BookOpen className="h-4 w-4" />
+                {t('stories.tabStories')} ({stories.length})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </section>
+
       {/* Search and Filter Section (photos only) */}
-      <section className={`py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${activeTab !== 'photos' ? 'hidden' : ''}`}>
+      {activeTab === 'photos' && (
+      <section className="py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
@@ -570,62 +627,7 @@ if (loading) {
           )}
         </div>
       </section>
-
-      {/* Upload Form Modal */}
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>
-              {t('upload.addPhotoTo')} {locationData.displayName}
-            </DialogTitle>
-          </DialogHeader>
-          <PhotoUpload
-            locationName={actualCityName}
-            onSuccess={handleUploadSuccess}
-            onCancel={() => setShowAddForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Story Form Modal */}
-      <Dialog open={showStoryForm} onOpenChange={setShowStoryForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>
-              {t('stories.shareStory')} - {locationData.displayName}
-            </DialogTitle>
-          </DialogHeader>
-          <StoryForm
-            locationName={actualCityName}
-            onSuccess={handleStorySuccess}
-            onCancel={() => setShowStoryForm(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Tabs */}
-      <section className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container max-w-6xl mx-auto px-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-transparent border-b-0 h-auto p-0 gap-0">
-              <TabsTrigger
-                value="photos"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
-              >
-                <Camera className="h-4 w-4" />
-                {t('stories.tabPhotos')} ({allPhotos.length})
-              </TabsTrigger>
-              <TabsTrigger
-                value="stories"
-                className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:data-[state=active]:text-blue-400 dark:data-[state=active]:border-blue-400 flex items-center gap-2"
-              >
-                <BookOpen className="h-4 w-4" />
-                {t('stories.tabStories')} ({stories.length})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </section>
+      )}
 
       {/* Results Summary */}
       {activeTab === 'photos' && hasFilters && (
