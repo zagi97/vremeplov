@@ -346,22 +346,24 @@ if (loading) {
       <div className="relative group">
         <Button
           onClick={() => {
-            if (uploadLimitInfo?.canUpload) {
+            if (activeTab === 'stories') {
+              setShowStoryForm(true);
+            } else if (uploadLimitInfo?.canUpload) {
               setShowAddForm(true);
             } else {
               // ✅ Na tablet - toggle tooltip on click
               setShowClickTooltip(!showClickTooltip);
             }
           }}
-          disabled={uploadLimitInfo ? !uploadLimitInfo.canUpload : false}
+          disabled={activeTab === 'photos' && uploadLimitInfo ? !uploadLimitInfo.canUpload : false}
           className={`w-full sm:w-auto flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 ${
-            uploadLimitInfo?.canUpload 
-              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+            activeTab === 'stories' || uploadLimitInfo?.canUpload
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
           <Plus className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{t("location.addMemory")}</span>
+          <span className="truncate">{activeTab === 'stories' ? t('stories.addStory') : t("location.addMemory")}</span>
         </Button>
         
         {/* ✅ DESKTOP HOVER TOOLTIP - Only on large screens with mouse */}
@@ -451,7 +453,7 @@ if (loading) {
       className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
     >
       <LogIn className="h-4 w-4 flex-shrink-0" />
-      <span className="truncate">{t("location.signInToAdd")}</span>
+      <span className="truncate">{activeTab === 'stories' ? t('stories.signInToAdd') : t("location.signInToAdd")}</span>
     </Button>
   )}
 </div>
@@ -709,27 +711,6 @@ if (loading) {
       {activeTab === 'stories' && (
         <section className="py-12 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
           <div className="container max-w-4xl mx-auto">
-            {/* Add story button */}
-            <div className="flex justify-end mb-6">
-              {user ? (
-                <Button
-                  onClick={() => setShowStoryForm(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('stories.addStory')}
-                </Button>
-              ) : (
-                <Button
-                  onClick={signInWithGoogle}
-                  className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                >
-                  <LogIn className="h-4 w-4" />
-                  {t('stories.signInToAdd')}
-                </Button>
-              )}
-            </div>
-
             {storiesLoading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
