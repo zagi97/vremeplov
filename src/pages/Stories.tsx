@@ -1,9 +1,10 @@
 // src/pages/Stories.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { BookOpen, MapPin, Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Input } from '../components/ui/input';
+import { BookOpen, MapPin, Calendar, User, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { storyService, Story } from '../services/firebaseService';
 import { useLanguage } from '../contexts/LanguageContext';
 import PageHeader from '@/components/PageHeader';
@@ -19,6 +20,7 @@ const Stories = () => {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
     const loadStories = async () => {
@@ -46,9 +48,26 @@ const Stories = () => {
     });
   };
 
-  const totalPages = Math.ceil(stories.length / STORIES_PER_PAGE);
+  // Filter stories by search text
+  const filteredStories = useMemo(() => {
+    if (!searchText.trim()) return stories;
+    const lower = searchText.toLowerCase().trim();
+    return stories.filter(s =>
+      s.title.toLowerCase().includes(lower) ||
+      s.content.toLowerCase().includes(lower) ||
+      s.location.toLowerCase().includes(lower) ||
+      s.authorName.toLowerCase().includes(lower)
+    );
+  }, [stories, searchText]);
+
+  // Reset page on search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchText]);
+
+  const totalPages = Math.ceil(filteredStories.length / STORIES_PER_PAGE);
   const startIndex = (currentPage - 1) * STORIES_PER_PAGE;
-  const currentStories = stories.slice(startIndex, startIndex + STORIES_PER_PAGE);
+  const currentStories = filteredStories.slice(startIndex, startIndex + STORIES_PER_PAGE);
 
   const goToPage = useCallback((page: number) => {
     setCurrentPage(page);
@@ -94,23 +113,63 @@ const Stories = () => {
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {t('stories.pageDescription')}
           </p>
-          {stories.length > 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              {stories.length} {stories.length === 1 ? (t('stories.storyCount') || 'priča') : (t('stories.storiesCount') || 'priča')}
-            </p>
-          )}
         </div>
       </div>
 
       {/* Stories list */}
-      <section className="py-12 px-4 flex-1">
+      <section className="py-8 px-4 flex-1">
         <div className="container max-w-4xl mx-auto">
-          {stories.length === 0 ? (
-            <EmptyState
-              icon={BookOpen}
-              title={t('stories.noStories')}
-              description={t('stories.noStoriesDesc')}
-            />
+          {/* Search bar */}
+          <div className="mb-6 space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={t('stories.searchPlaceholder') || 'Pretraži priče...'}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="pl-10 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                />
+              </div>
+              {searchText && (
+                <Button
+                  variant="ghost"
+                  onClick={() => setSearchText('')}
+                  className="text-red-500 hover:text-red-600 dark:text-red-400 px-2"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Result count */}
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {searchText
+                ? `${filteredStories.length} ${t('common.of')} ${stories.length} ${t('stories.storiesCount') || 'priča'}`
+                : `${stories.length} ${t('stories.storiesCount') || 'priča'}`
+              }
+            </p>
+          </div>
+
+          {filteredStories.length === 0 ? (
+            stories.length === 0 ? (
+              <EmptyState
+                icon={BookOpen}
+                title={t('stories.noStories')}
+                description={t('stories.noStoriesDesc')}
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title={t('stories.noResults') || 'Nema rezultata'}
+                description={t('stories.noResultsDesc') || 'Pokušajte promijeniti pretragu.'}
+                action={{
+                  label: t('stories.clearSearch') || 'Očisti pretragu',
+                  onClick: () => setSearchText(''),
+                }}
+              />
+            )
           ) : (
             <>
               <div className="space-y-4">

@@ -851,7 +851,19 @@ export const enTranslations = {
   "photos.pageTitle": "Photo Gallery",
   "photos.pageDescription": "Browse all historical photos from Croatian cities and municipalities.",
   "photos.photo": "photo",
-  "photos.photosCount": "photos"
+  "photos.photosCount": "photos",
+  "photos.searchPlaceholder": "Search photos...",
+  "photos.filters": "Filters",
+  "photos.clearFilters": "Clear filters",
+  "photos.yearRange": "Period",
+  "photos.allPeriods": "All",
+  "photos.sortBy": "Sort by",
+  "photos.noResults": "No results",
+  "photos.noResultsDesc": "Try changing your filters or search.",
+  "stories.searchPlaceholder": "Search stories...",
+  "stories.noResults": "No results",
+  "stories.noResultsDesc": "Try changing your search.",
+  "stories.clearSearch": "Clear search"
 } as const;
 
 export const hrTranslations = {
@@ -1704,5 +1716,17 @@ export const hrTranslations = {
   "photos.pageTitle": "Galerija fotografija",
   "photos.pageDescription": "Pregledajte sve povijesne fotografije iz hrvatskih gradova i općina.",
   "photos.photo": "fotografija",
-  "photos.photosCount": "fotografija"
+  "photos.photosCount": "fotografija",
+  "photos.searchPlaceholder": "Pretraži fotografije...",
+  "photos.filters": "Filteri",
+  "photos.clearFilters": "Očisti filtere",
+  "photos.yearRange": "Razdoblje",
+  "photos.allPeriods": "Sve",
+  "photos.sortBy": "Sortiraj",
+  "photos.noResults": "Nema rezultata",
+  "photos.noResultsDesc": "Pokušajte promijeniti filtere ili pretragu.",
+  "stories.searchPlaceholder": "Pretraži priče...",
+  "stories.noResults": "Nema rezultata",
+  "stories.noResultsDesc": "Pokušajte promijeniti pretragu.",
+  "stories.clearSearch": "Očisti pretragu"
 } as const;

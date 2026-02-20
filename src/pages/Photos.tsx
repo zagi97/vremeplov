@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Image, MapPin, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Image, MapPin, Clock, ChevronLeft, ChevronRight, Search, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { photoService, Photo } from '../services/firebaseService';
 import { useLanguage } from '../contexts/LanguageContext';
 import { formatYear } from '@/utils/dateUtils';
+import { usePhotoFilters } from '@/hooks/usePhotoFilters';
+import { YEAR_RANGES, getSortOptions } from '@/constants/filters';
 import LazyImage from '@/components/LazyImage';
 import PageHeader from '@/components/PageHeader';
 import Footer from '@/components/Footer';
@@ -19,6 +22,19 @@ const Photos = () => {
   const [allPhotos, setAllPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const {
+    filters,
+    filteredPhotos,
+    setFilters,
+    clearFilters,
+    hasActiveFilters,
+    filteredCount,
+    totalCount,
+  } = usePhotoFilters(allPhotos);
+
+  const sortOptions = getSortOptions(t);
 
   useEffect(() => {
     const loadPhotos = async () => {
@@ -36,9 +52,14 @@ const Photos = () => {
     loadPhotos();
   }, []);
 
-  const totalPages = Math.ceil(allPhotos.length / PHOTOS_PER_PAGE);
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  const totalPages = Math.ceil(filteredPhotos.length / PHOTOS_PER_PAGE);
   const startIndex = (currentPage - 1) * PHOTOS_PER_PAGE;
-  const currentPhotos = allPhotos.slice(startIndex, startIndex + PHOTOS_PER_PAGE);
+  const currentPhotos = filteredPhotos.slice(startIndex, startIndex + PHOTOS_PER_PAGE);
 
   const goToPage = useCallback((page: number) => {
     setCurrentPage(page);
@@ -104,23 +125,136 @@ const Photos = () => {
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {t('photos.pageDescription') || 'Pregledajte sve povijesne fotografije iz hrvatskih gradova i općina.'}
           </p>
-          {allPhotos.length > 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              {allPhotos.length} {allPhotos.length === 1 ? (t('photos.photo') || 'fotografija') : (t('photos.photosCount') || 'fotografija')}
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Photo grid */}
-      <section className="py-12 px-4 flex-1">
+      {/* Filters + Photo grid */}
+      <section className="py-8 px-4 flex-1">
         <div className="container max-w-6xl mx-auto">
-          {allPhotos.length === 0 ? (
-            <EmptyState
-              icon={Image}
-              title={t('gallery.noPhotos')}
-              description={t('gallery.noPhotosDesc')}
-            />
+          {/* Search & Filter Bar */}
+          <div className="mb-6 space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={t('photos.searchPlaceholder') || 'Pretraži fotografije...'}
+                  value={filters.searchText}
+                  onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
+                  className="pl-10 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                />
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 dark:border-gray-600 dark:text-gray-300 ${hasActiveFilters ? 'border-blue-500 text-blue-600 dark:border-blue-400 dark:text-blue-400' : ''}`}
+              >
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('photos.filters') || 'Filteri'}</span>
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="text-red-500 hover:text-red-600 dark:text-red-400 px-2"
+                  title={t('photos.clearFilters') || 'Očisti filtere'}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            {/* Expanded filters */}
+            {showFilters && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4">
+                {/* Year Range */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    {t('photos.yearRange') || 'Razdoblje'}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={!filters.yearRange ? "default" : "outline"}
+                      onClick={() => setFilters(prev => ({ ...prev, yearRange: null }))}
+                      className={!filters.yearRange ? "bg-blue-600 text-white hover:bg-blue-700" : "dark:border-gray-600 dark:text-gray-300"}
+                    >
+                      {t('photos.allPeriods') || 'Sve'}
+                    </Button>
+                    {YEAR_RANGES.map((range) => (
+                      <Button
+                        key={range.label}
+                        size="sm"
+                        variant={filters.yearRange?.label === range.label ? "default" : "outline"}
+                        onClick={() => setFilters(prev => ({
+                          ...prev,
+                          yearRange: prev.yearRange?.label === range.label ? null : range
+                        }))}
+                        className={filters.yearRange?.label === range.label
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "dark:border-gray-600 dark:text-gray-300"
+                        }
+                      >
+                        {range.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sort */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    {t('photos.sortBy') || 'Sortiraj'}
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {sortOptions.map((option) => (
+                      <Button
+                        key={option.value}
+                        size="sm"
+                        variant={filters.sortBy === option.value ? "default" : "outline"}
+                        onClick={() => setFilters(prev => ({ ...prev, sortBy: option.value }))}
+                        className={filters.sortBy === option.value
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "dark:border-gray-600 dark:text-gray-300"
+                        }
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Result count */}
+            {(hasActiveFilters || allPhotos.length > 0) && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {hasActiveFilters
+                  ? `${filteredCount} ${t('common.of')} ${totalCount} ${t('photos.photosCount') || 'fotografija'}`
+                  : `${totalCount} ${t('photos.photosCount') || 'fotografija'}`
+                }
+              </p>
+            )}
+          </div>
+
+          {filteredPhotos.length === 0 ? (
+            allPhotos.length === 0 ? (
+              <EmptyState
+                icon={Image}
+                title={t('gallery.noPhotos')}
+                description={t('gallery.noPhotosDesc')}
+              />
+            ) : (
+              <EmptyState
+                icon={Search}
+                title={t('photos.noResults') || 'Nema rezultata'}
+                description={t('photos.noResultsDesc') || 'Pokušajte promijeniti filtere ili pretragu.'}
+                action={{
+                  label: t('photos.clearFilters') || 'Očisti filtere',
+                  onClick: clearFilters,
+                }}
+              />
+            )
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

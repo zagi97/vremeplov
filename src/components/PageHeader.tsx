@@ -136,7 +136,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
       {menuOpen && (
         <div
           ref={menuRef}
-          className="md:hidden border-t border-white/10 bg-gray-900/95 backdrop-blur-md animate-in slide-in-from-top-2 duration-200"
+          className="md:hidden border-t border-white/10 bg-gray-900 shadow-lg animate-in slide-in-from-top-2 duration-200"
         >
           <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
             {navLinks.map((link) => (
