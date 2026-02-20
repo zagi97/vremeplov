@@ -288,7 +288,7 @@ const StoryDetails = () => {
                     size="sm"
                     onClick={handleLike}
                     disabled={likeLoading}
-                    className={`ml-auto ${userHasLiked ? 'text-red-500 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950' : ''}`}
+                    className={`ml-auto ${userHasLiked ? 'text-red-500 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400' : 'dark:hover:bg-gray-700 dark:hover:text-gray-100'}`}
                   >
                     <Heart className={`h-4 w-4 mr-1 ${userHasLiked ? 'fill-red-500' : ''}`} />
                     {userHasLiked ? t('photoDetail.unlikePhoto') : t('photoDetail.likePhoto')}
