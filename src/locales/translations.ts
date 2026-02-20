@@ -844,7 +844,14 @@ export const enTranslations = {
   "stories.noStoriesDesc": "Be the first to share a story from this place!",
   "stories.notFound": "Story not found",
   "stories.back": "Back",
-  "nav.stories": "Stories"
+  "stories.storyCount": "story",
+  "stories.storiesCount": "stories",
+  "nav.stories": "Stories",
+  "nav.gallery": "Gallery",
+  "photos.pageTitle": "Photo Gallery",
+  "photos.pageDescription": "Browse all historical photos from Croatian cities and municipalities.",
+  "photos.photo": "photo",
+  "photos.photosCount": "photos"
 } as const;
 
 export const hrTranslations = {
@@ -1690,5 +1697,12 @@ export const hrTranslations = {
   "stories.noStoriesDesc": "Budite prvi koji će podijeliti priču iz ovog mjesta!",
   "stories.notFound": "Priča nije pronađena",
   "stories.back": "Natrag",
-  "nav.stories": "Priče"
+  "stories.storyCount": "priča",
+  "stories.storiesCount": "priča",
+  "nav.stories": "Priče",
+  "nav.gallery": "Galerija",
+  "photos.pageTitle": "Galerija fotografija",
+  "photos.pageDescription": "Pregledajte sve povijesne fotografije iz hrvatskih gradova i općina.",
+  "photos.photo": "fotografija",
+  "photos.photosCount": "fotografija"
 } as const;

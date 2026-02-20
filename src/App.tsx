@@ -25,6 +25,7 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Stories = lazy(() => import("./pages/Stories"));
+const Photos = lazy(() => import("./pages/Photos"));
 const StoryDetails = lazy(() => import("./pages/StoryDetails"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -83,6 +84,7 @@ const AppContent = () => {
           <Route path="/community" element={<CommunityLeaderboard />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/stories" element={<Stories />} />
+          <Route path="/photos" element={<Photos />} />
           <Route path="/story/:storyId" element={<StoryDetails />} />
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<FAQ />} />
