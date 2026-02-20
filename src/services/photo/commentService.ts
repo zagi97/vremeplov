@@ -41,25 +41,27 @@ export class CommentService {
 
       const docRef = await addDoc(this.commentsCollection, comment);
 
-      // Create user activity
+      // Create user activity (non-fatal - don't break comment flow if this fails)
       if (userId) {
-        const photoDoc = await getDoc(doc(this.photosCollection, photoId));
-        const photoData = photoDoc.data();
+        try {
+          const photoDoc = await getDoc(doc(this.photosCollection, photoId));
+          const photoData = photoDoc.exists() ? photoDoc.data() : null;
 
-        const { userService } = await import('../user');
+          const { userService } = await import('../user');
 
-        await userService.addUserActivity(
-          userId,
-          'comment_added',
-          photoId,
-          {
-            photoTitle: photoData?.description || 'Unknown photo',
-            location: photoData?.location,
-            targetId: photoId
-          }
-        );
-      } else {
-        console.warn('⚠️ No userId provided - activity not created');
+          await userService.addUserActivity(
+            userId,
+            'comment_added',
+            photoId,
+            {
+              photoTitle: photoData?.description || 'Unknown',
+              location: photoData?.location,
+              targetId: photoId
+            }
+          );
+        } catch (activityError) {
+          console.warn('⚠️ Failed to log comment activity:', activityError);
+        }
       }
 
       return docRef.id;

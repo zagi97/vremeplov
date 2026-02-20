@@ -50,7 +50,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
             disabled={likes === 0}
           >
-            <Heart className="h-5 w-5" />
+            <Heart className={`h-5 w-5 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
           </button>
           {taggedPersonsCount > 0 && (
@@ -70,7 +70,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
               className={`flex items-center gap-2 ${
                 userHasLiked
                   ? "bg-red-600 text-white hover:bg-red-700"
-                  : "hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                  : "hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800"
               }`}
             >
               {likeLoading ? (
@@ -85,7 +85,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
               onClick={signInWithGoogle}
               variant="outline"
               disabled={isPhotoPending}
-              className="flex items-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800"
             >
               <Heart className="h-4 w-4" />
               {t('photoDetail.signInToLike')}
@@ -107,7 +107,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
             disabled={likes === 0}
           >
-            <Heart className="h-5 w-5" />
+            <Heart className={`h-5 w-5 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
             <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
           </button>
           {taggedPersonsCount > 0 && (
@@ -128,7 +128,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
               className={`w-full flex items-center justify-center gap-2 ${
                 userHasLiked
                   ? "bg-red-600 text-white hover:bg-red-700"
-                  : "hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                  : "hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800"
               }`}
             >
               {likeLoading ? (
@@ -143,7 +143,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
               onClick={signInWithGoogle}
               variant="outline"
               disabled={isPhotoPending}
-              className="w-full flex items-center justify-center gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+              className="w-full flex items-center justify-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800"
             >
               <Heart className="h-4 w-4" />
               {t('photoDetail.signInToLike')}

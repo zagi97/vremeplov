@@ -216,11 +216,12 @@ useEffect(() => {
     }
   };
 
+  // Load stories on mount so the tab count is accurate
   useEffect(() => {
-    if (activeTab === 'stories' && stories.length === 0 && !storiesLoading) {
+    if (actualCityName && stories.length === 0 && !storiesLoading) {
       loadStories();
     }
-  }, [activeTab, actualCityName]);
+  }, [actualCityName]);
 
   const handleStorySuccess = () => {
     setShowStoryForm(false);
