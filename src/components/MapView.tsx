@@ -155,7 +155,7 @@ const MapView: React.FC = () => {
     const [selectedDecade, setSelectedDecade] = useState<string>('all');
     const [searchLocation, setSearchLocation] = useState('');
     const [mapCenter, setMapCenter] = useState<[number, number]>([45.8150, 15.9819]); // 🆕 Default Zagreb
-    const [displayedPhotosCount, setDisplayedPhotosCount] = useState(6);
+    const [displayedPhotosCount, setDisplayedPhotosCount] = useState(12);
 const [loadingMore, setLoadingMore] = useState(false);
 
 
@@ -179,13 +179,13 @@ const handleLoadMore = () => {
   
   // Simulate loading delay
   setTimeout(() => {
-    setDisplayedPhotosCount(prev => prev + 6);
+    setDisplayedPhotosCount(prev => prev + 12);
     setLoadingMore(false);
   }, 300);
 };
 
 useEffect(() => {
-  setDisplayedPhotosCount(6);
+  setDisplayedPhotosCount(12);
 }, [filteredPhotos.length]);
 
     // COMPONENT TO TRACK ZOOM CHANGES
