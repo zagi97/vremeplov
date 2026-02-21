@@ -69,6 +69,15 @@ const FAQ = () => {
       ]
     },
     {
+      title: t('faq.mapClustering'),
+      icon: MapPin,
+      color: 'text-teal-500',
+      bgColor: 'bg-teal-50',
+      questions: [
+        { q: t('faq.q13'), a: t('faq.a13') },
+      ]
+    },
+    {
       title: t('faq.technical'),
       icon: Wrench,
       color: 'text-red-500',

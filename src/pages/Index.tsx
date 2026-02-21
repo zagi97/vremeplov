@@ -11,6 +11,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 // Lazy loads
 const FeatureCard = lazy(() => import("@/components/FeaturedCard"));
 const SampleGallery = lazy(() => import("@/components/SampleGallery"));
+const LatestStories = lazy(() => import("@/components/LatestStories"));
 const Footer = lazy(() => import("@/components/Footer"));
 
 const ComponentLoader = () => (
@@ -118,15 +119,18 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 bg-blue-600 text-white">
-        <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            {t('home.startJourneyTitle')}
+      {/* Latest Stories Section */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <div className="w-full max-w-full sm:max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-white">
+            {t('home.latestStoriesTitle')}
           </h2>
-          <p className="text-xl mb-10 max-w-3xl mx-auto">
-            {t('home.startJourneyDesc')}
+          <p className="text-lg text-gray-600 dark:text-gray-300 text-center max-w-3xl mx-auto mb-12">
+            {t('home.latestStoriesDesc')}
           </p>
+          <Suspense fallback={<ComponentLoader />}>
+            <LatestStories />
+          </Suspense>
         </div>
       </section>
 
