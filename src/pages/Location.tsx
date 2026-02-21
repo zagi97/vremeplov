@@ -724,18 +724,18 @@ if (loading) {
                 description={t('stories.noStoriesDesc')}
               />
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {stories.map((story) => (
                   <Link key={story.id} to={`/story/${story.id}`} className="block">
                     <Card className="hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
-                      <CardContent className="p-6">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-2">
+                      <CardContent className="p-5 sm:p-6">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
                           {story.title}
                         </h3>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3 mb-4">
+                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
                           {story.content}
                         </p>
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
                           <span className="flex items-center gap-1">
                             <User className="h-3 w-3" />
                             {story.authorName}

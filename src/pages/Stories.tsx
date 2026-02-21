@@ -109,6 +109,11 @@ const Stories = () => {
           <BookOpen className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
             {t('stories.pageTitle')}
+            {stories.length > 0 && (
+              <span className="text-lg sm:text-xl md:text-2xl font-normal text-gray-500 dark:text-gray-400 ml-2">
+                ({stories.length})
+              </span>
+            )}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {t('stories.pageDescription')}
@@ -143,13 +148,12 @@ const Stories = () => {
               )}
             </div>
 
-            {/* Result count */}
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {searchText
-                ? `${filteredStories.length} ${t('common.of')} ${stories.length} ${t('stories.storiesCount') || 'priča'}`
-                : `${stories.length} ${t('stories.storiesCount') || 'priča'}`
-              }
-            </p>
+            {/* Result count - only when searching */}
+            {searchText && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {filteredStories.length} {t('common.of')} {stories.length}
+              </p>
+            )}
           </div>
 
           {filteredStories.length === 0 ? (

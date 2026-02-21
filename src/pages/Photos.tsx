@@ -121,6 +121,11 @@ const Photos = () => {
           <Image className="h-10 w-10 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
             {t('photos.pageTitle') || 'Galerija fotografija'}
+            {allPhotos.length > 0 && (
+              <span className="text-lg sm:text-xl md:text-2xl font-normal text-gray-500 dark:text-gray-400 ml-2">
+                ({allPhotos.length})
+              </span>
+            )}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {t('photos.pageDescription') || 'Pregledajte sve povijesne fotografije iz hrvatskih gradova i općina.'}
@@ -226,13 +231,10 @@ const Photos = () => {
               </div>
             )}
 
-            {/* Result count */}
-            {(hasActiveFilters || allPhotos.length > 0) && (
+            {/* Result count - only when filtering */}
+            {hasActiveFilters && (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {hasActiveFilters
-                  ? `${filteredCount} ${t('common.of')} ${totalCount} ${t('photos.photosCount') || 'fotografija'}`
-                  : `${totalCount} ${t('photos.photosCount') || 'fotografija'}`
-                }
+                {filteredCount} {t('common.of')} {totalCount}
               </p>
             )}
           </div>
