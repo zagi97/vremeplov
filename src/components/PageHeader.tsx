@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, BookOpen, Image, Menu, X } from "lucide-react";
@@ -25,14 +25,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
   const isHomePage = location.pathname === "/";
 
-  // Measure header bottom edge on click BEFORE opening menu
-  const toggleMenu = useCallback(() => {
-    if (!menuOpen && headerRef.current) {
+  // Measure header height via useLayoutEffect - runs AFTER DOM update, BEFORE paint
+  useLayoutEffect(() => {
+    if (headerRef.current) {
       const bottom = headerRef.current.getBoundingClientRect().bottom;
       setHeaderHeight(Math.ceil(bottom));
     }
-    setMenuOpen((prev) => !prev);
   }, [menuOpen]);
+
+  const toggleMenu = useCallback(() => {
+    setMenuOpen((prev) => !prev);
+  }, []);
 
   // Close menu on route change
   useEffect(() => {
@@ -62,14 +65,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
     : "bg-gray-900 border-b border-gray-800";
 
-  // Debug: log header height (remove after fixing)
-  useEffect(() => {
-    if (menuOpen) {
-      console.log("[PageHeader] headerHeight used for portal:", headerHeight);
-      console.log("[PageHeader] actual getBoundingClientRect:", headerRef.current?.getBoundingClientRect());
-    }
-  }, [menuOpen, headerHeight]);
-
   // Mobile menu via portal - renders on document.body, bypasses all stacking contexts
   const mobileMenu = menuOpen
     ? createPortal(
@@ -84,7 +79,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
               right: 0,
               bottom: 0,
               zIndex: 99998,
-              background: "rgba(0,0,0,0.5)",
+              background: "rgba(0,0,0,0.85)",
             }}
           />
           {/* Menu panel - positioned right below header */}
