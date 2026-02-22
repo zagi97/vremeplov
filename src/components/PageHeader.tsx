@@ -20,6 +20,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const menuPanelRef = useRef<HTMLDivElement>(null);
 
   const isHomePage = location.pathname === "/";
 
@@ -28,10 +29,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Close menu on click outside the entire header
+  // Close menu on click outside header and menu panel
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideHeader = headerRef.current?.contains(target);
+      const insideMenu = menuPanelRef.current?.contains(target);
+      if (!insideHeader && !insideMenu) {
         setMenuOpen(false);
       }
     };
@@ -61,108 +65,119 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const isActiveLink = (path: string) => location.pathname === path;
 
   return (
-    <header
-      ref={headerRef}
-      className={`w-full z-50 ${fixed ? 'fixed' : 'relative'} top-0 left-0 right-0 transition-all duration-300 ${
-        isHomePage && !menuOpen
-          ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
-          : "bg-gray-900 border-b border-gray-800"
-      } text-white`}
-    >
-      <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
-        {/* Left side */}
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0">
-          {!isHomePage && (
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/10 p-1.5 sm:p-2 transition-colors flex-shrink-0"
-              aria-label="Natrag"
-            >
-              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
-          )}
-          {showTitle && (
-            <Link
-              to="/"
-              className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate hover:text-gray-200 transition-colors"
-            >
-              {/* Short on mobile, full on desktop */}
-              <span className="md:hidden">{title ? title : "V.hr"}</span>
-              <span className="hidden md:inline">{title || "Vremeplov.hr"}</span>
-            </Link>
-          )}
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-          {/* Desktop nav links - hidden on mobile */}
-          {navLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`hidden md:flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium px-2 py-1 gap-1 rounded-md hover:bg-white/10 ${
-                isActiveLink(link.to) ? "bg-white/15 text-white" : ""
-              }`}
-              aria-label={link.label}
-            >
-              <link.icon className="h-5 w-5" />
-              <span className="text-xs md:text-sm">{link.label}</span>
-            </Link>
-          ))}
-
-          {/* Desktop only: theme & language */}
-          <div className="hidden md:flex items-center gap-2">
-            <ThemeToggle />
-            <LanguageSelector />
+    <>
+      <header
+        ref={headerRef}
+        className={`w-full z-50 ${fixed ? 'fixed' : 'relative'} top-0 left-0 right-0 transition-all duration-300 ${
+          isHomePage
+            ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
+            : "bg-gray-900 border-b border-gray-800"
+        } text-white`}
+      >
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          {/* Left side */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-3 min-w-0">
+            {!isHomePage && (
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="text-white hover:bg-white/10 p-1.5 sm:p-2 transition-colors flex-shrink-0"
+                aria-label="Natrag"
+              >
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            )}
+            {showTitle && (
+              <Link
+                to="/"
+                className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate hover:text-gray-200 transition-colors"
+              >
+                {/* Short on mobile, full on desktop */}
+                <span className="md:hidden">{title ? title : "V.hr"}</span>
+                <span className="hidden md:inline">{title || "Vremeplov.hr"}</span>
+              </Link>
+            )}
           </div>
 
-          {/* Always visible: notifications & profile */}
-          <NotificationBell className="text-white hover:text-white" />
-          <UserProfile className="text-white" />
-
-          {/* Hamburger button - mobile only */}
-          <Button
-            variant="ghost"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden text-white hover:bg-white/10 p-1.5 transition-colors"
-            aria-label={menuOpen ? "Zatvori izbornik" : "Otvori izbornik"}
-          >
-            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-      </div>
-
-      {/* Mobile menu dropdown */}
-      {menuOpen && (
-        <div
-          className="md:hidden border-t border-white/10 bg-gray-900 shadow-lg animate-in slide-in-from-top-2 duration-200"
-        >
-          <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+          {/* Right side */}
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+            {/* Desktop nav links - hidden on mobile */}
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActiveLink(link.to)
-                    ? "bg-white/15 text-white"
-                    : "text-gray-300 hover:bg-white/10 hover:text-white"
+                className={`hidden md:flex items-center text-white hover:text-gray-300 transition-colors text-sm font-medium px-2 py-1 gap-1 rounded-md hover:bg-white/10 ${
+                  isActiveLink(link.to) ? "bg-white/15 text-white" : ""
                 }`}
+                aria-label={link.label}
               >
                 <link.icon className="h-5 w-5" />
-                {link.label}
+                <span className="text-xs md:text-sm">{link.label}</span>
               </Link>
             ))}
 
-            {/* Theme & Language in mobile menu */}
-            <div className="flex items-center gap-3 px-3 py-3 border-t border-white/10 mt-1">
+            {/* Desktop only: theme & language */}
+            <div className="hidden md:flex items-center gap-2">
               <ThemeToggle />
               <LanguageSelector />
             </div>
-          </nav>
+
+            {/* Always visible: notifications & profile */}
+            <NotificationBell className="text-white hover:text-white" />
+            <UserProfile className="text-white" />
+
+            {/* Hamburger button - mobile only */}
+            <Button
+              variant="ghost"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="md:hidden text-white hover:bg-white/10 p-1.5 transition-colors"
+              aria-label={menuOpen ? "Zatvori izbornik" : "Otvori izbornik"}
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
         </div>
+      </header>
+
+      {/* Mobile menu - rendered OUTSIDE header to avoid backdrop-blur inheritance */}
+      {menuOpen && (
+        <>
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/40 z-40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+          />
+          {/* Menu panel */}
+          <div
+            ref={menuPanelRef}
+            className="fixed left-0 right-0 top-[52px] sm:top-[56px] z-50 md:hidden bg-gray-900 border-t border-white/10 shadow-2xl animate-in slide-in-from-top-2 duration-200"
+          >
+            <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    isActiveLink(link.to)
+                      ? "bg-white/15 text-white"
+                      : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <link.icon className="h-5 w-5" />
+                  {link.label}
+                </Link>
+              ))}
+
+              {/* Theme & Language in mobile menu */}
+              <div className="flex items-center gap-3 px-3 py-3 border-t border-white/10 mt-1">
+                <ThemeToggle />
+                <LanguageSelector />
+              </div>
+            </nav>
+          </div>
+        </>
       )}
-    </header>
+    </>
   );
 };
 
