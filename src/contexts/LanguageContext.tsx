@@ -9,9 +9,21 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// Fallback values for HMR edge cases where context temporarily loses its provider
+const fallbackContext: LanguageContextType = {
+  language: (localStorage.getItem('language') as Language) || 'hr',
+  setLanguage: () => {},
+  t: (key: string) => key,
+};
+
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
   if (context === undefined) {
+    // During Vite HMR, context can temporarily be undefined - return fallback instead of crashing
+    if (import.meta.hot) {
+      console.warn('useLanguage: LanguageProvider not found (HMR reload), using fallback');
+      return fallbackContext;
+    }
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
