@@ -20,7 +20,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
-  const menuPanelRef = useRef<HTMLDivElement>(null);
 
   const isHomePage = location.pathname === "/";
 
@@ -29,13 +28,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Close menu on click outside header and menu panel
+  // Close menu on click outside the entire header
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const insideHeader = headerRef.current?.contains(target);
-      const insideMenu = menuPanelRef.current?.contains(target);
-      if (!insideHeader && !insideMenu) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
@@ -64,15 +60,20 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
   const isActiveLink = (path: string) => location.pathname === path;
 
+  // When menu is open: solid background, no blur/transparency
+  // When menu is closed on home page: glass effect
+  // Otherwise: solid background
+  const headerBg =
+    menuOpen || !isHomePage
+      ? "bg-gray-900 border-b border-gray-800"
+      : "bg-gray-900/30 backdrop-blur-md border-b border-white/10";
+
   return (
     <>
       <header
         ref={headerRef}
-        className={`w-full z-50 ${fixed ? 'fixed' : 'relative'} top-0 left-0 right-0 transition-all duration-300 ${
-          isHomePage
-            ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
-            : "bg-gray-900 border-b border-gray-800"
-        } text-white`}
+        className={`w-full z-50 ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
+        style={menuOpen ? { backgroundColor: "#111827" } : undefined}
       >
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Left side */}
@@ -92,7 +93,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
                 to="/"
                 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white truncate hover:text-gray-200 transition-colors"
               >
-                {/* Short on mobile, full on desktop */}
                 <span className="md:hidden">{title ? title : "V.hr"}</span>
                 <span className="hidden md:inline">{title || "Vremeplov.hr"}</span>
               </Link>
@@ -101,7 +101,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
           {/* Right side */}
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-            {/* Desktop nav links - hidden on mobile */}
+            {/* Desktop nav links */}
             {navLinks.map((link) => (
               <Link
                 key={link.to}
@@ -137,20 +137,12 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
             </Button>
           </div>
         </div>
-      </header>
 
-      {/* Mobile menu - rendered OUTSIDE header to avoid backdrop-blur inheritance */}
-      {menuOpen && (
-        <>
-          {/* Backdrop overlay */}
+        {/* Mobile dropdown - inside header, naturally positioned below toolbar */}
+        {menuOpen && (
           <div
-            className="fixed inset-0 bg-black/40 z-40 md:hidden"
-            onClick={() => setMenuOpen(false)}
-          />
-          {/* Menu panel */}
-          <div
-            ref={menuPanelRef}
-            className="fixed left-0 right-0 top-[52px] sm:top-[56px] z-50 md:hidden bg-gray-900 border-t border-white/10 shadow-2xl animate-in slide-in-from-top-2 duration-200"
+            className="md:hidden border-t border-white/10"
+            style={{ backgroundColor: "#111827" }}
           >
             <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
               {navLinks.map((link) => (
@@ -175,7 +167,15 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
               </div>
             </nav>
           </div>
-        </>
+        )}
+      </header>
+
+      {/* Backdrop overlay - closes menu on tap outside */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          onClick={() => setMenuOpen(false)}
+        />
       )}
     </>
   );
