@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, BookOpen, Image, Menu, X } from "lucide-react";
@@ -20,18 +20,18 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(56);
   const headerRef = useRef<HTMLElement>(null);
 
   const isHomePage = location.pathname === "/";
 
-  // Track header height for portal positioning
-  useEffect(() => {
-    if (headerRef.current) {
-      const rect = headerRef.current.getBoundingClientRect();
-      setHeaderHeight(rect.height);
+  // Measure header height on click BEFORE opening menu
+  const toggleMenu = useCallback(() => {
+    if (!menuOpen && headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
     }
-  });
+    setMenuOpen((prev) => !prev);
+  }, [menuOpen]);
 
   // Close menu on route change
   useEffect(() => {
@@ -61,21 +61,24 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
     : "bg-gray-900 border-b border-gray-800";
 
-  // Mobile menu rendered via portal to bypass any stacking context issues
+  // Mobile menu via portal - renders on document.body, bypasses all stacking contexts
   const mobileMenu = menuOpen
     ? createPortal(
         <>
-          {/* Backdrop */}
+          {/* Backdrop - starts BELOW header so header stays visible */}
           <div
             onClick={() => setMenuOpen(false)}
             style={{
               position: "fixed",
-              inset: 0,
+              top: headerHeight,
+              left: 0,
+              right: 0,
+              bottom: 0,
               zIndex: 99998,
               background: "rgba(0,0,0,0.5)",
             }}
           />
-          {/* Menu panel */}
+          {/* Menu panel - positioned right below header */}
           <div
             style={{
               position: "fixed",
@@ -120,7 +123,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     <>
       <header
         ref={headerRef}
-        className={`w-full z-50 ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
+        className={`w-full ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
+        style={{ zIndex: menuOpen ? 100000 : 50 }}
       >
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Left side */}
@@ -176,7 +180,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
             {/* Hamburger button - mobile only */}
             <Button
               variant="ghost"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={toggleMenu}
               className="md:hidden text-white hover:bg-white/10 p-1.5 transition-colors"
               aria-label={menuOpen ? "Zatvori izbornik" : "Otvori izbornik"}
             >
@@ -186,7 +190,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
         </div>
       </header>
 
-      {/* Mobile menu via portal - renders on document.body, bypasses all stacking contexts */}
       {mobileMenu}
     </>
   );
