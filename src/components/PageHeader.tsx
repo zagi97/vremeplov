@@ -25,10 +25,11 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
   const isHomePage = location.pathname === "/";
 
-  // Measure header height on click BEFORE opening menu
+  // Measure header bottom edge on click BEFORE opening menu
   const toggleMenu = useCallback(() => {
     if (!menuOpen && headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight);
+      const bottom = headerRef.current.getBoundingClientRect().bottom;
+      setHeaderHeight(Math.ceil(bottom));
     }
     setMenuOpen((prev) => !prev);
   }, [menuOpen]);
@@ -60,6 +61,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const headerBg = isHomePage && !menuOpen
     ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
     : "bg-gray-900 border-b border-gray-800";
+
+  // Debug: log header height (remove after fixing)
+  useEffect(() => {
+    if (menuOpen) {
+      console.log("[PageHeader] headerHeight used for portal:", headerHeight);
+      console.log("[PageHeader] actual getBoundingClientRect:", headerRef.current?.getBoundingClientRect());
+    }
+  }, [menuOpen, headerHeight]);
 
   // Mobile menu via portal - renders on document.body, bypasses all stacking contexts
   const mobileMenu = menuOpen
