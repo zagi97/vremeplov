@@ -95,7 +95,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
               boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
             }}
           >
-            <nav style={{ maxWidth: "72rem", margin: "0 auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+            <nav style={{ position: "static", zIndex: "auto", top: "auto", width: "auto", maxWidth: "72rem", margin: "0 auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
