@@ -127,7 +127,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     <>
       <header
         ref={headerRef}
-        className={`w-full ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
+        className={`w-full ${(fixed || menuOpen) ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
         style={{ zIndex: menuOpen ? 100000 : 50 }}
       >
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
