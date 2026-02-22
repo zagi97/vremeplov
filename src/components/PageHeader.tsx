@@ -19,7 +19,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   const isHomePage = location.pathname === "/";
 
@@ -28,10 +28,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Close menu on click outside
+  // Close menu on click outside the entire header
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
@@ -62,8 +62,9 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
   return (
     <header
+      ref={headerRef}
       className={`w-full z-50 ${fixed ? 'fixed' : 'relative'} top-0 left-0 right-0 transition-all duration-300 ${
-        isHomePage
+        isHomePage && !menuOpen
           ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
           : "bg-gray-900 border-b border-gray-800"
       } text-white`}
@@ -135,7 +136,6 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
       {/* Mobile menu dropdown */}
       {menuOpen && (
         <div
-          ref={menuRef}
           className="md:hidden border-t border-white/10 bg-gray-900 shadow-lg animate-in slide-in-from-top-2 duration-200"
         >
           <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
