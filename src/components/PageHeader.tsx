@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, BookOpen, Image, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,27 +20,23 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
 
   const isHomePage = location.pathname === "/";
+
+  // Track header height for portal positioning
+  useEffect(() => {
+    if (headerRef.current) {
+      const rect = headerRef.current.getBoundingClientRect();
+      setHeaderHeight(rect.height);
+    }
+  });
 
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname]);
-
-  // Close menu on click outside the entire header
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
 
   // Close menu on Escape key
   useEffect(() => {
@@ -60,20 +57,70 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
   const isActiveLink = (path: string) => location.pathname === path;
 
-  // When menu is open: solid background, no blur/transparency
-  // When menu is closed on home page: glass effect
-  // Otherwise: solid background
-  const headerBg =
-    menuOpen || !isHomePage
-      ? "bg-gray-900 border-b border-gray-800"
-      : "bg-gray-900/30 backdrop-blur-md border-b border-white/10";
+  const headerBg = isHomePage && !menuOpen
+    ? "bg-gray-900/30 backdrop-blur-md border-b border-white/10"
+    : "bg-gray-900 border-b border-gray-800";
+
+  // Mobile menu rendered via portal to bypass any stacking context issues
+  const mobileMenu = menuOpen
+    ? createPortal(
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setMenuOpen(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 99998,
+              background: "rgba(0,0,0,0.5)",
+            }}
+          />
+          {/* Menu panel */}
+          <div
+            style={{
+              position: "fixed",
+              top: headerHeight,
+              left: 0,
+              right: 0,
+              zIndex: 99999,
+              backgroundColor: "#111827",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+            }}
+          >
+            <nav style={{ maxWidth: "72rem", margin: "0 auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "4px" }}>
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={() => setMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                    isActiveLink(link.to)
+                      ? "bg-white/15 text-white"
+                      : "text-gray-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <link.icon className="h-5 w-5" />
+                  {link.label}
+                </Link>
+              ))}
+
+              <div className="flex items-center gap-3 px-3 py-3 border-t border-white/10 mt-1">
+                <ThemeToggle />
+                <LanguageSelector />
+              </div>
+            </nav>
+          </div>
+        </>,
+        document.body
+      )
+    : null;
 
   return (
     <>
       <header
         ref={headerRef}
         className={`w-full z-50 ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
-        style={menuOpen ? { background: "#ff0000", opacity: 1 } : undefined}
       >
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Left side */}
@@ -137,46 +184,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
             </Button>
           </div>
         </div>
-
-        {/* Mobile dropdown - inside header, naturally positioned below toolbar */}
-        {menuOpen && (
-          <div
-            className="md:hidden border-t border-white/10"
-            style={{ background: "#ff0000", opacity: 1, position: "relative", zIndex: 9999 }}
-          >
-            <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
-                    isActiveLink(link.to)
-                      ? "bg-white/15 text-white"
-                      : "text-gray-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  <link.icon className="h-5 w-5" />
-                  {link.label}
-                </Link>
-              ))}
-
-              {/* Theme & Language in mobile menu */}
-              <div className="flex items-center gap-3 px-3 py-3 border-t border-white/10 mt-1">
-                <ThemeToggle />
-                <LanguageSelector />
-              </div>
-            </nav>
-          </div>
-        )}
       </header>
 
-      {/* Backdrop overlay - closes menu on tap outside */}
-      {menuOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
+      {/* Mobile menu via portal - renders on document.body, bypasses all stacking contexts */}
+      {mobileMenu}
     </>
   );
 };
