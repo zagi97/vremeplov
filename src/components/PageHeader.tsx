@@ -73,7 +73,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
       <header
         ref={headerRef}
         className={`w-full z-50 ${fixed ? "fixed" : "relative"} top-0 left-0 right-0 transition-all duration-300 ${headerBg} text-white`}
-        style={menuOpen ? { backgroundColor: "#111827" } : undefined}
+        style={menuOpen ? { background: "#ff0000", opacity: 1 } : undefined}
       >
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           {/* Left side */}
@@ -142,7 +142,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
         {menuOpen && (
           <div
             className="md:hidden border-t border-white/10"
-            style={{ backgroundColor: "#111827" }}
+            style={{ background: "#ff0000", opacity: 1, position: "relative", zIndex: 9999 }}
           >
             <nav className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1">
               {navLinks.map((link) => (
