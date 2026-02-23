@@ -111,6 +111,7 @@ export interface LeaderboardUser {
   totalLikes: number;
   totalViews: number;
   locationsCount: number;
+  totalStories: number;
   joinDate: string;
   badges: string[];
   recentPhotoUrl?: string;

@@ -27,10 +27,11 @@ import {
   Heart,
   Eye,
   Users,
-  Filter
+  Filter,
+  BookOpen
 } from "lucide-react";
 import LazyImage from "../components/LazyImage";
-import { photoService } from "../services/firebaseService";
+import { photoService, storyService, Story } from "../services/firebaseService";
 import { userService, UserActivity } from "../services/user";
 import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
@@ -71,6 +72,8 @@ const UserProfilePage = () => {
   const [photoLimit, setPhotoLimit] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingMorePhotos, setLoadingMorePhotos] = useState(false);
+  const [userStories, setUserStories] = useState<Story[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(false);
 
   // Filter state for photos
   const [selectedYear, setSelectedYear] = useState<string>('all');
@@ -110,6 +113,23 @@ const UserProfilePage = () => {
       });
     }
   }, [profile]);
+
+  // Load user stories
+  useEffect(() => {
+    const loadStories = async () => {
+      if (!userId) return;
+      setStoriesLoading(true);
+      try {
+        const stories = await storyService.getUserStories(userId);
+        setUserStories(stories);
+      } catch (error) {
+        console.error('Error loading user stories:', error);
+      } finally {
+        setStoriesLoading(false);
+      }
+    };
+    if (userId) loadStories();
+  }, [userId]);
 
   // Get unique years from photos
   const availableYears = useMemo(() => {
@@ -447,9 +467,9 @@ if (loading) {
             {/* Content Tabs */}
             <div className="lg:w-2/3">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3 gap-1 bg-muted">
-                  <TabsTrigger 
-                    value="photos" 
+                <TabsList className="grid w-full grid-cols-4 gap-1 bg-muted">
+                  <TabsTrigger
+                    value="photos"
                     title={t('profile.photos')}
                     className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
                   >
@@ -458,18 +478,29 @@ if (loading) {
                     <span className="sm:hidden">({profile.stats.totalPhotos})</span>
                     <span className="hidden sm:inline">({profile.stats.totalPhotos})</span>
                   </TabsTrigger>
-                  
-                  <TabsTrigger 
-                    value="stats" 
+
+                  <TabsTrigger
+                    value="stories"
+                    title={t('profile.stories')}
+                    className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
+                  >
+                    <BookOpen className="h-4 w-4 flex-shrink-0" />
+                    <span className="hidden sm:inline">{t('profile.stories')}</span>
+                    <span className="sm:hidden">({userStories.length})</span>
+                    <span className="hidden sm:inline">({userStories.length})</span>
+                  </TabsTrigger>
+
+                  <TabsTrigger
+                    value="stats"
                     title={t('profile.statistics')}
                     className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
                   >
                     <Trophy className="h-4 w-4 flex-shrink-0" />
                     <span className="hidden sm:inline">{t('profile.statistics')}</span>
                   </TabsTrigger>
-                  
-                  <TabsTrigger 
-                    value="activity" 
+
+                  <TabsTrigger
+                    value="activity"
                     title={t('profile.activity')}
                     className="flex items-center gap-1 px-2 text-xs sm:text-sm sm:px-4 sm:gap-2"
                   >
@@ -652,6 +683,69 @@ if (loading) {
     </p>
   )}
 </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="stories" className="mt-6">
+                  {storiesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : userStories.length > 0 ? (
+                    <div className="space-y-4">
+                      {userStories.map((story) => (
+                        <Link key={story.id} to={`/story/${story.id}`} className="block">
+                          <Card className="hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
+                            <CardContent className="p-5 sm:p-6">
+                              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
+                                {story.title}
+                              </h3>
+                              <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
+                                {story.content}
+                              </p>
+                              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
+                                <span className="flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" />
+                                  {story.location}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {story.createdAt?.toDate
+                                    ? story.createdAt.toDate().toLocaleDateString('hr-HR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        year: 'numeric',
+                                      })
+                                    : ''
+                                  }
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Eye className="h-3 w-3" />
+                                  {story.views || 0}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Heart className="h-3 w-3" />
+                                  {story.likes || 0}
+                                </span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                        {t('profile.noStoriesYet')}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        {isOwnProfile
+                          ? t('profile.startWritingStories')
+                          : t('profile.userHasntWrittenStories')
+                        }
+                      </p>
+                    </div>
                   )}
                 </TabsContent>
 

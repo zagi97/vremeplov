@@ -7,18 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Badge } from "../components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { 
-  ArrowLeft, 
-  Trophy, 
-  Crown, 
-  Medal, 
+import {
+  ArrowLeft,
+  Trophy,
+  Crown,
+  Medal,
   Award,
   Camera,
   Heart,
   MapPin,
   Star,
   TrendingUp,
-  Users
+  Users,
+  BookOpen
 } from "lucide-react";
 import { toast } from 'sonner';
 import { useLanguage } from "../contexts/LanguageContext";
@@ -53,11 +54,13 @@ const CommunityLeaderboard = () => {
     photos: LeaderboardUser[];
     likes: LeaderboardUser[];
     locations: LeaderboardUser[];
+    stories: LeaderboardUser[];
     recent: LeaderboardUser[];
   }>({
     photos: [],
     likes: [],
     locations: [],
+    stories: [],
     recent: []
   });
   const [communityStats, setCommunityStats] = useState<CommunityStats>({
@@ -81,6 +84,7 @@ const CommunityLeaderboard = () => {
     photos: 12,
     likes: 12,
     locations: 12,
+    stories: 12,
     recent: 12
   });
   const USERS_PER_PAGE = 12;
@@ -91,6 +95,7 @@ const CommunityLeaderboard = () => {
       photos: 12,
       likes: 12,
       locations: 12,
+      stories: 12,
       recent: 12
     });
   }, [timePeriod]);
@@ -142,7 +147,7 @@ const CommunityLeaderboard = () => {
     };
   }, [timePeriod, t]);
 
-  const loadMoreUsers = (tab: 'photos' | 'likes' | 'locations' | 'recent') => {
+  const loadMoreUsers = (tab: 'photos' | 'likes' | 'locations' | 'stories' | 'recent') => {
     setVisibleCounts(prev => ({
       ...prev,
       [tab]: prev[tab] + USERS_PER_PAGE
@@ -172,6 +177,8 @@ const CommunityLeaderboard = () => {
           return `${user.totalLikes.toLocaleString()} ${t('community.likes')}`;
         case 'locations':
           return `${user.locationsCount.toLocaleString()} ${t('community.locations')}`;
+        case 'stories':
+          return `${user.totalStories.toLocaleString()} ${t('community.stories')}`;
         case 'recent':
           return `${t('community.joined')}: ${user.joinDate ? new Date(user.joinDate).toLocaleDateString('hr-HR') : 'N/A'}`;
         default:
@@ -435,7 +442,7 @@ const CommunityLeaderboard = () => {
       <section className="py-6 sm:py-8 px-4 pb-20">
         <div className="container max-w-6xl mx-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl mx-auto mb-10 sm:mb-12 gap-1 sm:gap-1 p-1 bg-transparent">
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 max-w-3xl mx-auto mb-10 sm:mb-12 gap-1 sm:gap-1 p-1 bg-transparent">
               <TabsTrigger
                 value="photos"
                 className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
@@ -459,6 +466,14 @@ const CommunityLeaderboard = () => {
                 <MapPin className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                 <span className="hidden md:inline">{t('community.mostLocations')}</span>
                 <span className="md:hidden truncate">{t('community.places')}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="stories"
+                className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 md:px-4 py-2.5 sm:py-2 bg-background hover:bg-accent data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-semibold data-[state=active]:shadow-md transition-all"
+              >
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden md:inline">{t('community.mostStories')}</span>
+                <span className="md:hidden truncate">{t('community.stories')}</span>
               </TabsTrigger>
               <TabsTrigger
                 value="recent"
@@ -596,6 +611,49 @@ const CommunityLeaderboard = () => {
                         <EmptyState
                           icon={MapPin}
                           title={t('community.emptyLocations')}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="stories">
+                  <Card>
+                    <CardHeader className="pb-3 sm:pb-6">
+                      <h2 className="flex items-center gap-2 text-base sm:text-lg font-semibold leading-none tracking-tight">
+                        <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                        {t('community.topStoryWriters')}
+                      </h2>
+                    </CardHeader>
+                    <CardContent>
+                      {loading ? (
+                        <>
+                          {[...Array(5)].map((_, i) => (
+                            <LeaderboardSkeleton key={i} />
+                          ))}
+                        </>
+                      ) : leaderboardData.stories.length > 0 ? (
+                        <>
+                          {leaderboardData.stories.slice(0, visibleCounts.stories).map(user => (
+                            <LeaderboardCard key={user.uid} user={user} category="stories" />
+                          ))}
+                          {leaderboardData.stories.length > visibleCounts.stories && (
+                            <div className="mt-4 text-center">
+                              <Button
+                                variant="outline"
+                                onClick={() => loadMoreUsers('stories')}
+                                className="w-full sm:w-auto"
+                              >
+                                <TrendingUp className="h-4 w-4 mr-2" />
+                                {t('community.loadMore')}
+                              </Button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <EmptyState
+                          icon={BookOpen}
+                          title={t('community.emptyStories')}
                         />
                       )}
                     </CardContent>

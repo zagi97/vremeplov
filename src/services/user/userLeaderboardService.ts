@@ -29,6 +29,7 @@ class UserLeaderboardService {
     photos: LeaderboardUser[];
     likes: LeaderboardUser[];
     locations: LeaderboardUser[];
+    stories: LeaderboardUser[];
     recent: LeaderboardUser[];
   }> {
     try {
@@ -65,10 +66,14 @@ class UserLeaderboardService {
       // ✅ OPTIMIZATION 2: Batch all recent photo queries with Promise.all
       const recentPhotoPromises = userIds.map(userId => this.getUserMostRecentPhoto(userId));
 
+      // ✅ OPTIMIZATION 3: Batch story count queries with Promise.all
+      const storyCountPromises = userIds.map(userId => this.getUserStoryCount(userId, dateFilter));
+
       // Execute all queries in parallel (instead of sequential in loop)
-      const [periodStatsArray, recentPhotosArray] = await Promise.all([
+      const [periodStatsArray, recentPhotosArray, storyCountsArray] = await Promise.all([
         dateFilter ? Promise.all(periodStatsPromises) : Promise.resolve([]),
-        Promise.all(recentPhotoPromises)
+        Promise.all(recentPhotoPromises),
+        Promise.all(storyCountPromises)
       ]);
 
       // Build users array with pre-fetched data
@@ -96,6 +101,7 @@ class UserLeaderboardService {
           totalLikes: safeStats.totalLikes || 0,
           totalViews: safeStats.totalViews || 0,
           locationsCount: safeStats.locationsContributed || 0,
+          totalStories: storyCountsArray[index] || 0,
           joinDate: userData.joinedAt?.toDate()?.toISOString() || new Date().toISOString(),
           badges: userData.badges || [],
           recentPhotoUrl: recentPhoto?.imageUrl
@@ -118,6 +124,12 @@ class UserLeaderboardService {
         .slice(0, limitCount)
         .map((user, index) => ({ ...user, rank: index + 1 }));
 
+      const storyLeaders = [...users]
+        .filter(user => user.totalStories > 0)
+        .sort((a, b) => b.totalStories - a.totalStories)
+        .slice(0, limitCount)
+        .map((user, index) => ({ ...user, rank: index + 1 }));
+
       // Filter recent members based on date filter for time period
       const filteredRecentUsers = dateFilter
         ? users.filter(user => new Date(user.joinDate).getTime() >= dateFilter.getTime())
@@ -132,12 +144,39 @@ class UserLeaderboardService {
         photos: photoLeaders,
         likes: likeLeaders,
         locations: locationLeaders,
+        stories: storyLeaders,
         recent: recentMembers
       };
 
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Get user's story count (optionally filtered by date)
+   */
+  private async getUserStoryCount(userId: string, dateFilter: Date | null): Promise<number> {
+    try {
+      let storiesQuery;
+      if (dateFilter) {
+        storiesQuery = query(
+          collection(db, 'stories'),
+          where('authorId', '==', userId),
+          where('createdAt', '>=', dateFilter)
+        );
+      } else {
+        storiesQuery = query(
+          collection(db, 'stories'),
+          where('authorId', '==', userId)
+        );
+      }
+      const snapshot = await getDocs(storiesQuery);
+      return snapshot.size;
+    } catch (error) {
+      console.error('Error fetching story count:', error);
+      return 0;
     }
   }
 
