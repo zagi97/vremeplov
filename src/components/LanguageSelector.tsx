@@ -41,7 +41,7 @@ const LanguageSelector: React.FC = () => {
           <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[160px]">
+      <DropdownMenuContent align="end" className="min-w-[160px] z-[100001]">
         <DropdownMenuItem
           onClick={() => setLanguage('hr')}
           className="flex items-center gap-2 cursor-pointer"
