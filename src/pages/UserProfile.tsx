@@ -674,17 +674,17 @@ if (loading) {
                   ) : (
                     <div className="text-center py-12">
   <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
     {t('profile.noPhotosYet')}
   </h3>
-  <p className="text-gray-600 mb-4">
-    {isOwnProfile 
+  <p className="text-gray-600 dark:text-gray-400 mb-4">
+    {isOwnProfile
       ? t('profile.startSharing')
       : t('profile.userHasntShared')
     }
   </p>
   {isOwnProfile && (
-    <p className="text-sm text-gray-500">
+    <p className="text-sm text-gray-500 dark:text-gray-400">
       {t('profile.uploadFirstPhoto')}
     </p>
   )}
