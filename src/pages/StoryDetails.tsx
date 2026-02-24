@@ -28,8 +28,19 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+const pluralizeHr = (count: number, singular: string, few: string, many: string, lang: string) => {
+  if (lang === 'hr') {
+    const lastDigit = count % 10;
+    const lastTwoDigits = count % 100;
+    if (count === 1) return singular;
+    if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwoDigits >= 12 && lastTwoDigits <= 14)) return few;
+    return many;
+  }
+  return count === 1 ? singular : many;
+};
+
 const StoryDetails = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { storyId } = useParams<{ storyId: string }>();
   const { user, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
@@ -277,11 +288,11 @@ const StoryDetails = () => {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                     <Eye className="h-4 w-4" />
-                    {views} {t('photoDetail.views')}
+                    {views} {pluralizeHr(views, t('photoDetail.viewsSingular'), t('photoDetail.viewsFew') || t('photoDetail.views'), t('photoDetail.views'), language)}
                   </div>
                   <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                     <Heart className={`h-4 w-4 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                    {likes} {t('photoDetail.likes')}
+                    {likes} {pluralizeHr(likes, t('photoDetail.likesSingular'), t('photoDetail.likesFew') || t('photoDetail.likes'), t('photoDetail.likes'), language)}
                   </div>
                 </div>
                 {user ? (
