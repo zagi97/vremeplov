@@ -265,13 +265,31 @@ export class StoryService {
    */
   async getUserStories(userId: string): Promise<Story[]> {
     try {
-      const q = query(
-        this.storiesCollection,
-        where('authorId', '==', userId)
-      );
+      const currentUser = auth.currentUser;
+      const isOwner = currentUser?.uid === userId;
 
-      const querySnapshot = await getDocs(q);
-      const stories = mapDocumentsWithId<Story>(querySnapshot.docs);
+      let stories: Story[];
+
+      if (isOwner) {
+        // Owner can see all their stories (including pending) - needs limit per Firestore rules
+        const q = query(
+          this.storiesCollection,
+          where('authorId', '==', userId),
+          limit(100)
+        );
+        const querySnapshot = await getDocs(q);
+        stories = mapDocumentsWithId<Story>(querySnapshot.docs);
+      } else {
+        // Others can only see approved stories
+        const q = query(
+          this.storiesCollection,
+          where('authorId', '==', userId),
+          where('isApproved', '==', true)
+        );
+        const querySnapshot = await getDocs(q);
+        stories = mapDocumentsWithId<Story>(querySnapshot.docs);
+      }
+
       // Sort client-side to avoid requiring composite index
       return stories.sort((a, b) => {
         const aTime = a.createdAt?.toMillis?.() || 0;
