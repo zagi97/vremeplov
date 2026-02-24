@@ -273,14 +273,16 @@ const StoryDetails = () => {
               </div>
 
               {/* Stats & Like */}
-              <div className="flex items-center gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Eye className="h-4 w-4" />
-                  {views} {t('photoDetail.views')}
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Heart className={`h-4 w-4 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                  {likes} {t('photoDetail.likes')}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                    <Eye className="h-4 w-4" />
+                    {views} {t('photoDetail.views')}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+                    <Heart className={`h-4 w-4 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
+                    {likes} {t('photoDetail.likes')}
+                  </div>
                 </div>
                 {user ? (
                   <Button
@@ -288,7 +290,7 @@ const StoryDetails = () => {
                     size="sm"
                     onClick={handleLike}
                     disabled={likeLoading}
-                    className={`ml-auto ${userHasLiked ? 'text-red-500 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400' : 'dark:hover:bg-gray-700 dark:hover:text-gray-100'}`}
+                    className={`w-full sm:w-auto sm:ml-auto ${userHasLiked ? 'text-red-500 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400' : 'dark:hover:bg-gray-700 dark:hover:text-gray-100'}`}
                   >
                     <Heart className={`h-4 w-4 mr-1 ${userHasLiked ? 'fill-red-500' : ''}`} />
                     {userHasLiked ? t('photoDetail.unlikePhoto') : t('photoDetail.likePhoto')}
@@ -298,7 +300,7 @@ const StoryDetails = () => {
                     variant="outline"
                     size="sm"
                     onClick={signInWithGoogle}
-                    className="ml-auto"
+                    className="w-full sm:w-auto sm:ml-auto"
                   >
                     {t('photoDetail.signInToLike')}
                   </Button>
