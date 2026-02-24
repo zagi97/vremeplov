@@ -267,12 +267,17 @@ export class StoryService {
     try {
       const q = query(
         this.storiesCollection,
-        where('authorId', '==', userId),
-        orderBy('createdAt', 'desc')
+        where('authorId', '==', userId)
       );
 
       const querySnapshot = await getDocs(q);
-      return mapDocumentsWithId<Story>(querySnapshot.docs);
+      const stories = mapDocumentsWithId<Story>(querySnapshot.docs);
+      // Sort client-side to avoid requiring composite index
+      return stories.sort((a, b) => {
+        const aTime = a.createdAt?.toMillis?.() || 0;
+        const bTime = b.createdAt?.toMillis?.() || 0;
+        return bTime - aTime;
+      });
     } catch (error) {
       console.error('Error getting user stories:', error);
       return [];

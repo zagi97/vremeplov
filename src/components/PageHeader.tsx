@@ -115,7 +115,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
 
               <div className="flex items-center gap-3 px-3 py-3 border-t border-white/10 mt-1 relative">
                 <ThemeToggle />
-                <LanguageSelector />
+                <LanguageSelector onLanguageChange={() => setMenuOpen(false)} />
               </div>
             </nav>
           </div>

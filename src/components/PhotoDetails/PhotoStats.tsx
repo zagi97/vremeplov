@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Heart, Eye, Users, Clock } from "lucide-react";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { User } from 'firebase/auth';
 import { LikesModal } from "@/components/LikesModal";
@@ -32,18 +32,32 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
   onLike,
   isPhotoPending = false
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { signInWithGoogle } = useAuth();
   const [likesModalOpen, setLikesModalOpen] = useState(false);
 
+  const pluralize = (count: number, singular: string, few: string, many: string) => {
+    if (language === 'hr') {
+      const lastDigit = count % 10;
+      const lastTwoDigits = count % 100;
+      if (count === 1) return singular;
+      if (lastDigit >= 2 && lastDigit <= 4 && !(lastTwoDigits >= 12 && lastTwoDigits <= 14)) return few;
+      return many;
+    }
+    return count === 1 ? singular : many;
+  };
+
+  const viewsText = pluralize(views, t('photoDetail.viewsSingular'), t('photoDetail.viewsFew') || t('photoDetail.views'), t('photoDetail.views'));
+  const likesText = pluralize(likes, t('photoDetail.likesSingular'), t('photoDetail.likesFew') || t('photoDetail.likes'), t('photoDetail.likes'));
+
   return (
-    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
       {/* Desktop layout (md and up) - original design */}
       <div className="hidden md:flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Eye className="h-5 w-5" />
-            <span className="text-sm">{views} {t('photoDetail.views')}</span>
+            <span className="text-sm">{views} {viewsText}</span>
           </div>
           <button
             onClick={() => likes > 0 && setLikesModalOpen(true)}
@@ -51,7 +65,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             disabled={likes === 0}
           >
             <Heart className={`h-5 w-5 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
-            <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
+            <span className="text-sm">{likes} {likesText}</span>
           </button>
           {taggedPersonsCount > 0 && (
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
@@ -95,12 +109,12 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
       </div>
 
       {/* Mobile layout (below md) - stacked design */}
-      <div className="md:hidden space-y-4">
+      <div className="md:hidden space-y-3">
         {/* Stats */}
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
             <Eye className="h-5 w-5" />
-            <span className="text-sm">{views} {t('photoDetail.views')}</span>
+            <span className="text-sm">{views} {viewsText}</span>
           </div>
           <button
             onClick={() => likes > 0 && setLikesModalOpen(true)}
@@ -108,7 +122,7 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
             disabled={likes === 0}
           >
             <Heart className={`h-5 w-5 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
-            <span className="text-sm">{likes} {t('photoDetail.likes')}</span>
+            <span className="text-sm">{likes} {likesText}</span>
           </button>
           {taggedPersonsCount > 0 && (
             <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">

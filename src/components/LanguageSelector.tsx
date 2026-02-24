@@ -10,7 +10,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { Globe, ChevronDown } from 'lucide-react';
 import 'flag-icons/css/flag-icons.min.css';
 
-const LanguageSelector: React.FC = () => {
+interface LanguageSelectorProps {
+  onLanguageChange?: () => void;
+}
+
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ onLanguageChange }) => {
   const { language, setLanguage } = useLanguage();
 
   // Language names based on current language
@@ -43,14 +47,14 @@ const LanguageSelector: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[160px] z-[100001]">
         <DropdownMenuItem
-          onClick={() => setLanguage('hr')}
+          onClick={() => { setLanguage('hr'); onLanguageChange?.(); }}
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="fi fi-hr"></span>
           <span>{languageNames[language as 'hr' | 'en'].hr}</span>
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => setLanguage('en')}
+          onClick={() => { setLanguage('en'); onLanguageChange?.(); }}
           className="flex items-center gap-2 cursor-pointer"
         >
           <span className="fi fi-gb"></span>
