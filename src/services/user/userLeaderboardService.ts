@@ -256,20 +256,21 @@ class UserLeaderboardService {
         );
       }
 
-      const [usersSnapshot, photosSnapshot, storiesSnapshot] = await Promise.all([
-        getDocs(query(collection(db, 'users'))),
-        getDocs(photosQuery),
-        getDocs(storiesQuery)
+      // Run queries independently so one failure doesn't zero out all stats
+      const [usersResult, photosResult, storiesResult] = await Promise.all([
+        getDocs(query(collection(db, 'users'))).catch(e => { console.error('Error fetching users:', e); return null; }),
+        getDocs(photosQuery).catch(e => { console.error('Error fetching photos:', e); return null; }),
+        getDocs(storiesQuery).catch(e => { console.error('Error fetching stories:', e); return null; })
       ]);
 
-      const totalMembers = usersSnapshot.size;
-      const photosShared = photosSnapshot.size;
-      const totalStories = storiesSnapshot.size;
+      const totalMembers = usersResult?.size || 0;
+      const photosShared = photosResult?.size || 0;
+      const totalStories = storiesResult?.size || 0;
 
       let totalLikes = 0;
       const locationSet = new Set<string>();
 
-      photosSnapshot.docs.forEach(doc => {
+      photosResult?.docs.forEach(doc => {
         const photo = doc.data();
         totalLikes += photo.likes || 0;
         if (photo.location) locationSet.add(photo.location);
