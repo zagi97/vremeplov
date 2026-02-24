@@ -57,54 +57,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-800">
-        <div className="w-full max-w-full sm:max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-gray-900 dark:text-white">
-            {t('home.reconnectTitle')}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <FeatureCard 
-                icon={<MapPin className="h-10 w-10 text-blue-600" />} 
-                title={t('home.discoverTitle')} 
-                description={t('home.discoverDesc')} 
-              />
-              <FeatureCard 
-                icon={<Archive className="h-10 w-10 text-blue-600" />} 
-                title={t('home.preserveTitle')} 
-                description={t('home.preserveDesc')} 
-              />
-              <FeatureCard 
-                icon={<Users className="h-10 w-10 text-blue-600" />} 
-                title={t('home.connectTitle')} 
-                description={t('home.connectDesc')} 
-              />
-            </Suspense>
-          </div>
-        </div>
-      </section>
-
-      {/* Memory Map Preview Section */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-        <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
-            {t('home.exploreCroatiaTitle')}
-          </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
-            {t('home.exploreCroatiaDesc')}
-          </p>
-          <Link 
-            to="/map"
-            className="inline-flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-lg"
-          >
-            <MapPin className="h-6 w-6" />
-            {t('home.exploreMemoryMap')}
-          </Link>
-        </div>
-      </section>
-
-      {/* Sample Gallery Section */}
+      {/* Sample Gallery Section - "Pogled u prošlost" */}
       <section className="py-20 px-4 bg-gray-50 dark:bg-gray-800">
         <div className="w-full max-w-full sm:max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-white">
@@ -119,7 +72,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Latest Stories Section */}
+      {/* Latest Stories Section - "Priče iz prošlosti" */}
       <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="w-full max-w-full sm:max-w-4xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-6 text-gray-900 dark:text-white">
@@ -131,6 +84,53 @@ const Index = () => {
           <Suspense fallback={<ComponentLoader />}>
             <LatestStories />
           </Suspense>
+        </div>
+      </section>
+
+      {/* Features Section - "Povežite se s vlastitom baštinom" */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-800">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-gray-900 dark:text-white">
+            {t('home.reconnectTitle')}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <Suspense fallback={<ComponentLoader />}>
+              <FeatureCard
+                icon={<MapPin className="h-10 w-10 text-blue-600" />}
+                title={t('home.discoverTitle')}
+                description={t('home.discoverDesc')}
+              />
+              <FeatureCard
+                icon={<Archive className="h-10 w-10 text-blue-600" />}
+                title={t('home.preserveTitle')}
+                description={t('home.preserveDesc')}
+              />
+              <FeatureCard
+                icon={<Users className="h-10 w-10 text-blue-600" />}
+                title={t('home.connectTitle')}
+                description={t('home.connectDesc')}
+              />
+            </Suspense>
+          </div>
+        </div>
+      </section>
+
+      {/* Memory Map Preview Section - "Istražite Hrvatsku kroz vrijeme" */}
+      <section className="py-20 px-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <div className="w-full max-w-full sm:max-w-6xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+            {t('home.exploreCroatiaTitle')}
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-3xl mx-auto">
+            {t('home.exploreCroatiaDesc')}
+          </p>
+          <Link
+            to="/map"
+            className="inline-flex items-center gap-3 bg-blue-600 text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-lg"
+          >
+            <MapPin className="h-6 w-6" />
+            {t('home.exploreMemoryMap')}
+          </Link>
         </div>
       </section>
 
