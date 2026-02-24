@@ -96,6 +96,10 @@ const [allNotificationsLoaded, setAllNotificationsLoaded] = useState(false);
       return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.rejected')}${reason ? `: ${reason}` : ''}`;
     case 'story_deleted':
       return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.deleted')}${reason ? `: ${reason}` : ''}`;
+    case 'story_liked':
+      return `${actorName} ${t('notifications.likedStory')} "${storyTitle}"`;
+    case 'story_comment':
+      return `${actorName} ${t('notifications.commentedStory')} "${storyTitle}"`;
     case 'user_banned':
       return `${t('notifications.accountBanned')}${reason ? `: ${reason}` : ''}`;
     case 'user_suspended':

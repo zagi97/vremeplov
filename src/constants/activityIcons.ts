@@ -59,7 +59,9 @@ export const NOTIFICATION_ICONS: Record<string, IconConfig> = {
   user_unsuspended: { icon: ShieldCheck, color: 'text-green-600 bg-green-50' },
   story_approved: { icon: BookOpen, color: 'text-green-600 bg-green-50' },
   story_rejected: { icon: BookOpen, color: 'text-red-600 bg-red-50' },
-  story_deleted: { icon: BookOpen, color: 'text-gray-600 bg-gray-50' }
+  story_deleted: { icon: BookOpen, color: 'text-gray-600 bg-gray-50' },
+  story_liked: { icon: Heart, color: 'text-red-600 bg-red-50' },
+  story_comment: { icon: MessageCircle, color: 'text-blue-600 bg-blue-50' }
 };
 
 /**

@@ -241,27 +241,16 @@ class UserStatsService {
    */
   async getUserStatsForPeriod(userId: string, fromDate: Date): Promise<UserProfile['stats']> {
     try {
-      // Get photos uploaded since the date
-      const { photoService } = await import('../firebaseService');
+      // Query approved photos by uploader within time period directly
+      const photosQuery = query(
+        collection(db, 'photos'),
+        where('uploaderId', '==', userId),
+        where('isApproved', '==', true),
+        where('createdAt', '>=', fromDate)
+      );
 
-      // ✅ Try getPhotosByUploader first, fallback to getAllPhotos if index is missing
-      let allPhotos;
-      try {
-        allPhotos = await photoService.getPhotosByUploader(userId);
-      } catch (error: any) {
-        console.warn(`⚠️  getPhotosByUploader failed for ${userId}, using fallback. Error: ${error.message}`);
-        // Fallback: Get all photos and filter manually
-        const allPhotosList = await photoService.getAllPhotos();
-        allPhotos = allPhotosList.filter(p =>
-          p.uploaderId === userId || p.authorId === userId
-        );
-      }
-
-      // ✅ Filter to only count APPROVED photos within the time period
-      const periodPhotos = allPhotos.filter(photo => {
-        const photoDate = photo.createdAt?.toDate() || new Date(photo.uploadedAt || 0);
-        return photoDate >= fromDate && photo.isApproved === true;
-      });
+      const snapshot = await getDocs(photosQuery);
+      const periodPhotos = snapshot.docs.map(doc => doc.data());
 
       const totalLikes = periodPhotos.reduce((sum, photo) => sum + (photo.likes || 0), 0);
       const totalViews = periodPhotos.reduce((sum, photo) => sum + (photo.views || 0), 0);

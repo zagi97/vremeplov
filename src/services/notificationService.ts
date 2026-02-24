@@ -24,7 +24,8 @@ export interface NotificationData {
         'comment_deleted' | 'photo_edited' | 'photo_deleted' |
         'user_suspended' | 'user_banned' | 'user_unsuspended' | 'user_unbanned' |
         'new_comment' | 'new_like' | 'new_follower' | 'new_tag' | 'badge_earned' |
-        'story_approved' | 'story_rejected' | 'story_deleted';
+        'story_approved' | 'story_rejected' | 'story_deleted' |
+        'story_liked' | 'story_comment';
   storyId?: string;
   storyTitle?: string;
   reason?: string;
@@ -442,6 +443,54 @@ export const notifyStoryDeleted = async (
   });
 };
 
+/**
+ * Helper: Create notification for story liked
+ */
+export const notifyStoryLiked = async (
+  storyOwnerId: string,
+  actorId: string,
+  actorName: string,
+  storyId: string,
+  storyTitle: string,
+  actorPhotoURL?: string
+): Promise<void> => {
+  if (storyOwnerId === actorId) return;
+
+  await sendNotification({
+    userId: storyOwnerId,
+    type: 'story_liked',
+    storyId,
+    storyTitle,
+    actorId,
+    actorName,
+    actorPhotoURL
+  });
+};
+
+/**
+ * Helper: Create notification for story comment
+ */
+export const notifyStoryComment = async (
+  storyOwnerId: string,
+  actorId: string,
+  actorName: string,
+  storyId: string,
+  storyTitle: string,
+  actorPhotoURL?: string
+): Promise<void> => {
+  if (storyOwnerId === actorId) return;
+
+  await sendNotification({
+    userId: storyOwnerId,
+    type: 'story_comment',
+    storyId,
+    storyTitle,
+    actorId,
+    actorName,
+    actorPhotoURL
+  });
+};
+
 export const notificationService = {
   sendNotification,
   getUserNotifications,
@@ -458,5 +507,7 @@ export const notificationService = {
   notifyPhotoRejected,
   notifyStoryApproved,
   notifyStoryRejected,
-  notifyStoryDeleted
+  notifyStoryDeleted,
+  notifyStoryLiked,
+  notifyStoryComment
 };

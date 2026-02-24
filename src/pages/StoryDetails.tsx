@@ -169,9 +169,10 @@ const StoryDetails = () => {
         setLikes(newLikes);
         setUserHasLiked(true);
 
-        // Log activity (non-critical)
+        // Log activity + send notification (non-critical)
         try {
           const { userService } = await import('../services/user');
+          const { notifyStoryLiked } = await import('../services/notificationService');
           await userService.addUserActivity(
             user.uid,
             'story_liked',
@@ -181,6 +182,16 @@ const StoryDetails = () => {
               targetId: storyId
             }
           );
+          if (story?.authorId) {
+            await notifyStoryLiked(
+              story.authorId,
+              user.uid,
+              user.displayName || user.email || 'Unknown',
+              storyId,
+              story.title,
+              user.photoURL || undefined
+            );
+          }
         } catch (activityError) {
           console.error('Error logging story like activity:', activityError);
         }
@@ -338,7 +349,13 @@ const StoryDetails = () => {
 
           {/* Comments */}
           <div className="mt-8">
-            <PhotoComments photoId={storyId!} />
+            <PhotoComments
+              photoId={storyId!}
+              photoAuthorId={story?.authorId}
+              photoAuthor={story?.authorName}
+              isStory={true}
+              storyTitle={story?.title}
+            />
           </div>
         </article>
       </div>

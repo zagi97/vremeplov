@@ -37,9 +37,11 @@ interface PhotoCommentsProps {
   photoAuthor?: string;
   photoAuthorId?: string;
   isPhotoPending?: boolean;
+  isStory?: boolean;
+  storyTitle?: string;
 }
 
-const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = false }: PhotoCommentsProps) => {
+const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = false, isStory = false, storyTitle }: PhotoCommentsProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -196,17 +198,28 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
       return [...prev.filter(ts => ts > oneMinuteAgo), submissionTime];
     });
 
-    // ✅✅✅ Send notification to photo owner
+    // ✅✅✅ Send notification to photo/story owner
     if (photoAuthorId && photoAuthorId !== user.uid) {
       try {
-        await notificationService.notifyNewComment(
-          photoAuthorId,
-          user.uid,
-          user.displayName || 'Anonymous',
-          photoId,
-          photoAuthor || 'untitled photo',
-          user.photoURL || undefined
-        );
+        if (isStory) {
+          await notificationService.notifyStoryComment(
+            photoAuthorId,
+            user.uid,
+            user.displayName || 'Anonymous',
+            photoId,
+            storyTitle || 'priča',
+            user.photoURL || undefined
+          );
+        } else {
+          await notificationService.notifyNewComment(
+            photoAuthorId,
+            user.uid,
+            user.displayName || 'Anonymous',
+            photoId,
+            photoAuthor || 'untitled photo',
+            user.photoURL || undefined
+          );
+        }
       } catch (notifError) {
         console.error('⚠️ Failed to send comment notification:', notifError);
       }

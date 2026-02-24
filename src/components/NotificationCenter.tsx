@@ -74,6 +74,10 @@ const NotificationCenter = ({
         return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.rejected')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'story_deleted':
         return `${t('notifications.yourStory')} "${storyTitle}" ${t('notifications.deleted')}${shortReason ? `: ${shortReason}` : ''}`;
+      case 'story_liked':
+        return `${actorName} ${t('notifications.likedStory')} "${storyTitle}"`;
+      case 'story_comment':
+        return `${actorName} ${t('notifications.commentedStory')} "${storyTitle}"`;
       case 'user_banned':
         return `${t('notifications.accountBanned')}${shortReason ? `: ${shortReason}` : ''}`;
       case 'user_suspended':
