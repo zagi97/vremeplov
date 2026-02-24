@@ -78,6 +78,7 @@ export const getActivityDisplay = (activityType: string, t: (key: string) => str
     comment_added: t('profile.activityComment'),
     person_tagged: t('profile.activityTagged'),
     story_published: t('profile.activityPublishedStory'),
+    story_liked: t('profile.activityLikedStory'),
   };
 
   return {
@@ -97,6 +98,7 @@ export const getActivityLink = (activity: UserActivity): string | null => {
     case 'person_tagged':
       return activity.metadata?.targetId ? `/photo/${activity.metadata.targetId}` : null;
     case 'story_published':
+    case 'story_liked':
       return activity.metadata?.targetId ? `/story/${activity.metadata.targetId}` : null;
     case 'user_follow':
       return activity.metadata?.targetId ? `/user/${activity.metadata.targetId}` : null;

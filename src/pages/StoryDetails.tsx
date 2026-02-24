@@ -168,6 +168,22 @@ const StoryDetails = () => {
         await updateDoc(storyRef, { likes: newLikes, updatedAt: Timestamp.now() });
         setLikes(newLikes);
         setUserHasLiked(true);
+
+        // Log activity (non-critical)
+        try {
+          const { userService } = await import('../services/user');
+          await userService.addUserActivity(
+            user.uid,
+            'story_liked',
+            storyId,
+            {
+              storyTitle: story?.title,
+              targetId: storyId
+            }
+          );
+        } catch (activityError) {
+          console.error('Error logging story like activity:', activityError);
+        }
       }
     } catch (error) {
       console.error('Error toggling like:', error);

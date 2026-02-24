@@ -67,11 +67,12 @@ const CommunityLeaderboard = () => {
     totalMembers: 0,
     photosShared: 0,
     locationsDocumented: 0,
-    totalLikes: 0
+    totalLikes: 0,
+    totalStories: 0
   });
   const [monthlyHighlights, setMonthlyHighlights] = useState<MonthlyHighlights>({
     mostActiveLocation: { name: t('common.loading'), photoCount: 0 },
-    photoOfTheMonth: { title: t('common.loading'), author: t('common.loading') },
+    photoOfTheMonth: { id: null, title: t('common.loading'), author: t('common.loading') },
     newMembers: { count: 0, percentageChange: 0 }
   });
 
@@ -732,6 +733,10 @@ const CommunityLeaderboard = () => {
                           <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.locationsDocumented.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between text-sm sm:text-base">
+                          <span className="text-gray-600 dark:text-gray-400">{t('community.storiesShared')}</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.totalStories.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-sm sm:text-base">
                           <span className="text-gray-600 dark:text-gray-400">{t('profile.totalLikes')}</span>
                           <span className="font-bold text-gray-900 dark:text-gray-100">{communityStats.totalLikes.toLocaleString()}</span>
                         </div>
@@ -762,7 +767,7 @@ const CommunityLeaderboard = () => {
                             </Link>
                           ) : (
                             <div className="font-medium text-base sm:text-lg text-red-500 dark:text-red-400 truncate">
-                              {monthlyHighlights.mostActiveLocation.name}
+                              {t('community.noActivity')}
                             </div>
                           )}
                           <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -783,12 +788,14 @@ const CommunityLeaderboard = () => {
                             </Link>
                           ) : (
                             <div className="font-medium text-base sm:text-lg text-gray-900 dark:text-gray-100 line-clamp-2">
-                              {monthlyHighlights.photoOfTheMonth.title}
+                              {t('community.noPhotosThisPeriod')}
                             </div>
                           )}
-                          <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                            {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
-                          </div>
+                          {monthlyHighlights.photoOfTheMonth.id && (
+                            <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                              {t('community.by')} {monthlyHighlights.photoOfTheMonth.author}
+                            </div>
+                          )}
                         </div>
 
                         <div>

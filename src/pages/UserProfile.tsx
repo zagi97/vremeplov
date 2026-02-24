@@ -548,12 +548,18 @@ if (loading) {
 
                       <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <h3 className="font-semibold mb-2 text-center dark:text-white">{t('profile.collectionOverview')}</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div className="text-center">
                             <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                               {profile.stats.totalPhotos}
                             </div>
                             <div className="text-gray-500 dark:text-gray-400">{t('profile.totalPhotos')}</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                              {userStories.length}
+                            </div>
+                            <div className="text-gray-500 dark:text-gray-400">{t('profile.totalStories')}</div>
                           </div>
                           <div className="text-center">
                             <div className="text-lg font-bold text-green-600 dark:text-green-400">
@@ -772,6 +778,10 @@ if (loading) {
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.totalPhotos')}</span>
                           <span className="font-bold text-blue-600 dark:text-blue-400">{profile.stats.totalPhotos}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.totalStories')}</span>
+                          <span className="font-bold text-indigo-600 dark:text-indigo-400">{userStories.length}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.uniqueLocations')}</span>

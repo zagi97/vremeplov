@@ -164,12 +164,14 @@ class UserLeaderboardService {
         storiesQuery = query(
           collection(db, 'stories'),
           where('authorId', '==', userId),
+          where('isApproved', '==', true),
           where('createdAt', '>=', dateFilter)
         );
       } else {
         storiesQuery = query(
           collection(db, 'stories'),
-          where('authorId', '==', userId)
+          where('authorId', '==', userId),
+          where('isApproved', '==', true)
         );
       }
       const snapshot = await getDocs(storiesQuery);
@@ -240,13 +242,29 @@ class UserLeaderboardService {
         );
       }
 
-      const [usersSnapshot, photosSnapshot] = await Promise.all([
+      // Stories query
+      let storiesQuery = query(
+        collection(db, 'stories'),
+        where('isApproved', '==', true)
+      );
+
+      if (startDate) {
+        storiesQuery = query(
+          collection(db, 'stories'),
+          where('isApproved', '==', true),
+          where('createdAt', '>=', startDate)
+        );
+      }
+
+      const [usersSnapshot, photosSnapshot, storiesSnapshot] = await Promise.all([
         getDocs(query(collection(db, 'users'))),
-        getDocs(photosQuery)
+        getDocs(photosQuery),
+        getDocs(storiesQuery)
       ]);
 
       const totalMembers = usersSnapshot.size;
       const photosShared = photosSnapshot.size;
+      const totalStories = storiesSnapshot.size;
 
       let totalLikes = 0;
       const locationSet = new Set<string>();
@@ -261,11 +279,12 @@ class UserLeaderboardService {
         totalMembers,
         photosShared,
         locationsDocumented: locationSet.size,
-        totalLikes
+        totalLikes,
+        totalStories
       };
     } catch (error) {
       console.error('Error fetching community stats:', error);
-      return { totalMembers: 0, photosShared: 0, locationsDocumented: 0, totalLikes: 0 };
+      return { totalMembers: 0, photosShared: 0, locationsDocumented: 0, totalLikes: 0, totalStories: 0 };
     }
   }
 

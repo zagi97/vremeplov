@@ -73,7 +73,7 @@ export interface FollowRelationship {
 export interface UserActivity {
   id?: string;
   userId: string;
-  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added' | 'person_tagged' | 'story_published';
+  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added' | 'person_tagged' | 'story_published' | 'story_liked';
   metadata?: {
     photoTitle?: string;
     storyTitle?: string;
@@ -123,6 +123,7 @@ export interface CommunityStats {
   photosShared: number;
   locationsDocumented: number;
   totalLikes: number;
+  totalStories: number;
 }
 
 export interface MonthlyHighlights {
