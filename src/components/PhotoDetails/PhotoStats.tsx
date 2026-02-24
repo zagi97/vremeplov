@@ -109,31 +109,31 @@ export const PhotoStats: React.FC<PhotoStatsProps> = ({
       </div>
 
       {/* Mobile layout (below md) - stacked design */}
-      <div className="md:hidden space-y-3">
-        {/* Stats */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-            <Eye className="h-5 w-5" />
+      <div className="md:hidden flex flex-col gap-3">
+        {/* Stats row */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+            <Eye className="h-4 w-4" />
             <span className="text-sm">{views} {viewsText}</span>
           </div>
           <button
             onClick={() => likes > 0 && setLikesModalOpen(true)}
-            className={`flex items-center gap-2 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
+            className={`flex items-center gap-1.5 text-gray-600 dark:text-gray-400 ${likes > 0 ? 'hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors' : ''}`}
             disabled={likes === 0}
           >
-            <Heart className={`h-5 w-5 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
+            <Heart className={`h-4 w-4 ${userHasLiked ? 'fill-red-500 text-red-500' : ''}`} />
             <span className="text-sm">{likes} {likesText}</span>
           </button>
           {taggedPersonsCount > 0 && (
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <Users className="h-5 w-5" />
+            <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
+              <Users className="h-4 w-4" />
               <span className="text-sm">{taggedPersonsCount} {t('photoDetail.taggedPeople')}</span>
             </div>
           )}
         </div>
 
-        {/* Like Button - full width */}
-        <div className="w-full">
+        {/* Like Button - full width, clearly below stats */}
+        <div>
           {user ? (
             <Button
               onClick={onLike}

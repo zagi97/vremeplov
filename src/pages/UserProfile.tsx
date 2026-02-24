@@ -622,7 +622,7 @@ if (loading) {
 
                                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                                   <User className="h-4 w-4 mr-1 flex-shrink-0" />
-                                  <span className="truncate">{photo.author || photo.uploadedBy || t('profile.unknown')}</span>
+                                  <span className="truncate">{(photo.author && photo.author !== 'Unknown' ? photo.author : null) || (photo.uploadedBy && photo.uploadedBy !== 'Unknown' ? photo.uploadedBy : null) || t('profile.unknown')}</span>
                                 </div>
 
                                 <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
