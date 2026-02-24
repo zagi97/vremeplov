@@ -73,9 +73,10 @@ export interface FollowRelationship {
 export interface UserActivity {
   id?: string;
   userId: string;
-  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added' | 'person_tagged';
+  type: 'photo_upload' | 'photo_like' | 'user_follow' | 'badge_earned' | 'comment_added' | 'person_tagged' | 'story_published';
   metadata?: {
     photoTitle?: string;
+    storyTitle?: string;
     targetUserName?: string;
     badgeName?: string;
     location?: string;

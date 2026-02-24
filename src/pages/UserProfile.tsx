@@ -695,11 +695,21 @@ if (loading) {
                     <div className="space-y-4">
                       {userStories.map((story) => (
                         <Link key={story.id} to={`/story/${story.id}`} className="block">
-                          <Card className="hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
+                          <Card className={`hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 ${!story.isApproved ? 'opacity-75' : ''}`}>
                             <CardContent className="p-5 sm:p-6">
-                              <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
-                                {story.title}
-                              </h3>
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 line-clamp-1">
+                                  {story.title}
+                                </h3>
+                                {!story.isApproved && (
+                                  <span className="bg-yellow-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap flex items-center gap-1">
+                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {t('profile.pendingApproval')}
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
                                 {story.content}
                               </p>
@@ -874,6 +884,11 @@ if (loading) {
                                       {activity.metadata?.photoTitle && (
                                         <span className="font-medium text-blue-600 dark:text-blue-400 truncate">
                                           "{activity.metadata.photoTitle}"
+                                        </span>
+                                      )}
+                                      {activity.metadata?.storyTitle && (
+                                        <span className="font-medium text-indigo-600 dark:text-indigo-400 truncate">
+                                          "{activity.metadata.storyTitle}"
                                         </span>
                                       )}
                                       {activity.metadata?.targetUserName && (

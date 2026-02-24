@@ -71,7 +71,8 @@ export const ACTIVITY_DISPLAY: Record<string, ActivityConfig> = {
   user_follow: { text: 'started following', icon: UserPlus, color: 'text-green-600' },
   badge_earned: { text: 'earned a badge', icon: Award, color: 'text-yellow-600' },
   comment_added: { text: 'added a comment', icon: MessageCircle, color: 'text-purple-600' },
-  person_tagged: { text: 'tagged someone in', icon: Tag, color: 'text-orange-600' }
+  person_tagged: { text: 'tagged someone in', icon: Tag, color: 'text-orange-600' },
+  story_published: { text: 'published a story', icon: BookOpen, color: 'text-indigo-600' }
 };
 
 /**

@@ -64,6 +64,23 @@ export class StoryService {
       // Invalidate cache
       this.clearLocationCache(storyData.location);
 
+      // Add user activity (non-critical)
+      try {
+        const { userService } = await import('../user');
+        await userService.addUserActivity(
+          currentUser.uid,
+          'story_published',
+          docRef.id,
+          {
+            storyTitle: storyData.title,
+            location: storyData.location,
+            targetId: docRef.id
+          }
+        );
+      } catch (activityError) {
+        console.error('⚠️ Error adding story activity (non-critical):', activityError);
+      }
+
       return docRef.id;
     } catch (error) {
       console.error('Error adding story:', error);
