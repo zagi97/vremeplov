@@ -179,8 +179,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
             </div>
 
             {/* Always visible: notifications & profile */}
-            <NotificationBell className="text-white hover:text-white" />
-            <UserProfile className="text-white" />
+            <div className="flex items-center gap-1.5 sm:gap-2" onClickCapture={() => menuOpen && setMenuOpen(false)}>
+              <NotificationBell className="text-white hover:text-white" />
+              <UserProfile className="text-white" />
+            </div>
 
             {/* Hamburger button - mobile only */}
             <Button
