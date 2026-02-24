@@ -40,7 +40,7 @@ import LanguageSelector from "../components/LanguageSelector";
 import Footer from "@/components/Footer";
 import { notificationService } from '../services/notificationService';
 import PageHeader from '@/components/PageHeader';
-import { formatActivityDate } from '../utils/dateUtils';
+import { formatActivityDate, formatYear } from '../utils/dateUtils';
 import LoadingScreen from '@/components/LoadingScreen';
 import { useUserProfileData } from '@/hooks/useUserProfileData';
 import { getActivityDisplay, getActivityLink, getBadgeDetails } from '@/utils/userProfileHelpers';
@@ -612,7 +612,7 @@ if (loading) {
 
                                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
                                   <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                                  <span>{photo.year || t('profile.unknown')}</span>
+                                  <span>{formatYear(photo.year, t)}</span>
                                 </div>
 
                                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
