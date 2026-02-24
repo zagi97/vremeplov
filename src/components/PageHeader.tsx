@@ -178,8 +178,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
               <LanguageSelector />
             </div>
 
-            {/* Always visible: notifications & profile */}
-            <div className="flex items-center gap-1.5 sm:gap-2" onClickCapture={() => menuOpen && setMenuOpen(false)}>
+            {/* Notifications & profile - hidden on mobile when menu is open */}
+            <div className={`flex items-center gap-1.5 sm:gap-2 ${menuOpen ? 'hidden md:flex' : ''}`}>
               <NotificationBell className="text-white hover:text-white" />
               <UserProfile className="text-white" />
             </div>
