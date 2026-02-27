@@ -903,7 +903,7 @@ if (loading) {
                                   to={activityLink || '#'}
                                   className={`flex gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg transition-colors ${
                                     activityLink
-                                      ? 'hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
+                                      ? 'hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 cursor-pointer'
                                       : 'cursor-default'
                                   }`}
                                   onClick={(e) => !activityLink && e.preventDefault()}
