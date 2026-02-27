@@ -474,6 +474,22 @@ export class PhotoService {
           totalPhotos: 1
         });
         await userService.checkAndAwardBadges(currentUser.uid);
+
+        // Add activity (non-critical)
+        try {
+          await userService.addUserActivity(
+            currentUser.uid,
+            'photo_upload',
+            docRef.id,
+            {
+              photoTitle: photoData.description,
+              location: photoData.location,
+              targetId: docRef.id
+            }
+          );
+        } catch (activityError) {
+          console.error('⚠️ Error adding photo upload activity (non-critical):', activityError);
+        }
       }
 
       return docRef.id;
