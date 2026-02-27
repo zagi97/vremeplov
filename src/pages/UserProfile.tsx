@@ -701,7 +701,7 @@ if (loading) {
                     <div className="space-y-4">
                       {userStories.map((story) => (
                         <Link key={story.id} to={`/story/${story.id}`} className="block">
-                          <Card className={`hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700 ${!story.isApproved ? 'opacity-75' : ''}`}>
+                          <Card className={`hover:shadow-lg transition-all dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-700/70 ${!story.isApproved ? 'opacity-75' : ''}`}>
                             <CardContent className="p-5 sm:p-6">
                               <div className="flex items-start justify-between gap-2 mb-2">
                                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 line-clamp-1">
