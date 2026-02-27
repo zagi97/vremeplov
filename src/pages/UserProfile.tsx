@@ -766,7 +766,17 @@ if (loading) {
                 </TabsContent>
 
                 <TabsContent value="stats" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {(() => {
+                    const approvedStories = userStories.filter(s => s.isApproved);
+                    const storyLikes = approvedStories.reduce((sum, s) => sum + (s.likes || 0), 0);
+                    const storyViews = approvedStories.reduce((sum, s) => sum + (s.views || 0), 0);
+                    const storyUniqueLocations = new Set(approvedStories.map(s => s.location).filter(Boolean));
+                    const photoUniqueLocations = new Set(userPhotos.map(p => p.location).filter(Boolean));
+                    const combinedLocations = new Set([...photoUniqueLocations, ...storyUniqueLocations]);
+                    const combinedUniqueLocations = Math.max(combinedLocations.size, profile.stats.locationsContributed);
+
+                    return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
@@ -785,15 +795,15 @@ if (loading) {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.uniqueLocations')}</span>
-                          <span className="font-bold text-green-600 dark:text-green-400">{profile.stats.locationsContributed}</span>
+                          <span className="font-bold text-green-600 dark:text-green-400">{combinedUniqueLocations}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.totalLikesReceived')}</span>
-                          <span className="font-bold text-red-600 dark:text-red-400">{profile.stats.totalLikes}</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">{profile.stats.totalLikes + storyLikes}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.totalViews')}</span>
-                          <span className="font-bold text-purple-600 dark:text-purple-400">{profile.stats.totalViews}</span>
+                          <span className="font-bold text-purple-600 dark:text-purple-400">{profile.stats.totalViews + storyViews}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.achievementsEarned')}</span>
@@ -837,6 +847,24 @@ if (loading) {
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.avgLikesPerStory')}</span>
+                          <span className="font-bold text-red-600 dark:text-red-400">
+                            {approvedStories.length > 0
+                              ? Math.round(storyLikes / approvedStories.length)
+                              : 0
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-700 dark:text-gray-300">{t('profile.avgViewsPerStory')}</span>
+                          <span className="font-bold text-purple-600 dark:text-purple-400">
+                            {approvedStories.length > 0
+                              ? Math.round(storyViews / approvedStories.length)
+                              : 0
+                            }
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
                           <span className="text-gray-700 dark:text-gray-300">{t('profile.memberSince')}</span>
                           <span className="font-bold text-gray-600 dark:text-gray-300">
                             {profile.joinedAt?.toDate ?
@@ -848,6 +876,8 @@ if (loading) {
                       </CardContent>
                     </Card>
                   </div>
+                    );
+                  })()}
                 </TabsContent>
 
                 <TabsContent value="activity" className="mt-6">

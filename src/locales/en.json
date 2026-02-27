@@ -498,6 +498,8 @@
   "profile.communityImpact": "Community Impact",
   "profile.avgLikesPerPhoto": "Avg. Likes per Photo",
   "profile.avgViewsPerPhoto": "Avg. Views per Photo",
+  "profile.avgLikesPerStory": "Avg. Likes per Story",
+  "profile.avgViewsPerStory": "Avg. Views per Story",
   "profile.memberSince": "Member Since",
   "profile.noPhotosYet": "No photos yet",
   "profile.startSharing": "Start sharing your historical photos to build your collection!",
