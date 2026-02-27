@@ -812,7 +812,7 @@ if (loading) {
                       </CardContent>
                     </Card>
 
-                    <Card className="dark:bg-gray-800 dark:border-gray-700">
+                    <Card>
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                           <Users className="h-5 w-5" />

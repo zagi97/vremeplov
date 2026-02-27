@@ -1,7 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, BookOpen, Image, Menu, X } from "lucide-react";
+import { ArrowLeft, MapPin, BookOpen, Image, Menu, X, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NotificationBell from "@/components/NotificationBell";
 import UserProfile from "@/components/UserProfile";
@@ -54,6 +54,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, showTitle = true, fixed 
   }, [menuOpen]);
 
   const navLinks = [
+    { to: "/about", icon: Info, label: t("nav.about") || "O nama" },
     { to: "/photos", icon: Image, label: t("nav.gallery") || "Galerija" },
     { to: "/stories", icon: BookOpen, label: t("nav.stories") || "Priče" },
     { to: "/map", icon: MapPin, label: t("nav.memoryMapShort") || "Karta" },

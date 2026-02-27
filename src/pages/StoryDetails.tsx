@@ -255,17 +255,10 @@ const StoryDetails = () => {
       />
       <PageHeader title="Vremeplov.hr" />
 
-      <div className="mt-16 flex-1">
+      <div className="mt-20 flex-1">
         {/* Back button */}
         <div className="container max-w-4xl mx-auto px-4 pt-6">
-          <Button
-            variant="ghost"
-            onClick={handleBack}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            {t('stories.back')}
-          </Button>
+         
         </div>
 
         {/* Story content */}
