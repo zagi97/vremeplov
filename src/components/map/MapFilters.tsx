@@ -51,9 +51,9 @@ export const MapFilters: React.FC<MapFiltersProps> = ({
               aria-label={t('mapView.filterByDecade')}
               className="appearance-none px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 w-full md:min-w-[200px] cursor-pointer"
             >
-              <option value="all">{t('mapView.allDecades')}</option>
+              <option value="all" className="dark:bg-gray-700 dark:text-white">{t('mapView.allDecades')}</option>
               {availableDecades.map(decade => (
-                <option key={decade} value={decade.toString()}>
+                <option key={decade} value={decade.toString()} className="dark:bg-gray-700 dark:text-white">
                   {decade}{t('filter.decade')} ({decade}-{decade + 9})
                 </option>
               ))}

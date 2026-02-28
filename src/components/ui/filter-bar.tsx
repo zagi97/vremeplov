@@ -59,7 +59,7 @@ export function FilterBar({
           className="px-3 py-2 border border-input bg-background dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {filterOptions.map(option => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} className="dark:bg-gray-700 dark:text-white">
               {option.icon && `${option.icon} `}{option.label}
             </option>
           ))}
@@ -74,7 +74,7 @@ export function FilterBar({
           className="px-3 py-2 border border-input bg-background dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
         >
           {sortOptions.map(option => (
-            <option key={option.value} value={option.value}>
+            <option key={option.value} value={option.value} className="dark:bg-gray-700 dark:text-white">
               {option.label}
             </option>
           ))}
