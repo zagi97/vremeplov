@@ -442,10 +442,13 @@ if (loading) {
                                                             </Link>
                                                         ))}
                                                     </div>
-                                                    {item.cluster.count > 8 && (
-                                                        <div className="text-center mt-2 text-sm text-gray-500">
-                                                            +{item.cluster.count - 8} more photos
-                                                        </div>
+                                                    {item.cluster.count > 8 && item.cluster.photos[0]?.location && (
+                                                        <Link
+                                                            to={`/location/${encodeURIComponent(item.cluster.photos[0].location)}`}
+                                                            className="block text-center mt-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                                        >
+                                                            {translateWithParams(t, 'mapView.viewAllPhotos', { count: item.cluster.count })}
+                                                        </Link>
                                                     )}
                                                 </div>
                                             </Popup>

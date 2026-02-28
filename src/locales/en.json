@@ -277,6 +277,7 @@
   "mapView.viewDetails": "View Details",
   "mapView.photosInArea": "{count} Photos in this area",
   "mapView.morePhotos": "+{count} more photos",
+  "mapView.viewAllPhotos": "View all {count} photos →",
   "mapView.locatedPhotos": "Located Photos",
   "mapView.cities": "Locations",
   "mapView.specificAddresses": "Specific Addresses",
