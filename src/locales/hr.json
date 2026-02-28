@@ -326,6 +326,7 @@
   "mapView.viewDetails": "Pogledaj detalje",
   "mapView.photosInArea": "{count} fotografija u ovom području",
   "mapView.morePhotos": "+{count} fotografija više",
+  "mapView.viewAllPhotos": "Pogledaj svih {count} fotografija →",
   "mapView.locatedPhotos": "Locirane fotografije",
   "mapView.cities": "Lokacije",
   "mapView.specificAddresses": "Točne adrese",
