@@ -1,31 +1,23 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Upload, Calendar, MapPin, User, Image as ImageIcon, Navigation, Search, Tag } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import { photoService, geocodingService } from '../services/firebaseService';
-import { toast } from 'sonner';
-import { useAuth } from '../contexts/AuthContext';
-import { translateWithParams, useLanguage } from '../contexts/LanguageContext';
+import { Upload, Calendar, MapPin, User, Navigation, Tag } from "lucide-react";
+import { useLanguage } from '../contexts/LanguageContext';
 import { CharacterCounter } from "./ui/character-counter";
 import PhotoTagger from "./PhotoTagger";
 import { TooltipProvider } from "./ui/tooltip";
-import { SimpleMiniMap } from "./SimpleMiniMap";
 import YearPicker from "../components/YearPicker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { userService } from '@/services/user';
 import { municipalityData } from '../../data/municipalities';
 import { parseLocationFromUrl } from '@/utils/locationUtils';
-import { useDebounce } from '@/hooks/useDebounce';
-import { IMAGE_CONFIG, resizeImage, generateImageSizes } from '@/utils/imageOptimization';
-import { searchCache, getUploadTitle, extractHouseNumber, getPhotoTypeOptions } from '@/utils/photoUploadHelpers';
-import { useFileUpload } from '@/hooks/useFileUpload';
-import { isPhotoUploadFormValid, validateCityBounds } from '@/utils/photoUploadValidation';
+import { getUploadTitle, getPhotoTypeOptions } from '@/utils/photoUploadHelpers';
+import { isPhotoUploadFormValid } from '@/utils/photoUploadValidation';
 import { ManualLocationPicker } from './PhotoUpload/ManualLocationPicker';
 import { LocationConfirmation } from './PhotoUpload/LocationConfirmation';
 import { AddressAutocomplete } from './PhotoUpload/AddressAutocomplete';
+import { usePhotoUpload } from '@/hooks/usePhotoUpload';
 
 interface PhotoUploadProps {
   locationName: string;
@@ -33,372 +25,44 @@ interface PhotoUploadProps {
   onCancel?: () => void;
 }
 
-const PhotoUpload: React.FC<PhotoUploadProps> = ({ 
-  locationName, 
-  onSuccess, 
-  onCancel 
+const PhotoUpload: React.FC<PhotoUploadProps> = ({
+  locationName,
+  onSuccess,
+  onCancel
 }) => {
-  // Hooks
   const { t } = useLanguage();
-
 
   const decodedLocationName = decodeURIComponent(locationName);
   const parsedLocation = parseLocationFromUrl(decodedLocationName, municipalityData);
 
-  const { user } = useAuth();
-
   const PHOTO_TYPES = getPhotoTypeOptions(t);
 
-  // File upload hook
-  const { selectedFile, previewUrl, handleFileChange, removeFile: removeFileBase } = useFileUpload(t);
-
-  // Basic state
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [uploading, setUploading] = useState(false);
-
-  // Extended remove file handler that also clears tagged persons
-  const removeFile = useCallback(() => {
-    removeFileBase();
-    setTaggedPersons([]);
-  }, [removeFileBase]);
-
-  // Address state (simplified - most logic in AddressAutocomplete)
-  const [addressSearch, setAddressSearch] = useState<string>('');
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
-  const [coordinates, setCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
-
-  // Manual positioning state
-  const [needsManualPositioning, setNeedsManualPositioning] = useState(false);
-  const [streetOnlyCoordinates, setStreetOnlyCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
-  const [houseNumber, setHouseNumber] = useState<string>('');
-  const [streetName, setStreetName] = useState<string>('');
-  const [manualMarkerPosition, setManualMarkerPosition] = useState<{latitude: number, longitude: number} | null>(null);
-
-  // Tagged persons state
-  const [taggedPersons, setTaggedPersons] = useState<Array<{
-    id: string;
-    name: string;
-    x: number;
-    y: number;
-  }>>([]);
-
-  // Form data
-  const [formData, setFormData] = useState({
-    year: '',
-    description: '',
-    detailedDescription: '',
-    author: '',
-    photoType: '',
-    sublocation: '',
-  });
-
-    // Handler for when address is selected from autocomplete
-  const handleAddressSelect = (address: string, coords: { latitude: number; longitude: number } | null) => {
-    setSelectedAddress(address);
-    setAddressSearch(address);
-
-    if (coords) {
-      setCoordinates(coords);
-      toast.success(t('upload.locationFound'));
-    } else {
-      toast.warning(t('upload.coordinatesNotFound'));
-    }
-  };
-
-  // Handler for manual positioning (when street found but not exact address)
-  const handleManualPositioning = (
-    streetCoords: { latitude: number; longitude: number },
-    streetName: string,
-    houseNumber: string,
-    fullAddress: string
-  ) => {
-    setStreetOnlyCoordinates(streetCoords);
-    setStreetName(streetName);
-    setHouseNumber(houseNumber);
-    setSelectedAddress(fullAddress);
-    setAddressSearch(fullAddress);
-    setNeedsManualPositioning(true);
-  };
-
-  // CLEAR ADDRESS
-  const handleClearAddress = () => {
-    setAddressSearch('');
-    setSelectedAddress('');
-    setCoordinates(null);
-    setNeedsManualPositioning(false);
-    setStreetOnlyCoordinates(null);
-    setHouseNumber('');
-    setStreetName('');
-    setManualMarkerPosition(null);
-  };
-
-  // Monitor online status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
-  // Cleanup preview URL on unmount
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    };
-  }, [previewUrl]);
-
-  // Handle adding a new tag
-  const handleAddTag = (newTag: { name: string; x: number; y: number }) => {
-    const tagWithId = {
-      ...newTag,
-      id: Date.now().toString()
-    };
-    setTaggedPersons(prev => [...prev, tagWithId]);
-  };
-
-  // Handle form submission
-  // Handle form submission - AŽURIRANO s rate limiting
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!user) {
-    toast.error(t('upload.error'));
-    return;
-  }
-  
-  if (!selectedFile) {
-    toast.error(t('upload.error'));
-    return;
-  }
-
-  if (!formData.year || !formData.description || !formData.author) {
-    toast.error(t('upload.fillRequired'));
-    return;
-  }
-
-  // Validate address selection
-  if (addressSearch.trim() !== '' && (!selectedAddress || !coordinates)) {
-    toast.error(t('upload.mustSelectAddress'));
-    return;
-  }
-
-  // Validate coordinates are within city bounds
-  const boundsValidation = validateCityBounds(
+  const {
+    formData,
+    setFormData,
+    uploading,
+    isOnline,
+    selectedFile,
+    previewUrl,
+    addressSearch,
+    selectedAddress,
     coordinates,
+    needsManualPositioning,
     streetOnlyCoordinates,
-    locationName,
-    15 // 15km radius
-  );
-
-  if (!boundsValidation.valid) {
-    toast.error(boundsValidation.errorMessage || t('errors.locationOutOfBounds'), {
-      duration: 5000,
-    });
-    return;
-  }
-
-  if (!navigator.onLine) {
-    toast.error(t('upload.offline'));
-    return;
-  }
-
-  setUploading(true);
-
-  try {
-    const photoId = Date.now().toString();
-
-    // ✅ STEP 1: Generate all image sizes
-const imageSizes = await generateImageSizes(selectedFile);
-
-const timestamp = Date.now();
-// Sanitize location name for filename - handle Croatian characters (č,ć,š,ž,đ → c,c,s,z,d)
-const sanitizedLocation = locationName
-  .normalize('NFD') // Decompose special characters (č → c + combining diacritic)
-  .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (combining marks)
-  .replace(/[^a-zA-Z0-9_-]/g, '-') // Replace remaining non-allowed chars
-  .replace(/-+/g, '-') // Replace multiple hyphens with single
-  .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-const baseName = `${sanitizedLocation}-${timestamp}`;
-
-// ✅ OPTIMIZED: Upload all images in parallel (3x faster!)
-const uploadPromises: Promise<any>[] = [];
-
-// Prepare original upload
-const originalFileName = `${baseName}-original.jpg`;
-uploadPromises.push(
-  photoService.uploadImage(
-    imageSizes.original.blob,
-    originalFileName,
-    user.uid,
-    photoId
-  ).then(url => ({ type: 'original', url }))
-);
-
-// Prepare WebP uploads
-for (const webp of imageSizes.webp) {
-  const webpFileName = `${baseName}-${webp.suffix}.webp`;
-  uploadPromises.push(
-    photoService.uploadImage(
-      webp.blob,
-      webpFileName,
-      user.uid,
-      photoId
-    ).then(url => ({ type: 'webp', url, width: webp.width, suffix: webp.suffix }))
-  );
-}
-
-// Prepare JPEG uploads
-for (const jpeg of imageSizes.jpeg) {
-  const jpegFileName = `${baseName}-${jpeg.suffix}.jpg`;
-  uploadPromises.push(
-    photoService.uploadImage(
-      jpeg.blob,
-      jpegFileName,
-      user.uid,
-      photoId
-    ).then(url => ({ type: 'jpeg', url, width: jpeg.width, suffix: jpeg.suffix }))
-  );
-}
-
-// ✅ Upload all in parallel - 3x faster than sequential!
-const results = await Promise.all(uploadPromises);
-
-// Process results
-const uploadedUrls: {
-  original: string;
-  webp: Array<{ url: string; width: number; suffix: string }>;
-  jpeg: Array<{ url: string; width: number; suffix: string }>;
-} = {
-  original: '',
-  webp: [],
-  jpeg: [],
-};
-
-for (const result of results) {
-  if (result.type === 'original') {
-    uploadedUrls.original = result.url;
-  } else if (result.type === 'webp') {
-    uploadedUrls.webp.push({ url: result.url, width: result.width, suffix: result.suffix });
-  } else if (result.type === 'jpeg') {
-    uploadedUrls.jpeg.push({ url: result.url, width: result.width, suffix: result.suffix });
-  }
-}
-
-const imageUrl = uploadedUrls.original; // For backward compatibility
-
-    let uploaderName = 'Unknown';
-    if (user?.displayName && user.displayName.trim() !== '') {
-      uploaderName = user.displayName.trim();
-    } else if (user?.email && user.email.trim() !== '') {
-      uploaderName = user.email.split('@')[0].trim();
-    }
-
-   // ✅ Prepare photo data object
-const photoData: any = {
-  imageUrl: imageUrl,
-  responsiveImages: {
-    webp: uploadedUrls.webp,
-    jpeg: uploadedUrls.jpeg,
-    original: uploadedUrls.original,
-  },
-  imageDimensions: {
-    width: imageSizes.original.width,
-    height: imageSizes.original.height,
-  },
-  imageStoragePath: `photos/${user.uid}/${photoId}/${baseName}-original.jpg`,
-  year: formData.year,
-  description: formData.description,
-  detailedDescription: formData.detailedDescription,
-  author: formData.author,
-  authorId: user.uid,
-  location: locationName,
-  sublocation: formData.sublocation.trim() || '',
-  photoType: formData.photoType,
-  taggedPersons: taggedPersons.map(person => ({
-    name: person.name,
-    x: person.x,
-    y: person.y,
-    addedByUid: user.uid,
-    isApproved: false
-  })),
-  uploadedBy: uploaderName,
-  uploadedAt: new Date().toISOString()
-};
-
-// ✅ DODAJ coordinates SAMO ako postoje
-if (coordinates && selectedAddress) {
-  photoData.coordinates = {
-    latitude: coordinates.latitude,
-    longitude: coordinates.longitude,
-    address: selectedAddress
-  };
-}
-
-const finalPhotoId = await photoService.addPhoto(photoData);
-
-// ✅ ISPRAVNO - koristi coordinates i selectedAddress
-if (coordinates && selectedAddress) {
-  toast.success(
-    translateWithParams(t, 'upload.successWithLocation', { 
-      address: selectedAddress 
-    })
-  );
-} else {
-  toast.success(t('upload.success'));
-}
-
-
-    // Reset form
-    removeFile(); // Also clears tagged persons
-    handleClearAddress();
-    setFormData({
-      year: '',
-      description: '',
-      detailedDescription: '',
-      author: '',
-      photoType: '',
-      sublocation: ''
-    });
-
-    onSuccess?.();
-    
-  } catch (error: unknown) {
-    console.error('Upload error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      code: (error as any)?.code,
-      serverResponse: (error as any)?.serverResponse,
-      customData: (error as any)?.customData,
-    });
-
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const isStorageError = (err: unknown): err is { code: string } => {
-      return typeof err === 'object' && err !== null && 'code' in err;
-    };
-    const errorCode = isStorageError(error) ? error.code : undefined;
-
-    if (errorCode === 'storage/unauthorized') {
-      toast.error(t('errors.uploadFailed'));
-    } else if (errorCode === 'storage/quota-exceeded') {
-      toast.error(t('errors.uploadStorageFull'));
-    } else if (errorMessage?.includes('network')) {
-      toast.error(t('errors.uploadError'));
-    } else {
-      // Show detailed error message to help debug
-      toast.error(errorMessage || t('upload.error'));
-    }
-  } finally {
-    setUploading(false);
-  }
-};
+    streetName,
+    houseNumber,
+    taggedPersons,
+    handleSubmit,
+    handleFileChange,
+    removeFile,
+    handleAddressSelect,
+    handleManualPositioning,
+    handleClearAddress,
+    handleAddTag,
+    handleManualLocationSelect,
+    handleChangeLocation,
+    handleAddressSearchChange,
+  } = usePhotoUpload({ locationName, onSuccess });
 
   return (
     <Card className="w-full max-w-2xl mx-auto dark:bg-gray-800 dark:border-gray-700">
@@ -455,14 +119,7 @@ if (coordinates && selectedAddress) {
             <AddressAutocomplete
               locationName={locationName}
               value={addressSearch}
-              onChange={(value) => {
-                setAddressSearch(value);
-                // Clear selected address when user starts typing
-                if (selectedAddress && value !== selectedAddress) {
-                  setSelectedAddress('');
-                  setCoordinates(null);
-                }
-              }}
+              onChange={handleAddressSearchChange}
               onAddressSelect={handleAddressSelect}
               onManualPositioning={handleManualPositioning}
               placeholder={t('upload.searchAddress')}
@@ -494,12 +151,7 @@ if (coordinates && selectedAddress) {
               streetOnlyCoordinates={streetOnlyCoordinates}
               streetName={streetName}
               houseNumber={houseNumber}
-              onLocationSelect={(coords) => {
-                setCoordinates(coords);
-                setSelectedAddress(`${streetName} ${houseNumber}`);
-                setAddressSearch(`${streetName} ${houseNumber}`);
-                setNeedsManualPositioning(false);
-              }}
+              onLocationSelect={handleManualLocationSelect}
               t={t}
             />
           )}
@@ -511,19 +163,15 @@ if (coordinates && selectedAddress) {
               selectedAddress={selectedAddress}
               streetName={streetName}
               houseNumber={houseNumber}
-              onChangeLocation={() => {
-                setNeedsManualPositioning(true);
-                setCoordinates(null);
-              }}
+              onChangeLocation={handleChangeLocation}
               onReset={handleClearAddress}
               t={t}
             />
           )}
 
-
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Year - ✅ UPDATED WITH YEARPICKER */}
+            {/* Year */}
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
                 <Calendar className="inline h-4 w-4 mr-1" />
@@ -553,32 +201,33 @@ if (coordinates && selectedAddress) {
               />
               <CharacterCounter currentLength={formData.author.length} maxLength={40} />
             </div>
-            {/* Photo Type - NOVO POLJE */}
-<div>
-  <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
-    <Tag className="inline h-4 w-4 mr-1" />
-     {t('upload.photoType')} *
-  </label>
-  <Select
-    value={formData.photoType}
-    onValueChange={(value) => setFormData({...formData, photoType: value})}
-  >
-    <SelectTrigger>
-      <SelectValue placeholder={t('upload.selectPhotoType')} />
-    </SelectTrigger>
-    <SelectContent>
-      {PHOTO_TYPES.map(type => (
-      <SelectItem
-        key={type.value}
-        value={type.value}
-        className="hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
-      >
-        {type.label}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+
+            {/* Photo Type */}
+            <div>
+              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+                <Tag className="inline h-4 w-4 mr-1" />
+                {t('upload.photoType')} *
+              </label>
+              <Select
+                value={formData.photoType}
+                onValueChange={(value) => setFormData({...formData, photoType: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('upload.selectPhotoType')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {PHOTO_TYPES.map(type => (
+                    <SelectItem
+                      key={type.value}
+                      value={type.value}
+                      className="hover:bg-blue-50 hover:text-blue-700 cursor-pointer"
+                    >
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Location (readonly) */}
@@ -595,7 +244,7 @@ if (coordinates && selectedAddress) {
             />
           </div>
 
-          {/* Sublocation (Mjesto / Kvart) - Optional */}
+          {/* Sublocation */}
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
               <MapPin className="inline h-4 w-4 mr-1" />
@@ -631,23 +280,23 @@ if (coordinates && selectedAddress) {
           </div>
 
           {/* Detailed Description */}
-<div>
-  <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
-    {t('upload.detailedStory')}
-  </label>
-  <Textarea
-    placeholder={t('upload.shareStory')}
-    value={formData.detailedDescription}
-    onChange={(e) => {
-      const value = e.target.value.slice(0, 250);
-      setFormData({...formData, detailedDescription: value});
-    }}
-    maxLength={250}
-    rows={3}
-    className={`bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 ${formData.detailedDescription.length >= 238 ? "border-red-300 focus:border-red-500" : ""}`}
-  />
-  <CharacterCounter currentLength={formData.detailedDescription.length} maxLength={250} />
-</div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
+              {t('upload.detailedStory')}
+            </label>
+            <Textarea
+              placeholder={t('upload.shareStory')}
+              value={formData.detailedDescription}
+              onChange={(e) => {
+                const value = e.target.value.slice(0, 250);
+                setFormData({...formData, detailedDescription: value});
+              }}
+              maxLength={250}
+              rows={3}
+              className={`bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 ${formData.detailedDescription.length >= 238 ? "border-red-300 focus:border-red-500" : ""}`}
+            />
+            <CharacterCounter currentLength={formData.detailedDescription.length} maxLength={250} />
+          </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end space-x-4">
