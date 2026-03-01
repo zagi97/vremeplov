@@ -114,6 +114,24 @@ export function formatFullDate(timestamp: TimestampValue, locale: string = 'hr-H
 }
 
 /**
+ * Formats a timestamp as a short date (abbreviated month)
+ *
+ * @param timestamp - Firebase Timestamp, Date, or string
+ * @param locale - Locale string (default: 'hr-HR')
+ * @returns Formatted date string (e.g., "6. pro 2025")
+ */
+export function formatShortDate(timestamp: TimestampValue, locale: string = 'hr-HR'): string {
+  const date = toDate(timestamp);
+  if (!date) return '';
+
+  return date.toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+/**
  * Formats a timestamp as time only
  *
  * @param timestamp - Firebase Timestamp, Date, or string

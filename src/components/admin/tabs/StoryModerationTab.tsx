@@ -17,6 +17,7 @@ import {
 } from '../../ui/alert-dialog';
 import { Check, X, BookOpen, MapPin, User, Calendar, Edit, Trash2, Save } from 'lucide-react';
 import type { Story } from '../../../services/firebaseService';
+import { formatShortDate } from '../../../utils/dateUtils';
 
 interface StoryModerationTabProps {
   pendingStories: Story[];
@@ -28,16 +29,6 @@ interface StoryModerationTabProps {
   handleDeleteStory: (storyId: string, reason: string) => void;
   handleEditStory: (storyId: string, updates: Partial<Story>) => void;
 }
-
-const formatDate = (timestamp: any) => {
-  if (!timestamp) return '';
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  return date.toLocaleDateString('hr-HR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
 
 function RejectReasonDialog({
   trigger,
@@ -283,7 +274,7 @@ export default function StoryModerationTab({
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {formatDate(story.createdAt)}
+                    {formatShortDate(story.createdAt)}
                   </span>
                 </div>
               </div>

@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { BookOpen, MapPin, Calendar, User, ChevronLeft, ChevronRight, Search, X } from 'lucide-react';
 import { storyService, Story } from '../services/firebaseService';
 import { useLanguage } from '../contexts/LanguageContext';
+import { formatFullDate } from '../utils/dateUtils';
 import PageHeader from '@/components/PageHeader';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -38,15 +39,6 @@ const Stories = () => {
     loadStories();
   }, []);
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('hr-HR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
   // Filter stories by search text
   const filteredStories = useMemo(() => {
@@ -198,7 +190,7 @@ const Stories = () => {
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {formatDate(story.createdAt)}
+                            {formatFullDate(story.createdAt)}
                           </span>
                         </div>
                       </CardContent>

@@ -4,6 +4,7 @@ import { Card, CardContent } from './ui/card';
 import { BookOpen, MapPin, Calendar, User, ArrowRight } from 'lucide-react';
 import { storyService, Story } from '../services/firebaseService';
 import { useLanguage } from '../contexts/LanguageContext';
+import { formatFullDate } from '../utils/dateUtils';
 import { Skeleton } from './ui/skeleton';
 
 const LatestStories = () => {
@@ -26,15 +27,6 @@ const LatestStories = () => {
     loadStories();
   }, []);
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('hr-HR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
   if (loading) {
     return (
@@ -79,7 +71,7 @@ const LatestStories = () => {
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    {formatDate(story.createdAt)}
+                    {formatFullDate(story.createdAt)}
                   </span>
                 </div>
               </CardContent>

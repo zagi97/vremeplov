@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Calendar, User, Heart, Eye } from 'lucide-react';
 import { storyService, Story, likeService, viewService } from '../services/firebaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { formatFullDate } from '../utils/dateUtils';
 import PageHeader from '@/components/PageHeader';
 import Footer from '@/components/Footer';
 import SEO from '@/components/SEO';
@@ -203,15 +204,6 @@ const StoryDetails = () => {
     }
   };
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleDateString('hr-HR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
 
   const handleBack = () => {
     if (window.history.length > 1 && document.referrer) {
@@ -288,7 +280,7 @@ const StoryDetails = () => {
                 </Link>
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  {formatDate(story.createdAt)}
+                  {formatFullDate(story.createdAt)}
                 </span>
               </div>
 
