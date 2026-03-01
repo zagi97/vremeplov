@@ -1,40 +1,33 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Calendar, User, Filter, ArrowLeft, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, User, ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import LazyImage from './LazyImage';
-import { photoService, Photo } from '../services/firebaseService';
-import { toast } from 'sonner';
+import { photoService } from '../services/firebaseService';
 
-import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from '../contexts/LanguageContext';
 import { formatYear } from '@/utils/dateUtils';
 import SEO from './SEO';
 
-// 🆕 Import TypeScript podataka o općinama
-import { municipalityData } from '../../data/municipalities';
-
 // Leaflet imports
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Footer from './Footer';
 import PageHeader from './PageHeader';
-import { fixLeafletIcons, photoIcon, createClusterIcon, getRandomLocationCoordinates } from '@/utils/mapUtils';
+import { fixLeafletIcons, photoIcon, createClusterIcon } from '@/utils/mapUtils';
 import {
     clusterPhotos,
     filterPhotosWithCoordinates,
     PhotoWithCoordinates,
-    ClusterGroup,
-    ClusteredMarker
 } from '@/utils/mapClustering';
 import { MapFilters } from './map/MapFilters';
+import MapViewSkeleton from './map/MapViewSkeleton';
+import MapPhotoGrid from './map/MapPhotoGrid';
+import MapStatistics from './map/MapStatistics';
 
 // Fix Leaflet icons on component mount
 fixLeafletIcons();
 
-// Dodaj novu komponentu koja će pratiti resize
 const MapController = () => {
     const map = useMap();
     
@@ -59,92 +52,6 @@ const MapController = () => {
 };
 
 
-// Dodaj ovu komponentu prije MapView komponente
-
-const MapViewSkeleton = () => {
-  const { t } = useLanguage();
-  
-  return (
-    <div className="min-h-screen bg-[#F8F9FA] dark:bg-gray-900 flex flex-col">
-      <PageHeader title="Vremeplov.hr" fixed={false} />
-
-      {/* Hero section skeleton */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-12">
-        <div className="container max-w-5xl mx-auto px-4 text-center">
-          <div className="h-9 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mb-3" />
-          <div className="h-6 w-96 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto" />
-        </div>
-      </div>
-
-      {/* Filters skeleton */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 py-4">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-            <div className="h-5 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-10 flex-1 md:flex-initial md:max-w-xs bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse md:ml-auto" />
-          </div>
-        </div>
-      </div>
-
-      {/* Map skeleton */}
-      <div className="container max-w-6xl mx-auto px-4 py-6 flex-1">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden mb-8">
-          <div className="h-[50vh] md:h-[60vh] lg:h-[600px] bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">{t('mapView.loadingMemoryMap')}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Photo grid skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
-              <div className="h-64 bg-gray-200 dark:bg-gray-700 animate-pulse" />
-              <div className="p-5 space-y-3">
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
-                <div className="space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-2/3" />
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
-                </div>
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/3" />
-                <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Statistics skeleton */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
-              <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto mb-2" />
-              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mx-auto" />
-            </div>
-          ))}
-        </div>
-
-        {/* Info box skeleton */}
-        <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <div className="h-5 w-48 bg-blue-200 dark:bg-blue-800 rounded animate-pulse mb-2" />
-          <div className="space-y-2">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-4 bg-blue-200 dark:bg-blue-800 rounded animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <Footer />
-    </div>
-  );
-};
-
-
 
 const MapView: React.FC = () => {
     const { t } = useLanguage();
@@ -154,9 +61,7 @@ const MapView: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [selectedDecade, setSelectedDecade] = useState<string>('all');
     const [searchLocation, setSearchLocation] = useState('');
-    const [mapCenter, setMapCenter] = useState<[number, number]>([45.8150, 15.9819]); // 🆕 Default Zagreb
-    const [displayedPhotosCount, setDisplayedPhotosCount] = useState(12);
-const [loadingMore, setLoadingMore] = useState(false);
+    const [mapCenter, setMapCenter] = useState<[number, number]>([45.8150, 15.9819]);
 
 
 // 🆕 Dinamički zoom ovisno o širini ekrana
@@ -173,20 +78,6 @@ const getInitialZoom = () => {
     const getMinZoom = () => {
   return typeof window !== 'undefined' && window.innerWidth < 768 ? 6 : 7;
 };
-
-const handleLoadMore = () => {
-  setLoadingMore(true);
-  
-  // Simulate loading delay
-  setTimeout(() => {
-    setDisplayedPhotosCount(prev => prev + 12);
-    setLoadingMore(false);
-  }, 300);
-};
-
-useEffect(() => {
-  setDisplayedPhotosCount(12);
-}, [filteredPhotos.length]);
 
     // COMPONENT TO TRACK ZOOM CHANGES
     const ZoomTracker = () => {
@@ -460,113 +351,9 @@ if (loading) {
                     </div>
                 </div>
 
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-  {filteredPhotos.slice(0, displayedPhotosCount).map((photo) => (
-    <div key={photo.id} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-      {/* Fiksna visina slike */}
-      <div className="h-64 overflow-hidden bg-gray-100 dark:bg-gray-700">
-        <LazyImage
-          src={photo.imageUrl}
-          alt={photo.description}
-          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-        />
-      </div>
+<MapPhotoGrid photos={filteredPhotos} t={t} />
 
-      {/* Content - više prostora */}
-      <div className="p-5 space-y-3">
-        <h3 className="font-bold text-lg line-clamp-2 min-h-[3.5rem] text-gray-900 dark:text-gray-100">
-          {photo.description}
-        </h3>
-
-        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{photo.location}</span>
-          </div>
-
-          {photo.address && (
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500 dark:text-blue-400" />
-              <span className="truncate text-blue-600 dark:text-blue-400 text-xs">{photo.address}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 flex-shrink-0" />
-            <span>{formatYear(photo.year, t)}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">{photo.author}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
-          <span>❤️ {photo.likes || 0}</span>
-          <span>👁️ {photo.views || 0}</span>
-        </div>
-
-        <Link to={`/photo/${photo.id}`} className="block mt-3">
-          <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-            {t('mapView.viewDetails')}
-          </Button>
-        </Link>
-      </div>
-    </div>
-  ))}
-</div>
-
-{/* ✅ LOAD MORE BUTTON */}
-{displayedPhotosCount < filteredPhotos.length && (
-  <div className="text-center mt-8">
-    <Button
-      onClick={handleLoadMore}
-      disabled={loadingMore}
-      className="bg-blue-600 hover:bg-blue-700 text-white px-8"
-    >
-      {loadingMore ? (
-        <>
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-          {t('common.loading')}
-        </>
-      ) : (
-        <>
-          📸 {t('mapView.loadMorePhotos')} ({filteredPhotos.length - displayedPhotosCount} {t('mapView.remaining')})
-        </>
-      )}
-    </Button>
-  </div>
-)}
-
-                {/* Statistics */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{photos.length}</div>
-                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.locatedPhotos')}</div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
-                            {new Set(photos.map(p => p.location)).size}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.cities')}</div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
-                            {photos.filter(p => p.address).length}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.specificAddresses')}</div>
-                    </div>
-
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm text-center">
-                        <div className="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">
-                            {availableDecades.length}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-300">{t('mapView.differentDecades')}</div>
-                    </div>
-                </div>
+                <MapStatistics photos={photos} availableDecades={availableDecades} t={t} />
             </div>
 
             {/* Footer */}

@@ -1,36 +1,11 @@
-// src/components/PhotoComments.tsx
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { User, MessageSquare, Send, LogIn, AlertTriangle, TrendingUp } from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "../contexts/AuthContext";
+import { MessageSquare, Send, LogIn, AlertTriangle, TrendingUp } from "lucide-react";
 import { CharacterCounter } from "./ui/character-counter";
-import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { notificationService } from '../services/notificationService';
-import { useCommentRateLimit, COMMENT_RATE_LIMIT_CONFIG } from '@/hooks/useMultiWindowRateLimit';
-
-interface Comment {
-  id: string;
-  userId: string;
-  userName?: string;
-  text: string;
-  date: string;
-  timestamp: Timestamp | null;
-  photoId: string;
-}
+import { translateWithParams } from "../contexts/LanguageContext";
+import { usePhotoComments } from '@/hooks/usePhotoComments';
+import CommentItem from './comments/CommentItem';
 
 interface PhotoCommentsProps {
   photoId: string;
@@ -42,227 +17,21 @@ interface PhotoCommentsProps {
 }
 
 const PhotoComments = ({ photoId, photoAuthor, photoAuthorId, isPhotoPending = false, isStory = false, storyTitle }: PhotoCommentsProps) => {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, signInWithGoogle } = useAuth();
-  const { t } = useLanguage();
-
-  // ✅ PAGINATION STATE
-  const [visibleCount, setVisibleCount] = useState(10);
-  const COMMENTS_PER_PAGE = 10;
-
-  // ✅ RATE LIMITING - using centralized hook
-  const [rateLimitState, refreshRateLimit] = useCommentRateLimit(user?.uid);
-
-  // ✅ CLIENT-SIDE FALLBACK: Track recent submissions in memory
-  const [recentSubmissions, setRecentSubmissions] = useState<number[]>([]);
-
-  // Extract constants for cleaner code
-  const MAX_COMMENTS_PER_MINUTE = COMMENT_RATE_LIMIT_CONFIG.timeWindows[0].maxRequests;
-  const MAX_COMMENTS_PER_HOUR = COMMENT_RATE_LIMIT_CONFIG.timeWindows[1].maxRequests;
-  const MAX_COMMENTS_PER_DAY = COMMENT_RATE_LIMIT_CONFIG.timeWindows[2].maxRequests;
-
-  // Fetch comments function (one-time read instead of real-time listener)
-  const fetchComments = async () => {
-    if (!photoId) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const commentsRef = collection(db, 'comments');
-      const q = query(
-        commentsRef,
-        where('photoId', '==', photoId),
-        where('isApproved', '==', true),
-        orderBy('createdAt', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const fetchedComments: Comment[] = [];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-
-        fetchedComments.push({
-          id: doc.id,
-          userId: data.userId || '',
-          userName: data.userName || 'Nepoznato',
-          text: data.text || '',
-          photoId: data.photoId || '',
-          timestamp: data.createdAt || null,
-          date: data.createdAt
-            ? (() => {
-                const date = new Date(data.createdAt.toMillis());
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                const hours = String(date.getHours()).padStart(2, '0');
-                const minutes = String(date.getMinutes()).padStart(2, '0');
-                return `${day}.${month}.${year}. ${hours}:${minutes}`;
-              })()
-            : 'Upravo sad'
-        });
-      });
-
-      setComments(fetchedComments);
-    } catch (error) {
-      console.error('Greška pri dohvaćanju komentara:', error);
-      toast.error(t('comments.loadError'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Load comments on mount
-  useEffect(() => {
-    fetchComments();
-  }, [photoId]);
-
-  // Helper getters for cleaner code
-  const commentsInLastMinute = rateLimitState.counts[0] || 0;
-  const commentsInLastHour = rateLimitState.counts[1] || 0;
-  const commentsInLastDay = rateLimitState.counts[2] || 0;
-
-  // ✅ CLIENT-SIDE FALLBACK: Count recent submissions from memory
-  const now = Date.now();
-  const oneMinuteAgo = now - 60 * 1000;
-  const recentSubmissionsInLastMinute = recentSubmissions.filter(ts => ts > oneMinuteAgo).length;
-
-  // Combine Firestore data with client-side tracking
-  const totalCommentsInLastMinute = Math.max(commentsInLastMinute, recentSubmissionsInLastMinute);
-
-  // ✅ Block commenting on pending photos
-  const canComment = !isPhotoPending && !rateLimitState.isLimited && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE;
-
-  // ✅ LOAD MORE FUNCTION
-  const loadMoreComments = () => {
-    setVisibleCount(prev => prev + COMMENTS_PER_PAGE);
-  };
-
-  const handleSignInToComment = async () => {
-    // signInWithGoogle handles success/error toasts internally
-    await signInWithGoogle();
-  };
-
-const handleSubmitComment = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!newComment.trim()) {
-    toast.error(t('comments.emptyComment'));
-    return;
-  }
-  
-  if (!user) {
-    toast.error(t('comments.mustBeSignedIn'));
-    return;
-  }
-
-  // ✅ RATE LIMIT PROVJERA
-  if (!canComment) {
-    let errorMessage = '';
-
-    {/* Error poruke pri submitu komentara */}
-if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
-  errorMessage = translateWithParams(t, 'rateLimit.errorMinute', { limit: MAX_COMMENTS_PER_MINUTE });
-} else if (commentsInLastHour >= MAX_COMMENTS_PER_HOUR) {
-  errorMessage = translateWithParams(t, 'rateLimit.errorHour', { limit: MAX_COMMENTS_PER_HOUR });
-} else if (commentsInLastDay >= MAX_COMMENTS_PER_DAY) {
-  errorMessage = translateWithParams(t, 'rateLimit.errorDay', { limit: MAX_COMMENTS_PER_DAY });
-}
-
-    toast.error(errorMessage, { duration: 5000 });
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    const { commentService } = await import('../services/photo/commentService');
-
-    // ✅ Use commentService instead of photoService
-    await commentService.addComment(
-      photoId,
-      newComment.trim(),
-      user.uid,
-      user.displayName || user.email || 'Nepoznato'
-    );
-
-    // ✅ CLIENT-SIDE: Track this submission
-    const submissionTime = Date.now();
-    setRecentSubmissions(prev => {
-      // Add new submission and clean up old ones (older than 1 minute)
-      const oneMinuteAgo = submissionTime - 60 * 1000;
-      return [...prev.filter(ts => ts > oneMinuteAgo), submissionTime];
-    });
-
-    // ✅✅✅ Send notification to photo/story owner
-    if (photoAuthorId && photoAuthorId !== user.uid) {
-      try {
-        if (isStory) {
-          await notificationService.notifyStoryComment(
-            photoAuthorId,
-            user.uid,
-            user.displayName || 'Anonymous',
-            photoId,
-            storyTitle || 'priča',
-            user.photoURL || undefined
-          );
-        } else {
-          await notificationService.notifyNewComment(
-            photoAuthorId,
-            user.uid,
-            user.displayName || 'Anonymous',
-            photoId,
-            photoAuthor || 'untitled photo',
-            user.photoURL || undefined
-          );
-        }
-      } catch (notifError) {
-        console.error('⚠️ Failed to send comment notification:', notifError);
-      }
-    }
-
-    setNewComment("");
-    toast.success(t('comments.commentAdded'));
-
-    // ✅ REFRESH rate limit info after successful comment
-    // Immediate refresh to update UI, then again after Firestore indexes
-    await refreshRateLimit(); // Immediate
-    setTimeout(() => {
-      refreshRateLimit(); // After Firestore indexes (1s delay)
-    }, 1000);
-
-    // ✅ Refresh comments to show the new comment
-    await fetchComments();
-
-  } catch (error) {
-    console.error('Greška pri dodavanju komentara:', error);
-    toast.error(t('comments.postError'));
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-
-  // ✅ FORMAT REMAINING TIME
-    const formatRemainingTime = (date?: Date) => {
-      // If no date is provided, treat as "now"
-      if (!date) return 'sada';
-  
-      const now = new Date();
-      const diff = date.getTime() - now.getTime();
-      
-      if (diff <= 0) return 'sada';
-      
-      const minutes = Math.floor(diff / (60 * 1000));
-      const hours = Math.floor(diff / (60 * 60 * 1000));
-      
-      if (hours > 0) return `za ${hours}h`;
-      if (minutes > 0) return `za ${minutes} min`;
-      return 'uskoro';
-    };
+  const {
+    comments,
+    newComment,
+    setNewComment,
+    loading,
+    isSubmitting,
+    visibleCount,
+    canComment,
+    user,
+    getRateLimitMessage,
+    handleSubmitComment,
+    handleSignInToComment,
+    loadMoreComments,
+    t,
+  } = usePhotoComments({ photoId, photoAuthor, photoAuthorId, isPhotoPending, isStory, storyTitle });
 
   return (
     <div className="mt-8 px-4 sm:px-0">
@@ -272,10 +41,10 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
           {translateWithParams(t, 'comments.title', { count: comments.length })}
         </span>
       </h2>
-      
+
       {user ? (
         <div className="mb-6">
-          {/* ✅ PENDING PHOTO WARNING */}
+          {/* Pending photo warning */}
           {isPhotoPending && (
             <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 dark:border-yellow-600 rounded">
               <div className="flex items-start gap-3">
@@ -292,30 +61,22 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
             </div>
           )}
 
-          {/* RATE LIMIT WARNING (naranđasti okvir) */}
-{!canComment && !isPhotoPending && (
-  <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 dark:border-orange-600 rounded">
-    <div className="flex items-start gap-3">
-      <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-500 flex-shrink-0 mt-0.5" />
-      <div>
-        <p className="font-medium text-orange-800 dark:text-orange-300 mb-1">
-          {t('rateLimit.commentWarningTitle')}
-        </p>
-        <p className="text-sm text-orange-700 dark:text-orange-400">
-          {totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE && (
-            <>{translateWithParams(t, 'rateLimit.canCommentAgainIn', { time: formatRemainingTime(rateLimitState.nextAvailableTime) })}</>
+          {/* Rate limit warning */}
+          {!canComment && !isPhotoPending && (
+            <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/30 border-l-4 border-orange-500 dark:border-orange-600 rounded">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-medium text-orange-800 dark:text-orange-300 mb-1">
+                    {t('rateLimit.commentWarningTitle')}
+                  </p>
+                  <p className="text-sm text-orange-700 dark:text-orange-400">
+                    {getRateLimitMessage()}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
-          {commentsInLastHour >= MAX_COMMENTS_PER_HOUR && totalCommentsInLastMinute < MAX_COMMENTS_PER_MINUTE && (
-            <>{translateWithParams(t, 'rateLimit.hourlyLimitReached', { limit: MAX_COMMENTS_PER_HOUR })}</>
-          )}
-          {commentsInLastDay >= MAX_COMMENTS_PER_DAY && commentsInLastHour < MAX_COMMENTS_PER_HOUR && (
-            <>{translateWithParams(t, 'rateLimit.dailyLimitReached', { limit: MAX_COMMENTS_PER_DAY })}</>
-          )}
-        </p>
-      </div>
-    </div>
-  </div>
-)}
 
           <form onSubmit={handleSubmitComment}>
             <Textarea
@@ -352,7 +113,7 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
           </Button>
         </div>
       )}
-      
+
       <div className="space-y-4">
         {loading ? (
           <div className="text-center py-8">
@@ -368,49 +129,15 @@ if (totalCommentsInLastMinute >= MAX_COMMENTS_PER_MINUTE) {
           </div>
         ) : (
           <>
-            {comments.slice(0, visibleCount).map((comment) => {
-              const isPhotoAuthor = photoAuthorId && comment.userId === photoAuthorId;
+            {comments.slice(0, visibleCount).map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                photoAuthorId={photoAuthorId}
+                t={t}
+              />
+            ))}
 
-              return (
-                <div
-                  key={comment.id}
-                  className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2 gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-600 dark:text-gray-400 flex-shrink-0" />
-                        {comment.userId ? (
-                          <Link
-                            to={`/user/${comment.userId}`}
-                            className="font-medium break-words text-blue-600 dark:text-blue-400 underline"
-                          >
-                            {comment.userName || 'Nepoznato'}
-                          </Link>
-                        ) : (
-                          <span className="font-medium break-words text-gray-900 dark:text-gray-100">
-                            {comment.userName || 'Nepoznato'}
-                          </span>
-                        )}
-                      </div>
-                      {isPhotoAuthor && (
-                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-1 rounded-full whitespace-nowrap">
-                          {t('comments.author')}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm whitespace-nowrap">
-                      {comment.date}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300 break-words leading-relaxed">
-                    {comment.text}
-                  </p>
-                </div>
-              );
-            })}
-
-            {/* ✅ LOAD MORE BUTTON */}
             {comments.length > visibleCount && (
               <div className="mt-6 text-center">
                 <Button
