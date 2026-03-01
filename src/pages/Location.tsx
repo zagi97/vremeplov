@@ -1,20 +1,18 @@
 // src/pages/Location.tsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Card, CardContent } from "../components/ui/card";
-import { ArrowLeft, Plus, LogIn, Search, Filter, X, MapPin, Tag, Calendar, Camera, BookOpen, User } from "lucide-react";
+import { Search, Filter, X, MapPin, Calendar, Camera, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import PhotoUpload from "../components/PhotoUpload";
 import StoryForm from "../components/StoryForm";
 import { photoService, Photo, storyService, Story } from "../services/firebaseService";
-import { toast } from 'sonner';
 import { useAuth } from "../contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../components/ui/dialog";
 import LazyImage from "../components/LazyImage";
-import LanguageSelector from "../components/LanguageSelector";
 import { useLanguage, translateWithParams } from "../contexts/LanguageContext";
 
 import { municipalityData } from '../../data/municipalities';
@@ -24,12 +22,13 @@ import SEO from '@/components/SEO';
 import { parseLocationFromUrl, normalizeCountyName } from '@/utils/locationUtils';
 import { formatYear } from '@/utils/dateUtils';
 import LoadingScreen from '@/components/LoadingScreen';
-import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions, YearRange } from '@/constants/filters';
-import { usePhotoFilters, DEFAULT_FILTERS } from '@/hooks/usePhotoFilters';
-import { PhotoFilterState } from '@/utils/photoFilters';
+import { YEAR_RANGES, getPhotoTypeOptions, getSortOptions } from '@/constants/filters';
+import { usePhotoFilters } from '@/hooks/usePhotoFilters';
 import EmptyState from '@/components/EmptyState';
+import LocationUploadButton from '@/components/location/LocationUploadButton';
+import LocationStories from '@/components/location/LocationStories';
 
-const translateCityType = (type: string, t: any) => {
+const translateCityType = (type: string, t: (key: string) => string) => {
   switch (type.toLowerCase()) {
     case 'grad':
       return t('cityType.city');
@@ -40,7 +39,7 @@ const translateCityType = (type: string, t: any) => {
   }
 };
 
-// Interface definicije - now using PhotoFilterState from utils
+const PHOTOS_PER_PAGE = 12;
 
 const Location = () => {
   const { t } = useLanguage();
@@ -49,17 +48,17 @@ const Location = () => {
   const decodedLocationName = locationName ? decodeURIComponent(locationName) : '';
   const { user, signInWithGoogle } = useAuth();
 
-  // Parsiraj URL parametar
+  // Parse URL parameter
   const locationData = parseLocationFromUrl(decodedLocationName, municipalityData);
   const actualCityName = locationData.cityName;
-  
-  // Validacija - case-insensitive (parseLocationFromUrl već vraća ispravno ime)
+
+  // Validate location
   const allLocations: string[] = municipalityData.records.map(record => record[3] as string);
   const isValidLocation = allLocations.some(
     loc => loc.toLowerCase() === actualCityName.toLowerCase()
   );
 
-  // Konstante - koristi centralizirane definicije iz filters.ts
+  // Constants
   const PHOTO_TYPES = getPhotoTypeOptions(t);
   const SORT_OPTIONS = getSortOptions(t);
 
@@ -71,28 +70,23 @@ const Location = () => {
   const [displayedPhotos, setDisplayedPhotos] = useState<Photo[]>([]);
   const [stories, setStories] = useState<Story[]>([]);
   const [storiesLoading, setStoriesLoading] = useState(false);
-  const [storySearchText, setStorySearchText] = useState('');
-  const [visibleStoriesCount, setVisibleStoriesCount] = useState(10);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const PHOTOS_PER_PAGE = 12;
 
-  // Use photo filters hook
+  // Photo filters hook
   const {
     filters,
     filteredPhotos,
     setFilters,
-    updateFilter,
     clearFilters,
     hasFilters,
-    filteredCount,
     totalCount
   } = usePhotoFilters(allPhotos);
 
-  // ✅ DODAJ OVO - Upload Limit State
+  // Upload limit state
   const [uploadLimitInfo, setUploadLimitInfo] = useState<{
     canUpload: boolean;
     uploadsToday: number;
@@ -102,34 +96,14 @@ const Location = () => {
     nextTierInfo?: string;
   } | null>(null);
 
-  const [showClickTooltip, setShowClickTooltip] = useState(false);
-
-
-  // ✅ Close click tooltip when clicking outside
-useEffect(() => {
-  const handleClickOutside = () => {
-    if (showClickTooltip) {
-      setShowClickTooltip(false);
-    }
-  };
-  
-  if (showClickTooltip) {
-    document.addEventListener('click', handleClickOutside);
-  }
-  
-  return () => {
-    document.removeEventListener('click', handleClickOutside);
-  };
-}, [showClickTooltip]);
-
-  // ✅ DODAJ OVO - Check limit when user logs in
+  // Check upload limit when user logs in
   useEffect(() => {
     const checkUploadLimit = async () => {
       if (!user) {
         setUploadLimitInfo(null);
         return;
       }
-      
+
       try {
         const limitCheck = await photoService.canUserUploadToday(user.uid);
         setUploadLimitInfo({
@@ -144,55 +118,52 @@ useEffect(() => {
         console.error('Error checking upload limit:', error);
       }
     };
-    
+
     checkUploadLimit();
   }, [user]);
 
-  // Redirect ako lokacija nije validna
+  // Redirect if location is not valid
   if (!isValidLocation) {
     return <Navigate to="/not-found" replace />;
   }
 
-  // Handler funkcije
+  // Handler functions
   const handleSignInToAddMemory = async () => {
-    // signInWithGoogle handles success/error toasts internally
     await signInWithGoogle();
   };
 
   const handleUploadSuccess = async () => {
-  setShowAddForm(false);
-  // Removed toast - PhotoUpload already shows success message
+    setShowAddForm(false);
 
-  try {
-    const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
-    setAllPhotos(locationPhotos);
-    
-    // ✅ REFRESH upload limit info
-    if (user) {
-      const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
-      setUploadLimitInfo({
-        canUpload: updatedLimitCheck.allowed,
-        uploadsToday: updatedLimitCheck.uploadsToday,
-        remainingToday: updatedLimitCheck.remainingToday,
-        userTier: updatedLimitCheck.userTier,
-        dailyLimit: updatedLimitCheck.dailyLimit,
-        nextTierInfo: updatedLimitCheck.nextTierInfo
-      });
+    try {
+      const locationPhotos = await photoService.getPhotosByLocation(actualCityName);
+      setAllPhotos(locationPhotos);
+
+      if (user) {
+        const updatedLimitCheck = await photoService.canUserUploadToday(user.uid);
+        setUploadLimitInfo({
+          canUpload: updatedLimitCheck.allowed,
+          uploadsToday: updatedLimitCheck.uploadsToday,
+          remainingToday: updatedLimitCheck.remainingToday,
+          userTier: updatedLimitCheck.userTier,
+          dailyLimit: updatedLimitCheck.dailyLimit,
+          nextTierInfo: updatedLimitCheck.nextTierInfo
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing photos:', error);
     }
-  } catch (error) {
-    console.error('Error refreshing photos:', error);
-  }
-};
+  };
 
   const loadMorePhotos = () => {
     if (loadingMore || !hasMore) return;
-    
+
     setLoadingMore(true);
     const nextPage = currentPage + 1;
     const startIndex = (nextPage - 1) * PHOTOS_PER_PAGE;
     const endIndex = nextPage * PHOTOS_PER_PAGE;
     const newPhotos = filteredPhotos.slice(startIndex, endIndex);
-    
+
     if (newPhotos.length > 0) {
       setDisplayedPhotos(prev => [...prev, ...newPhotos]);
       setCurrentPage(nextPage);
@@ -200,11 +171,11 @@ useEffect(() => {
     } else {
       setHasMore(false);
     }
-    
+
     setLoadingMore(false);
   };
 
-  // Load stories when tab changes
+  // Load stories
   const loadStories = async () => {
     if (!actualCityName) return;
     try {
@@ -218,38 +189,18 @@ useEffect(() => {
     }
   };
 
-  // Load stories on mount so the tab count is accurate
   useEffect(() => {
     if (actualCityName && stories.length === 0 && !storiesLoading) {
       loadStories();
     }
   }, [actualCityName]);
 
-  // Filter stories by search text
-  const filteredStories = useMemo(() => {
-    if (!storySearchText.trim()) return stories;
-    const lower = storySearchText.toLowerCase().trim();
-    return stories.filter(s =>
-      s.title.toLowerCase().includes(lower) ||
-      s.content.toLowerCase().includes(lower) ||
-      s.authorName.toLowerCase().includes(lower)
-    );
-  }, [stories, storySearchText]);
-
-  // Reset visible stories when search changes
-  useEffect(() => {
-    setVisibleStoriesCount(10);
-  }, [storySearchText]);
-
-  const visibleStories = filteredStories.slice(0, visibleStoriesCount);
-  const hasMoreStories = visibleStoriesCount < filteredStories.length;
-
   const handleStorySuccess = () => {
     setShowStoryForm(false);
     loadStories();
   };
 
-  // useEffect hooks
+  // Load photos
   useEffect(() => {
     const loadPhotos = async () => {
       if (!actualCityName) return;
@@ -276,11 +227,9 @@ useEffect(() => {
     setHasMore(filteredPhotos.length > PHOTOS_PER_PAGE);
   }, [filteredPhotos]);
 
-  // hasFilters is now hasFilters from usePhotoFilters hook
-
-if (loading) {
-  return <LoadingScreen message={t('location.loadingPhotos')} />;
-}
+  if (loading) {
+    return <LoadingScreen message={t('location.loadingPhotos')} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F9FA] dark:bg-gray-900">
@@ -302,11 +251,11 @@ if (loading) {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
             {/* Left side: location info */}
             <div className="flex-1 min-w-0">
-             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 break-words mb-4">
-  {locationData.displayName}
-</h2>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 break-words mb-4">
+                {locationData.displayName}
+              </h2>
 
-              {/* Info o županiji i tipu */}
+              {/* County and type info */}
               {locationData.isSpecific && locationData.county && locationData.type && (
                 <div className="mb-3">
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 flex-wrap">
@@ -322,7 +271,7 @@ if (loading) {
                 </div>
               )}
 
-              {/* Ako nije specific */}
+              {/* Non-specific location info */}
               {!locationData.isSpecific && (
                 <div className="mb-3">
                   {(() => {
@@ -348,7 +297,7 @@ if (loading) {
                 </div>
               )}
 
-              {/* Broj fotografija */}
+              {/* Photo count */}
               <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 break-words">
                 {t("location.exploreHistory")}
                 {filteredPhotos.length !== allPhotos.length && (
@@ -360,125 +309,18 @@ if (loading) {
               </p>
             </div>
 
-            {/* Right side: buttons */}
-<div className="flex-shrink-0 w-full sm:w-auto">
-  {user ? (
-    <div className="w-full sm:w-auto">
-      {/* ✅ BUTTON with Tooltip */}
-      <div className="relative group">
-        <Button
-          onClick={() => {
-            if (activeTab === 'stories') {
-              setShowStoryForm(true);
-            } else if (uploadLimitInfo?.canUpload) {
-              setShowAddForm(true);
-            } else {
-              // ✅ Na tablet - toggle tooltip on click
-              setShowClickTooltip(!showClickTooltip);
-            }
-          }}
-          disabled={activeTab === 'photos' && uploadLimitInfo ? !uploadLimitInfo.canUpload : false}
-          className={`w-full sm:w-auto flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2 ${
-            activeTab === 'stories' || uploadLimitInfo?.canUpload
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-          }`}
-        >
-          <Plus className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{activeTab === 'stories' ? t('stories.addStory') : t("location.addMemory")}</span>
-        </Button>
-        
-        {/* ✅ DESKTOP HOVER TOOLTIP - Only on large screens with mouse */}
-        {uploadLimitInfo && !uploadLimitInfo.canUpload && (
-          <div className="hidden lg:block absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48 z-30">
-            <div className="text-center">
-              <div className="font-semibold mb-1">
-                {t('upload.limitReached')}
-              </div>
-              <div className="text-gray-300 leading-tight">
-                Učitano: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
-              </div>
-              {uploadLimitInfo.userTier === 'NEW_USER' && (
-                <div className="text-blue-300 mt-2 text-[9px] leading-tight">
-                  💡 Verificiraj se za više
-                </div>
-              )}
+            {/* Right side: upload button */}
+            <div className="flex-shrink-0 w-full sm:w-auto">
+              <LocationUploadButton
+                user={user}
+                activeTab={activeTab}
+                uploadLimitInfo={uploadLimitInfo}
+                onAddPhoto={() => setShowAddForm(true)}
+                onAddStory={() => setShowStoryForm(true)}
+                onSignIn={handleSignInToAddMemory}
+                t={t}
+              />
             </div>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-              <div className="border-4 border-transparent border-t-gray-900"></div>
-            </div>
-          </div>
-        )}
-        
-        {/* ✅ TABLET CLICK TOOLTIP - Shows BELOW button (640-1024px only) */}
-        {uploadLimitInfo && !uploadLimitInfo.canUpload && showClickTooltip && (
-          <div className="hidden sm:block lg:hidden absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg w-64 z-30 shadow-xl">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowClickTooltip(false);
-              }}
-              className="absolute top-1 right-1 text-gray-400 hover:text-white text-lg leading-none"
-            >
-              ✕
-            </button>
-            <div className="text-center pt-3">
-              <div className="font-semibold mb-1 text-sm">
-                {t('upload.limitReached')}
-              </div>
-              <div className="text-gray-300 text-xs leading-tight">
-                Učitano danas: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
-              </div>
-              {uploadLimitInfo.userTier === 'NEW_USER' && (
-                <div className="text-blue-300 mt-2 text-xs leading-tight">
-                  💡 Verificiraj se za više uploadova
-                </div>
-              )}
-            </div>
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-[-1px]">
-              <div className="border-4 border-transparent border-b-gray-900"></div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ✅ MOBILE PERSISTENT CARD - Shows below button on mobile (<640px) */}
-      {uploadLimitInfo && !uploadLimitInfo.canUpload && (
-        <div className="sm:hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-start gap-2">
-            <div className="flex-shrink-0 mt-0.5">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-red-800">
-                {t('upload.limitReached')}
-              </h3>
-              <p className="mt-1 text-xs text-red-700">
-                {t('upload.uploadedToday')}: {uploadLimitInfo.uploadsToday}/{uploadLimitInfo.dailyLimit}
-              </p>
-              {uploadLimitInfo.nextTierInfo && (
-                <p className="mt-2 text-xs text-blue-700 flex items-start gap-1">
-                  <span className="flex-shrink-0">💡</span>
-                  <span>{uploadLimitInfo.nextTierInfo}</span>
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  ) : (
-    <Button
-      onClick={handleSignInToAddMemory}
-      className="w-full sm:w-auto bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base px-3 sm:px-4 py-2"
-    >
-      <LogIn className="h-4 w-4 flex-shrink-0" />
-      <span className="truncate">{activeTab === 'stories' ? t('stories.signInToAdd') : t("location.signInToAdd")}</span>
-    </Button>
-  )}
-</div>
           </div>
         </div>
       </div>
@@ -541,116 +383,116 @@ if (loading) {
 
       {/* Search and Filter Section (photos only) */}
       {activeTab === 'photos' && (
-      <section className="py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
-                <Input
-                  placeholder={t('location.searchPlaceholder')}
-                  value={filters.searchText}
-                  onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
-                  className="pl-10 placeholder:text-xs sm:placeholder:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
-                />
+        <section className="py-6 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+          <div className="container max-w-6xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-4 w-4" />
+                  <Input
+                    placeholder={t('location.searchPlaceholder')}
+                    value={filters.searchText}
+                    onChange={(e) => setFilters(prev => ({ ...prev, searchText: e.target.value }))}
+                    className="pl-10 placeholder:text-xs sm:placeholder:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                  />
+                </div>
               </div>
+
+              <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 ${hasFilters ? 'border-blue-500 text-blue-600' : ''}`}
+              >
+                <Filter className="h-4 w-4" />
+                {t('location.filters')} {hasFilters && '●'}
+              </Button>
+
+              {hasFilters && (
+                <Button
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                >
+                  <X className="h-4 w-4" />
+                  {t('location.clear')}
+                </Button>
+              )}
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 ${hasFilters ? 'border-blue-500 text-blue-600' : ''}`}
-            >
-              <Filter className="h-4 w-4" />
-              {t('location.filters')} {hasFilters && '●'}
-            </Button>
+            {showFilters && (
+              <Card className="mt-4 dark:bg-gray-800 dark:border-gray-700">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.timePeriod')}</label>
+                      <Select
+                        value={filters.yearRange?.label || 'all'}
+                        onValueChange={(value) => {
+                          if (value === 'all') {
+                            setFilters(prev => ({ ...prev, yearRange: null }));
+                          } else {
+                            const range = YEAR_RANGES.find(r => r.label === value);
+                            setFilters(prev => ({ ...prev, yearRange: range || null }));
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('location.allYears')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t('location.allYears')}</SelectItem>
+                          {YEAR_RANGES.map(range => (
+                            <SelectItem key={range.label} value={range.label}>
+                              {range.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            {hasFilters && (
-              <Button
-                variant="ghost"
-                onClick={clearFilters}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-              >
-                <X className="h-4 w-4" />
-                {t('location.clear')}
-              </Button>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.photoType')}</label>
+                      <Select
+                        value={filters.photoType}
+                        onValueChange={(value) => setFilters(prev => ({ ...prev, photoType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t('location.allTypes')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PHOTO_TYPES.map(type => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.sortBy')}</label>
+                      <Select
+                        value={filters.sortBy}
+                        onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SORT_OPTIONS.map(option => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-
-          {showFilters && (
-            <Card className="mt-4 dark:bg-gray-800 dark:border-gray-700">
-              <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.timePeriod')}</label>
-                    <Select
-                      value={filters.yearRange?.label || 'all'}
-                      onValueChange={(value) => {
-                        if (value === 'all') {
-                          setFilters(prev => ({ ...prev, yearRange: null }));
-                        } else {
-                          const range = YEAR_RANGES.find(r => r.label === value);
-                          setFilters(prev => ({ ...prev, yearRange: range || null }));
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('location.allYears')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('location.allYears')}</SelectItem>
-                        {YEAR_RANGES.map(range => (
-                          <SelectItem key={range.label} value={range.label}>
-                            {range.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.photoType')}</label>
-                    <Select
-                      value={filters.photoType}
-                      onValueChange={(value) => setFilters(prev => ({ ...prev, photoType: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('location.allTypes')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {PHOTO_TYPES.map(type => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">{t('location.sortBy')}</label>
-                    <Select
-                      value={filters.sortBy}
-                      onValueChange={(value) => setFilters(prev => ({ ...prev, sortBy: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SORT_OPTIONS.map(option => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </section>
+        </section>
       )}
 
       {/* Results Summary */}
@@ -685,19 +527,19 @@ if (loading) {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {displayedPhotos.map((photo, index) => (
-<Link
-  key={photo.id}
-  to={`/photo/${photo.id}`}
-  className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
->
-<LazyImage
-  src={photo.imageUrl}
-  alt={`${photo.location}, ${formatYear(photo.year, t)}`}
-  className="transition-transform duration-500 group-hover:scale-110"
-  aspectRatio="4/3"
-  responsiveImages={photo.responsiveImages}
-  priority={index === 0}
-/>
+                    <Link
+                      key={photo.id}
+                      to={`/photo/${photo.id}`}
+                      className="group relative overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 block"
+                    >
+                      <LazyImage
+                        src={photo.imageUrl}
+                        alt={`${photo.location}, ${formatYear(photo.year, t)}`}
+                        className="transition-transform duration-500 group-hover:scale-110"
+                        aspectRatio="4/3"
+                        responsiveImages={photo.responsiveImages}
+                        priority={index === 0}
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-80"></div>
                       <div className="absolute bottom-0 left-0 p-4 w-full">
                         <h3 className="text-white text-lg font-semibold line-clamp-1">{photo.description}</h3>
@@ -733,110 +575,17 @@ if (loading) {
       {activeTab === 'stories' && (
         <section className="py-8 px-4 flex-1 bg-[#F8F9FA] dark:bg-gray-900">
           <div className="container max-w-4xl mx-auto">
-            {storiesLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-500 dark:text-gray-400">{t('stories.loading')}</p>
-              </div>
-            ) : stories.length === 0 ? (
-              <EmptyState
-                icon={BookOpen}
-                title={t('stories.noStories')}
-                description={t('stories.noStoriesDesc')}
-              />
-            ) : (
-              <>
-                {/* Search bar */}
-                <div className="mb-6 space-y-3">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        type="text"
-                        placeholder={t('stories.searchPlaceholder') || 'Pretraži priče...'}
-                        value={storySearchText}
-                        onChange={(e) => setStorySearchText(e.target.value)}
-                        className="pl-10 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
-                      />
-                    </div>
-                    {storySearchText && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => setStorySearchText('')}
-                        className="text-red-500 hover:text-red-600 dark:text-red-400 px-2"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  {storySearchText && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {filteredStories.length} {t('common.of')} {stories.length}
-                    </p>
-                  )}
-                </div>
-
-                {filteredStories.length === 0 ? (
-                  <EmptyState
-                    icon={Search}
-                    title={t('stories.noResults') || 'Nema rezultata'}
-                    description={t('stories.noResultsDesc') || 'Pokušajte promijeniti pretragu.'}
-                    action={{
-                      label: t('stories.clearSearch') || 'Očisti pretragu',
-                      onClick: () => setStorySearchText(''),
-                    }}
-                  />
-                ) : (
-                  <>
-                    <div className="space-y-4">
-                      {visibleStories.map((story) => (
-                        <Link key={story.id} to={`/story/${story.id}`} className="block">
-                          <Card className="hover:shadow-lg transition-shadow dark:bg-gray-800 dark:border-gray-700">
-                            <CardContent className="p-5 sm:p-6">
-                              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
-                                {story.title}
-                              </h3>
-                              <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2 mb-3">
-                                {story.content}
-                              </p>
-                              <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 dark:text-gray-400">
-                                <span className="flex items-center gap-1">
-                                  <User className="h-3 w-3" />
-                                  {story.authorName}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="h-3 w-3" />
-                                  {story.createdAt?.toDate ? story.createdAt.toDate().toLocaleDateString('hr-HR', {
-                                    day: 'numeric', month: 'long', year: 'numeric'
-                                  }) : ''}
-                                </span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </Link>
-                      ))}
-                    </div>
-
-                    {hasMoreStories && (
-                      <div className="mt-8 text-center">
-                        <Button
-                          onClick={() => setVisibleStoriesCount(prev => prev + 10)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          {t('community.loadMore') || 'Učitaj više'}
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+            <LocationStories
+              stories={stories}
+              storiesLoading={storiesLoading}
+              t={t}
+            />
           </div>
         </section>
       )}
 
-     {/* Footer */}
-      <Footer/>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
